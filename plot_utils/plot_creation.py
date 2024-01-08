@@ -60,6 +60,7 @@ def return_positioning(number, form_factor):
                  "hspace": 0.2}
     return positioning[number][form_factor], width_ratio[number][form_factor], height_ratio[number][form_factor], gs_kw
 
+
 def return_fig_size(number, form_factor):
     fig_size = {1: {1: (4, 4),
                     2: (4, 4)},
@@ -106,6 +107,8 @@ class PlotCreation:
     def __init__(self):
         self.fig = None
         self.axd = None
+        self.number = None
+        self.form_factor = None
         self.fig_is_open = self.fig_is_open()
         self.axd_is_open = self.axd_is_open()
 
@@ -126,30 +129,32 @@ class PlotCreation:
             return True
     
     def __setup_axd(self, number=1, form_factor=1):
+        self.number = number
+        self.form_factor = form_factor
         if not self.fig_is_open:
             self.__setup_figure()
         if not self.axd_is_open:
-            position, width_ratio, height_ratio, gs_kw = return_positioning(number, form_factor)
+            position, width_ratio, height_ratio, gs_kw = return_positioning(self.number, self.form_factor)
             self.axd = self.fig.subplot_mosaic(position,
                                                gridspec_kw=gs_kw,
                                                width_ratios=width_ratio, 
                                                height_ratios=height_ratio)
-            if number  == 2:
-                if form_factor == 2:
+            if self.number  == 2:
+                if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True, False)
-            elif number == 3:
-                if form_factor == 1:
+            elif self.number == 3:
+                if self.form_factor == 1:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], True, False)
-            elif number == 4:
-                if form_factor == 2:
+            elif self.number == 4:
+                if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"], self.axd["C"], self.axd["D"]], True, False)
                     self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
                     self.__share_axis(self.axd["C"], [self.axd["D"]], False, True)
-            elif number == 5:
-                if form_factor == 1:
+            elif self.number == 5:
+                if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], self.axd["C"], self.axd["D"], self.axd["E"]], True, False)
-            self.__setup_label_position(number, form_factor)
-            self.fig.set_size_inches(return_fig_size(number, form_factor))
+            self.__setup_label_position(self.number, self.form_factor)
+            self.fig.set_size_inches(return_fig_size(self.number, self.form_factor))
     
     def change_figsize(self, multiplies=1):
         if self.fig_is_open:
@@ -159,18 +164,19 @@ class PlotCreation:
         if self.fig_is_open:
             plt.close(self.fig)
             self.fig = None
+            self.axd = None
     
-    def __setup_aspect(self, number, form_factor):
-        if number == 1 and form_factor == 2:
+    def __setup_aspect(self):
+        if self.number == 1 and self.form_factor == 2:
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
-        elif number == 2 and (form_factor == 2 or form_factor == 4):
+        elif self.number == 2 and (self.form_factor == 2 or self.form_factor == 4):
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
-        elif number == 3 and form_factor == 1:
+        elif self.number == 3 and self.form_factor == 1:
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
             change_y_cbar_aspect(self.axd["B"], self.axd["c"])
             change_x_aspect(self.axd["A"], self.axd["B"], self.axd["C"])
-        elif number == 4 and form_factor == 2:
+        elif self.number == 4 and self.form_factor == 2:
             change_x_cbar_aspect(self.axd["A"], self.axd["a"])
             change_x_cbar_aspect(self.axd["B"], self.axd["b"])
             change_x_cbar_aspect(self.axd["C"], self.axd["c"])
@@ -183,20 +189,14 @@ class PlotCreation:
         if y:
             for ax in list_axs_share:
                 ax.sharey(axd)
-
-    def xlim(self, xlim, axd_letter="A"):
-        self.axd[axd_letter].set_xlim(xlim)
-    
-    def ylim(self, ylim, axd_letter="A"):
-        self.axd[axd_letter].set_ylim(ylim)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         self.axd[axd_letter].set_xlabel(xlabel)
         self.axd[axd_letter].set_ylabel(ylabel)
     
-    def __setup_label_position(self, number, form_factor):
-        if number == 2:
-            if form_factor == 2:
+    def __setup_label_position(self):
+        if self.number == 2:
+            if self.form_factor == 2:
                 self.axd["A"].tick_params(top=False, labeltop=False,
                         bottom=True, labelbottom=True,
                         left=True, labelleft=True,
@@ -206,7 +206,7 @@ class PlotCreation:
                         left=False, labelleft=False,
                         right=True, labelright=True)
                 self.axd["A"].yaxis.set_label_position('right')
-            elif form_factor == 4:
+            elif self.form_factor == 4:
                 self.axd["A"].tick_params(top=False, labeltop=False,
                         bottom=False, labelbottom=False,
                         left=True, labelleft=True,
@@ -215,7 +215,7 @@ class PlotCreation:
                         bottom=True, labelbottom=True,
                         left=True, labelleft=True,
                         right=False, labelright=False)
-        elif number == 3 and form_factor == 1:
+        elif self.number == 3 and self.form_factor == 1:
             self.axd["A"].tick_params(top=True, labeltop=True,
                         bottom=False, labelbottom=False,
                         left=True, labelleft=True,
@@ -233,7 +233,7 @@ class PlotCreation:
             self.axd["C"].xaxis.set_label_position('bottom')
             self.axd["B"].yaxis.set_label_position('left')
             self.axd["C"].yaxis.set_label_position('right')
-        elif number == 4 and form_factor == 2:
+        elif self.number == 4 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
                         bottom=False, labelbottom=False,
                         left=True, labelleft=True,
@@ -258,7 +258,7 @@ class PlotCreation:
             self.axd["B"].yaxis.set_label_position('left')
             self.axd["C"].yaxis.set_label_position('left')
             self.axd["D"].yaxis.set_label_position('right')
-        elif number == 5 and form_factor == 1:
+        elif self.number == 5 and self.form_factor == 1:
                 self.axd["A"].tick_params(top=False, labeltop=False,
                                           bottom=False, labelbottom=False,
                                           left=True, labelleft=True,
@@ -275,3 +275,5 @@ class PlotCreation:
                                             bottom=True, labelbottom=True,
                                             left=True, labelleft=True,
                                             right=False, labelright=False)
+    
+    
