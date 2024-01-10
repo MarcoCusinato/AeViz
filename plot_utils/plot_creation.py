@@ -16,12 +16,12 @@ def return_positioning(number, form_factor):
                            BC""",},
                     4: {1:"""AB
                            CD""",
-                        2:"""ab
+                        2:"""ac
                              ..
-                             AB
-                             CD
+                             AC
+                             BD
                              ..
-                             cd"""},
+                             bd"""},
                     5: {1:"""A..
                              B..
                              C..
@@ -62,16 +62,16 @@ def return_positioning(number, form_factor):
 
 
 def return_fig_size(number, form_factor):
-    fig_size = {1: {1: (4, 4),
-                    2: (4, 4)},
-                2: {1: (4, 4),
-                    2: (4, 4),
-                    3: (4, 4),
-                    4: (4, 4)},
-                3: {1: (4.5, 4.21),
-                    2: (4, 4)},
-                4: {1: (4, 4),
-                    2: (4, 4)},
+    fig_size = {1: {1: (8, 8),
+                    2: (8, 8)},
+                2: {1: (8, 8),
+                    2: (8, 8),
+                    3: (8, 8),
+                    4: (8, 8)},
+                3: {1: (9, 8.42),
+                    2: (4, 8)},
+                4: {1: (8, 4),
+                    2: (8, 11.6)},
                 5: {1: (4.5, 8)}}
     return fig_size[number][form_factor]
 
@@ -141,19 +141,20 @@ class PlotCreation:
                                                height_ratios=height_ratio)
             if self.number  == 2:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["A"], [self.axd["B"]], True, False)
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
             elif self.number == 3:
                 if self.form_factor == 1:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], True, False)
             elif self.number == 4:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["A"], [self.axd["B"], self.axd["C"], self.axd["D"]], True, False)
-                    self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
-                    self.__share_axis(self.axd["C"], [self.axd["D"]], False, True)
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], True, False)
+                    self.__share_axis(self.axd["C"], [self.axd["D"]], True, False)
+                    self.__share_axis(self.axd["A"], [self.axd["C"]], False, True)
+                    self.__share_axis(self.axd["B"], [self.axd["D"]], False, True)
             elif self.number == 5:
                 if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], self.axd["C"], self.axd["D"], self.axd["E"]], True, False)
-            self.__setup_label_position(self.number, self.form_factor)
+            self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number, self.form_factor))
     
     def change_figsize(self, multiplies=1):
@@ -169,7 +170,8 @@ class PlotCreation:
     def __setup_aspect(self):
         if self.number == 1 and self.form_factor == 2:
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
-        elif self.number == 2 and (self.form_factor == 2 or self.form_factor == 4):
+        elif (self.number == 2 and self.form_factor == 2) or \
+            (self.number == 2 and self.form_factor == 4):
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
         elif self.number == 3 and self.form_factor == 1:
@@ -190,10 +192,6 @@ class PlotCreation:
             for ax in list_axs_share:
                 ax.sharey(axd)
     
-    def labels(self, xlabel, ylabel, axd_letter="A"):
-        self.axd[axd_letter].set_xlabel(xlabel)
-        self.axd[axd_letter].set_ylabel(ylabel)
-    
     def __setup_label_position(self):
         if self.number == 2:
             if self.form_factor == 2:
@@ -205,7 +203,8 @@ class PlotCreation:
                         bottom=True, labelbottom=True,
                         left=False, labelleft=False,
                         right=True, labelright=True)
-                self.axd["A"].yaxis.set_label_position('right')
+                self.axd["A"].yaxis.set_label_position('left')
+                self.axd["B"].yaxis.set_label_position('right')
             elif self.form_factor == 4:
                 self.axd["A"].tick_params(top=False, labeltop=False,
                         bottom=False, labelbottom=False,
@@ -238,25 +237,25 @@ class PlotCreation:
                         bottom=False, labelbottom=False,
                         left=True, labelleft=True,
                         right=False, labelright=False)
-            self.axd["B"].tick_params(top=True, labeltop=True,
-                        bottom=False, labelbottom=False,
-                        left=False, labelleft=False,
-                        right=True, labelright=True)
-            self.axd["C"].tick_params(top=False, labeltop=False,
+            self.axd["B"].tick_params(top=False, labeltop=False,
                         bottom=True, labelbottom=True,
                         left=True, labelleft=True,
                         right=False, labelright=False)
+            self.axd["C"].tick_params(top=True, labeltop=True,
+                        bottom=False, labelbottom=False,
+                        left=False, labelleft=False,
+                        right=True, labelright=True)
             self.axd["D"].tick_params(top=False, labeltop=False,
                         bottom=True, labelbottom=True,
                         left=False, labelleft=False,
                         right=True, labelright=True)
             self.axd["A"].xaxis.set_label_position('top')
-            self.axd["B"].xaxis.set_label_position('top')
-            self.axd["C"].xaxis.set_label_position('bottom')
+            self.axd["B"].xaxis.set_label_position('bottom')
+            self.axd["C"].xaxis.set_label_position('top')
             self.axd["D"].xaxis.set_label_position('bottom')
-            self.axd["A"].yaxis.set_label_position('right')
+            self.axd["A"].yaxis.set_label_position('left')
             self.axd["B"].yaxis.set_label_position('left')
-            self.axd["C"].yaxis.set_label_position('left')
+            self.axd["C"].yaxis.set_label_position('right')
             self.axd["D"].yaxis.set_label_position('right')
         elif self.number == 5 and self.form_factor == 1:
                 self.axd["A"].tick_params(top=False, labeltop=False,

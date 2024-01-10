@@ -1,4 +1,4 @@
-from plot_creation import PlotCreation
+from plot_utils.plot_creation import PlotCreation
 from load_utils.data_load_utils import Data
 from matplotlib import ticker
 import numpy as np
@@ -22,7 +22,7 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         xlim = list(xlim)
         xlim.sort()
         xlim[0] = 0
-        if number == 4 and form_factor == 1:
+        if number == 4 and form_factor == 2:
             ylim = xlim
         else:
             ylim = [-xlim[1], xlim[1]]
@@ -35,15 +35,16 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
     elif number == 3 and form_factor == 1:
         ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 4 and form_factor == 1:
+    elif number == 4 and form_factor == 2:
         ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["C"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]), aspect=1)
+        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]), aspect=1)
+        ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]), aspect=1)
 
 
 class PlottingUtils(PlotCreation):
     def __init__(self):
+        super().__init__()
         self.__reset_params()
 
     def __update_params(self, ax_letter, grid, data, cbar_position, 
@@ -55,7 +56,7 @@ class PlottingUtils(PlotCreation):
         self.data[ax_letter] = data
         self.dim[ax_letter] = dim
         self.cmap_color[ax_letter] = cmap
-        self.cbar_label = cbar_label
+        self.cbar_label[ax_letter] = cbar_label
         if self.dim[ax_letter] == 2:
             self.data[ax_letter] = self.data[ax_letter].T
     
@@ -75,7 +76,7 @@ class PlottingUtils(PlotCreation):
 
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
-            cbar_levels = np.logspace(self.cbar_lv[ax_letter][0], self.cbar_lv[ax_letter][1], 100)
+            cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]), np.log10(self.cbar_lv[ax_letter][1]), 100)
             locator = ticker.LogLocator()
             fmt = lambda x, pos: '{:.0e}'.format(x)
         else:
@@ -88,8 +89,10 @@ class PlottingUtils(PlotCreation):
                                             extend='both')
        
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()], format=ticker.FuncFormatter(fmt), 
-                                   location=cbar_loaction[self.cbar_position[ax_letter]])
+                                   location=cbar_loaction(self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
+        if self.cbar_position[ax_letter] in ['L', 'R']:
+            self.axd[ax_letter].yaxis.labelpad = -10
 
     def __plot1D(self, ax_letter):
         if type(self.data[ax_letter]) == list:
@@ -109,7 +112,8 @@ class PlottingUtils(PlotCreation):
                 self.__plot2D(ax_letter)
             else:
                 self.__plot1D(ax_letter)
-        self.__setup_aspect()
+        self._PlotCreation__setup_aspect()
+
 
     def xlim(self, xlim, axd_letter="A"):
         if self.dim[axd_letter] == 2:
@@ -117,6 +121,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[axd_letter].set_xlim(xlim)
         self.__save_lims()
+        self._PlotCreation__setup_aspect()
     
     def ylim(self, ylim, axd_letter="A"):
         if self.dim[axd_letter] == 2:
@@ -124,6 +129,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[axd_letter].set_ylim(ylim)
         self.__save_lims()
+        self._PlotCreation__setup_aspect()
     
     def cmap(self, cmap, axd_letter="A"):
         self.cmap_color[axd_letter] = cmap
@@ -133,6 +139,11 @@ class PlottingUtils(PlotCreation):
         self.cbar_lv[axd_letter] = cbar_levels
         self.__redo_plot()
     
+    def labels(self, xlabel, ylabel, axd_letter="A"):
+        self.axd[axd_letter].set_xlabel(xlabel)
+        self.axd[axd_letter].set_ylabel(ylabel)
+        self.__save_labels()
+
     def __save_lims(self):
         for ax_letter in self.axd:
             self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()

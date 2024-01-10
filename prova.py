@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+from quantities_plotting.plotting import Plotting
+from plot_utils.plotting_utils import PlottingUtils
+"""
 fig = plt.figure(figsize=(10, 10))
-axs = fig.subplot_mosaic("""AB""")
+axs = fig.subplot_mosaic()
 
 fig.subplots_adjust(wspace=0.0)
 
@@ -29,3 +31,9 @@ for ax in axs:
     print(ax)
     print(axs[ax].get_xlim())
     print(axs[ax].get_xlabel())
+"""
+
+Plot = Plotting()
+Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-DD2-1.0omg-5e+08-1e+09B/outp-hdf/h00078700.h5')
+Plot.plot2D('ENTR', 'YE')
+input()
