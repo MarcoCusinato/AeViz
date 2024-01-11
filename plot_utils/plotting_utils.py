@@ -2,6 +2,7 @@ from plot_utils.plot_creation import PlotCreation
 from load_utils.data_load_utils import Data
 from matplotlib import ticker
 import numpy as np
+from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 
 def cbar_loaction(loc):
     location = {'T': 'top', 'B': 'bottom', 'L': 'left', 'R': 'right'}
@@ -76,18 +77,26 @@ class PlottingUtils(PlotCreation):
 
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
-            cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]), np.log10(self.cbar_lv[ax_letter][1]), 100)
-            locator = ticker.LogLocator()
+            if self.cbar_lv[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.cbar_lv[ax_letter][0]),
+                    np.log10(self.cbar_lv[ax_letter][1]))) - 6)
+                cbar_levels = np.concatenate((-np.logspace(np.log10(-self.cbar_lv[ax_letter][0]), np.log10(lntresh), 45, endpoint=False),
+                                              np.linspace(-lntresh, lntresh, 10, endpoint=False),
+                                              np.logspace(np.log10(lntresh), np.log10(self.cbar_lv[ax_letter][1]), 45)))
+                norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])    
+            else:
+                cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]), np.log10(self.cbar_lv[ax_letter][1]), 100)
+                norm=   LogNorm(vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.0e}'.format(x)
         else:
             cbar_levels = np.linspace(self.cbar_lv[ax_letter][0], self.cbar_lv[ax_letter][1], 100)
-            locator = ticker.LinearLocator()
+            norm = Normalize(vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.1f}'.format(x)
         
-        pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0], self.grid[ax_letter][1], self.data[ax_letter],
-                                            levels=cbar_levels, locator=locator, antialiased=True, cmap=self.cmap_color[ax_letter],
+        pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0], self.grid[ax_letter][1], self.data[ax_letter], norm=norm,
+                                            levels=cbar_levels, antialiased=True, cmap=self.cmap_color[ax_letter],
                                             extend='both')
-       
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()], format=ticker.FuncFormatter(fmt), 
                                    location=cbar_loaction(self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])

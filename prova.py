@@ -34,6 +34,7 @@ for ax in axs:
 """
 
 Plot = Plotting()
-Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-DD2-1.0omg-5e+08-1e+09B/outp-hdf/h00078700.h5')
-Plot.plot2D('ENTR', 'YE')
+Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-DD2-1.0omg-5e+08-1e+09B/outp-hdf/h00065600.h5')
+Plot.plot2D('NUXX', 'NUXY', 'NUXZ', 'NUXE')
+Plot.xlim((0, 100), "A")
 input()
