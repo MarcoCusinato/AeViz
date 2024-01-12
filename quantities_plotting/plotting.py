@@ -106,10 +106,6 @@ def normalize_indices(index1, index2):
         index2 = list(index2)
     if type(index1) == list and type(index2) == list:
         index2 = index2[0]
-    if index1 is None:
-        index1 = 0
-    if index2 is None:
-        index2 = 0
     return index1, index2
 
 def get_data_to_plot(index1, index2, post_data, xaxis):
@@ -121,6 +117,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 data = []
                 for i in index1:
                     data.append(post_data[i, :])
+            elif index1 is None:
+                data = post_data.mean(axis=0)
             else:
                 data = post_data[index1, :]
         elif xaxis == 'theta':
@@ -129,6 +127,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 data = []
                 for i in index1:
                     data.append(post_data[:, i])
+            elif index1 is None:
+                data = post_data.mean(axis=1)
             else:
                 data = post_data[:, index1]
     elif post_data.ndim == 3:
@@ -141,6 +141,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 data = []
                 for i in index2:
                     data.append(post_data[index1, i, :])
+            elif index1 is None and index2 is None:
+                data = post_data.mean(axis=(0, 1))
             else:
                 data = post_data[index1, index2, :]
         elif xaxis == 'theta':
@@ -152,6 +154,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 data = []
                 for i in index2:
                     data.append(post_data[index1, :, i])
+            elif index1 is None and index2 is None:
+                data = post_data.mean(axis=(0, 2))
             else:
                 data = post_data[index1, :, index2]
         elif xaxis == 'phi':
@@ -163,6 +167,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 data = []
                 for i in index2:
                     data.append(post_data[:, index1, i])
+            elif index1 is None and index2 is None:
+                data = post_data.mean(axis=(1, 2))
             else:
                 data = post_data[:, index1, index2]
     return data
@@ -172,39 +178,58 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
 class Plotting(PlottingUtils, Data):
     def __init__(self):
         super().__init__()
+        
 
     def  plot1D(self, qt, xaxis, index1, index2):
-        plt.show()
-        plt.ion()
-        self._PlotCreation__setup_axd(1, 1)
+        axd_letters = ['A', 'B', 'C', 'D']
+        number = 1 
+        if not self.fig_is_open():
+            plt.show()
+            plt.ion()
+            self._PlotCreation__setup_axd(number, 1)
+        else:
+            while True:
+                try:
+                    if plot_labels[qt]['label'] != self.axd[axd_letters[number-1]].get_ylabel():
+                        number += 1
+                    else:
+                        break
+                except:
+                    if axd_letters[number-1] not in self.axd:
+                        break
+                if number > 4:
+                    raise ValueError('No more axes available.')
+            print(number)
+            self.number = number
+            self._PlottingUtils__redo_plot()
+        
         gh = ghost(self.gh_cells)
         post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
         if xaxis == 'radius':
             grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
-            self.labels('Radius [km]', None, 'A')
-            self.axd['A'].set_xscale('log')
+            self.labels('R [km]', None, axd_letters[number-1])
+            self.Xscale('log', axd_letters[number-1])
         elif xaxis == 'theta':
             if self.sim_dim == 1:
                 raise ValueError('Cannot plot theta in 1D.')
             grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
-            self.labels('Theta [rad]', None, 'A')
+            self.labels('$\theta$ [rad]', None, axd_letters[number-1])
         elif xaxis == 'phi':
             if self.sim_dim == 1 or self.sim_dim == 2:
                 raise ValueError('Cannot plot phi in 1D or 2D.')
             grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
-            self.labels('Phi [rad]', None, 'A')
+            self.labels('$\phi$ [rad]', None, axd_letters[number-1])
         else:
             raise ValueError('xaxis must be radius, theta or phi.')
         
         index1, index2 = normalize_indices(index1, index2)
 
         data = get_data_to_plot(index1, index2, post_data, xaxis)
-        
-        self._PlottingUtils__update_params('A', grid, data, None, 
-                                           plot_labels[qt]['log'], plot_labels[qt]['lim'], 1, None, plot_labels[qt]['label']) 
-        self._PlottingUtils__plot1D('A')
-        
 
+        
+        self._PlottingUtils__update_params(axd_letters[number-1], grid, data, None, 
+                                           plot_labels[qt]['log'], plot_labels[qt]['lim'], 1, None, plot_labels[qt]['label']) 
+        self._PlottingUtils__plot1D(axd_letters[number-1])
         
 
     def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
@@ -260,5 +285,7 @@ class Plotting(PlottingUtils, Data):
         number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
         
+    def Close(self):
+        self._PlotCreation__close_figure()
 
         

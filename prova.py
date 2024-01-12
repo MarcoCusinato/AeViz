@@ -35,6 +35,6 @@ for ax in axs:
 
 Plot = Plotting()
 Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-DD2-1.0omg-5e+08-1e+09B/outp-hdf/h00065600.h5')
-Plot.plot1D('VX', 'theta', 50,None )
+Plot.plot1D('BX', 'radius', None,None )
 
 input()

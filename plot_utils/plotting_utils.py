@@ -72,6 +72,8 @@ class PlottingUtils(PlotCreation):
         self.cbar_label = {}
         self.xlims = {}
         self.ylims = {}
+        self.logX = {}
+        self.logY = {}
         self.xlabels = {}
         self.ylabels = {}
 
@@ -122,11 +124,15 @@ class PlottingUtils(PlotCreation):
             self.axd[ax_letter].plot(self.grid[ax_letter], self.data[ax_letter])
 
     def __redo_plot(self):
-        self.__close_figure()
-        self.__setup_axd(self.number, self.form_factor)
+        self._PlotCreation__close_figure()
+        self._PlotCreation__setup_axd(self.number, self.form_factor)
         for ax_letter in self.axd:
+            if ax_letter not in self.data.keys():
+                continue
             self.xlim(self.xlims[ax_letter], ax_letter)
             self.ylim(self.ylims[ax_letter], ax_letter)
+            self.Xscale(self.logX[ax_letter], ax_letter)
+            self.Yscale(self.logY[ax_letter], ax_letter)
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter], ax_letter)
             if self.dim[ax_letter] == 2:
                 self.__plot2D(ax_letter)
@@ -150,6 +156,35 @@ class PlottingUtils(PlotCreation):
             self.axd[axd_letter].set_ylim(ylim)
         self.__save_lims()
         self._PlotCreation__setup_aspect()
+    
+    def Xscale(self, scale, ax_letter="A"):
+        self.__save_lims()
+        if scale == 'log':
+            if self.xlims[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.ylims[ax_letter][0]),
+                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                self.axd[ax_letter].set_xscale('symlog', linthresh=lntresh)
+            else:
+                self.axd[ax_letter].set_xscale('log')
+        else:
+            self.axd[ax_letter].set_xscale('linear')
+        self.__save_scale()
+    
+    def Yscale(self, scale, ax_letter="A"):
+        self.__save_lims()
+        if scale == 'log':
+            if self.ylims[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.ylims[ax_letter][0]),
+                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
+            else:
+                self.axd[ax_letter].set_yscale('log')
+        else:
+            self.axd[ax_letter].set_yscale('linear')
+        self.__save_scale()
+        
     
     def cmap(self, cmap, axd_letter="A"):
         self.cmap_color[axd_letter] = cmap
@@ -176,4 +211,8 @@ class PlottingUtils(PlotCreation):
             self.xlabels[ax_letter] = self.axd[ax_letter].get_xlabel()
             self.ylabels[ax_letter] = self.axd[ax_letter].get_ylabel()
 
+    def __save_scale(self):
+        for ax_letter in self.axd:
+            self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
+            self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
 

@@ -10,10 +10,10 @@ def return_positioning(number, form_factor):
                        4: """A.a
                              B.b""",
                        },
-                    3: {1:"""..AA..
-                           b.BC.c""",
-                        2:"""AA
-                           BC""",},
+                    3: {1:"""AA
+                           BC""",
+                        2:"""..AA..
+                           b.BC.c"""},
                     4: {1:"""AB
                            CD""",
                         2:"""ac
@@ -34,8 +34,8 @@ def return_positioning(number, form_factor):
                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
                        3: [1],
                        4: [1.1, 0.4, 0.08]},
-                   3: {1:  [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                       2: [1, 1]},
+                   3: {1: [1, 1],
+                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08]},
                    4: {1: [1, 1],
                        2: [1, 1]},
                     5: {1: [1, 0.03, 0.04]}}
@@ -109,11 +109,10 @@ class PlotCreation:
         self.axd = None
         self.number = None
         self.form_factor = None
-        self.fig_is_open = self.fig_is_open()
-        self.axd_is_open = self.axd_is_open()
+
 
     def __setup_figure(self):
-        if not self.fig_is_open:
+        if not self.fig_is_open():
             self.fig = plt.figure()
     
     def fig_is_open(self):
@@ -131,9 +130,9 @@ class PlotCreation:
     def __setup_axd(self, number=1, form_factor=1):
         self.number = number
         self.form_factor = form_factor
-        if not self.fig_is_open:
+        if not self.fig_is_open():
             self.__setup_figure()
-        if not self.axd_is_open:
+        if not self.axd_is_open():
             position, width_ratio, height_ratio, gs_kw = return_positioning(self.number, self.form_factor)
             self.axd = self.fig.subplot_mosaic(position,
                                                gridspec_kw=gs_kw,
@@ -143,7 +142,7 @@ class PlotCreation:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
             elif self.number == 3:
-                if self.form_factor == 1:
+                if self.form_factor == 2:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], True, False)
             elif self.number == 4:
                 if self.form_factor == 2:
@@ -158,11 +157,11 @@ class PlotCreation:
             self.fig.set_size_inches(return_fig_size(self.number, self.form_factor))
     
     def change_figsize(self, multiplies=1):
-        if self.fig_is_open:
+        if self.fig_is_open():
             self.fig.set_size_inches(self.fig.get_size_inches()*multiplies)
             
     def __close_figure(self):
-        if self.fig_is_open:
+        if self.fig_is_open():
             plt.close(self.fig)
             self.fig = None
             self.axd = None
@@ -174,7 +173,7 @@ class PlotCreation:
             (self.number == 2 and self.form_factor == 4):
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
-        elif self.number == 3 and self.form_factor == 1:
+        elif self.number == 3 and self.form_factor == 2:
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
             change_y_cbar_aspect(self.axd["B"], self.axd["c"])
             change_x_aspect(self.axd["A"], self.axd["B"], self.axd["C"])
@@ -214,7 +213,7 @@ class PlotCreation:
                         bottom=True, labelbottom=True,
                         left=True, labelleft=True,
                         right=False, labelright=False)
-        elif self.number == 3 and self.form_factor == 1:
+        elif self.number == 3 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
                         bottom=False, labelbottom=False,
                         left=True, labelleft=True,
