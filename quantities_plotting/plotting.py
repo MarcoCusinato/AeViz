@@ -3,6 +3,7 @@ from plot_utils.plotting_utils import PlottingUtils
 from plot_utils.plot_creation import PlotCreation
 import matplotlib.pyplot as plt
 from scidata.grid.grid import grid
+from scidata.cell.ghost import ghost
 
 
 plot_labels = {'RHO': {'log': True, 'lim': (1e4, 1e15), 'cmap': 'viridis', 'label': r'$\rho$ [g$\cdot$cm$^{-3}$]'},
@@ -59,51 +60,170 @@ plot_labels = {'RHO': {'log': True, 'lim': (1e4, 1e15), 'cmap': 'viridis', 'labe
         'NUXY': {'log': True, 'lim': (-1e38, 1e38), 'cmap': 'Spectral_r', 'label': r'F$_{\nu_x,\theta}$ [$\#_\nu\cdot$ s$^{-1}$]'},
         'NUXZ': {'log': True, 'lim': (-1e38, 1e38), 'cmap': 'Spectral_r', 'label': r'F$_{\nu_x,\phi}$ [$\#_\nu\cdot$ s$^{-1}$]'},
         'NUXE': {'log': True, 'lim': (1e25, 1e34), 'cmap': 'viridis', 'label': r'E$_{\nu_x}$ [erg$\cdot$ s$^{-1}$]'},
+        'BX': {'log': True, 'lim': (-1e15, 1e15), 'cmap': 'coolwarm', 'label': r'B$_r$ [G]'},
+        'BY': {'log': True, 'lim': (-1e15, 1e15), 'cmap': 'coolwarm', 'label': r'B$_\theta$ [G]'},
+        'BZ': {'log': True, 'lim': (-1e15, 1e15), 'cmap': 'coolwarm', 'label': r'B$_\phi$ [G]'},
 }
+
+def recognize_quantity(qt1, qt2, qt3, qt4, pars):
+    if qt1 == 'NUE':
+        qt1, qt2, qt3, qt4 = 'NUEX', 'NUEY', 'NUEZ', 'NUEE'
+    if qt1 == 'NUA':
+        qt1, qt2, qt3, qt4 = 'NUAX', 'NUAY', 'NUAZ', 'NUAE'
+    if qt1 == 'NUX':
+        qt1, qt2, qt3, qt4 = 'NUXX', 'NUXY', 'NUXZ', 'NUXE'
+    if qt1 == 'B':
+        qt1, qt2, qt3, qt4 = 'BX', 'BY', 'BZ', None
+    if pars:
+        if qt1 == 'VEL':
+            qt1, qt2, qt3, qt4 = 'VELX', 'VELY', 'VELZ', None
+        if qt1 == 'V':
+            qt1, qt2, qt3, qt4 = 'VX', 'VY', 'VZ', None
+        if qt1 == 'X':
+            qt1, qt2, qt3, qt4 = 'X_n', 'X_p', 'X_alpha', 'X_h'
+        if qt1 == 'CPOT':
+            qt1, qt2, qt3, qt4 = 'CPOT_e', 'CPOT_n', 'CPOT_p', 'CPOT_nu'
+    return qt1, qt2, qt3, qt4
+
+def setup_cbars(qt1, qt2, qt3, qt4):
+    if qt4 is not None or qt3 is not None:
+        number, form_factor = 4, 2
+        cbars = {'A': 'T', 'B': 'B', 'C': 'T', 'D': 'B'}
+    elif qt2 is not None:
+        number, form_factor = 2, 2
+        cbars = {'A': 'L', 'B': 'R'}
+    elif qt1 is not None:
+        number, form_factor = 1, 2
+        cbars = {'A': 'R'}
+    else:
+        raise ValueError('No quantity given.')
+    return number, form_factor, cbars
+
+def normalize_indices(index1, index2):
+    if type(index1) == range:
+        index1 = list(index1)
+    if type(index2) == range:
+        index2 = list(index2)
+    if type(index1) == list and type(index2) == list:
+        index2 = index2[0]
+    if index1 is None:
+        index1 = 0
+    if index2 is None:
+        index2 = 0
+    return index1, index2
+
+def get_data_to_plot(index1, index2, post_data, xaxis):
+    if post_data.ndim == 1:
+        data = post_data
+    elif post_data.ndim == 2:
+        if xaxis == 'radius':
+            if type(index1) == list:
+                data = []
+                for i in index1:
+                    data.append(post_data[i, :])
+            else:
+                data = post_data[index1, :]
+        elif xaxis == 'theta':
+            
+            if type(index1) == list:
+                data = []
+                for i in index1:
+                    data.append(post_data[:, i])
+            else:
+                data = post_data[:, index1]
+    elif post_data.ndim == 3:
+        if xaxis == 'radius':
+            if type(index1) == list:
+                data = []
+                for i in index1:
+                    data.append(post_data[i, index2, :])
+            elif type(index2) == list:
+                data = []
+                for i in index2:
+                    data.append(post_data[index1, i, :])
+            else:
+                data = post_data[index1, index2, :]
+        elif xaxis == 'theta':
+            if type(index1) == list:
+                data = []
+                for i in index1:
+                    data.append(post_data[i, :, index2])
+            elif type(index2) == list:
+                data = []
+                for i in index2:
+                    data.append(post_data[index1, :, i])
+            else:
+                data = post_data[index1, :, index2]
+        elif xaxis == 'phi':
+            if type(index1) == list:
+                data = []
+                for i in index1:
+                    data.append(post_data[:, i, index2])
+            elif type(index2) == list:
+                data = []
+                for i in index2:
+                    data.append(post_data[:, index1, i])
+            else:
+                data = post_data[:, index1, index2]
+    return data
+        
+
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
         super().__init__()
 
-    def plot2D(self, qt1=None, qt2=None, qt3=None, qt4=None):
+    def  plot1D(self, qt, xaxis, index1, index2):
+        plt.show()
+        plt.ion()
+        self._PlotCreation__setup_axd(1, 1)
+        gh = ghost(self.gh_cells)
+        post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
+        if xaxis == 'radius':
+            grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
+            self.labels('Radius [km]', None, 'A')
+            self.axd['A'].set_xscale('log')
+        elif xaxis == 'theta':
+            if self.sim_dim == 1:
+                raise ValueError('Cannot plot theta in 1D.')
+            grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
+            self.labels('Theta [rad]', None, 'A')
+        elif xaxis == 'phi':
+            if self.sim_dim == 1 or self.sim_dim == 2:
+                raise ValueError('Cannot plot phi in 1D or 2D.')
+            grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
+            self.labels('Phi [rad]', None, 'A')
+        else:
+            raise ValueError('xaxis must be radius, theta or phi.')
+        
+        index1, index2 = normalize_indices(index1, index2)
+
+        data = get_data_to_plot(index1, index2, post_data, xaxis)
+        
+        self._PlottingUtils__update_params('A', grid, data, None, 
+                                           plot_labels[qt]['log'], plot_labels[qt]['lim'], 1, None, plot_labels[qt]['label']) 
+        self._PlottingUtils__plot1D('A')
+        
+
+        
+
+    def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
         plt.show()
         plt.ion()
 
         gr = grid(self.sim_dim, self.radius, self.theta, self.phi)
         X, Y = gr.cartesian_grid()
 
-        if qt1 == 'X':
-            qt1 = 'X_n'
-            qt2 = 'X_p'
-            qt3 = 'X_alpha'
-            qt4 = 'X_h'
-        if qt1 == 'CPOT':
-            qt1 = 'CPOT_e'
-            qt2 = 'CPOT_n'
-            qt3 = 'CPOT_p'
-            qt4 = 'CPOT_nu'
+        qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
 
-        if qt4 is not None:
-            self._PlotCreation__setup_axd(4, 2)
-            cbars = {'A': 'T', 'B': 'B', 'C': 'T', 'D': 'B'}
-        elif qt3 is not None:
-            self._PlotCreation__setup_axd(4, 2)
-            cbars = {'A': 'T', 'B': 'B', 'C': 'T', 'D': 'B'}
-        elif qt2 is not None:
-            self._PlotCreation__setup_axd(2, 2)
-            cbars = {'A': 'L', 'B': 'R'}
-        elif qt1 is not None:
-            self._PlotCreation__setup_axd(1, 2)
-            cbars = {'A': 'R'}
-        else:
-            raise ValueError('No quantity given.')
+        number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
+        self._PlotCreation__setup_axd(number, form_factor)
         
         self._PlottingUtils__update_params('A', (X, Y), self._Data__get_data_from_name(qt1), cbars['A'], 
                                            plot_labels[qt1]['log'], plot_labels[qt1]['lim'], 2, plot_labels[qt1]['cmap'], plot_labels[qt1]['label'])  
         self._PlottingUtils__plot2D('A')
         self.labels('X [km]', 'Z [km]', 'A')
         if qt2 is not None:
-            
             self._PlottingUtils__update_params('B', (X, Y), self._Data__get_data_from_name(qt2), cbars['B'], 
                                                plot_labels[qt2]['log'], plot_labels[qt2]['lim'], 2, plot_labels[qt2]['cmap'], plot_labels[qt2]['label'])
             self._PlottingUtils__plot2D('B')
@@ -127,5 +247,18 @@ class Plotting(PlottingUtils, Data):
             self.labels('X [km]', 'Z [km]', 'D')
         self.xlim((0, 100), "A")
 
+    def plot2DnoPar(self, qt1=None, type1='hydro', qt2=None, type2='hydro', 
+                    qt3=None, type3='hydro', qt4=None, type4='hydro'):
+        plt.show()
+        plt.ion()
+
+        gr = grid(self.sim_dim, self.radius, self.theta, self.phi)
+        X, Y = gr.cartesian_grid()
+
+        qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, False)
+
+        number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
+        self._PlotCreation__setup_axd(number, form_factor)
         
+
         

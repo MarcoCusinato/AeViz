@@ -104,6 +104,17 @@ class PlottingUtils(PlotCreation):
             self.axd[ax_letter].yaxis.labelpad = -10
 
     def __plot1D(self, ax_letter):
+
+        self.ylim(self.cbar_lv[ax_letter], ax_letter)
+        self.labels(None, self.cbar_label[ax_letter], ax_letter)
+        if self.cbar_log[ax_letter]:
+            if self.ylims[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.ylims[ax_letter][0]),
+                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
+            else:
+                self.axd[ax_letter].set_yscale('log')
         if type(self.data[ax_letter]) == list:
             for data in self.data[ax_letter]:
                 self.axd[ax_letter].plot(self.grid[ax_letter], data)
@@ -149,8 +160,10 @@ class PlottingUtils(PlotCreation):
         self.__redo_plot()
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
-        self.axd[axd_letter].set_xlabel(xlabel)
-        self.axd[axd_letter].set_ylabel(ylabel)
+        if xlabel is not None:
+            self.axd[axd_letter].set_xlabel(xlabel)
+        if ylabel is not None:
+            self.axd[axd_letter].set_ylabel(ylabel)
         self.__save_labels()
 
     def __save_lims(self):

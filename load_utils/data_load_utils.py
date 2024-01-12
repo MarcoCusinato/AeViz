@@ -68,6 +68,9 @@ def return_index(hydro_dict, name):
         'NUXX': {'type': 'neutrinogrey/egrey', 'index': [2, 1] },
         'NUXY': {'type': 'neutrinogrey/egrey', 'index': [2, 2] },
         'NUXZ': {'type': 'neutrinogrey/egrey', 'index': [2, 3] },
+        'BX': {'type': 'mag_vol/data', 'index': 0},
+        'BY': {'type': 'mag_vol/data','index': 1},
+        'BZ': {'type': 'mag_vol/data', 'index': 2},
         }
     return convert_dict[name]
     
@@ -124,7 +127,6 @@ class Data:
                 data = np.squeeze(np.array(self.loaded_data[return_index(self.hydroTHD_index, name)['type']])[..., index[0], index[1]])
             else:
                 data = np.squeeze(np.array(self.loaded_data[return_index(self.hydroTHD_index, name)['type']])[..., index])
-            print(data.shape)
             if name in ['YE', 'YN', 'VX', 'VY', 'VZ']:
                 data /= np.squeeze(np.array(self.loaded_data['hydro']['data'])[..., self.hydroTHD_index['hydro']['I_RH']])
             return data
