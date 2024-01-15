@@ -69,7 +69,7 @@ def return_fig_size(number, form_factor):
                     3: (8, 8),
                     4: (8, 8)},
                 3: {1: (9, 8.42),
-                    2: (4, 8)},
+                    2: (9, 8.42)},
                 4: {1: (8, 4),
                     2: (8, 11.6)},
                 5: {1: (4.5, 8)}}
@@ -143,7 +143,7 @@ class PlotCreation:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
             elif self.number == 3:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["B"], [self.axd["C"]], True, False)
+                    self.__share_axis(self.axd["B"], [self.axd["C"]], False, True)
             elif self.number == 4:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True, False)

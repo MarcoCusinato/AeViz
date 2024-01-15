@@ -95,7 +95,6 @@ class PlottingUtils(PlotCreation):
             cbar_levels = np.linspace(self.cbar_lv[ax_letter][0], self.cbar_lv[ax_letter][1], 100)
             norm = Normalize(vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.1f}'.format(x)
-        
         pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0], self.grid[ax_letter][1], self.data[ax_letter], norm=norm,
                                             levels=cbar_levels, antialiased=True, cmap=self.cmap_color[ax_letter],
                                             extend='both')
@@ -119,15 +118,19 @@ class PlottingUtils(PlotCreation):
         for ax_letter in self.axd:
             if ax_letter not in self.dim.keys():
                 continue
+            if self.data[ax_letter] is None:
+                continue
             if self.dim[ax_letter] == 2:
                 self.__plot2D(ax_letter)
+                set2Dlims(self.axd, self.xlims[ax_letter], None, self.number, self.form_factor)
             else:
                 self.__plot1D(ax_letter)
-            self.xlim(self.xlims[ax_letter], ax_letter)
- 
-            self.ylim(self.ylims[ax_letter], ax_letter)
-            self.Xscale(self.logX[ax_letter], ax_letter)
-            self.Yscale(self.logY[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
+        
+            
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter], ax_letter)
         self._PlotCreation__setup_aspect()
 
@@ -135,6 +138,7 @@ class PlottingUtils(PlotCreation):
     def xlim(self, xlim, axd_letter="A"):
         if self.dim[axd_letter] == 2:
             set2Dlims(self.axd, xlim, None, self.number, self.form_factor)
+            self.__save_lims()
         else:
             self.axd[axd_letter].set_xlim(xlim)
         self.__save_lims(axd_letter)
@@ -143,6 +147,7 @@ class PlottingUtils(PlotCreation):
     def ylim(self, ylim, axd_letter="A"):
         if self.dim[axd_letter] == 2:
             set2Dlims(self.axd, None, ylim, self.number, self.form_factor)
+            self.__save_lims()
         else:
             self.axd[axd_letter].set_ylim(ylim)
         self.__save_lims(axd_letter)

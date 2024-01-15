@@ -35,9 +35,8 @@ for ax in axs:
 
 Plot = Plotting()
 Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-DD2-1.0omg-5e+08-1e+09B/outp-hdf/h00065600.h5')
-Plot.plot1D('BX', 'radius', None,None )
-Plot.plot1D('VX', 'radius', None,None )
-Plot.plot1D('RHO', 'radius', None,None )
-Plot.plot1D('VY', 'radius', None,None )
+Plot.plot2DwithPar('RHO', 'VX')
+Plot.plot1D('RHO', 'radius', range(0, 15),None )
+Plot.plot1D('VX', 'radius', range(0, 15),None )
 
 input()

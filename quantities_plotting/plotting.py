@@ -185,23 +185,25 @@ class Plotting(PlottingUtils, Data):
     def  plot1D(self, qt, xaxis, index1, index2):
 
         axd_letters = ['A', 'B', 'C', 'D']
-        self.__check_axd_1D(axd_letters, qt)
+        number = self.__check_axd_1D(qt, xaxis)
         gh = ghost(self.gh_cells)
         post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
         if xaxis == 'radius':
             grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
-            self.labels('R [km]', plot_labels[qt]['label'], axd_letters[self.number-1])
-            self.Xscale('log', axd_letters[self.number-1])
+            self.labels('R [km]', plot_labels[qt]['label'], axd_letters[number])
+            self.Xscale('log', axd_letters[number])
         elif xaxis == 'theta':
             if self.sim_dim == 1:
                 raise ValueError('Cannot plot theta in 1D.')
             grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
-            self.labels('$\theta$ [rad]', plot_labels[qt]['label'], axd_letters[self.number-1])
+            self.labels(r'$\theta$ [rad]', plot_labels[qt]['label'], axd_letters[number])
+            self.Xscale('linear', axd_letters[number])
         elif xaxis == 'phi':
             if self.sim_dim == 1 or self.sim_dim == 2:
                 raise ValueError('Cannot plot phi in 1D or 2D.')
             grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
-            self.labels('$\phi$ [rad]', plot_labels[qt]['label'], axd_letters[self.number-1])
+            self.labels('$\phi$ [rad]', plot_labels[qt]['label'], axd_letters[number])
+            self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta or phi.')
         
@@ -209,35 +211,64 @@ class Plotting(PlottingUtils, Data):
 
         data = get_data_to_plot(index1, index2, post_data, xaxis)
         
-        self._PlottingUtils__update_params(axd_letters[self.number-1], grid, data, None, 
+        self._PlottingUtils__update_params(axd_letters[number], grid, data, None, 
                                            plot_labels[qt]['log'], None, 1, None, None) 
         
-        self._PlottingUtils__plot1D(axd_letters[self.number-1])
-        self.ylim(plot_labels[qt]['lim'], axd_letters[self.number-1])
-        self.xlim((grid.min(), grid.max()), axd_letters[self.number-1])
-        self.Yscale(plot_labels[qt]['log'], axd_letters[self.number-1])
+        self._PlottingUtils__plot1D(axd_letters[number])
         
-    def __check_axd_1D(self, axd_letters, qt, xaxis):
+        self.ylim(plot_labels[qt]['lim'], axd_letters[number])
+        self.xlim((grid.min(), grid.max()), axd_letters[number])
+        self.Yscale(plot_labels[qt]['log'], axd_letters[number])
+    
+    def __check_axd_1D(self, qt, xaxis):
         number = 1 
         if not self.fig_is_open():
             plt.show()
             plt.ion()
             self._PlotCreation__setup_axd(number, 1)
+        elif self.number == 2 and self.form_factor == 2:
+            self.number = 3
+            self.dim['C'], self.grid['C'], self.data['C'] = self.dim['B'], self.grid['B'], self.data['B']
+            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
+            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], self.cbar_label['B']
+            self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
+            self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
+            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], self.ylabels['B']
+            
+            self.dim['B'], self.grid['B'], self.data['B'] = self.dim['A'], self.grid['A'], self.data['A']
+            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
+            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'], self.cbar_label['A']
+            self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
+            self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
+            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'], self.ylabels['A']
+
+            self.dim['A'], self.grid['A'], self.data['A'] = None, None, None
+            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = None, None, None
+            self.cmap_color['A'], self.cbar_label['A'] = None, None
+            self.xlims['A'], self.ylims['A'] = None, None
+            self.logX['A'], self.logY['A'] = None, None
+            self.xlabels['A'], self.ylabels['A'] = None, None
+            self._PlottingUtils__redo_plot()
+            return number - 1
+        elif self.number == 3 and self.form_factor == 2:
+            if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
+                        (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
+                self.Close()
+                plt.show()
+                plt.ion()
+                self._PlotCreation__setup_axd(number, 1)
         else:
-            while True:
-                try:
-                    if (plot_labels[qt]['label'] != self.axd[axd_letters[number-1]].get_ylabel()) or \
-                        (xaxis_labels[xaxis] != self.axd[axd_letters[number-1]].get_xlabel()):
-                        number += 1
-                    else:
-                        break
-                except:
-                    if axd_letters[number-1] not in self.axd:
-                        break
-                if number > 4:
-                    raise ValueError('No more axes available.')
+            number = 1
+            for axd_letter in self.axd:
+                if (plot_labels[qt]['label'] == self.axd[axd_letter].get_ylabel()) and \
+                        (xaxis_labels[xaxis] == self.axd[axd_letter].get_xlabel()):
+                    return number - 1
+                number += 1
+            if number > 4:
+                raise ValueError('No more axes available.')
             self.number = number
             self._PlottingUtils__redo_plot()
+        return number - 1
 
     def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
         plt.show()
@@ -277,8 +308,15 @@ class Plotting(PlottingUtils, Data):
                                                   plot_labels[qt4]['log'], plot_labels[qt4]['lim'], 2, plot_labels[qt4]['cmap'], plot_labels[qt4]['label'])
             self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
+        
         self.xlim((0, 100), "A")
-        #self._PlottingUtils__save_params()
+
+        for ax_letter in self.axd:
+            if ax_letter in ['a', 'b', 'c', 'd']:
+                continue
+            self.Xscale('linear', ax_letter)
+            self.Yscale('linear', ax_letter)
+
 
     def plot2DnoPar(self, qt1=None, type1='hydro', qt2=None, type2='hydro', 
                     qt3=None, type3='hydro', qt4=None, type4='hydro'):
