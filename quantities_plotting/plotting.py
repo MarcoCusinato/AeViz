@@ -65,6 +65,8 @@ plot_labels = {'RHO': {'log': True, 'lim': (1e4, 1e15), 'cmap': 'viridis', 'labe
         'BZ': {'log': True, 'lim': (-1e15, 1e15), 'cmap': 'coolwarm', 'label': r'B$_\phi$ [G]'},
 }
 
+xaxis_labels = {'radius': 'R [km]', 'theta': r'$\theta$ [rad]', 'phi': r'$\phi$ [rad]', 'time': 't [s]'}
+
 def recognize_quantity(qt1, qt2, qt3, qt4, pars):
     if qt1 == 'NUE':
         qt1, qt2, qt3, qt4 = 'NUEX', 'NUEY', 'NUEZ', 'NUEE'
@@ -181,7 +183,41 @@ class Plotting(PlottingUtils, Data):
         
 
     def  plot1D(self, qt, xaxis, index1, index2):
+
         axd_letters = ['A', 'B', 'C', 'D']
+        self.__check_axd_1D(axd_letters, qt)
+        gh = ghost(self.gh_cells)
+        post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
+        if xaxis == 'radius':
+            grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
+            self.labels('R [km]', plot_labels[qt]['label'], axd_letters[self.number-1])
+            self.Xscale('log', axd_letters[self.number-1])
+        elif xaxis == 'theta':
+            if self.sim_dim == 1:
+                raise ValueError('Cannot plot theta in 1D.')
+            grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
+            self.labels('$\theta$ [rad]', plot_labels[qt]['label'], axd_letters[self.number-1])
+        elif xaxis == 'phi':
+            if self.sim_dim == 1 or self.sim_dim == 2:
+                raise ValueError('Cannot plot phi in 1D or 2D.')
+            grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
+            self.labels('$\phi$ [rad]', plot_labels[qt]['label'], axd_letters[self.number-1])
+        else:
+            raise ValueError('xaxis must be radius, theta or phi.')
+        
+        index1, index2 = normalize_indices(index1, index2)
+
+        data = get_data_to_plot(index1, index2, post_data, xaxis)
+        
+        self._PlottingUtils__update_params(axd_letters[self.number-1], grid, data, None, 
+                                           plot_labels[qt]['log'], None, 1, None, None) 
+        
+        self._PlottingUtils__plot1D(axd_letters[self.number-1])
+        self.ylim(plot_labels[qt]['lim'], axd_letters[self.number-1])
+        self.xlim((grid.min(), grid.max()), axd_letters[self.number-1])
+        self.Yscale(plot_labels[qt]['log'], axd_letters[self.number-1])
+        
+    def __check_axd_1D(self, axd_letters, qt, xaxis):
         number = 1 
         if not self.fig_is_open():
             plt.show()
@@ -190,7 +226,8 @@ class Plotting(PlottingUtils, Data):
         else:
             while True:
                 try:
-                    if plot_labels[qt]['label'] != self.axd[axd_letters[number-1]].get_ylabel():
+                    if (plot_labels[qt]['label'] != self.axd[axd_letters[number-1]].get_ylabel()) or \
+                        (xaxis_labels[xaxis] != self.axd[axd_letters[number-1]].get_xlabel()):
                         number += 1
                     else:
                         break
@@ -199,38 +236,8 @@ class Plotting(PlottingUtils, Data):
                         break
                 if number > 4:
                     raise ValueError('No more axes available.')
-            print(number)
             self.number = number
             self._PlottingUtils__redo_plot()
-        
-        gh = ghost(self.gh_cells)
-        post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
-        if xaxis == 'radius':
-            grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
-            self.labels('R [km]', None, axd_letters[number-1])
-            self.Xscale('log', axd_letters[number-1])
-        elif xaxis == 'theta':
-            if self.sim_dim == 1:
-                raise ValueError('Cannot plot theta in 1D.')
-            grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
-            self.labels('$\theta$ [rad]', None, axd_letters[number-1])
-        elif xaxis == 'phi':
-            if self.sim_dim == 1 or self.sim_dim == 2:
-                raise ValueError('Cannot plot phi in 1D or 2D.')
-            grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
-            self.labels('$\phi$ [rad]', None, axd_letters[number-1])
-        else:
-            raise ValueError('xaxis must be radius, theta or phi.')
-        
-        index1, index2 = normalize_indices(index1, index2)
-
-        data = get_data_to_plot(index1, index2, post_data, xaxis)
-
-        
-        self._PlottingUtils__update_params(axd_letters[number-1], grid, data, None, 
-                                           plot_labels[qt]['log'], plot_labels[qt]['lim'], 1, None, plot_labels[qt]['label']) 
-        self._PlottingUtils__plot1D(axd_letters[number-1])
-        
 
     def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
         plt.show()
@@ -271,6 +278,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
         self.xlim((0, 100), "A")
+        #self._PlottingUtils__save_params()
 
     def plot2DnoPar(self, qt1=None, type1='hydro', qt2=None, type2='hydro', 
                     qt3=None, type3='hydro', qt4=None, type4='hydro'):

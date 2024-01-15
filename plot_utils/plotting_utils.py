@@ -13,7 +13,7 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         ylim = list(ylim)
         ylim.sort()
         xlim = [0]
-        if number == 4 and form_factor == 1:
+        if number == 4 and form_factor == 2:
             ylim[0] = 0
         else:
             ylim[0] = -ylim[1]
@@ -33,7 +33,7 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
     elif number == 2 and form_factor == 2:
         ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["B"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 3 and form_factor == 1:
+    elif number == 3 and form_factor == 2:
         ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 4 and form_factor == 2:
@@ -106,38 +106,29 @@ class PlottingUtils(PlotCreation):
             self.axd[ax_letter].yaxis.labelpad = -10
 
     def __plot1D(self, ax_letter):
-
-        self.ylim(self.cbar_lv[ax_letter], ax_letter)
-        self.labels(None, self.cbar_label[ax_letter], ax_letter)
-        if self.cbar_log[ax_letter]:
-            if self.ylims[ax_letter][0] < 0:
-                lntresh = 10 ** (np.round(
-                    min(np.log10(-self.ylims[ax_letter][0]),
-                    np.log10(self.ylims[ax_letter][1]))) - 6)
-                self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
-            else:
-                self.axd[ax_letter].set_yscale('log')
         if type(self.data[ax_letter]) == list:
             for data in self.data[ax_letter]:
                 self.axd[ax_letter].plot(self.grid[ax_letter], data)
         else:
             self.axd[ax_letter].plot(self.grid[ax_letter], self.data[ax_letter])
+        
 
     def __redo_plot(self):
         self._PlotCreation__close_figure()
         self._PlotCreation__setup_axd(self.number, self.form_factor)
         for ax_letter in self.axd:
-            if ax_letter not in self.data.keys():
+            if ax_letter not in self.dim.keys():
                 continue
-            self.xlim(self.xlims[ax_letter], ax_letter)
-            self.ylim(self.ylims[ax_letter], ax_letter)
-            self.Xscale(self.logX[ax_letter], ax_letter)
-            self.Yscale(self.logY[ax_letter], ax_letter)
-            self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter], ax_letter)
             if self.dim[ax_letter] == 2:
                 self.__plot2D(ax_letter)
             else:
                 self.__plot1D(ax_letter)
+            self.xlim(self.xlims[ax_letter], ax_letter)
+ 
+            self.ylim(self.ylims[ax_letter], ax_letter)
+            self.Xscale(self.logX[ax_letter], ax_letter)
+            self.Yscale(self.logY[ax_letter], ax_letter)
+            self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter], ax_letter)
         self._PlotCreation__setup_aspect()
 
 
@@ -146,7 +137,7 @@ class PlottingUtils(PlotCreation):
             set2Dlims(self.axd, xlim, None, self.number, self.form_factor)
         else:
             self.axd[axd_letter].set_xlim(xlim)
-        self.__save_lims()
+        self.__save_lims(axd_letter)
         self._PlotCreation__setup_aspect()
     
     def ylim(self, ylim, axd_letter="A"):
@@ -154,11 +145,11 @@ class PlottingUtils(PlotCreation):
             set2Dlims(self.axd, None, ylim, self.number, self.form_factor)
         else:
             self.axd[axd_letter].set_ylim(ylim)
-        self.__save_lims()
+        self.__save_lims(axd_letter)
         self._PlotCreation__setup_aspect()
     
     def Xscale(self, scale, ax_letter="A"):
-        self.__save_lims()
+        self.__save_lims(ax_letter)
         if scale == 'log':
             if self.xlims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
@@ -169,11 +160,11 @@ class PlottingUtils(PlotCreation):
                 self.axd[ax_letter].set_xscale('log')
         else:
             self.axd[ax_letter].set_xscale('linear')
-        self.__save_scale()
+        self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
     
     def Yscale(self, scale, ax_letter="A"):
-        self.__save_lims()
-        if scale == 'log':
+        self.__save_lims(ax_letter)
+        if scale in ['log', 'symlog'] or scale == True:
             if self.ylims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.ylims[ax_letter][0]),
@@ -183,7 +174,7 @@ class PlottingUtils(PlotCreation):
                 self.axd[ax_letter].set_yscale('log')
         else:
             self.axd[ax_letter].set_yscale('linear')
-        self.__save_scale()
+        self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
         
     
     def cmap(self, cmap, axd_letter="A"):
@@ -199,20 +190,40 @@ class PlottingUtils(PlotCreation):
             self.axd[axd_letter].set_xlabel(xlabel)
         if ylabel is not None:
             self.axd[axd_letter].set_ylabel(ylabel)
-        self.__save_labels()
+        self.__save_labels(axd_letter)
 
-    def __save_lims(self):
-        for ax_letter in self.axd:
+    def __save_lims(self, ax_letter=None):
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
+                self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+        else:
             self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
             self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
     
-    def __save_labels(self):
-        for ax_letter in self.axd:
+
+
+    
+    def __save_labels(self, ax_letter=None):
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                self.xlabels[ax_letter] = self.axd[ax_letter].get_xlabel()
+                self.ylabels[ax_letter] = self.axd[ax_letter].get_ylabel()
+        else:
             self.xlabels[ax_letter] = self.axd[ax_letter].get_xlabel()
             self.ylabels[ax_letter] = self.axd[ax_letter].get_ylabel()
 
-    def __save_scale(self):
-        for ax_letter in self.axd:
+    def __save_scale(self, ax_letter=None):
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
+                self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
+        else:
             self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
             self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
+    
+    def __save_params(self):
+        self.__save_lims()
+        self.__save_scale()
+        self.__save_labels()
 
