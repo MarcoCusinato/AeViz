@@ -2,8 +2,8 @@ from load_utils.data_load_utils import Data
 from plot_utils.plotting_utils import PlottingUtils
 from plot_utils.plot_creation import PlotCreation
 import matplotlib.pyplot as plt
-from scidata.grid.grid import grid
-from scidata.cell.ghost import ghost
+from grid.grid import grid
+from cell.ghost import ghost
 
 
 plot_labels = {'RHO': {'log': True, 'lim': (1e4, 1e15), 'cmap': 'viridis', 'label': r'$\rho$ [g$\cdot$cm$^{-3}$]'},

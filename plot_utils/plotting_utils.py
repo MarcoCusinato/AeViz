@@ -1,5 +1,4 @@
 from plot_utils.plot_creation import PlotCreation
-from load_utils.data_load_utils import Data
 from matplotlib import ticker
 import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize

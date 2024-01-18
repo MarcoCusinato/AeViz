@@ -1,6 +1,6 @@
-from scidata.par.read_parfile import get_indices_from_parfile
+from utils.parfiles import get_indices_from_parfile
 from scidata.quantities.quantities import SimulationAnalysis
-from scidata.units.units import units
+from units.units import units
 import h5py, os
 import numpy as np
 
