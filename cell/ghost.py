@@ -100,6 +100,8 @@ class ghost:
             if array_dim not in (1, 2, 3, 4, 5):
                 raise TypeError("Array MUST be 1, 2, 3 or 4D")
             if array_dim == 1:
+                if quantity_1D == 'phi':
+                    return None
                 if not quantity_1D in ['radius', 'theta']:
                     raise TypeError("Quantity type required: " + str(['radius', 'theta']))
                 return self.__remove_1D_ghost_cells(array, quantity_1D)

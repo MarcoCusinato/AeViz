@@ -8,12 +8,24 @@ class cell:
         path_folder: (string) path to the simulation folder
         dim: (int, optional) dimension of the supernova simulation (1, 2, or 3)
     """
-    def __init__(self, path_folder, dim=None):
+    def __init__(self, path_folder=None, dim=None,
+                 radius=None, theta=None, phi=None):
         assert dim in (1, 2, 3, None), "Supernova simulation can either be 1D, 2D or 3D"
-        self.path_grid = os.path.join(path_folder, 'grid')
-        self.__radius_file = np.loadtxt(os.path.join(self.path_grid, 'grid.x.dat'))
-        self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))
-        self.__phi_file = np.loadtxt(os.path.join(self.path_grid, 'grid.z.dat'))
+        assert (path_folder is not None) or (radius is not None and theta is not None and phi is not None), \
+            "Please provide either path to the simulation folder or the grid coordinates"
+        if path_folder is not None:
+            self.path_grid = os.path.join(path_folder, 'grid')
+            self.__radius_file = np.loadtxt(os.path.join(self.path_grid, 'grid.x.dat'))[:, 1:]
+            self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))[:, 1:]
+            self.__phi_file = np.loadtxt(os.path.join(self.path_grid, 'grid.z.dat'))[:, 1:]
+        else:
+            assert radius.ndim == 2, "Radius must be a 3D array"
+            assert theta.ndim == 2, "Theta must be a 3D array"
+            assert phi.ndim == 2, "Phi must be a 3D array"
+            self.__radius_file = radius
+            self.__theta_file = theta
+            self.__phi_file = phi
+
         if dim is None:
             dim = 1
             if (self.__theta_file).size > 4:
@@ -39,7 +51,7 @@ class cell:
         Results:
             left radius coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__radius_file[:, 1], self.dim, 'radius')
+        return ghost.remove_ghost_cells(self.__radius_file[:, 0], self.dim, 'radius')
    
     def radius_right(self, ghost):
         """
@@ -50,7 +62,7 @@ class cell:
         Results:
             right radius coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__radius_file[:, 3], self.dim, 'radius')
+        return ghost.remove_ghost_cells(self.__radius_file[:, 2], self.dim, 'radius')
 
     def radius(self, ghost):
         """
@@ -61,7 +73,7 @@ class cell:
         Results:
             center radius coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__radius_file[:, 2], self.dim, 'radius')
+        return ghost.remove_ghost_cells(self.__radius_file[:, 1], self.dim, 'radius')
 
     def dr(self, ghost):
         """
@@ -83,7 +95,7 @@ class cell:
         Results:
             left theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 1], self.dim, 'theta')
+        return ghost.remove_ghost_cells(self.__theta_file[:, 0], self.dim, 'theta')
 
     def theta_right(self, ghost):
         """
@@ -94,7 +106,7 @@ class cell:
         Results:
             right theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 3], self.dim, 'theta')
+        return ghost.remove_ghost_cells(self.__theta_file[:, 2], self.dim, 'theta')
 
     def theta(self, ghost):
         """
@@ -105,7 +117,7 @@ class cell:
         Results:
             central theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 2], self.dim, 'theta')
+        return ghost.remove_ghost_cells(self.__theta_file[:, 1], self.dim, 'theta')
     
     def dtheta(self, ghost):
         """
@@ -127,7 +139,7 @@ class cell:
         Results:
             left phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 1], self.dim, 'phi')
+        return ghost.remove_ghost_cells(self.__phi_file[:, 0], self.dim, 'phi')
 
     def phi_right(self, ghost):
         """
@@ -138,7 +150,7 @@ class cell:
         Results:
             right phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 3], self.dim, 'phi')
+        return ghost.remove_ghost_cells(self.__phi_file[:, 2], self.dim, 'phi')
     
     def phi(self, ghost):
         """
@@ -149,7 +161,7 @@ class cell:
         Results:
             central phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 2], self.dim, 'phi')
+        return ghost.remove_ghost_cells(self.__phi_file[:, 1], self.dim, 'phi')
 
     def dphi(self, ghost):
         """

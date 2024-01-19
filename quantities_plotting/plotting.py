@@ -3,7 +3,10 @@ from plot_utils.plotting_utils import PlottingUtils
 from plot_utils.plot_creation import PlotCreation
 import matplotlib.pyplot as plt
 from grid.grid import grid
-from cell.ghost import ghost
+from units.units import units
+from utils.math_utils import function_average
+
+u = units()
 
 
 plot_labels = {'RHO': {'log': True, 'lim': (1e4, 1e15), 'cmap': 'viridis', 'label': r'$\rho$ [g$\cdot$cm$^{-3}$]'},
@@ -110,7 +113,7 @@ def normalize_indices(index1, index2):
         index2 = index2[0]
     return index1, index2
 
-def get_data_to_plot(index1, index2, post_data, xaxis):
+def get_data_to_plot(index1, index2, post_data, xaxis, dV):
     if post_data.ndim == 1:
         data = post_data
     elif post_data.ndim == 2:
@@ -120,7 +123,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 for i in index1:
                     data.append(post_data[i, :])
             elif index1 is None:
-                data = post_data.mean(axis=0)
+                data = function_average(post_data, 2, 'Omega', dV[1][:, None] * dV[2])
             else:
                 data = post_data[index1, :]
         elif xaxis == 'theta':
@@ -130,7 +133,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 for i in index1:
                     data.append(post_data[:, i])
             elif index1 is None:
-                data = post_data.mean(axis=1)
+                data = function_average(post_data, 2, 'theta', dV[0][None, :] * dV[2])
             else:
                 data = post_data[:, index1]
     elif post_data.ndim == 3:
@@ -144,7 +147,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 for i in index2:
                     data.append(post_data[index1, i, :])
             elif index1 is None and index2 is None:
-                data = post_data.mean(axis=(0, 1))
+                data = function_average(post_data, 3, 'Omega', dV[0][:, None, None] * dV[1][None, :, None])
             else:
                 data = post_data[index1, index2, :]
         elif xaxis == 'theta':
@@ -157,7 +160,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 for i in index2:
                     data.append(post_data[index1, :, i])
             elif index1 is None and index2 is None:
-                data = post_data.mean(axis=(0, 2))
+                data = function_average(post_data, 3, 'theta', dV[0][:, None, None] * dV[2][None, None, :])
             else:
                 data = post_data[index1, :, index2]
         elif xaxis == 'phi':
@@ -170,7 +173,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
                 for i in index2:
                     data.append(post_data[:, index1, i])
             elif index1 is None and index2 is None:
-                data = post_data.mean(axis=(1, 2))
+                data = function_average(post_data, 3, 'phi', dV[1][None, :, None] * dV[2][None, None, None])
             else:
                 data = post_data[:, index1, index2]
     return data
@@ -179,37 +182,38 @@ def get_data_to_plot(index1, index2, post_data, xaxis):
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
-        super().__init__()
-        
-
+        PlottingUtils.__init__(self)
+        Data.__init__(self)
+    
     def  plot1D(self, qt, xaxis, index1, index2):
 
         axd_letters = ['A', 'B', 'C', 'D']
         number = self.__check_axd_1D(qt, xaxis)
-        gh = ghost(self.gh_cells)
-        post_data = gh.remove_ghost_cells(self._Data__get_data_from_name(qt), self.sim_dim)
+        post_data = self._Data__get_data_from_name(qt)
         if xaxis == 'radius':
-            grid = gh.remove_ghost_cells(self.radius, self.sim_dim, 'radius')
+            grid = u.convert_to_km(self.cell.radius(self.ghost))
             self.labels('R [km]', plot_labels[qt]['label'], axd_letters[number])
             self.Xscale('log', axd_letters[number])
         elif xaxis == 'theta':
             if self.sim_dim == 1:
                 raise ValueError('Cannot plot theta in 1D.')
-            grid = gh.remove_ghost_cells(self.theta, self.sim_dim, 'theta')
+            grid = self.cell.theta(self.ghost)
             self.labels(r'$\theta$ [rad]', plot_labels[qt]['label'], axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'phi':
             if self.sim_dim == 1 or self.sim_dim == 2:
                 raise ValueError('Cannot plot phi in 1D or 2D.')
-            grid = gh.remove_ghost_cells(self.phi, self.sim_dim, 'phi')
+            grid = self.cell.phi(self.ghost)
             self.labels('$\phi$ [rad]', plot_labels[qt]['label'], axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta or phi.')
         
         index1, index2 = normalize_indices(index1, index2)
-
-        data = get_data_to_plot(index1, index2, post_data, xaxis)
+        
+        data = get_data_to_plot(index1, index2, post_data, xaxis, (self.cell.dr_integration(self.ghost), 
+                                                                    self.cell.dtheta_integration(self.ghost), 
+                                                                    self.cell.dphi(self.ghost)))
         
         self._PlottingUtils__update_params(axd_letters[number], grid, data, None, 
                                            plot_labels[qt]['log'], None, 1, None, None) 
@@ -273,8 +277,8 @@ class Plotting(PlottingUtils, Data):
     def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
         plt.show()
         plt.ion()
-
-        gr = grid(self.sim_dim, self.radius, self.theta, self.phi)
+        self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
+        gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)), self.cell.theta(self.ghost), self.cell.phi(self.ghost))
         X, Y = gr.cartesian_grid()
 
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
@@ -308,7 +312,7 @@ class Plotting(PlottingUtils, Data):
                                                   plot_labels[qt4]['log'], plot_labels[qt4]['lim'], 2, plot_labels[qt4]['cmap'], plot_labels[qt4]['label'])
             self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
-        
+        self.ghost.restore_default()
         self.xlim((0, 100), "A")
 
         for ax_letter in self.axd:

@@ -3,6 +3,8 @@ from scidata.quantities.quantities import SimulationAnalysis
 from units.units import units
 import h5py, os
 import numpy as np
+from cell.cell import cell as cl
+from cell.ghost import ghost
 
 u = units()
 
@@ -74,36 +76,33 @@ def return_index(hydro_dict, name):
         }
     return convert_dict[name]
     
-class Data:
+class Data(object):
     def __init__(self):
         self.loaded_data = None
-        self.is_open = self.is_open()
         self.hydroTHD_index, self.gh_cells = None, None
-        self.radius, self.theta, self.phi = None, None, None
         self.sim_dim = None
 
     def Load(self, path, simulation_path=None, dim=None):
         self.data_type = check_file_to_load(path)
         if self.data_type == 'hdf5':
-            self.loaded_data = h5py.File(path, 'r')
-            dir_path = os.path.dirname(os.path.abspath(path))
-            self.radius = u.convert_to_km(self.loaded_data['X']['znc'][...])
-            self.theta = self.loaded_data['Y']['znc'][...]
-            self.phi = self.loaded_data['Z']['znc'][...]
-            if self.theta.size == 1:
-                self.sim_dim = 1
-            elif self.phi.size == 1:
-                self.sim_dim = 2
-            else:
-                self.sim_dim = 3
-            try:
-                self.hydroTHD_index, self.gh_cells = get_indices_from_parfile('start.pars', os.path.join(dir_path, '../pars'))
-            except:
-                self.hydroTHD_index = None
-                Warning.warn('No start.pars file found in the parent directory of the hdf5 file. No auto-detection of the indices. Please set them manually.')
+            self.__load_hdf(path)
         elif self.data_type == 'sim':
             self.loaded_data = SimulationAnalysis(path, dim, simulation_path)
     
+    def __load_hdf(self, path):
+        self.loaded_data = h5py.File(path, 'r')
+        dir_path = os.path.dirname(os.path.abspath(path))
+        self.cell = cl(radius=np.stack((self.loaded_data['X']['znl'][...], self.loaded_data['X']['znc'][...], self.loaded_data['X']['znr'][...]), axis=-1),
+                  theta=np.stack((self.loaded_data['Y']['znl'][...], self.loaded_data['Y']['znc'][...], self.loaded_data['Y']['znr'][...]), axis=-1),
+                  phi=np.stack((self.loaded_data['Z']['znl'][...], self.loaded_data['Z']['znc'][...], self.loaded_data['Z']['znr'][...]), axis=-1))
+        self.sim_dim = self.cell.dim
+        try:
+            self.hydroTHD_index, self.gh_cells = get_indices_from_parfile('start.pars', os.path.join(dir_path, '../pars'))
+            self.ghost = ghost(self.gh_cells)
+        except:
+            self.hydroTHD_index = None
+            Warning.warn('No start.pars file found in the parent directory of the hdf5 file. No auto-detection of the indices. Please set them manually.')
+
     def is_open(self):
         if self.loaded_data is None:
             return False
@@ -111,7 +110,7 @@ class Data:
             return True
     
     def Close(self):
-        if self.is_open:
+        if self.is_open():
             if type(self.loaded_data) is h5py.File:
                 self.loaded_data.close()
             elif type(self.loaded_data) is SimulationAnalysis:
@@ -129,7 +128,7 @@ class Data:
                 data = np.squeeze(np.array(self.loaded_data[return_index(self.hydroTHD_index, name)['type']])[..., index])
             if name in ['YE', 'YN', 'VX', 'VY', 'VZ']:
                 data /= np.squeeze(np.array(self.loaded_data['hydro']['data'])[..., self.hydroTHD_index['hydro']['I_RH']])
-            return data
+            return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
             raise NotImplementedError('Not implemented yet.')
     

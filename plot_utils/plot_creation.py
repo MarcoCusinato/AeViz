@@ -103,7 +103,7 @@ def change_y_aspect(axd, axd_bottom, axd_top):
     axd_position.y0, axd_position.y1 = axd_bottom_position.y0, axd_top_position.y1
     axd.set_position(axd_position)
 
-class PlotCreation:
+class PlotCreation(object):
     def __init__(self):
         self.fig = None
         self.axd = None
