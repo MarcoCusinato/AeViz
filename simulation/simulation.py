@@ -2,6 +2,7 @@ import numpy as np
 import h5py, os
 from utils.parfiles import get_indices_from_parfile, get_initial_parameters
 from utils.path_utils import pltf, simulation_local_storage_folder, find_simulation
+from utils.file_utils import load_file
 from cell.cell import cell as cl
 from cell.ghost import ghost as gh
 
@@ -27,3 +28,4 @@ class Simulation:
         self.dim = self.cell.simulation_dimension()
         self.ghost = gh(self.ghost_cells)
         self.storage_path = simulation_local_storage_folder(pltf(), self.simulation_name, self.dim)
+        self.initial_parameters = get_initial_parameters(self.par_path)
