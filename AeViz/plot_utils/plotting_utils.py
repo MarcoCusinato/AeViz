@@ -1,4 +1,4 @@
-from plot_utils.plot_creation import PlotCreation
+from AeViz.plot_utils.plot_creation import PlotCreation
 from matplotlib import ticker
 import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize

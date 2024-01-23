@@ -1,10 +1,10 @@
 import numpy as np
 import h5py, os
-from utils.parfiles import get_indices_from_parfile, get_initial_parameters
-from utils.path_utils import pltf, simulation_local_storage_folder, find_simulation
-from utils.file_utils import load_file
-from cell.cell import cell as cl
-from cell.ghost import ghost as gh
+from AeViz.utils.parfiles import get_indices_from_parfile, get_initial_parameters
+from AeViz.utils.path_utils import pltf, simulation_local_storage_folder, find_simulation
+from AeViz.utils.file_utils import load_file
+from AeViz.cell.cell import cell as cl
+from AeViz.cell.ghost import ghost as gh
 
 
 

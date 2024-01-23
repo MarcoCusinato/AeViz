@@ -1,10 +1,10 @@
-from utils.parfiles import get_indices_from_parfile
+from AeViz.utils.parfiles import get_indices_from_parfile
 from scidata.quantities.quantities import SimulationAnalysis
-from units.units import units
+from AeViz.units.units import units
 import h5py, os
 import numpy as np
-from cell.cell import cell as cl
-from cell.ghost import ghost
+from AeViz.cell.cell import cell as cl
+from AeViz.cell.ghost import ghost
 
 u = units()
 

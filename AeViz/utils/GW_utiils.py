@@ -1,6 +1,6 @@
 import numpy as np
-from units.units import units
-from utils.math_utils import IDL_derivative
+from AeViz.units.units import units
+from AeViz.utils.math_utils import IDL_derivative
 from scipy.signal import stft
 
 u = units()

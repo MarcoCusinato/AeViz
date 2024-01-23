@@ -1,10 +1,10 @@
-from load_utils.data_load_utils import Data
-from plot_utils.plotting_utils import PlottingUtils
-from plot_utils.plot_creation import PlotCreation
+from AeViz.load_utils.data_load_utils import Data
+from AeViz.plot_utils.plotting_utils import PlottingUtils
+from AeViz.plot_utils.plot_creation import PlotCreation
 import matplotlib.pyplot as plt
-from grid.grid import grid
-from units.units import units
-from utils.math_utils import function_average
+from AeViz.grid.grid import grid
+from AeViz.units.units import units
+from AeViz.utils.math_utils import function_average
 
 u = units()
 

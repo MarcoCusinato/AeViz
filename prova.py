@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from quantities_plotting.plotting import Plotting
-from plot_utils.plotting_utils import PlottingUtils
+from AeViz.quantities_plotting.plotting import Plotting
+from AeViz.plot_utils.plotting_utils import PlottingUtils
 from pprint import pprint
 
 """
