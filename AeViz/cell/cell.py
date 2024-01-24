@@ -16,8 +16,14 @@ class cell:
         if path_folder is not None:
             self.path_grid = os.path.join(path_folder, 'grid')
             self.__radius_file = np.loadtxt(os.path.join(self.path_grid, 'grid.x.dat'))[:, 1:]
-            self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))[:, 1:]
-            self.__phi_file = np.loadtxt(os.path.join(self.path_grid, 'grid.z.dat'))[:, 1:]
+            try:
+                self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))[:, 1:]
+            except:
+                self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))[1:]
+            try:
+                self.__phi_file = np.loadtxt(os.path.join(self.path_grid, 'grid.z.dat'))[:, 1:]
+            except:
+                self.__phi_file = np.loadtxt(os.path.join(self.path_grid, 'grid.z.dat'))[1:]
         else:
             assert radius.ndim == 2, "Radius must be a 3D array"
             assert theta.ndim == 2, "Theta must be a 3D array"
@@ -95,7 +101,10 @@ class cell:
         Results:
             left theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 0], self.dim, 'theta')
+        try:
+            return ghost.remove_ghost_cells(self.__theta_file[:, 0], self.dim, 'theta')
+        except:
+            return self.__theta_file[0]
 
     def theta_right(self, ghost):
         """
@@ -106,7 +115,10 @@ class cell:
         Results:
             right theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 2], self.dim, 'theta')
+        try:
+            return ghost.remove_ghost_cells(self.__theta_file[:, 2], self.dim, 'theta')
+        except:
+            return self.__theta_file[2]
 
     def theta(self, ghost):
         """
@@ -117,7 +129,10 @@ class cell:
         Results:
             central theta coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__theta_file[:, 1], self.dim, 'theta')
+        try:
+            return ghost.remove_ghost_cells(self.__theta_file[:, 1], self.dim, 'theta')
+        except:
+            return self.__theta_file[1]
     
     def dtheta(self, ghost):
         """
@@ -139,7 +154,10 @@ class cell:
         Results:
             left phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 0], self.dim, 'phi')
+        try:
+            return ghost.remove_ghost_cells(self.__phi_file[:, 0], self.dim, 'phi')
+        except:
+            return self.__phi_file[0]
 
     def phi_right(self, ghost):
         """
@@ -150,7 +168,10 @@ class cell:
         Results:
             right phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 2], self.dim, 'phi')
+        try:
+            return ghost.remove_ghost_cells(self.__phi_file[:, 2], self.dim, 'phi')
+        except:
+            return self.__phi_file[2]
     
     def phi(self, ghost):
         """
@@ -161,7 +182,10 @@ class cell:
         Results:
             central phi coordinates: (numpy array)
         """
-        return ghost.remove_ghost_cells(self.__phi_file[:, 1], self.dim, 'phi')
+        try:
+            return ghost.remove_ghost_cells(self.__phi_file[:, 1], self.dim, 'phi')
+        except:
+            return self.__phi_file[1]
 
     def dphi(self, ghost):
         """

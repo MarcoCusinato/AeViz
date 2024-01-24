@@ -1,4 +1,4 @@
-from utils.path_utils import (pltf, local_storage_folder,
+from AeViz.utils.path_utils import (pltf, local_storage_folder,
                               save_paths_dictionary, get_paths_dictionary)
 
 
