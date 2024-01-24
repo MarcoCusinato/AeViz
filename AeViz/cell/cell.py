@@ -15,6 +15,7 @@ class cell:
             "Please provide either path to the simulation folder or the grid coordinates"
         if path_folder is not None:
             self.path_grid = os.path.join(path_folder, 'grid')
+            self.__nu_grid_file = np.loadtxt(os.path.join(self.path_grid, 'grid.e.dat'))[:, 1:]
             self.__radius_file = np.loadtxt(os.path.join(self.path_grid, 'grid.x.dat'))[:, 1:]
             try:
                 self.__theta_file = np.loadtxt(os.path.join(self.path_grid, 'grid.y.dat'))[:, 1:]
@@ -307,6 +308,7 @@ class cell:
         else:
             phi = np.ones(self.phi(ghost))
             return phi[:, None, None] * dtheta[None, :, None] * r[None, None, :]
+    
     #integration methods
     def dVolume_integration(self, ghost):
         dr = self.dr_integration(ghost)
@@ -352,4 +354,49 @@ class cell:
         return np.cos(self.theta_left(ghost)) - np.cos(self.theta_right(ghost))
     
     def dOmega(self, ghost):
+        """
+        Method that returns an array with the solid angle integration element.
+        Parameters:
+            ghost: (object) ghost
+        Results:
+            dOmega: (numpy array)
+        """
         return self.dtheta_integration(ghost) * self.dphi(ghost)
+    
+    def E_nu_left(self):
+        """
+        Method that returns an array with the left neutrino energy grid.
+        Results:
+            E_nu_left: (numpy array)
+        """
+        if self.path_grid is None:
+            raise TypeError("You shouldn't be here.")
+        return self.__nu_grid_file[:, 0]
+    
+    def E_nu_right(self):
+        """
+        Method that returns an array with the right neutrino energy grid.
+        Results:
+            E_nu_right: (numpy array)
+        """
+        if self.path_grid is None:
+            raise TypeError("You shouldn't be here.")
+        return self.__nu_grid_file[:, 2]
+    
+    def E_nu(self):
+        """
+        Method that returns an array with the neutrino energy grid.
+        Results:
+            E_nu: (numpy array)
+        """
+        if self.path_grid is None:
+            raise TypeError("You shouldn't be here.")
+        return self.__nu_grid_file[:, 1]
+
+    def dE_nu(self):
+        """
+        Method that returns an array with the neutrino energy integration element.
+        Results:
+            dE_nu: (numpy array)
+        """
+        return self.E_nu_right() - self.E_nu_left()

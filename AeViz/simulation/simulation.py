@@ -4,6 +4,7 @@ from AeViz.utils.parfiles import get_indices_from_parfile, get_initial_parameter
 from AeViz.utils.path_utils import pltf, simulation_local_storage_folder, find_simulation
 from AeViz.utils.file_utils import load_file
 from AeViz.utils.decorators import hdf_isopen
+from AeViz.utils.math_utils import strfct2D
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
 
@@ -188,4 +189,56 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['thd/data']) \
                                                         [..., self.hydroTHD_index['thd']['I_CPOT'][3]]), self.dim)
     
+    ## ERROR
+    @hdf_isopen
+    def error(self, file_name):
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['hydro/data']) \
+                                                        [..., self.hydroTHD_index['hydro']['I_EOSERR']]), self.dim)
+
+    ## -----------------------------------------------------------------------------------------------------------------
+    ## MAGNETIC FIELDS DATA
+    ## -----------------------------------------------------------------------------------------------------------------
+
+    @hdf_isopen
+    def __CT_magnetic_fields(self, file_name):
+        """
+        Magnetic field at the cells border, use this ONLY to calculate streamlines.
+        If you want to plot the actual magnetic fields use the 'magnetic_field'
+        method.
+        """
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['mag_CT/data'])), self.dim)
+    
+    @hdf_isopen
+    def magnetic_fields(self, file_name):
+        """
+        Magnetic field at the cells center.
+        """
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['mag_vol/data'])), self.dim)
+    
+    @hdf_isopen
+    def poloidal_magnetic_fields(self, file_name):
+        data = self.magnetic_fields(file_name)
+        return np.sqrt(data[..., 0] ** 2 + data[..., 1] ** 2)
+    
+    @hdf_isopen
+    def toroidal_magnetic_fields(self, file_name):
+        data = self.magnetic_fields(file_name)
+        return data[..., 2]
+    
+    @hdf_isopen
+    def magnetic_energy(self, file_name):
+        """
+        Magnetic energy density. Total, poloidal and toroidal.
+        """
+        data = self.magnetic_fields(file_name)
+        return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 + data[..., 2] ** 2), \
+                 0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), 0.5 * data[..., 2] ** 2
+    
+    @hdf_isopen
+    def stream_function(self, file_name, plane):
+        return strfct2D(self.__CT_magnetic_fields(file_name),self.cell, self.ghost, plane)
+    
+    ## -----------------------------------------------------------------------------------------------------------------
+    ## NEUTRINO DATA
+    ## -----------------------------------------------------------------------------------------------------------------
     
