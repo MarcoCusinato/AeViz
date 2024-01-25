@@ -44,6 +44,10 @@ class Simulation:
         self.__opened_hdf_file = ''
         self.hdf_file_list = self.__get_hdf_file_list()
 
+    ## -----------------------------------------------------------------------------------------------------------------
+    ## UTILITIES
+    ## -----------------------------------------------------------------------------------------------------------------
+
     def __get_hdf_file_list(self):
         """
         List of all the 'timestep' files in the outp-hdf folder.
@@ -54,7 +58,23 @@ class Simulation:
         #return the sorted list of files
         file_list.sort()
         return file_list
-    
+
+    def find_file_from_time(self, time_in_ms=True, return_index=False, tob_corrected=True):
+        """
+        Returns the name of the file corresponding to the given time.
+        If return_index is True, returns the index of the file in the hdf_file_list.
+        If time_in_ms is True, the time to giveis in ms, otherwise is in s.
+        """
+        if time_in_ms:
+            time_to_find = u.convert_to_s(time_to_find)
+        
+        file_list = self.file_list_hdf()
+        time = self.get_PNS_radius(ret_time=True, tob_corrected=tob_corrected)
+        if return_index:
+            index = np.argmax(time>=time_to_find)
+            return file_list[index], index
+        return file_list[np.argmax(time>=time_to_find)]
+
     ## -----------------------------------------------------------------------------------------------------------------
     ## HYDRODYNAMICAL DATA
     ## -----------------------------------------------------------------------------------------------------------------
@@ -119,11 +139,15 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['thd/data']) \
                                                         [..., self.hydroTHD_index['thd']['I_GAMM']]), self.dim)
     
-    ## RELATIVISTIC
+    ## RELATIVITY AND GRAVITY
     @hdf_isopen
     def lorentz(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['thd/data']) \
                                                         [..., self.hydroTHD_index['thd']['I_LRTZ']]), self.dim)
+    
+    @hdf_isopen
+    def gravitational_potential(self, file_name):
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['gravpot/data'])), self.dim)
     
     ## ENERGY
     @hdf_isopen
@@ -194,12 +218,27 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['thd/data']) \
                                                         [..., self.hydroTHD_index['thd']['I_CPOT'][3]]), self.dim)
     
+    ## -----------------------------------------------------------------------------------------------------------------
+    ## PARAMETERS
+    ## -----------------------------------------------------------------------------------------------------------------
+
     ## ERROR
     @hdf_isopen
     def error(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['hydro/data']) \
                                                         [..., self.hydroTHD_index['hydro']['I_EOSERR']]), self.dim)
 
+    ## TIME
+    @hdf_isopen
+    def time(self, file_name, tob_corrected=True):
+        """
+        Time of the simulation. If tob_corrected is True, the time is corrected
+        for the time of bounce.
+        """
+        if tob_corrected:
+            return np.array(self.__data_h5['Parameters/t']) - self.time_of_bounce_rho()
+        return np.array(self.__data_h5['Parameters/t'])
+    
     ## -----------------------------------------------------------------------------------------------------------------
     ## MAGNETIC FIELDS DATA
     ## -----------------------------------------------------------------------------------------------------------------

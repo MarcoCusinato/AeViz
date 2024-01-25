@@ -70,6 +70,22 @@ def find_column_changing_line(path_folder, file_name):
         line_number = None
     return line_number
 
+def save_hdf(save_path, dataset_keywords, dataset_values):
+    """
+    Save data in hdf format
+    dataset_keywords: list of strings, keywords for the datasets
+    dataset_values: list of whatever you want, these are the values for the datasets
+    """
+    assert len(dataset_keywords) == len(dataset_values), "Number of keywords and values do not match"
+    file_out = h5py.File(save_path, 'w')
+    for (key, value) in zip(dataset_keywords, dataset_values):
+        if type(value) == dict:
+            group = file_out.create_group(key)
+            for (k, v) in value.items():
+                group.create_dataset(k, data = v)
+        else:
+            file_out.create_dataset(key, data = value)
+    file_out.close()
 
 def save_h5(save_path, data_radius, data_average,
             indices, ghost_cells, corrected_for_tob):

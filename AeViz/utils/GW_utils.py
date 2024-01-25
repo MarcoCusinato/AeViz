@@ -5,6 +5,10 @@ from scipy.signal import stft
 
 u = units()
 
+## ------------------------------------------------------------------------------------------
+## GW strain
+## ------------------------------------------------------------------------------------------
+
 def GW_strain(sim_dim, column_change, data, index):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if sim_dim == 1:
@@ -56,6 +60,12 @@ def correct_zero(sim_dim, GWs, index):
         for i in range(1, GWs.shape[1]):
             GWs[:, i] -= GWs[:index, i].mean()
         return GWs
+    
+## ------------------------------------------------------------------------------------------
+## GW spectrogram
+## ------------------------------------------------------------------------------------------
+
+
 def GW_spectrogram(sim_dim, GWs, window_size):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if sim_dim == 1:
@@ -94,6 +104,10 @@ def GW_spectrogram_3D(GWs, window_size):
            np.stack((np.abs(Zxx_pl_e), np.abs(Zxx_pl_p), np.abs(Zxx_cr_e),
                      np.abs(Zxx_cr_p)), axis=-1)
 
+## ------------------------------------------------------------------------------------------
+## GWs strain from the postprocessing
+## ------------------------------------------------------------------------------------------
+## TODO: fix with the new decorators
 def calculate_AE220(simulation):
     """
     Calculates the AE220 from density and velocities for a
