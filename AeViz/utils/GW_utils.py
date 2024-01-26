@@ -229,28 +229,6 @@ def GWs_frequency_peak_indices(frequency, htilde):
             second_peak_index = index
     return [first_peak_index, second_peak_index]
 
-def GWs_frequency_peak_indices(frequency, htilde):
-    """
-    Method that find the indices of the first and second frequency peak
-    on a fourier transformed GW strain
-    Return:
-        list containing: first peak index, second peak index 
-    """
-    dhtilde_df = IDL_derivative(frequency, htilde)
-    sign = dhtilde_df[1:] * dhtilde_df[:-1]
-    ## Find extrema points
-    extr = np.where(sign < 0)[0]
-    ## Find the two peaks
-    first_peak_index = 0
-    second_peak_index = 0
-    for index in extr:
-        if htilde[index] > htilde[first_peak_index]:
-            second_peak_index = first_peak_index
-            first_peak_index = index
-        elif htilde[index] > htilde[second_peak_index]:
-            second_peak_index = index
-    return [first_peak_index, second_peak_index]
-
 ## ---------------------------------------------------------------------
 ## GWs strain from the postprocessing
 ## ---------------------------------------------------------------------

@@ -10,7 +10,8 @@ from AeViz.utils.decorators import hdf_isopen
 from AeViz.utils.math_utils import strfct2D
 from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_AE220, GW_spectrogram,
-                                  GWs_peak_indices)
+                                  GWs_peak_indices, GWs_fourier_transform,
+                                  GWs_frequency_peak_indices)
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
 from AeViz.units.units import units
@@ -92,7 +93,10 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     @hdf_isopen
-    def rho(self, file_name):GWs_max_min_peak
+    def rho(self, file_name):
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
+            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+                                          ['I_RH']]), self.dim)
     
     ## VELOCITY
     @hdf_isopen
@@ -253,8 +257,9 @@ class Simulation:
     ## ERROR
     @hdf_isopen
     def error(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(self.__data_h5['hydro/data']) \
-                                                        [..., self.hydroTHD_index['hydro']['I_EOSERR']]), self.dim)
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
+            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+                                          ['I_EOSERR']]), self.dim)
 
     ## TIME
     @hdf_isopen
@@ -494,9 +499,10 @@ class Simulation:
                 frequencies array
                 htilde
         """
-        
-        frequency, htilde = self.GWs_fourier_transform(peak, min_time, max_time, use_der, interval)
-        indices = self.__GWs_frequency_peak_indices(frequency, htilde)
+        GWs = self.GW_Amplitudes()
+        indices = GWs_peak_indices(GWs, peak, interval, min_time, max_time)
+        frequency, htilde = GWs_fourier_transform(GWs, indices)
+        indices = GWs_frequency_peak_indices(frequency, htilde)
         return_list = [frequency[indices]]
         if return_intensities:
             return_list.append(htilde[indices])
@@ -506,6 +512,14 @@ class Simulation:
             return return_list[0]
         return return_list
     
+    def GWs_dE_dt(self, tob_corrected=True):
+        """
+        Returns the energy carried away by the GWs in erg/s
+        """
+        GWs = self.GW_Amplitudes(tob_corrected)
+        GWs[:, 1] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
+        return GWs
+
     ## FIX ME!!!!!
     def AE220(self, tob_corrected):
         """
