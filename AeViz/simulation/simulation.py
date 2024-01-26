@@ -145,6 +145,19 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(
             self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
                                         ['I_CSND']]), self.dim)
+    
+    def omega(self, file_name):
+        if self.dim == 1:
+            warnings.warn("No omega in 1D simulations.")
+        elif self.dim == 2:
+            return self.phi_velocity(file_name) / (np.sin(self.cell.theta(
+                self.ghost))[:, None] * self.cell.radius(self.ghost)[None, :])
+        elif self.dim == 3:
+            return self.phi_velocity(file_name) / (np.cos(self.cell.phi(
+                self.ghost))[:, None, None] * np.sin(self.cell.theta(
+                self.ghost))[None, :, None] * \
+                self.cell.radius(self.ghost))[None, None, :]
+
     ## -----------------------------------------------------------------
     ## THERMODYNAMICAL DATA
     ## -----------------------------------------------------------------
