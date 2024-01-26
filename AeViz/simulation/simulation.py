@@ -48,17 +48,18 @@ class Simulation:
         self.__integrated_nu_path = 'neu.dat'
         self.__rho_max_path = 'rho.dat'
         self.__grw_path = 'grw.dat'
-        self.__nu_E_grid_path = 'grid.e.dat'
+        self.__mag_data = 'mag.dat'
         self.__data_h5 = None
         ## Opened file name
         self.__opened_hdf_file = ''
         self.hdf_file_list = self.__get_hdf_file_list()
-        self.tob = self.time_of_bounce_rho()
+        self.tob = self.time_of_bounce()
 
     ## -----------------------------------------------------------------
     ## UTILITIES
     ## -----------------------------------------------------------------
 
+    ## FILE LIST AND FILE SEARCH
     def __get_hdf_file_list(self):
         """
         List of all the 'timestep' files in the outp-hdf folder.
@@ -87,6 +88,28 @@ class Simulation:
             index = np.argmax(time>=time_to_find)
             return file_list[index], index
         return file_list[np.argmax(time>=time_to_find)]
+
+    ## TIME POINTS           
+    def time_of_bounce(self):
+        """
+        Empirical criterion: time of bounce defined as the time at which
+        the central density (max desity) raises above 2.5e14 g/cm^3 before a rapid fall.
+        If we do not reach that density we lower the threshold to 2
+        """
+        rho_data = self.rho_max(False)
+        rho_index = np.argmax(rho_data[:,1] > 1.4e14)
+        if rho_index == 0 or rho_data[rho_index, 0] >= 0.6:
+            rho_index = np.argmax(rho_data[:,1]>2e14)
+        return rho_data[rho_index, 0]
+
+    def time_of_BH(self):
+        """
+        Attempt to find when and if a BH is formed.
+        For now is when the rho max raises above a certain limit (6e15 g/cm3)
+        """
+        rho_data = self.rho_max()
+        rho_BH = 6e15
+        return rho_data[np.argmax(rho_data[:,1]>=rho_BH),0]
 
     ## -----------------------------------------------------------------
     ## HYDRODYNAMICAL DATA
@@ -168,6 +191,10 @@ class Simulation:
     def gravitational_potential(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(
             self.__data_h5['gravpot/data'])), self.dim)
+    
+    def gravitational_energy(self, file_name):
+        return 0.5 * self.rho(file_name) * \
+            self.gravitational_potential(file_name)
     
     ## ENERGY
     @hdf_isopen
@@ -520,6 +547,7 @@ class Simulation:
         GWs[:, 1] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
         return GWs
 
+
     ## FIX ME!!!!!
     def AE220(self, tob_corrected):
         """
@@ -562,3 +590,89 @@ class Simulation:
             time += self.time_of_bounce_rho()
         return self.cell.radius(self.ghost), time, AE220 * const, \
                 full_strain, inner_strain, convection_strain, outer_strain
+    
+    ## -----------------------------------------------------------------
+    ## GLOBAL DATA
+    ## -----------------------------------------------------------------
+    def global_neutrino_luminosity(self, tob_corrected=True):
+        """
+        indices
+        1: time
+        2: luminosity flux nue  5: number luminosity flux nue
+        3: luminosity flux nua  6: number luminosity flux nua
+        4: luminosity flux nux  7: number luminosity flux nux
+        """
+        nu_tmp = load_file(self.__log_path, self.__integrated_nu_path)
+        if tob_corrected:
+            nu_tmp[:, 2] -= self.tob
+        return np.stack((nu_tmp[:, 2], nu_tmp[:, 38], nu_tmp[:, 39],
+                         0.25 * nu_tmp[:, 40], nu_tmp[:, 35],
+                         nu_tmp[:, 36], 0.25 * nu_tmp[:, 37]), axis=1)
+    
+    def global_neutrino_mean_energies(self, tob_corrected=True):
+        """
+        indices
+        1: time
+        2: mean energy nue  
+        3: mean energy nua  
+        4: mean energy nux  
+        """
+        nu = self.global_neutrino_luminosity(tob_corrected)
+        ene_mean = np.zeros((nu.shape[0],4))
+        ene_mean[:,0] = nu[:,0]
+        ene_mean[:,1] = u.convert_to_MeV(nu[:,1]/nu[:,4])
+        ene_mean[:,2] = u.convert_to_MeV(nu[:,2]/nu[:,5])
+        ene_mean[:,3] = u.convert_to_MeV(nu[:,3]/nu[:,6])
+        return np.stack((nu[:, 0], u.convert_to_MeV(nu[:, 1]/nu[:, 4]),
+                         u.convert_to_MeV(nu[:, 2]/nu[:, 5]),
+                         u.convert_to_MeV(nu[:, 3]/nu[:, 6])), axis=1)
+    
+    def total_mass(self, tob_corrected=True):
+        """
+        Returns the total mass of the star at every timestep
+        indices
+        1: time
+        2: total mass
+        """
+        M = load_file(self.__log_path, self.__rho_max_path)
+        if tob_corrected:
+            M[:,2] -= self.tob
+        return np.stack((M[:, 2], u.convert_to_solar_masses(M[:, 4])), axis=1)
+    
+    def rho_max(self, correct_for_tob=True):
+        """
+        indices
+        1: time
+        2: rho max
+        """
+        rho = load_file(self.__log_path, self.__rho_max_path)
+        if correct_for_tob:
+            rho[:,2] -= self.tob
+        return np.stack((rho[:, 2], rho[:, 3]), axis = 1)
+
+    def global_Ye(self, tob_corrected=True):
+        """
+        indices
+        1: time
+        2: Ye max
+        3: Ye min
+        4: Ye cent
+        """
+        Ye = load_file(self.__log_path, self.__rho_max_path)
+        if tob_corrected:
+            Ye[:,2] -= self.tob
+        return np.stack((Ye[:,2], Ye[:,6], Ye[:,7], Ye[:,8]), axis=1)
+
+    def global_rotational_energy(self, tob_corrected=True):
+        """
+        1: time
+        2: total rotational energy
+        """
+        en = load_file(self.__log_path, self.__mag_data)
+        if tob_corrected:
+            en[:,2] -= self.tob
+        return np.stack((en[:, 2], en[:, 3]), axis=1)
+
+    ## -----------------------------------------------------------------
+    ## PNS DATA
+    ## -----------------------------------------------------------------
