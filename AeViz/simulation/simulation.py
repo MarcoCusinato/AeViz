@@ -383,7 +383,7 @@ class Simulation:
         return nu_flux
     
     @hdf_isopen
-    def nutrino_momenta_opacities(self, file_name):
+    def neutrino_momenta_opacities(self, file_name):
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(np.array(
             self.__data_h5['neutrino/oe'])[..., 1:]), self.dim)
         if self.dim == 1:
