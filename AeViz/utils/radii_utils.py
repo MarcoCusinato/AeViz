@@ -1,7 +1,8 @@
-from AeViz.utils.file_utils import save_hdf
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
-
+from AeViz.cell.cell import cell
+import scipy.interpolate
+from scipy.interpolate import RegularGridInterpolator
 
 
 def PNS_radius(simulation, file_name):
@@ -85,5 +86,113 @@ def PNS_nucleus(simulation, file_name):
     minYe = np.where(mask, minYe, rho_thres_index)
     return radius[minYe]
 
+
+
 def shock_radius(simulation, file_name):
-    pass
+    if simulation.time(file_name, True) <= 0:
+        return np.zeros(simulation.cell.dVolume(simulation.ghost).shape[:-1])
+    if simulation.dim == 1:
+        return shock_radius_1D(simulation, file_name)
+    elif simulation.dim == 2:
+        return interpol_1D(hampel_filter(
+            shock_radius_2D(simulation, file_name)),
+                           simulation.cell.theta(simulation.ghost))
+    elif simulation.dim == 3:
+        return shock_radius_3D(simulation, file_name)
+    else:
+        raise ValueError("Invalid dimension")
+    
+    
+def shock_radius_1D(simulation, file_name):
+    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                        simulation.gas_pressure(file_name)) * \
+                            simulation.cell.radius(simulation.ghost) / \
+                            simulation.gas_pressure(file_name)
+    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                         simulation.radial_velocity(file_name)) * \
+                             simulation.cell.radius(simulation.ghost) / \
+                             np.abs(simulation.radial_velocity(file_name))
+    for ir in reversed(range(len(dP) - 1)):
+        if (dP[ir] < 10) and np.any(dvr[ir-5:ir+6] < -20):
+            return simulation.cell.radius(simulation.ghost)[ir]
+            
+
+def shock_radius_2D(simulation, file_name):
+    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                        simulation.gas_pressure(file_name)) * \
+                            simulation.cell.radius(simulation.ghost) / \
+                            simulation.gas_pressure(file_name)
+    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                         simulation.radial_velocity(file_name)) * \
+                             simulation.cell.radius(simulation.ghost) / \
+                             np.abs(simulation.radial_velocity(file_name))
+    shock_r = np.empty(dP.shape[0])
+    shock_r.fill(np.nan)
+    for it in range(dP.shape[0]):
+        for ir in reversed(range(dP.shape[1] - 1)):
+            if (dP[it, ir] < -10) and np.any(dvr[it, max(0,ir-5):min(ir+6,
+                                                dP.shape[1] - 1)] < -20):
+                shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
+                break
+    return shock_r
+
+
+def shock_radius_3D(simulation, file_name):
+    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                        simulation.gas_pressure(file_name)) * \
+                            simulation.cell.radius(simulation.ghost) / \
+                            simulation.gas_pressure(file_name)
+    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                         simulation.radial_velocity(file_name)) * \
+                             simulation.cell.radius(simulation.ghost) / \
+                             np.abs(simulation.radial_velocity(file_name))
+    shock_r = np.empty((dP.shape[0], dP.shape[1]))
+    shock_r.fill(np.nan)
+    for ip in range(dP.shape[0]):
+        for it in range(dP.shape[1]):
+            for ir in reversed(range(dP.shape[2] - 1)):
+                if (dP[ip, it, ir] < -10) and np.any(dvr[ip, it, max(0,ir-5):
+                                                    min(ir+6, dP.shape[2] - 1)] 
+                                                    < -20):
+                    shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
+                    break
+    return shock_r
+
+def hampel_filter(shock_radius, sigma=3):
+    """
+    Applies a hampel filter to the shock radius.
+    """
+    assert shock_radius.size > 1 and shock_radius.ndim >= 1, "Expected 1 or 2 \
+            dimensional array, with at least 2 elements."
+    
+    for i in range(10):
+        rmedian = np.nanmedian(shock_radius)
+        diff = np.abs(shock_radius - rmedian)
+        diffmedian = np.nanmedian(diff)
+        if i == 0:
+            threshold = np.minimum(sigma, np.nanmax(diff / (1.4826 * \
+                diffmedian)) * 0.95)
+        mask = diff > 1.4826 * diffmedian * threshold
+        shock_radius[mask] = np.nan
+        num_outliers = np.sum(mask)
+        if num_outliers == 0:
+            break
+    return shock_radius
+        
+    
+def interpol_1D(shock_radius, theta):
+    mask = np.isnan(shock_radius)
+    if mask.sum() == 0:
+        return shock_radius
+    shock_radius[mask] = np.interp(theta[mask], theta[~mask],
+                                   shock_radius[~mask])
+    return shock_radius
+
+def interpol_2D(shock_radius, theta, phi):
+    mask = np.isnan(shock_radius)
+    
+    if mask.sum() == 0:
+        return shock_radius
+    return scipy.interpolate.interp2d(theta[~mask], phi[~mask], 
+                                      shock_radius[~mask])(theta, phi)
+    

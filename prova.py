@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from AeViz.quantities_plotting.plotting import Plotting
 from AeViz.plot_utils.plotting_utils import PlottingUtils
-from pprint import pprint
+from AeViz.utils.radii_utils import shock_radius
+from AeViz.simulation.simulation import Simulation
+from AeViz.utils.math_utils import IDL_derivative
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -34,12 +36,38 @@ for ax in axs:
     print(axs[ax].get_xlim())
     print(axs[ax].get_xlabel())
 """
-
+"""
 Plot = Plotting()
 
 Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')
 
-Plot.plot1D('PGAS', 'theta', None, None)
+Plot.plot1D('PGAS', 'radius', 32, None)
+
+Plot.plot1D('ENTR', 'radius', 32, None)
 #Plot.plot2DwithPar('V')
 
 input()
+"""
+
+sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')
+radius = sim.cell.radius(sim.ghost)
+P = sim.gas_pressure('h00045000.h5')
+vx = sim.radial_velocity('h00045000.h5')
+
+shock = shock_radius(sim, 'h00045000.h5')
+print(np.any(shock==np.nan))
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+axs[0].plot(sim.cell.theta(sim.ghost), shock)
+"""
+axs[0].plot(sim.cell.radius(sim.ghost), P[32,...])
+axs[0].set_xscale('log')
+axs[0].set_yscale('log')
+axs[0].axvline(shock[32], color='k')
+ax1 =axs[0].twinx()
+ax1.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, P[32,:])/P[32, :] * radius, color='b')
+axs[1].plot(sim.cell.radius(sim.ghost), vx[32,...])
+axs[1].set_xscale('symlog')
+ax2=axs[1].twinx()
+ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[32, :]) * radius, color='b')
+"""
+plt.show()
