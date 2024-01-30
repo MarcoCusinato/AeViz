@@ -1,8 +1,6 @@
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
-from AeViz.cell.cell import cell
-import scipy.interpolate
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import griddata
 
 
 def PNS_radius(simulation, file_name):
@@ -89,6 +87,11 @@ def PNS_nucleus(simulation, file_name):
 
 
 def shock_radius(simulation, file_name):
+    """
+    Calculates the shock radius for each timestep.
+    Employed method: first jump in pressure and radial velocity after
+                    the bounce, considered from infinite to the centre.
+    """
     if simulation.time(file_name, True) <= 0:
         return np.zeros(simulation.cell.dVolume(simulation.ghost).shape[:-1])
     if simulation.dim == 1:
@@ -98,7 +101,9 @@ def shock_radius(simulation, file_name):
             shock_radius_2D(simulation, file_name)),
                            simulation.cell.theta(simulation.ghost))
     elif simulation.dim == 3:
-        return shock_radius_3D(simulation, file_name)
+        return interpol_2D(shock_radius_3D(simulation, file_name), 
+                            simulation.cell.theta(simulation.ghost),
+                            simulation.cell.phi(simulation.ghost))
     else:
         raise ValueError("Invalid dimension")
     
@@ -190,9 +195,14 @@ def interpol_1D(shock_radius, theta):
 
 def interpol_2D(shock_radius, theta, phi):
     mask = np.isnan(shock_radius)
-    
     if mask.sum() == 0:
         return shock_radius
-    return scipy.interpolate.interp2d(theta[~mask], phi[~mask], 
-                                      shock_radius[~mask])(theta, phi)
+    Phi, Theta = np.meshgrid(phi, theta)
+    shock_radius = np.ma.masked_invalid(shock_radius)
+    shock_radius[shock_radius.mask] = \
+        griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),
+                 shock_radius.ravel(), (Phi[shock_radius.mask], 
+                                        Theta[shock_radius.mask]),
+                    method='nearest', fill_value=None)
+    return shock_radius
     

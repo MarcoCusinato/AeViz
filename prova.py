@@ -5,6 +5,7 @@ from AeViz.plot_utils.plotting_utils import PlottingUtils
 from AeViz.utils.radii_utils import shock_radius
 from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
+from scipy.interpolate import griddata
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -47,7 +48,7 @@ Plot.plot1D('ENTR', 'radius', 32, None)
 #Plot.plot2DwithPar('V')
 
 input()
-"""
+
 
 sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')
 radius = sim.cell.radius(sim.ghost)
@@ -58,7 +59,7 @@ shock = shock_radius(sim, 'h00045000.h5')
 print(np.any(shock==np.nan))
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 axs[0].plot(sim.cell.theta(sim.ghost), shock)
-"""
+
 axs[0].plot(sim.cell.radius(sim.ghost), P[32,...])
 axs[0].set_xscale('log')
 axs[0].set_yscale('log')
@@ -70,4 +71,24 @@ axs[1].set_xscale('symlog')
 ax2=axs[1].twinx()
 ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[32, :]) * radius, color='b')
 """
-plt.show()
+
+x = np.linspace(0, np.pi, 50)
+y = np.linspace(-np.pi, np.pi, 100)
+
+z = np.sin(x) * np.cos(y[:, None])
+mask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)
+z[mask] = np.nan
+print(np.sum(np.isnan(z)))
+X, Y = np.meshgrid(x, y)
+z = np.ma.masked_invalid(z)
+print(np.sum(np.isnan(np.ma.masked_invalid(z))))
+nans_X = X[~z.mask]
+nans_y = Y[~z.mask]
+new_z = z[~z.mask]
+interp = griddata((nans_X, nans_y), new_z.ravel(), 
+                                 (X, Y), method='nearest')
+
+
+#print(np.sum(np.isnan(interp)))
+
+#plt.show()
