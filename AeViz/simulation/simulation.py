@@ -7,7 +7,7 @@ from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder,
                                     find_simulation)
 from AeViz.utils.file_utils import load_file
 from AeViz.utils.decorators import hdf_isopen
-from AeViz.utils.math_utils import strfct2D
+from AeViz.utils.math_utils import strfct2D, IDL_derivative
 from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_AE220, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
@@ -891,3 +891,19 @@ class Simulation:
         if not tob_corrected:
             time += self.tob
         return [time, data]
+    
+    ## -----------------------------------------------------------------
+    ## CONVECTION DATA
+    ## -----------------------------------------------------------------
+
+    def BV_frequency(self, file_name):
+        """
+        Returns the Brunt-Vaisala frequency at specific timestep.
+        
+        """
+        rho = self.rho(file_name)
+        radius = self.cell.radius(self.ghost)
+        return (1 / self.soundspeed(file_name) ** 2 * \
+                 IDL_derivative(radius, self.gas_pressure(file_name)) - \
+                 IDL_derivative(radius, rho)) * IDL_derivative(radius, 
+                                self.gravitational_potential(file_name)) / rho
