@@ -6,7 +6,7 @@ from AeViz.utils.radii_utils import shock_radius
 from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
-from AeViz.utils.load_save_radii_utils import get_radius
+from AeViz.utils.load_save_radii_utils import calculate_radius
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -78,4 +78,4 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-get_radius(sim, 'gain')
+calculate_radius(sim, 'neutrino')

@@ -559,7 +559,7 @@
         "documentation": {}
     },
     {
-        "label": "get_radius",
+        "label": "calculate_radius",
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
         "isExtraImport": true,
@@ -999,47 +999,20 @@
         "documentation": {}
     },
     {
-        "label": "save_h5",
-        "kind": 2,
-        "importPath": "AeViz.utils.file_utils",
-        "description": "AeViz.utils.file_utils",
-        "peekOfCode": "def save_h5(save_path, data_radius, data_average,\n            indices, ghost_cells, corrected_for_tob):\n        \"\"\"\n        Save data in h5 format\n        \"\"\"\n        file_out = h5py.File(save_path, 'w')\n        if 'neutrino' in save_path:\n                neutrino_save(file_out, data_radius, data_average, indices,\n                              ghost_cells, corrected_for_tob)\n        else:",
-        "detail": "AeViz.utils.file_utils",
-        "documentation": {}
-    },
-    {
-        "label": "standard_save",
-        "kind": 2,
-        "importPath": "AeViz.utils.file_utils",
-        "description": "AeViz.utils.file_utils",
-        "peekOfCode": "def standard_save(file_out, data_radius, data_average, indices, ghost_cells,\n                  corrected_for_tob):\n        \"\"\"\n        Save radii data:\n                Contains the following dataset\n                - radii: NumPy array with dimensions (phi, theta, time),\n                         theta and phi with ghost cells (default 1),\n                         contains the raidius value for every cell\n                - time: NumPy array with dimension (time), contains time valuse for each radius value\n                - min: NumPy array with dimension (time), contains minimum radius value",
-        "detail": "AeViz.utils.file_utils",
-        "documentation": {}
-    },
-    {
-        "label": "neutrino_save",
-        "kind": 2,
-        "importPath": "AeViz.utils.file_utils",
-        "description": "AeViz.utils.file_utils",
-        "peekOfCode": "def neutrino_save(file_out, data_radius, data_average, indices, ghost_cells,\n                  corrected_for_tob):\n        \"\"\"\n        Save nutrino sphere radii data:\n                Contains three groups, one for each neutrino flavour, with\n                the following dataset\n                - radii: NumPy array with dimensions (phi, theta, time),\n                         theta and phi with ghost cells (default 1),\n                         contains the raidius value for every cell\n                - time: NumPy array with dimension (time), contains time valuse for each radius value",
-        "detail": "AeViz.utils.file_utils",
-        "documentation": {}
-    },
-    {
-        "label": "dict_flavour",
-        "kind": 5,
-        "importPath": "AeViz.utils.file_utils",
-        "description": "AeViz.utils.file_utils",
-        "peekOfCode": "dict_flavour = {'0': 'nue', '1': 'nua', '2': 'nux'}\ndef load_file(path_folder, file_name):\n    \"\"\"\n    Load data files, three attempts are made\n    - Attempt 1: use of loadtxt method of NumPy\n    - Attempt 2: use of loadtxt method of NumPy, reading only the first \n                 n columns, with n specified on the 2nd row of the .txt\n                 header file\n    - Attempt 3: use of Pandas to generate missing data\n    - Attempt 4: read file line by line filling a matrix with dimension ",
-        "detail": "AeViz.utils.file_utils",
-        "documentation": {}
-    },
-    {
-        "label": "get_radius",
+        "label": "progressBar",
         "kind": 2,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                  save_checkpoints = True):\n    if check_existence(simulation, radius):\n        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \\\n            read_radius(simulation, radius)\n        if len(simulation.hdf_file_list) == len(time):\n            return time, full_radius, max_radius, min_radius, avg_radius, \\\n                ghost_cells\n        else:",
+        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '=' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()\ndef calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                     save_checkpoints=True):",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_radius",
+        "kind": 2,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                     save_checkpoints=True):\n    \"\"\"\n    Calculates the selected radius for each timestep of the simulation.\n    In case of neutrinos, since in some cases are not saved for each\n    timestep, the timestep for which they are not saved is skipped.\n    If the save checkpoint flag is on, every 200 timesteps (for 3D\n    simulations) or 600 timesteps (for 2D simulations) the data is saved\n    in a hdf file.",
         "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
@@ -1048,7 +1021,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "def check_existence(simulation, radius):\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       save_names[radius])):\n        return True\n    else:\n        return False\ndef read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus']):\n    radius_data = h5py.File(os.path.join(simulation.storage_path, \n                                            save_names[radius]), 'r')",
+        "peekOfCode": "def check_existence(simulation, radius):\n    \"\"\"\n    Check if the radius calculation has already been performed or at\n    least partially performed.\n    \"\"\"\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       save_names[radius])):\n        return True\n    else:\n        return False",
         "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
@@ -1057,7 +1030,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus']):\n    radius_data = h5py.File(os.path.join(simulation.storage_path, \n                                            save_names[radius]), 'r')\n    if radius == 'neutrino':\n        data = (\n                radius_data['time'][...],\n                {'nue': radius_data['radii/nue'][...],\n                'nua': radius_data['radii/nua'][...],\n                'nux': radius_data['radii/nux'][...]},",
+        "peekOfCode": "def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus']):\n    \"\"\"\n    Reads the data from the hdf file. Returns a tuple containing:\n    (time, radii, max, min, avg, ghost_cells)\n    In case of neutrinos, radii, max, min and avg are dictionaries.\n    \"\"\"\n    radius_data = h5py.File(os.path.join(simulation.storage_path, \n                                            save_names[radius]), 'r')\n    if radius == 'neutrino':",
         "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
@@ -1075,7 +1048,7 @@
         "kind": 5,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "save_names = {\n    'PNS': 'PNS_radius.h5',\n    'innercore': 'innercore_radius.h5',\n    'gain': 'gain_radius.h5',\n    'neutrino': 'neutrino_sphere_radii.h5',\n    'shock': 'shock_radius.h5',\n    'nucleus': 'PNS_nucleus.h5'\n}\ndef get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],",
+        "peekOfCode": "save_names = {\n    'PNS': 'PNS_radius.h5',\n    'innercore': 'innercore_radius.h5',\n    'gain': 'gain_radius.h5',\n    'neutrino': 'neutrino_sphere_radii.h5',\n    'shock': 'shock_radius.h5',\n    'nucleus': 'PNS_nucleus.h5'\n}\ndef progressBar(count_value, total, suffix=''):\n    bar_length = 100",
         "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },

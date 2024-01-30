@@ -4,8 +4,9 @@ from AeViz.utils.radii_utils import (PNS_radius, innercore_radius, gain_radius,
 from AeViz.utils.file_utils import save_hdf
 import numpy as np
 from typing import Literal
-import os, h5py
+import os, h5py, sys
 from AeViz.utils.math_utils import function_average_radii
+
 
 
 functions = {
@@ -26,9 +27,28 @@ save_names = {
     'nucleus': 'PNS_nucleus.h5'
 }
 
-def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
+def progressBar(count_value, total, suffix=''):
+    bar_length = 100
+    filled_up_Length = int(round(bar_length * count_value / float(total)))
+    percentage = round(100.0 * count_value/float(total),1)
+    bar = '=' * filled_up_Length + '-' * (bar_length - filled_up_Length)
+    sys.stdout.write('[%s] %s%s ...%s\r' %(bar, percentage, '%', suffix))
+    sys.stdout.flush()
+
+
+def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus'],
-                  save_checkpoints = True):
+                     save_checkpoints=True):
+    """
+    Calculates the selected radius for each timestep of the simulation.
+    In case of neutrinos, since in some cases are not saved for each
+    timestep, the timestep for which they are not saved is skipped.
+    If the save checkpoint flag is on, every 200 timesteps (for 3D
+    simulations) or 600 timesteps (for 2D simulations) the data is saved
+    in a hdf file.
+    Input:
+
+    """
     if check_existence(simulation, radius):
         time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \
             read_radius(simulation, radius)
@@ -38,8 +58,7 @@ def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         else:
             start_point = len(time) - 1
             print('Checkpoint found for the' + radius + ' radius, starting from' \
-                ' checkpoint.\nPlease wait...')
-            
+                ' checkpoint.\nPlease wait...')       
     else:
         start_point = 0
         print('No checkpoint found for ' + radius + 'radius, starting from' \
@@ -54,10 +73,13 @@ def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     dOmega = simulation.cell.dOmega(simulation.ghost)
     simulation.ghost.update_ghost_cells(t_l = g, t_r = g, p_l = g, p_r = g)
     check_index = 0
+    progress_index = 0
+    total_points = len(simulation.hdf_file_list) - start_point
     if radius == 'gain':
-        _, PNS_rad, _, _, _, _ = get_radius(simulation, 'PNS')
+        _, PNS_rad, _, _, _, _ = calculate_radius(simulation, 'PNS')
     
     for file in simulation.hdf_file_list[start_point:]:
+        progressBar(progress_index, total_points, suffix='Computing...')
         if radius == 'gain':
             rad_step = functions[radius](simulation, file,
                                          PNS_rad[..., check_index])   
@@ -128,14 +150,15 @@ def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 max_radius = max_rad_step
                 min_radius = min_rad_step
                 avg_radius = avg_rad_step
-        if check_index >= checkpoint:
-            print('Checkpoint reached, saving...')
+        if (check_index >= checkpoint and save_checkpoints):
+            print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
                      ['time', 'radii', 'max', 'min', 'avg', 'gcells'],
                      [time, full_radius, max_radius, min_radius, avg_radius,
                       simulation.ghost.return_ghost_dictionary()])
             check_index = 0
         check_index += 1
+        progress_index += 1
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
                 ['time', 'radii', 'max', 'min', 'avg', 'gcells'],
@@ -148,6 +171,10 @@ def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
 
 
 def check_existence(simulation, radius):
+    """
+    Check if the radius calculation has already been performed or at
+    least partially performed.
+    """
     if os.path.exists(os.path.join(simulation.storage_path, 
                                        save_names[radius])):
         return True
@@ -156,6 +183,11 @@ def check_existence(simulation, radius):
     
 def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus']):
+    """
+    Reads the data from the hdf file. Returns a tuple containing:
+    (time, radii, max, min, avg, ghost_cells)
+    In case of neutrinos, radii, max, min and avg are dictionaries.
+    """
     radius_data = h5py.File(os.path.join(simulation.storage_path, 
                                             save_names[radius]), 'r')
     if radius == 'neutrino':
