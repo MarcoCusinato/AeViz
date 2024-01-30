@@ -4,7 +4,7 @@ from AeViz.utils.radii_utils import (PNS_radius, innercore_radius, gain_radius,
 from AeViz.utils.file_utils import save_hdf
 import numpy as np
 from typing import Literal
-import os, h5py, sys
+import os, h5py
 from AeViz.utils.math_utils import function_average_radii
 from AeViz.utils.utils import progressBar, check_existence
 
@@ -48,9 +48,9 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
-            start_point = len(time) - 1
+            start_point = len(time)
             print('Checkpoint found for the' + radius + ' radius, starting from' \
-                ' checkpoint.\nPlease wait...')       
+                ' checkpoint.\nPlease wait...')
     else:
         start_point = 0
         print('No checkpoint found for ' + radius + 'radius, starting from' \
@@ -172,7 +172,7 @@ def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     radius_data = h5py.File(os.path.join(simulation.storage_path, 
                                             save_names[radius]), 'r')
     if radius == 'neutrino':
-        data = (
+        data = [
                 radius_data['time'][...],
                 {'nue': radius_data['radii/nue'][...],
                 'nua': radius_data['radii/nua'][...],
@@ -191,9 +191,9 @@ def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     't_l':  list(radius_data['gcells/theta'])[0],
                     't_r':  list(radius_data['gcells/theta'])[1],
                     'r_l':  list(radius_data['gcells/radius'])[0],
-                    'r_r':  list(radius_data['gcells/radius'])[1]})
+                    'r_r':  list(radius_data['gcells/radius'])[1]}]
     else:
-        data = (
+        data = [
                 radius_data['time'][...],
                 radius_data['radii'][...],
                 radius_data['max'][...],
@@ -204,7 +204,7 @@ def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     't_l':  list(radius_data['gcells/theta'])[0],
                     't_r':  list(radius_data['gcells/theta'])[1],
                     'r_l':  list(radius_data['gcells/radius'])[0],
-                    'r_r':  list(radius_data['gcells/radius'])[1]})
+                    'r_r':  list(radius_data['gcells/radius'])[1]}]
     radius_data.close()
     return data
         

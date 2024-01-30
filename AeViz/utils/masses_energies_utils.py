@@ -1,8 +1,5 @@
-from AeViz.utils.file_utils import save_hdf
-from AeViz.utils.utils import progressBar, check_existence
 from AeViz.units.units import units
 import numpy as np
-from AeViz.utils.radii_utils import gain_radius
 
 u = units()
 
@@ -70,6 +67,58 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
     Calculates the mass, kinetic, magnetic, rotational, gravitational
     and convective energy of the PNS for one timestep.
     """
-    pass
-        
+    if simulation.dim == 1:
+        mask = (simulation.cell.radius(simulation.ghost) >= \
+            PNS_radius)
+    else:
+        mask = (simulation.cell.radius(simulation.ghost) >= \
+            simulation.ghost.remove_ghost_cells_radii(PNS_radius,
+                                                      simulation.dim,
+                                                  **gcells)[..., None])
+    rho = simulation.rho(file_name)[mask] * dV[mask]
+    ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] \
+        * dV[mask])
+    if simulation.dim == 1:
+        ene_rot = 0
+        ene_kin = np.sum(0.5 * simulation.rho(file_name) * \
+            simulation.radial_velocity(file_name)[mask] ** 2)
+        ene_mag = 0
+        conv_ene = 0
+    else:
+        ene_rot = np.sum(0.5 * rho * \
+            simulation.phi_velocity(file_name)[mask] ** 2)
+        ene_kin = np.sum(0.5 * rho * \
+            (simulation.radial_velocity(file_name)[mask] + \
+            simulation.theta_velocity(file_name)[mask]) ** 2)
+        ene_mag = np.sum(simulation.magnetic_energy(file_name)[mask] \
+            * dV[mask])
+        conv_ene = np.sum(simulation.theta_velocity(file_name)[mask] ** 2 \
+            * rho)
+    return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
+        ene_grav, ene_kin + ene_rot, conv_ene
+
+def unbound_mass_energy(simulation, file_name, dV):
+    """
+    Calculates the explosion energy and the unbound mass for one timestep.
+    """
+    rho = simulation.rho(file_name)
+    mhd_ene = simulation.MHD_energy(file_name) + rho * \
+        simulation.gravitational_potential(file_name)
+    mask = (mhd_ene > 0) & (simulation.cell.radius(simulation.ghost) < 1e10)
+    return u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask])), \
+        np.sum(mhd_ene[mask] * dV[mask])
+
+def mass_flux(simulation, file_name, dOmega, radius_index):
+    """
+    Callulates the flow of matter at the index
+    """
+    if simulation.dim == 1:
+        return -u.convert_to_solar_masses(4 * np.pi * \
+                simulation.cell.radius(radius_index) ** 2 * np.sum( \
+                simulation.radial_velocity(file_name)[radius_index] * \
+                    simulation.rho(file_name)[radius_index]))
     
+    return -u.convert_to_solar_masses(
+        simulation.cell.radius(radius_index) ** 2 * np.sum(dOmega * \
+            simulation.radial_velocity(file_name)[..., radius_index] * \
+            simulation.rho(file_name)[..., radius_index]))

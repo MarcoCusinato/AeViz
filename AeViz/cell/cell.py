@@ -361,7 +361,13 @@ class cell:
         Results:
             dOmega: (numpy array)
         """
-        return self.dtheta_integration(ghost) * self.dphi(ghost)
+        if self.dim == 1:
+            return 4 * np.pi
+        elif self.dim == 2:
+            return self.dtheta_integration(ghost) * self.dphi(ghost)
+        else:
+            return self.dtheta_integration(ghost)[None, :] \
+                * self.dphi(ghost)[:, None]
     
     def E_nu_left(self):
         """

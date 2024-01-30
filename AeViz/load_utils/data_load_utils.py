@@ -1,5 +1,5 @@
 from AeViz.utils.parfiles import get_indices_from_parfile
-from scidata.quantities.quantities import SimulationAnalysis
+from AeViz.simulation.simulation import Simulation
 from AeViz.units.units import units
 import h5py, os
 import numpy as np
@@ -49,14 +49,19 @@ def return_index(hydro_dict, name):
         'VSOUND': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CSND']},
         'X_n': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][0]},
         'X_p': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][1]},
-        'X_alpha': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][2]},
+        'X_alpha': {'type': 'thd/data', 'index':
+                    hydro_dict['thd']['I_COMP'][2]},
         'X_h': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][3]},
         'Abar': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][4]},
         'Zbar': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][5]},
-        'CPOT_e': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CPOT'][0]},
-        'CPOT_n': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CPOT'][1]},
-        'CPOT_p': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CPOT'][2]},
-        'CPOT_nu': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CPOT'][3]},
+        'CPOT_e': {'type': 'thd/data', 'index': 
+                   hydro_dict['thd']['I_CPOT'][0]},
+        'CPOT_n': {'type': 'thd/data', 'index': 
+                   hydro_dict['thd']['I_CPOT'][1]},
+        'CPOT_p': {'type': 'thd/data', 'index': 
+                   hydro_dict['thd']['I_CPOT'][2]},
+        'CPOT_nu': {'type': 'thd/data', 'index': 
+                    hydro_dict['thd']['I_CPOT'][3]},
         'BHEX': {'type': 'thd/data', 'index': hydro_dict['thd']['I_BHEX']},
         'NUEE': {'type': 'neutrinogrey/egrey', 'index': [0, 0] },
         'NUEX': {'type': 'neutrinogrey/egrey', 'index': [0, 1] },
@@ -87,21 +92,31 @@ class Data(object):
         if self.data_type == 'hdf5':
             self.__load_hdf(path)
         elif self.data_type == 'sim':
-            self.loaded_data = SimulationAnalysis(path, dim, simulation_path)
+            self.loaded_data = Simulation(path, simulation_path, dim)
     
     def __load_hdf(self, path):
         self.loaded_data = h5py.File(path, 'r')
         dir_path = os.path.dirname(os.path.abspath(path))
-        self.cell = cl(radius=np.stack((self.loaded_data['X']['znl'][...], self.loaded_data['X']['znc'][...], self.loaded_data['X']['znr'][...]), axis=-1),
-                  theta=np.stack((self.loaded_data['Y']['znl'][...], self.loaded_data['Y']['znc'][...], self.loaded_data['Y']['znr'][...]), axis=-1),
-                  phi=np.stack((self.loaded_data['Z']['znl'][...], self.loaded_data['Z']['znc'][...], self.loaded_data['Z']['znr'][...]), axis=-1))
+        self.cell = cl(radius=np.stack((self.loaded_data['X']['znl'][...],
+                                        self.loaded_data['X']['znc'][...],
+                                        self.loaded_data['X']['znr'][...]),
+                                        axis=-1),
+                  theta=np.stack((self.loaded_data['Y']['znl'][...],
+                                  self.loaded_data['Y']['znc'][...],
+                                  self.loaded_data['Y']['znr'][...]), axis=-1),
+                  phi=np.stack((self.loaded_data['Z']['znl'][...],
+                                self.loaded_data['Z']['znc'][...],
+                                self.loaded_data['Z']['znr'][...]), axis=-1))
         self.sim_dim = self.cell.dim
         try:
-            self.hydroTHD_index, self.gh_cells = get_indices_from_parfile('start.pars', os.path.join(dir_path, '../pars'))
+            self.hydroTHD_index, self.gh_cells = get_indices_from_parfile(
+                'start.pars', os.path.join(dir_path, '../pars'))
             self.ghost = ghost(self.gh_cells)
         except:
             self.hydroTHD_index = None
-            Warning.warn('No start.pars file found in the parent directory of the hdf5 file. No auto-detection of the indices. Please set them manually.')
+            Warning.warn('No start.pars file found in the parent directory '\
+                        ' of the hdf5 file. No auto-detection of the indices.'\
+                            ' Please set them manually.')
 
     def is_open(self):
         if self.loaded_data is None:
@@ -113,21 +128,26 @@ class Data(object):
         if self.is_open():
             if type(self.loaded_data) is h5py.File:
                 self.loaded_data.close()
-            elif type(self.loaded_data) is SimulationAnalysis:
+            elif type(self.loaded_data) is Simulation:
                 del self.loaded_data
             self.loaded_data = None
     
     def __get_data_from_name(self, name):
         if self.data_type == 'hdf5':
             if return_index(self.hydroTHD_index, name)['index'] is None:
-                raise ValueError('The selected quantity is not present in the hdf5 file.')
+                raise ValueError('The selected quantity is not present in the'\
+                                 ' hdf5 file.')
             index = return_index(self.hydroTHD_index, name)['index']
             if type(index) == list:
-                data = np.squeeze(np.array(self.loaded_data[return_index(self.hydroTHD_index, name)['type']])[..., index[0], index[1]])
+                data = np.squeeze(np.array(self.loaded_data[return_index(
+                    self.hydroTHD_index, name)['type']])[..., index[0],
+                                                         index[1]])
             else:
-                data = np.squeeze(np.array(self.loaded_data[return_index(self.hydroTHD_index, name)['type']])[..., index])
+                data = np.squeeze(np.array(self.loaded_data[return_index(
+                    self.hydroTHD_index, name)['type']])[..., index])
             if name in ['YE', 'YN', 'VX', 'VY', 'VZ']:
-                data /= np.squeeze(np.array(self.loaded_data['hydro']['data'])[..., self.hydroTHD_index['hydro']['I_RH']])
+                data /= np.squeeze(np.array(self.loaded_data['hydro']['data'])\
+                                   [..., self.hydroTHD_index['hydro']['I_RH']])
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
             raise NotImplementedError('Not implemented yet.')

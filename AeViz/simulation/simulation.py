@@ -16,7 +16,7 @@ from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
 from AeViz.units.units import units
-from AeViz.utils.radii_utils import innercore_radius, shock_radius
+from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 
 
 u = units()
@@ -96,8 +96,9 @@ class Simulation:
     def time_of_bounce(self):
         """
         Empirical criterion: time of bounce defined as the time at which
-        the central density (max desity) raises above 2.5e14 g/cm^3 before a rapid fall.
-        If we do not reach that density we lower the threshold to 2
+        the central density (max desity) raises above 2.5e14 g/cm^3 
+        before a rapid fall. If we do not reach that density we lower 
+        the threshold to 2
         """
         rho_data = self.rho_max(False)
         rho_index = np.argmax(rho_data[:,1] > 1.4e14)
@@ -108,11 +109,35 @@ class Simulation:
     def time_of_BH(self):
         """
         Attempt to find when and if a BH is formed.
-        For now is when the rho max raises above a certain limit (6e15 g/cm3)
+        For now is when the rho max raises above a certain limit
+        (6e15 g/cm3)
         """
         rho_data = self.rho_max()
         rho_BH = 6e15
         return rho_data[np.argmax(rho_data[:,1]>=rho_BH),0]
+
+    ## BOUNCE COMPACTNESS
+    def bounce_compactness(self, mass = None):
+        """
+        Compactness parameter as defined in O'Connor 2011  
+        `10.1088/0004-637X/730/2/72`
+        It returns the compacteness at bounce (maximum compactness of
+        the core) for the model. 
+        If a mass at which the compactness has to be provided is 
+        specified it will return just a value
+        """
+        bounce_file = self.find_file_from_time(0, True)
+        rho = self.rho(bounce_file)
+        radius = u.convert_to_km(self.cell.radius(self.ghost)) / 1000
+        dV = self.cell.dVolume_integration(self.ghost)
+        if self.dim > 1:
+            enclosed_mass = np.sum(rho * dV, axis = tuple(range(self.dim - 1)))
+        enclosed_mass = u.convert_to_solar_masses(np.cumsum(enclosed_mass))
+        compactness = enclosed_mass / radius
+        if mass is not None:
+            return compactness[ np.argmax( enclosed_mass >= mass ) ]
+        else:
+            return compactness
 
     ## -----------------------------------------------------------------
     ## HYDRODYNAMICAL DATA
@@ -123,6 +148,13 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(
             self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
                                           ['I_RH']]), self.dim)
+    
+    ## ENERGY
+    @hdf_isopen
+    def MHD_energy(self, file_name):
+        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
+            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+                                          ['I_EN']]), self.dim)
     
     ## VELOCITY
     @hdf_isopen
@@ -702,7 +734,7 @@ class Simulation:
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
         """
-        data = list(calculate_radius(self, 'PNS', save_checkpoints))
+        data = calculate_radius(self, 'PNS', save_checkpoints)
         if not tob_corrected:
             data[0] += self.tob
         return data
@@ -716,7 +748,7 @@ class Simulation:
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
         """
-        data = list(calculate_radius(self, 'shock', save_checkpoints))
+        data = calculate_radius(self, 'shock', save_checkpoints)
         if not tob_corrected:
             data[0] += self.tob
         return data
@@ -731,11 +763,25 @@ class Simulation:
                  average_radius, number of ghost cells
         Radii are returned as disctionary of nue, nua and nux
         """
-        data = list(calculate_radius(self, 'neutrino', save_checkpoints))
+        data = calculate_radius(self, 'neutrino', save_checkpoints)
         if not tob_corrected:
             data[0] += self.tob
         return data
     
+    def gain_radius(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the gain radius at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        """
+        data = calculate_radius(self, 'gain', save_checkpoints)
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+
     def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True):
         """
         Returns the PNS nucleus at every timestep.
@@ -745,7 +791,7 @@ class Simulation:
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
         """
-        data = list(calculate_radius(self, 'nucleus', save_checkpoints))
+        data = calculate_radius(self, 'nucleus', save_checkpoints)
         if not tob_corrected:
             data[0] += self.tob
         return data
@@ -759,9 +805,89 @@ class Simulation:
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
         """
-        data = list(calculate_radius(self, 'innercore', save_checkpoints))
+        data = calculate_radius(self, 'innercore', save_checkpoints)
         if not tob_corrected:
             data[0] += self.tob
         return data
     
+    ## -----------------------------------------------------------------
+    ## MASS AND ENERGY DATA
+    ## -----------------------------------------------------------------
+
+    def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the PNS mass and energy at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, mass, kinetic energy, magnetic energy,
+                 rotational energy, gravitational energy, total energy,
+                 convective energy
+        """
+        time, _, _, _, data, _ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['convective_ene']]
     
+    def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the explosion mass and energy at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, mass, energy
+        """
+        time, _, _, _, _, data = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['mass'], data['energy']]
+    
+    def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the gain mass and neutrino heating at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, mass, neutrino heating
+        """
+        time, _, _, data, _, _ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['mass'], data['heating_ene']]
+
+    def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the inner core mass and energy at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, mass, kinetic energy, magnetic energy,
+                 rotational energy, gravitational energy, total energy,
+                 T/W
+        """
+        time, _, data, _, _, _ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['T_W']]
+    
+    def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the mass accretion rate at 500 km from the center of the
+        star at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce.
+        Returns: time, mass accretion rate
+        """
+        time, data, _, _, _, _ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data]
