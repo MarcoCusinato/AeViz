@@ -78,4 +78,4 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-calculate_radius(sim, 'neutrino')
+print(sim.PNS_radius(False)[0])

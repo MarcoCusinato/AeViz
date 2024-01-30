@@ -146,6 +146,14 @@
         "documentation": {}
     },
     {
+        "label": "units",
+        "importPath": "AeViz.units.units",
+        "description": "AeViz.units.units",
+        "isExtraImport": true,
+        "detail": "AeViz.units.units",
+        "documentation": {}
+    },
+    {
         "label": "h5py,",
         "kind": 6,
         "isExtraImport": true,
@@ -389,6 +397,14 @@
         "documentation": {}
     },
     {
+        "label": "save_hdf",
+        "importPath": "AeViz.utils.file_utils",
+        "description": "AeViz.utils.file_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
         "label": "hdf_isopen",
         "importPath": "AeViz.utils.decorators",
         "description": "AeViz.utils.decorators",
@@ -445,36 +461,35 @@
         "documentation": {}
     },
     {
-        "label": "stft",
-        "importPath": "scipy.signal",
-        "description": "scipy.signal",
+        "label": "calculate_radius",
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
         "isExtraImport": true,
-        "detail": "scipy.signal",
+        "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
     {
-        "label": "fft",
-        "importPath": "numpy.fft",
-        "description": "numpy.fft",
+        "label": "calculate_radius",
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
         "isExtraImport": true,
-        "detail": "numpy.fft",
+        "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
     {
-        "label": "fftfreq",
-        "importPath": "numpy.fft",
-        "description": "numpy.fft",
+        "label": "innercore_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
         "isExtraImport": true,
-        "detail": "numpy.fft",
+        "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
     {
-        "label": "pandas",
-        "kind": 6,
+        "label": "shock_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
         "isExtraImport": true,
-        "importPath": "pandas",
-        "description": "pandas",
-        "detail": "pandas",
+        "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
     {
@@ -526,11 +541,84 @@
         "documentation": {}
     },
     {
+        "label": "gain_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
         "label": "shock_radius",
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
         "isExtraImport": true,
         "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "stft",
+        "importPath": "scipy.signal",
+        "description": "scipy.signal",
+        "isExtraImport": true,
+        "detail": "scipy.signal",
+        "documentation": {}
+    },
+    {
+        "label": "fft",
+        "importPath": "numpy.fft",
+        "description": "numpy.fft",
+        "isExtraImport": true,
+        "detail": "numpy.fft",
+        "documentation": {}
+    },
+    {
+        "label": "fftfreq",
+        "importPath": "numpy.fft",
+        "description": "numpy.fft",
+        "isExtraImport": true,
+        "detail": "numpy.fft",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
         "documentation": {}
     },
     {
@@ -540,6 +628,15 @@
         "importPath": "f90nml",
         "description": "f90nml",
         "detail": "f90nml",
+        "documentation": {}
+    },
+    {
+        "label": "sys,",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys.",
+        "description": "sys.",
+        "detail": "sys.",
         "documentation": {}
     },
     {
@@ -556,14 +653,6 @@
         "description": "AeViz.simulation.simulation",
         "isExtraImport": true,
         "detail": "AeViz.simulation.simulation",
-        "documentation": {}
-    },
-    {
-        "label": "calculate_radius",
-        "importPath": "AeViz.utils.load_save_radii_utils",
-        "description": "AeViz.utils.load_save_radii_utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
     {
@@ -999,29 +1088,11 @@
         "documentation": {}
     },
     {
-        "label": "progressBar",
-        "kind": 2,
-        "importPath": "AeViz.utils.load_save_radii_utils",
-        "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '=' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()\ndef calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                     save_checkpoints=True):",
-        "detail": "AeViz.utils.load_save_radii_utils",
-        "documentation": {}
-    },
-    {
         "label": "calculate_radius",
         "kind": 2,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
         "peekOfCode": "def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                     save_checkpoints=True):\n    \"\"\"\n    Calculates the selected radius for each timestep of the simulation.\n    In case of neutrinos, since in some cases are not saved for each\n    timestep, the timestep for which they are not saved is skipped.\n    If the save checkpoint flag is on, every 200 timesteps (for 3D\n    simulations) or 600 timesteps (for 2D simulations) the data is saved\n    in a hdf file.",
-        "detail": "AeViz.utils.load_save_radii_utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "kind": 2,
-        "importPath": "AeViz.utils.load_save_radii_utils",
-        "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "def check_existence(simulation, radius):\n    \"\"\"\n    Check if the radius calculation has already been performed or at\n    least partially performed.\n    \"\"\"\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       save_names[radius])):\n        return True\n    else:\n        return False",
         "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
@@ -1048,8 +1119,48 @@
         "kind": 5,
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
-        "peekOfCode": "save_names = {\n    'PNS': 'PNS_radius.h5',\n    'innercore': 'innercore_radius.h5',\n    'gain': 'gain_radius.h5',\n    'neutrino': 'neutrino_sphere_radii.h5',\n    'shock': 'shock_radius.h5',\n    'nucleus': 'PNS_nucleus.h5'\n}\ndef progressBar(count_value, total, suffix=''):\n    bar_length = 100",
+        "peekOfCode": "save_names = {\n    'PNS': 'PNS_radius.h5',\n    'innercore': 'innercore_radius.h5',\n    'gain': 'gain_radius.h5',\n    'neutrino': 'neutrino_sphere_radii.h5',\n    'shock': 'shock_radius.h5',\n    'nucleus': 'PNS_nucleus.h5'\n}\ndef calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],",
         "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "innercore_mass_energy",
+        "kind": 2,
+        "importPath": "AeViz.utils.masses_energies_utils",
+        "description": "AeViz.utils.masses_energies_utils",
+        "peekOfCode": "def innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):\n    \"\"\"\n    Calculates the mass, kinetic, magnetic, rotational, gravitational\n    and total energy and T/|W| of the inner core for one timestep.\n    \"\"\"\n    if simulation.dim == 1:\n        mask = (simulation.cell.radius(simulation.ghost) <= \\\n            innercore_radius)\n    else:\n        mask = (simulation.cell.radius(simulation.ghost) <= \\",
+        "detail": "AeViz.utils.masses_energies_utils",
+        "documentation": {}
+    },
+    {
+        "label": {
+            "name": "",
+            "kind": 2,
+            "peekOfCode": "def  gain_region_mass_energy(simulation, file_name, shock_radius, sgcells, \n                             gain_radius, ggcells, dV):\n    \"\"\"\n    Calculates the mass, neutrino heating energy of the gain region for\n    one timestep.\n    \"\"\"\n    if simulation.dim == 1:\n        mask = (simulation.cell.radius(simulation.ghost) >= \\\n            np.minimum(shock_radius, gain_radius)) & \\\n                (simulation.cell.radius(simulation.ghost) <= \\"
+        },
+        "kind": 2,
+        "importPath": "AeViz.utils.masses_energies_utils",
+        "description": "AeViz.utils.masses_energies_utils",
+        "peekOfCode": "def  gain_region_mass_energy(simulation, file_name, shock_radius, sgcells, \n                             gain_radius, ggcells, dV):\n    \"\"\"\n    Calculates the mass, neutrino heating energy of the gain region for\n    one timestep.\n    \"\"\"\n    if simulation.dim == 1:\n        mask = (simulation.cell.radius(simulation.ghost) >= \\\n            np.minimum(shock_radius, gain_radius)) & \\\n                (simulation.cell.radius(simulation.ghost) <= \\",
+        "detail": "AeViz.utils.masses_energies_utils",
+        "documentation": {}
+    },
+    {
+        "label": "PNS_mass_energy",
+        "kind": 2,
+        "importPath": "AeViz.utils.masses_energies_utils",
+        "description": "AeViz.utils.masses_energies_utils",
+        "peekOfCode": "def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):\n    \"\"\"\n    Calculates the mass, kinetic, magnetic, rotational, gravitational\n    and convective energy of the PNS for one timestep.\n    \"\"\"\n    pass",
+        "detail": "AeViz.utils.masses_energies_utils",
+        "documentation": {}
+    },
+    {
+        "label": "u",
+        "kind": 5,
+        "importPath": "AeViz.utils.masses_energies_utils",
+        "description": "AeViz.utils.masses_energies_utils",
+        "peekOfCode": "u = units()\ndef innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):\n    \"\"\"\n    Calculates the mass, kinetic, magnetic, rotational, gravitational\n    and total energy and T/|W| of the inner core for one timestep.\n    \"\"\"\n    if simulation.dim == 1:\n        mask = (simulation.cell.radius(simulation.ghost) <= \\\n            innercore_radius)\n    else:",
+        "detail": "AeViz.utils.masses_energies_utils",
         "documentation": {}
     },
     {
@@ -1374,6 +1485,24 @@
         "description": "AeViz.utils.radii_utils",
         "peekOfCode": "def interpol_2D(shock_radius, theta, phi):\n    mask = np.isnan(shock_radius)\n    if mask.sum() == 0:\n        return shock_radius\n    Phi, Theta = np.meshgrid(phi, theta)\n    shock_radius = np.ma.masked_invalid(shock_radius)\n    shock_radius[shock_radius.mask] = \\\n        griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),\n                 shock_radius.ravel(), (Phi[shock_radius.mask], \n                                        Theta[shock_radius.mask]),",
         "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "kind": 2,
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '#' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()\ndef check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at",
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "kind": 2,
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "peekOfCode": "def check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at\n    least partially performed.\n    \"\"\"\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       file_name)):\n        return True\n    else:\n        return False",
+        "detail": "AeViz.utils.utils",
         "documentation": {}
     },
     {

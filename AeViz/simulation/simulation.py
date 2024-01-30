@@ -12,9 +12,12 @@ from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_AE220, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
+from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
 from AeViz.units.units import units
+from AeViz.utils.radii_utils import innercore_radius, shock_radius
+
 
 u = units()
 
@@ -687,5 +690,78 @@ class Simulation:
         return np.stack((en[:, 2], en[:, 3]), axis=1)
 
     ## -----------------------------------------------------------------
-    ## PNS DATA
+    ## RADII DATA
     ## -----------------------------------------------------------------
+    
+    def PNS_radius(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the radius of the PNS at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        """
+        data = list(calculate_radius(self, 'PNS', save_checkpoints))
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+    
+    def shock_radius(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the shock radius at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        """
+        data = list(calculate_radius(self, 'shock', save_checkpoints))
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+    
+    def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the neutrino spheres at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        Radii are returned as disctionary of nue, nua and nux
+        """
+        data = list(calculate_radius(self, 'neutrino', save_checkpoints))
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+    
+    def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the PNS nucleus at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        """
+        data = list(calculate_radius(self, 'nucleus', save_checkpoints))
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+    
+    def innercore_radius(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the inner core radius at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, radius(phi, theta), max_radius, min_radius,
+                 average_radius, number of ghost cells
+        """
+        data = list(calculate_radius(self, 'innercore', save_checkpoints))
+        if not tob_corrected:
+            data[0] += self.tob
+        return data
+    
+    

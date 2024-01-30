@@ -6,7 +6,7 @@ import numpy as np
 from typing import Literal
 import os, h5py, sys
 from AeViz.utils.math_utils import function_average_radii
-
+from AeViz.utils.utils import progressBar, check_existence
 
 
 functions = {
@@ -27,14 +27,6 @@ save_names = {
     'nucleus': 'PNS_nucleus.h5'
 }
 
-def progressBar(count_value, total, suffix=''):
-    bar_length = 100
-    filled_up_Length = int(round(bar_length * count_value / float(total)))
-    percentage = round(100.0 * count_value/float(total),1)
-    bar = '=' * filled_up_Length + '-' * (bar_length - filled_up_Length)
-    sys.stdout.write('[%s] %s%s ...%s\r' %(bar, percentage, '%', suffix))
-    sys.stdout.flush()
-
 
 def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus'],
@@ -49,7 +41,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     Input:
 
     """
-    if check_existence(simulation, radius):
+    if check_existence(simulation, save_names[radius]):
         time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \
             read_radius(simulation, radius)
         if len(simulation.hdf_file_list) == len(time):
@@ -169,17 +161,6 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     return time, full_radius, max_radius, min_radius, avg_radius, \
         simulation.ghost.return_ghost_dictionary()
 
-
-def check_existence(simulation, radius):
-    """
-    Check if the radius calculation has already been performed or at
-    least partially performed.
-    """
-    if os.path.exists(os.path.join(simulation.storage_path, 
-                                       save_names[radius])):
-        return True
-    else:
-        return False
     
 def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus']):
