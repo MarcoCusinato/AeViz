@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Literal
 
 def function_average(qt, dim, av_type, dV):
     if dim == 1:
@@ -9,20 +10,35 @@ def function_average(qt, dim, av_type, dV):
         indices = {'r': 2, 't': 1, 'p': 0}
 
     if av_type == 'Omega':
+        if dim < 2:
+            return qt
         av = np.sum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
     elif av_type == 'theta':
-        print(qt.shape, dV.shape)
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], indices['p'] ] if i is not None])) / np.sum(dV)
-        print(av.shape)
+        if dim < 2:
+            return qt
+        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], 
+                                                     indices['p']] 
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'phi':
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], indices['t'] ] if i is not None])) / np.sum(dV)
+        if dim < 2:
+            return qt
+        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], 
+                                                     indices['t']]
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'radius':
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['t'], indices['p'] ] if i is not None])) / np.sum(dV)
+        av = np.sum(qt * dV, axis=tuple([i for i in [indices['t'], 
+                                                     indices['p']] 
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'volume':
         av = np.sum(qt * dV) / np.sum(dV)
     return av
 
-from typing import Literal
+def function_average_radii(qt, dim, dOmega):
+    if dim == 1:
+        return qt
+    else:
+        return np.nansum(qt * dOmega) / (4 * np.pi)
+        
 
 def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):
     """
@@ -35,7 +51,8 @@ def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'
                       "Arrays must have equal last dimension"
     while x.ndim != y.ndim:
         x = x[None, ...]
-    assert x.shape[-1] >= 3, "To calculate this derivative you need AT LEAST three points."
+    assert x.shape[-1] >= 3, "To calculate this derivative you need AT LEAST"\
+            " three points."
     #first point
     x01 = x[..., 0] - x[..., 1]
     x02 = x[..., 0] - x[..., 2]
@@ -58,8 +75,9 @@ def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'
     
     return np.concatenate((derivative, (-y[...,-3] * x12 / (x01 * x02) +\
                                         y[..., -2] * x02 / (x01 * x12) - \
-                                        y[..., -1] * (x02 + x12) / (x02 * x12))[..., None]),
-                                        axis = -1)
+                                        y[..., -1] * (x02 + x12) / \
+                                            (x02 * x12))[..., None]), 
+                            axis = -1)
 
 ## The following is based on an Martin Obergaulinger's IDL script
 
@@ -131,7 +149,8 @@ def strfct2D(b, cell, ghost, plane):
     cell: object cell
     b magnetic field
     """
-    assert plane in ['yz', 'xz', 'xy'], "plane must be one of: \'yz\', \'xz\', \'xy\'"
+    assert plane in ['yz', 'xz', 'xy'], "plane must be one of: \'yz\', "\
+        "\'xz\', \'xy\'"
     ax = cell.ax(ghost)
     ay = cell.ay(ghost)
     az = cell.az(ghost)

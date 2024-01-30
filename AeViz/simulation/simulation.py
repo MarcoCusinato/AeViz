@@ -219,7 +219,7 @@ class Simulation:
     @hdf_isopen
     def nu_heat(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['hydro']
+            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
                                         ['I_HEAT']]), self.dim)
     
     ## COMPOSITION

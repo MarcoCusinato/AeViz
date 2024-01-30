@@ -42,6 +42,14 @@
         "documentation": {}
     },
     {
+        "label": "Literal",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "griddata",
         "importPath": "scipy.interpolate",
         "description": "scipy.interpolate",
@@ -292,6 +300,14 @@
         "documentation": {}
     },
     {
+        "label": "function_average_radii",
+        "importPath": "AeViz.utils.math_utils",
+        "description": "AeViz.utils.math_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.math_utils",
+        "documentation": {}
+    },
+    {
         "label": "IDL_derivative",
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
@@ -358,6 +374,14 @@
     },
     {
         "label": "find_column_changing_line",
+        "importPath": "AeViz.utils.file_utils",
+        "description": "AeViz.utils.file_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
+        "label": "save_hdf",
         "importPath": "AeViz.utils.file_utils",
         "description": "AeViz.utils.file_utils",
         "isExtraImport": true,
@@ -454,6 +478,62 @@
         "documentation": {}
     },
     {
+        "label": "PNS_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "innercore_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "gain_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "neutrino_sphere_radii",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "PNS_nucleus",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "shock_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "shock_radius",
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
         "label": "f90nml",
         "kind": 6,
         "isExtraImport": true,
@@ -471,19 +551,19 @@
         "documentation": {}
     },
     {
-        "label": "shock_radius",
-        "importPath": "AeViz.utils.radii_utils",
-        "description": "AeViz.utils.radii_utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.radii_utils",
-        "documentation": {}
-    },
-    {
         "label": "Simulation",
         "importPath": "AeViz.simulation.simulation",
         "description": "AeViz.simulation.simulation",
         "isExtraImport": true,
         "detail": "AeViz.simulation.simulation",
+        "documentation": {}
+    },
+    {
+        "label": "get_radius",
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.load_save_radii_utils",
         "documentation": {}
     },
     {
@@ -955,11 +1035,65 @@
         "documentation": {}
     },
     {
+        "label": "get_radius",
+        "kind": 2,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "def get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],\n                  save_checkpoints = True):\n    if check_existence(simulation, radius):\n        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \\\n            read_radius(simulation, radius)\n        if len(simulation.hdf_file_list) == len(time):\n            return time, full_radius, max_radius, min_radius, avg_radius, \\\n                ghost_cells\n        else:",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "kind": 2,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "def check_existence(simulation, radius):\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       save_names[radius])):\n        return True\n    else:\n        return False\ndef read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus']):\n    radius_data = h5py.File(os.path.join(simulation.storage_path, \n                                            save_names[radius]), 'r')",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "read_radius",
+        "kind": 2,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus']):\n    radius_data = h5py.File(os.path.join(simulation.storage_path, \n                                            save_names[radius]), 'r')\n    if radius == 'neutrino':\n        data = (\n                radius_data['time'][...],\n                {'nue': radius_data['radii/nue'][...],\n                'nua': radius_data['radii/nua'][...],\n                'nux': radius_data['radii/nux'][...]},",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "functions",
+        "kind": 5,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "functions = {\n    'PNS': PNS_radius,\n    'innercore': innercore_radius,\n    'gain': gain_radius,\n    'neutrino': neutrino_sphere_radii,\n    'shock': shock_radius,\n    'nucleus': PNS_nucleus\n}\nsave_names = {\n    'PNS': 'PNS_radius.h5',",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "save_names",
+        "kind": 5,
+        "importPath": "AeViz.utils.load_save_radii_utils",
+        "description": "AeViz.utils.load_save_radii_utils",
+        "peekOfCode": "save_names = {\n    'PNS': 'PNS_radius.h5',\n    'innercore': 'innercore_radius.h5',\n    'gain': 'gain_radius.h5',\n    'neutrino': 'neutrino_sphere_radii.h5',\n    'shock': 'shock_radius.h5',\n    'nucleus': 'PNS_nucleus.h5'\n}\ndef get_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', \n                                             'neutrino', 'shock', 'nucleus'],",
+        "detail": "AeViz.utils.load_save_radii_utils",
+        "documentation": {}
+    },
+    {
         "label": "function_average",
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def function_average(qt, dim, av_type, dV):\n    if dim == 1:\n        indices = {'r': 0, 't': None, 'p': None}\n    elif dim == 2:\n        indices = {'r': 1, 't': 0, 'p': None}\n    elif dim == 3:\n        indices = {'r': 2, 't': 1, 'p': 0}\n    if av_type == 'Omega':\n        av = np.sum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)\n    elif av_type == 'theta':",
+        "peekOfCode": "def function_average(qt, dim, av_type, dV):\n    if dim == 1:\n        indices = {'r': 0, 't': None, 'p': None}\n    elif dim == 2:\n        indices = {'r': 1, 't': 0, 'p': None}\n    elif dim == 3:\n        indices = {'r': 2, 't': 1, 'p': 0}\n    if av_type == 'Omega':\n        if dim < 2:\n            return qt",
+        "detail": "AeViz.utils.math_utils",
+        "documentation": {}
+    },
+    {
+        "label": "function_average_radii",
+        "kind": 2,
+        "importPath": "AeViz.utils.math_utils",
+        "description": "AeViz.utils.math_utils",
+        "peekOfCode": "def function_average_radii(qt, dim, dOmega):\n    if dim == 1:\n        return qt\n    else:\n        return np.nansum(qt * dOmega) / (4 * np.pi)\ndef IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` \n    \"\"\"",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -986,7 +1120,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def strfct2D(b, cell, ghost, plane):\n    \"\"\"\n    plane: 'yz', 'xz', 'xy'\n    cell: object cell\n    b magnetic field\n    \"\"\"\n    assert plane in ['yz', 'xz', 'xy'], \"plane must be one of: \\'yz\\', \\'xz\\', \\'xy\\'\"\n    ax = cell.ax(ghost)\n    ay = cell.ay(ghost)\n    az = cell.az(ghost)",
+        "peekOfCode": "def strfct2D(b, cell, ghost, plane):\n    \"\"\"\n    plane: 'yz', 'xz', 'xy'\n    cell: object cell\n    b magnetic field\n    \"\"\"\n    assert plane in ['yz', 'xz', 'xy'], \"plane must be one of: \\'yz\\', \"\\\n        \"\\'xz\\', \\'xy\\'\"\n    ax = cell.ax(ghost)\n    ay = cell.ay(ghost)",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -1211,7 +1345,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
-        "peekOfCode": "def shock_radius(simulation, file_name):\n    \"\"\"\n    Calculates the shock radius for each timestep.\n    Employed method: first jump in pressure and radial velocity after\n                    the bounce, considered from infinite to the centre.\n    \"\"\"\n    if simulation.time(file_name, True) <= 0:\n        return np.zeros(simulation.cell.dVolume(simulation.ghost).shape[:-1])\n    if simulation.dim == 1:\n        return shock_radius_1D(simulation, file_name)",
+        "peekOfCode": "def shock_radius(simulation, file_name):\n    \"\"\"\n    Calculates the shock radius for each timestep.\n    Employed method: first jump in pressure and radial velocity after\n                    the bounce, considered from infinite to the centre.\n    \"\"\"\n    if simulation.time(file_name, True) <= 0:\n        if simulation.dim == 1:\n            return np.array([0])\n        return np.zeros(simulation.cell.dVolume_integration(",
         "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
@@ -1292,7 +1426,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\nsim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')",
+        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\nprint(type(sim.time('h00045000.h5')))\n\"\"\"",
         "detail": "prova",
         "documentation": {}
     },
@@ -1301,7 +1435,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)\naxs[0].plot(sim.cell.radius(sim.ghost), P[32,...])\naxs[0].set_xscale('log')",
+        "peekOfCode": "sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\nprint(type(sim.time('h00045000.h5')))\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
         "detail": "prova",
         "documentation": {}
     },
@@ -1338,96 +1472,6 @@
         "importPath": "prova",
         "description": "prova",
         "peekOfCode": "shock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)\naxs[0].plot(sim.cell.radius(sim.ghost), P[32,...])\naxs[0].set_xscale('log')\naxs[0].set_yscale('log')\naxs[0].axvline(shock[32], color='k')\nax1 =axs[0].twinx()\nax1.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, P[32,:])/P[32, :] * radius, color='b')",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "x",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "x = np.linspace(0, np.pi, 50)\ny = np.linspace(-np.pi, np.pi, 100)\nz = np.sin(x) * np.cos(y[:, None])\nmask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)\nz[mask] = np.nan\nprint(np.sum(np.isnan(z)))\nX, Y = np.meshgrid(x, y)\nz = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "y",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "y = np.linspace(-np.pi, np.pi, 100)\nz = np.sin(x) * np.cos(y[:, None])\nmask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)\nz[mask] = np.nan\nprint(np.sum(np.isnan(z)))\nX, Y = np.meshgrid(x, y)\nz = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]\nnans_y = Y[~z.mask]",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "z",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "z = np.sin(x) * np.cos(y[:, None])\nmask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)\nz[mask] = np.nan\nprint(np.sum(np.isnan(z)))\nX, Y = np.meshgrid(x, y)\nz = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]\nnans_y = Y[~z.mask]\nnew_z = z[~z.mask]",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "mask",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "mask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)\nz[mask] = np.nan\nprint(np.sum(np.isnan(z)))\nX, Y = np.meshgrid(x, y)\nz = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]\nnans_y = Y[~z.mask]\nnew_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), ",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "z[mask]",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "z[mask] = np.nan\nprint(np.sum(np.isnan(z)))\nX, Y = np.meshgrid(x, y)\nz = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]\nnans_y = Y[~z.mask]\nnew_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "z",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "z = np.ma.masked_invalid(z)\nprint(np.sum(np.isnan(np.ma.masked_invalid(z))))\nnans_X = X[~z.mask]\nnans_y = Y[~z.mask]\nnew_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')\n#print(np.sum(np.isnan(interp)))\n#plt.show()",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "nans_X",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "nans_X = X[~z.mask]\nnans_y = Y[~z.mask]\nnew_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')\n#print(np.sum(np.isnan(interp)))\n#plt.show()",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "nans_y",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "nans_y = Y[~z.mask]\nnew_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')\n#print(np.sum(np.isnan(interp)))\n#plt.show()",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "new_z",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "new_z = z[~z.mask]\ninterp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')\n#print(np.sum(np.isnan(interp)))\n#plt.show()",
-        "detail": "prova",
-        "documentation": {}
-    },
-    {
-        "label": "interp",
-        "kind": 5,
-        "importPath": "prova",
-        "description": "prova",
-        "peekOfCode": "interp = griddata((nans_X, nans_y), new_z.ravel(), \n                                 (X, Y), method='nearest')\n#print(np.sum(np.isnan(interp)))\n#plt.show()",
         "detail": "prova",
         "documentation": {}
     }

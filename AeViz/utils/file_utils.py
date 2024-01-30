@@ -93,6 +93,9 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
             file_out.create_dataset(key, data = value)
     file_out.close()
 
+
+## LEGACY
+
 def save_h5(save_path, data_radius, data_average,
             indices, ghost_cells, corrected_for_tob):
         """

@@ -2,7 +2,6 @@ import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
 
-
 def PNS_radius(simulation, file_name):
     """
     Calculates the radius of the PNS for each timestep.
@@ -57,8 +56,8 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    k = np.sum(momenta * kappa, axis=(-1, simulation.dim)) / \
-               np.sum(momenta, axis=(-1, simulation.dim))
+    k = np.nansum(momenta * kappa, axis=(-1, simulation.dim)) / \
+               np.nansum(momenta, axis=(-1, simulation.dim))
     dr = simulation.cell.dr(simulation.ghost)[..., None]
     while k.ndim < dr.ndim:
         k = k[..., None]
@@ -93,7 +92,10 @@ def shock_radius(simulation, file_name):
                     the bounce, considered from infinite to the centre.
     """
     if simulation.time(file_name, True) <= 0:
-        return np.zeros(simulation.cell.dVolume(simulation.ghost).shape[:-1])
+        if simulation.dim == 1:
+            return np.array([0])
+        return np.zeros(simulation.cell.dVolume_integration(
+            simulation.ghost).shape[:-1])
     if simulation.dim == 1:
         return shock_radius_1D(simulation, file_name)
     elif simulation.dim == 2:

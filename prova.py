@@ -6,6 +6,7 @@ from AeViz.utils.radii_utils import shock_radius
 from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
+from AeViz.utils.load_save_radii_utils import get_radius
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -36,8 +37,8 @@ for ax in axs:
     print(ax)
     print(axs[ax].get_xlim())
     print(axs[ax].get_xlabel())
-"""
-"""
+
+
 Plot = Plotting()
 
 Plot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')
@@ -48,9 +49,11 @@ Plot.plot1D('ENTR', 'radius', 32, None)
 #Plot.plot2DwithPar('V')
 
 input()
-
+"""
 
 sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')
+print(type(sim.time('h00045000.h5')))
+"""
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00045000.h5')
 vx = sim.radial_velocity('h00045000.h5')
@@ -72,23 +75,7 @@ ax2=axs[1].twinx()
 ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[32, :]) * radius, color='b')
 """
 
-x = np.linspace(0, np.pi, 50)
-y = np.linspace(-np.pi, np.pi, 100)
 
-z = np.sin(x) * np.cos(y[:, None])
-mask = (np.random.uniform(low=0, high=1, size=(100,50)) <= 0.05)
-z[mask] = np.nan
-print(np.sum(np.isnan(z)))
-X, Y = np.meshgrid(x, y)
-z = np.ma.masked_invalid(z)
-print(np.sum(np.isnan(np.ma.masked_invalid(z))))
-nans_X = X[~z.mask]
-nans_y = Y[~z.mask]
-new_z = z[~z.mask]
-interp = griddata((nans_X, nans_y), new_z.ravel(), 
-                                 (X, Y), method='nearest')
-
-
-#print(np.sum(np.isnan(interp)))
 
 #plt.show()
+get_radius(sim, 'gain')
