@@ -17,7 +17,7 @@ from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
 from AeViz.units.units import units
 from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
-
+from AeViz.utils.math_utils import function_average
 
 u = units()
 
@@ -390,6 +390,16 @@ class Simulation:
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                         self.ghost, plane)
+        
+    def alfven_velocity(self, file_name):
+        """
+        Alfven velocity
+        """
+        if self.dim == 1:
+            return None
+        B = self.magnetic_fields(file_name)
+        return np.sqrt(B[0] ** 2 + B[1] ** 2 + B[2] ** 2) / \
+            np.sqrt(self.rho(file_name))
     
     ## -----------------------------------------------------------------
     ## NEUTRINO DATA
@@ -595,8 +605,6 @@ class Simulation:
         GWs[:, 1] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
         return GWs
 
-
-    ## FIX ME!!!!!
     def AE220(self, tob_corrected=True, save_checkpoints=True):
         """
         Calculates the AE220 from density and velocities for a
@@ -873,13 +881,12 @@ class Simulation:
         return [time, data]
     
     ## -----------------------------------------------------------------
-    ## CONVECTION DATA
+    ## CONVECTION AND TURBULENCE DATA
     ## -----------------------------------------------------------------
 
     def BV_frequency(self, file_name):
         """
         Returns the Brunt-Vaisala frequency at specific timestep.
-        
         """
         rho = self.rho(file_name)
         radius = self.cell.radius(self.ghost)
@@ -887,3 +894,65 @@ class Simulation:
                  IDL_derivative(radius, self.gas_pressure(file_name)) - \
                  IDL_derivative(radius, rho)) * IDL_derivative(radius, 
                                 self.gravitational_potential(file_name)) / rho
+
+    def convective_velocity(self, file_name):
+        """
+        Returns the convective velocity at specific timestep. Defined as
+        in `https://doi.org/10.3847/1538-4357/ac4507`:
+        v_conv = <vr-vr_ave>_omega
+        """
+        dOmega = self.cell.dOmega(self.ghost)
+        rho = self.rho(file_name)
+        vr = self.radial_velocity(file_name)
+        vrave = function_average(vr * rho, self.dim, 'Omega', dOmega) / \
+            function_average(rho, self.dim, 'Omega', dOmega)
+        return function_average((vr - vrave), self.dim, 'Omega', dOmega)
+    
+    def turbulent_velocity(self, file_name):
+        """
+        Returns the turbulent velocity at specific timestep. Defined as
+        in `https://doi.org/10.3847/1538-4357/ac4507`:
+        v_conv = <(v-v_ave)²>^0.5_omega
+        """
+        dOmega = self.cell.dOmega(self.ghost)
+        rho = self.rho(file_name)
+        rho_ave = function_average(rho, self.dim, 'Omega', dOmega)
+        vr, vtheta, vphi = self.radial_velocity(file_name), \
+            self.theta_velocity(file_name), self.phi_velocity(file_name)
+        vrave, vthetaave, vphiave = \
+            function_average(vr * rho, self.dim, 'Omega', dOmega) / rho_ave, \
+                function_average(rho, self.dim, 'Omega', dOmega), 0, \
+            function_average(vphi, self.dim, 'Omega', dOmega) / rho_ave
+        return function_average((vr - vrave) ** 2 + (vtheta - vthetaave) ** \
+            2 + (vphi - vphiave) ** 2, self.dim, 'Omega', dOmega) ** 0.5
+    
+    def convective_flux(self, file_name):
+        """
+        Returns the convective flux at specific timestep. Defined as
+        in `https://doi.org/10.3847/1538-4357/ac4507`:
+        F_conv = <(0.5 rho v_turb² + e + P)v_conv>_omega
+        """
+        return function_average((0.5 * self.rho(file_name) * \
+            self.turbulent_velocity(file_name) ** 2 + self.internal_energy(
+                file_name) + self.gas_pressure(file_name)) * \
+            self.convective_velocity(file_name), self.dim, 'Omega', 
+            self.cell.dOmega(self.ghost))
+    
+    def Rossby_number(self, file_name, lenghtscale=True):
+        """
+        Returns the Rossby number at specific timestep. Defined as
+        in `https://doi.org/10.3847/1538-4357/ac4507`:
+        Ro = v_conv / (Omega R)
+        If lenghtscale is True, the Rossby number is divided by a sort
+        of typical lenghtscale of the convection.
+        H = 1/|∂_r ρ/ρ|
+        """
+        if lenghtscale:
+            H = 1 / np.abs(IDL_derivative(self.cell.radius(self.ghost), self.rho(
+                file_name)) / self.rho(file_name))
+        else:
+            H = 1
+        return self.convective_velocity(file_name) / (self.cell.radius(
+            self.ghost) * self.omega(file_name) * H)
+
+    

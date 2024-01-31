@@ -316,6 +316,14 @@
         "documentation": {}
     },
     {
+        "label": "function_average",
+        "importPath": "AeViz.utils.math_utils",
+        "description": "AeViz.utils.math_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.math_utils",
+        "documentation": {}
+    },
+    {
         "label": "IDL_derivative",
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
@@ -595,6 +603,22 @@
         "importPath": "pandas",
         "description": "pandas",
         "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "factorial",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
+        "label": "binom",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
         "documentation": {}
     },
     {
@@ -1167,6 +1191,24 @@
         "description": "AeViz.utils.file_utils",
         "peekOfCode": "def save_hdf(save_path, dataset_keywords, dataset_values):\n    \"\"\"\n    Save data in hdf format\n    dataset_keywords: list of strings, keywords for the datasets\n    dataset_values: list of whatever you want, these are the values for\n                    the datasets\n    \"\"\"\n    assert len(dataset_keywords) == len(dataset_values), \\\n        \"Number of keywords and values do not match\"\n    file_out = h5py.File(save_path, 'w')",
         "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
+        "label": "legendre_polynomials",
+        "kind": 6,
+        "importPath": "AeViz.utils.legendre",
+        "description": "AeViz.utils.legendre",
+        "peekOfCode": "class legendre_polynomials:\n    \"\"\"\n    Class that allows the calculation of the legendre polynomials\n    Parameters:\n        x: (npumpy array) quantity to use as polinomial generator\n    Methods:\n        P_(from 0 to 4): legendre polynomials from order 0 to 4\n            result: (numpy array) polynomial\n    Legendre polynomials are calculated following:\n    `https://en.wikipedia.org/wiki/Legendre_polynomials`",
+        "detail": "AeViz.utils.legendre",
+        "documentation": {}
+    },
+    {
+        "label": "associated_legendre_polynomials",
+        "kind": 6,
+        "importPath": "AeViz.utils.legendre",
+        "description": "AeViz.utils.legendre",
+        "peekOfCode": "class associated_legendre_polynomials:\n    \"\"\"\n    Class that allows the calculation of the legendre associated\n    polynomials\n    Parameters:\n        x: (npumpy array) quantity to use as polinomial generator\n    Methods:\n        polynomial: \n    Legendre associated polynomials are calculated following:\n    `https://en.wikipedia.org/wiki/Associated_Legendre_polynomials`",
+        "detail": "AeViz.utils.legendre",
         "documentation": {}
     },
     {
