@@ -7,6 +7,7 @@ from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
 from AeViz.utils.load_save_radii_utils import calculate_radius
+from AeViz.utils.GW_utils import calculate_AE220
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -52,7 +53,6 @@ input()
 """
 
 sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')
-print(type(sim.time('h00045000.h5')))
 """
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00045000.h5')
@@ -78,4 +78,4 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-print(sim.PNS_radius(False)[0])
+print(calculate_AE220(sim))

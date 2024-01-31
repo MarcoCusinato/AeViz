@@ -15,6 +15,7 @@ def innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):
         mask = (simulation.cell.radius(simulation.ghost) <= \
                 simulation.ghost.remove_ghost_cells_radii(innercore_radius, 
                                 simulation.dim, **gcells)[..., None])
+        
     rho = simulation.rho(file_name)[mask] * dV[mask]
     if simulation.dim == 1:
         ene_rot = 0
@@ -28,10 +29,10 @@ def innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):
         ene_kin = np.sum(0.5 * rho * \
             (simulation.radial_velocity(file_name)[mask] + \
             simulation.theta_velocity(file_name)[mask]) ** 2)
-        ene_mag = np.sum(simulation.magnetic_energy(file_name)[mask] \
-            * dV[mask])
-    ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] \
-        * dV[mask])
+        ene_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] * \
+             dV[mask])
+    ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] * \
+        dV[mask])
     return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, ene_kin / np.abs(ene_grav)
         
@@ -90,7 +91,7 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
         ene_kin = np.sum(0.5 * rho * \
             (simulation.radial_velocity(file_name)[mask] + \
             simulation.theta_velocity(file_name)[mask]) ** 2)
-        ene_mag = np.sum(simulation.magnetic_energy(file_name)[mask] \
+        ene_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] \
             * dV[mask])
         conv_ene = np.sum(simulation.theta_velocity(file_name)[mask] ** 2 \
             * rho)
@@ -119,6 +120,6 @@ def mass_flux(simulation, file_name, dOmega, radius_index):
                     simulation.rho(file_name)[radius_index]))
     
     return -u.convert_to_solar_masses(
-        simulation.cell.radius(radius_index) ** 2 * np.sum(dOmega * \
+        simulation.cell.radius(simulation.ghost) ** 2 * np.sum(dOmega * \
             simulation.radial_velocity(file_name)[..., radius_index] * \
             simulation.rho(file_name)[..., radius_index]))
