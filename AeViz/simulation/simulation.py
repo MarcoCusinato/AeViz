@@ -597,7 +597,7 @@ class Simulation:
 
 
     ## FIX ME!!!!!
-    def AE220(self, tob_corrected):
+    def AE220(self, tob_corrected=True, save_checkpoints=True):
         """
         Calculates the AE220 from density and velocities for a
         2D simulation.
@@ -607,37 +607,17 @@ class Simulation:
             time: array of time step
             AE220: len(radius), len(time) array
             full_strain: GWs strain from the full star
-            inner_strain: GWs strain from the PNS nucleus
+            nucleus_strain: GWs strain from the PNS nucleus
             convection_strain: GWs strain from the convection region
             outer_strain: GWs strain from the outer layers
         """
-        AE220_file = os.path.join(self.storage_path,'AE220.h5')
-        const = -0.125 *  np.sqrt(15/np.pi)
-        if not os.path.exists(AE220_file):
-            warnings.warn("AE220 file not found. Creating one. \nPlease wait...")
-            time, AE220, full_strain, inner_strain, \
-            convection_strain, outer_strain = calculate_AE220(self)
-            AE220_hdf = h5py.File(AE220_file, 'w')
-            AE220_hdf.create_dataset('time', data = time)
-            AE220_hdf.create_dataset('AE220', data = AE220)
-            AE220_hdf.create_dataset('h_full_strain', data = full_strain * const)
-            AE220_hdf.create_dataset('h_inner_strain', data = inner_strain * const)
-            AE220_hdf.create_dataset('h_convection_strain', data = convection_strain * const)
-            AE220_hdf.create_dataset('h_outer_strain', data = outer_strain * const)
-            AE220_hdf.close()
-        data = self.open_h5(AE220_file)
-        time = data["time"][...]
-        AE220 = data["AE220"][...]
-        full_strain = data["h_full_strain"][...]
-        inner_strain = data["h_inner_strain"][...]
-        convection_strain = data["h_convection_strain"][...]
-        outer_strain = data["h_outer_strain"][...]
-        self.close_h5(data)
-        
+        GW_data = calculate_AE220(self, save_checkpoints)
+        if GW_data is None:
+            return None        
         if not tob_corrected:
-            time += self.time_of_bounce_rho()
-        return self.cell.radius(self.ghost), time, AE220 * const, \
-                full_strain, inner_strain, convection_strain, outer_strain
+            GW_data[0] += self.tob
+        return self.cell.radius(self.ghost), GW_data[0], GW_data[1], \
+                GW_data[2], GW_data[3], GW_data[4], GW_data[5]
     
     ## -----------------------------------------------------------------
     ## GLOBAL DATA

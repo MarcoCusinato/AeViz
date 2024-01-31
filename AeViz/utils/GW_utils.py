@@ -308,11 +308,9 @@ def calculate_AE220(simulation, save_checkpoints=True):
         fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
             file, dV, ctheta, inner_rad[..., findex], igcells,
             nuc_rad[..., findex], ngcells)
-        print(ffull)
         try:
             time = np.concatenate((time, simulation.time(file)))
             NE220 = np.concatenate((NE220, fNE220[..., None]), axis=-1)
-            print(full_NE220.shape, np.array(ffull).shape)
             full_NE220 = np.concatenate((full_NE220, np.array([ffull])))
             nuc_NE220 = np.concatenate((nuc_NE220, np.array([fnuc])))
             conv_NE220 = np.concatenate((conv_NE220, np.array([finner])))
@@ -364,7 +362,8 @@ def calculate_strain(time, NE220, full_NE220, nuc_NE220, conv_NE220,
     """
     Derives ancd fixes the constants of the strain.
     """
-    const = (u.G * 16 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))
+    const =  -0.125 *  np.sqrt(15/np.pi) * \
+        (u.G * 16 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))
     return time, const * IDL_derivative(time, NE220), const * \
         IDL_derivative(time, full_NE220), const * \
         IDL_derivative(time, nuc_NE220), const * \
