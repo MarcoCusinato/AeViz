@@ -340,6 +340,14 @@
         "documentation": {}
     },
     {
+        "label": "function_average",
+        "importPath": "AeViz.utils.math_utils",
+        "description": "AeViz.utils.math_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.math_utils",
+        "documentation": {}
+    },
+    {
         "label": "IDL_derivative",
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
@@ -437,6 +445,14 @@
         "documentation": {}
     },
     {
+        "label": "save_hdf",
+        "importPath": "AeViz.utils.file_utils",
+        "description": "AeViz.utils.file_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
         "label": "hdf_isopen",
         "importPath": "AeViz.utils.decorators",
         "description": "AeViz.utils.decorators",
@@ -453,7 +469,7 @@
         "documentation": {}
     },
     {
-        "label": "calculate_AE220",
+        "label": "calculate_h",
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
         "isExtraImport": true,
@@ -493,14 +509,6 @@
         "documentation": {}
     },
     {
-        "label": "calculate_AE220",
-        "importPath": "AeViz.utils.GW_utils",
-        "description": "AeViz.utils.GW_utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.GW_utils",
-        "documentation": {}
-    },
-    {
         "label": "calculate_radius",
         "importPath": "AeViz.utils.load_save_radii_utils",
         "description": "AeViz.utils.load_save_radii_utils",
@@ -522,6 +530,22 @@
         "description": "AeViz.utils.load_save_mass_ene_utils",
         "isExtraImport": true,
         "detail": "AeViz.utils.load_save_mass_ene_utils",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_profile",
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.profiles",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_profile",
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.profiles",
         "documentation": {}
     },
     {
@@ -590,6 +614,22 @@
     },
     {
         "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
         "isExtraImport": true,
@@ -1113,20 +1153,20 @@
         "documentation": {}
     },
     {
+        "label": "calculate_h",
+        "kind": 2,
+        "importPath": "AeViz.utils.GW_utils",
+        "description": "AeViz.utils.GW_utils",
+        "peekOfCode": "def calculate_h(simulation, save_checkpoints=True):\n    \"\"\"\n    Calculates the h cross and x from postprocessing quantities for \n    every timestep of a simulation.\n    Returns\n        time: array of time step\n        AE220: len(radius), len(time) array\n        Full_strain: len(time) array\n        PNS_nucleus_strain: len(time) array\n        Convection_strain: len(time) array",
+        "detail": "AeViz.utils.GW_utils",
+        "documentation": {}
+    },
+    {
         "label": "NE220_2D",
         "kind": 2,
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
         "peekOfCode": "def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,\n          nuc_rad, ngcells):\n    \"\"\"\n    Calculates the NE220 from density and velocities for for as single\n    timestep. SAme process is employed in\n    \"\"\"\n    NE220 = dV * simulation.cell.radius(simulation.ghost) * \\\n        simulation.rho(file_name) * (simulation.radial_velocity(file_name) * \\\n        (3 * ctheta ** 2 - 1) - 3 * simulation.theta_velocity(file_name) * \\\n        ctheta * np.sqrt(1 - ctheta ** 2))",
-        "detail": "AeViz.utils.GW_utils",
-        "documentation": {}
-    },
-    {
-        "label": "calculate_AE220",
-        "kind": 2,
-        "importPath": "AeViz.utils.GW_utils",
-        "description": "AeViz.utils.GW_utils",
-        "peekOfCode": "def calculate_AE220(simulation, save_checkpoints=True):\n    \"\"\"\n    Calculates the AE220 from postprocessing quantities for every\n    timestep of a simulation.\n    Returns\n        time: array of time step\n        AE220: len(radius), len(time) array\n        Full_strain: len(time) array\n        PNS_nucleus_strain: len(time) array\n        Convection_strain: len(time) array",
         "detail": "AeViz.utils.GW_utils",
         "documentation": {}
     },
@@ -1328,7 +1368,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def function_average(qt, dim, av_type, dV):\n    if dim == 1:\n        indices = {'r': 0, 't': None, 'p': None}\n    elif dim == 2:\n        indices = {'r': 1, 't': 0, 'p': None}\n    elif dim == 3:\n        indices = {'r': 2, 't': 1, 'p': 0}\n    if av_type == 'Omega':\n        if dim < 2:\n            return qt",
+        "peekOfCode": "def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',\n                                              'radius', 'volume'], dV):\n    if dim == 1:\n        indices = {'r': 0, 't': None, 'p': None}\n    elif dim == 2:\n        indices = {'r': 1, 't': 0, 'p': None}\n    elif dim == 3:\n        indices = {'r': 2, 't': 1, 'p': 0}\n    if av_type == 'Omega':\n        if dim < 2:",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -1537,6 +1577,42 @@
         "description": "AeViz.utils.path_utils",
         "peekOfCode": "dim_keys = {1: '1D', 2: '2D', 3: '3D'}\ndef pltf():\n    platf = platform.system()\n    \"\"\"\n    The only platforms \"supported\" are Linux and Windows.\n    \"\"\"\n    if not platf in ['Windows', 'Linux']:\n        raise TypeError(\"Platform not suppoerted, sorry :)\")\n    return platf\ndef local_storage_folder(platf):",
         "detail": "AeViz.utils.path_utils",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_profile",
+        "kind": 2,
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "peekOfCode": "def calculate_profile(simulation, profile):\n    \"\"\"\n    Returns the radial profile of the desired quantity. Quantity names\n    must be the same as the ones in the simulation class.\n    \"\"\"\n    if profile in ['BV_frequency', 'Rossby_number', 'Ye', 'temperature', 'rho',\n                   'entropy', 'convective_flux', 'gas_pressure']:\n        return read_profile(simulation, profile)\n    else:\n        return derive_profile(simulation, profile)",
+        "detail": "AeViz.utils.profiles",
+        "documentation": {}
+    },
+    {
+        "label": "read_profile",
+        "kind": 2,
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "peekOfCode": "def read_profile(simulation, profile):\n    \"\"\"\n    Reads the radial profile saved in the profiles.h5 file.\n    \"\"\"\n    if check_existence(simulation, 'profiles.h5'):\n        data = h5py.File(os.path.join(simulation.storage_path, 'profiles.h5'), 'r')\n        if len(data['time'][...])  == len(simulation.hdf_file_list):\n            t, pr = data['time'][...], data['profiles/' + profile][...]\n            data.close()\n            return t, simulation.cell.radius(simulation.ghost), pr",
+        "detail": "AeViz.utils.profiles",
+        "documentation": {}
+    },
+    {
+        "label": "derive_profile",
+        "kind": 2,
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "peekOfCode": "def derive_profile(simulation, profile):\n    \"\"\"\n    Calculates a single profile and returns it.\n    \"\"\"\n    qt = getattr(simulation, profile)\n    radius = len(simulation.cell.radius(simulation.ghost))\n    dOmega = simulation.cell.dOmega(simulation.ghost)\n    for (file, progress) in zip(simulation.hdf_file_list,\n                         range(len(simulation.hdf_file_list))):\n        try:",
+        "detail": "AeViz.utils.profiles",
+        "documentation": {}
+    },
+    {
+        "label": "derive_profiles",
+        "kind": 2,
+        "importPath": "AeViz.utils.profiles",
+        "description": "AeViz.utils.profiles",
+        "peekOfCode": "def derive_profiles(simulation, data):\n    \"\"\"\n    Calculates and saves the pressure, temperature, Ye, entropy, \n    density, Rossby number, BV frequency, and convective flux radial\n    profiles in an hdf file.\n    \"\"\"\n    if data is None:\n        start_point = 0\n    else:\n        time = data['time'][...]",
+        "detail": "AeViz.utils.profiles",
         "documentation": {}
     },
     {

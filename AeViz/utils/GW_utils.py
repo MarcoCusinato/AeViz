@@ -236,33 +236,10 @@ def GWs_frequency_peak_indices(frequency, htilde):
 ## GWs strain from the postprocessing
 ## ---------------------------------------------------------------------
 
-
-def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
-          nuc_rad, ngcells):
+def calculate_h(simulation, save_checkpoints=True):
     """
-    Calculates the NE220 from density and velocities for for as single
-    timestep. SAme process is employed in
-    """
-    NE220 = dV * simulation.cell.radius(simulation.ghost) * \
-        simulation.rho(file_name) * (simulation.radial_velocity(file_name) * \
-        (3 * ctheta ** 2 - 1) - 3 * simulation.theta_velocity(file_name) * \
-        ctheta * np.sqrt(1 - ctheta ** 2))
-    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
-        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
-                                                    **ngcells)[..., None]
-    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
-        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
-                                             **igcells)[..., None] + 2e6) & \
-        (np.logical_not(mask_nuc))
-    mask_outer = np.logical_not(mask_inner + mask_nuc)
-    return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner), \
-        np.sum(NE220 * mask_nuc), np.sum(NE220 * mask_outer)
-        
-
-def calculate_AE220(simulation, save_checkpoints=True):
-    """
-    Calculates the AE220 from postprocessing quantities for every
-    timestep of a simulation.
+    Calculates the h cross and x from postprocessing quantities for 
+    every timestep of a simulation.
     Returns
         time: array of time step
         AE220: len(radius), len(time) array
@@ -342,7 +319,30 @@ def calculate_AE220(simulation, save_checkpoints=True):
                       outer_NE220])
     return calculate_strain(time, NE220, full_NE220, nuc_NE220,
                                         conv_NE220, outer_NE220)
-            
+
+## 2D
+
+def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
+          nuc_rad, ngcells):
+    """
+    Calculates the NE220 from density and velocities for for as single
+    timestep. SAme process is employed in
+    """
+    NE220 = dV * simulation.cell.radius(simulation.ghost) * \
+        simulation.rho(file_name) * (simulation.radial_velocity(file_name) * \
+        (3 * ctheta ** 2 - 1) - 3 * simulation.theta_velocity(file_name) * \
+        ctheta * np.sqrt(1 - ctheta ** 2))
+    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
+        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
+                                                    **ngcells)[..., None]
+    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
+        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
+                                             **igcells)[..., None] + 2e6) & \
+        (np.logical_not(mask_nuc))
+    mask_outer = np.logical_not(mask_inner + mask_nuc)
+    return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner), \
+        np.sum(NE220 * mask_nuc), np.sum(NE220 * mask_outer)
+           
 def read_NE220(simulation):
     """
     Reads the NE220 from a checkpoint file.
@@ -369,3 +369,6 @@ def calculate_strain(time, NE220, full_NE220, nuc_NE220, conv_NE220,
         IDL_derivative(time, nuc_NE220), const * \
         IDL_derivative(time, conv_NE220), const * \
         IDL_derivative(time, outer_NE220)
+
+## 3D
+

@@ -1,7 +1,8 @@
 import numpy as np
 from typing import Literal
 
-def function_average(qt, dim, av_type, dV):
+def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
+                                              'radius', 'volume'], dV):
     if dim == 1:
         indices = {'r': 0, 't': None, 'p': None}
     elif dim == 2:
@@ -12,6 +13,8 @@ def function_average(qt, dim, av_type, dV):
     if av_type == 'Omega':
         if dim < 2:
             return qt
+        if dV.ndim != qt.ndim:
+            dV = dV[..., None]
         av = np.sum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
     elif av_type == 'theta':
         if dim < 2:

@@ -7,7 +7,7 @@ from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
 from AeViz.utils.load_save_radii_utils import calculate_radius
-from AeViz.utils.GW_utils import calculate_AE220
+from AeViz.utils.profiles import calculate_profile
 
 """
 fig = plt.figure(figsize=(10, 10))
@@ -78,4 +78,5 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-print(calculate_AE220(sim))
+time, radius, pr = sim.radial_profile('magnetic_fields')
+print(time.shape, radius.shape, pr.shape)

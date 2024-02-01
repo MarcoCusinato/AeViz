@@ -9,7 +9,7 @@ from AeViz.utils.file_utils import load_file
 from AeViz.utils.decorators import hdf_isopen
 from AeViz.utils.math_utils import strfct2D, IDL_derivative
 from AeViz.utils.file_utils import load_file, find_column_changing_line
-from AeViz.utils.GW_utils import (GW_strain, calculate_AE220, GW_spectrogram,
+from AeViz.utils.GW_utils import (GW_strain, calculate_h, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.load_save_radii_utils import calculate_radius
@@ -18,6 +18,7 @@ from AeViz.cell.ghost import ghost as gh
 from AeViz.units.units import units
 from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
+from AeViz.utils.profiles import calculate_profile
 
 u = units()
 
@@ -398,7 +399,7 @@ class Simulation:
         if self.dim == 1:
             return None
         B = self.magnetic_fields(file_name)
-        return np.sqrt(B[0] ** 2 + B[1] ** 2 + B[2] ** 2) / \
+        return np.sqrt(B[..., 0] ** 2 + B[..., 1] ** 2 + B[..., 2] ** 2) / \
             np.sqrt(self.rho(file_name))
     
     ## -----------------------------------------------------------------
@@ -619,7 +620,7 @@ class Simulation:
             convection_strain: GWs strain from the convection region
             outer_strain: GWs strain from the outer layers
         """
-        GW_data = calculate_AE220(self, save_checkpoints)
+        GW_data = calculate_h(self, save_checkpoints)
         if GW_data is None:
             return None        
         if not tob_corrected:
@@ -921,8 +922,7 @@ class Simulation:
             self.theta_velocity(file_name), self.phi_velocity(file_name)
         vrave, vthetaave, vphiave = \
             function_average(vr * rho, self.dim, 'Omega', dOmega) / rho_ave, \
-                function_average(rho, self.dim, 'Omega', dOmega), 0, \
-            function_average(vphi, self.dim, 'Omega', dOmega) / rho_ave
+                0, function_average(vphi, self.dim, 'Omega', dOmega) / rho_ave
         return function_average((vr - vrave) ** 2 + (vtheta - vthetaave) ** \
             2 + (vphi - vphiave) ** 2, self.dim, 'Omega', dOmega) ** 0.5
     
@@ -955,4 +955,19 @@ class Simulation:
         return self.convective_velocity(file_name) / (self.cell.radius(
             self.ghost) * self.omega(file_name) * H)
 
+    ## -----------------------------------------------------------------
+    ## Profiles
+    ## -----------------------------------------------------------------
     
+    def radial_profile(self, quantity):
+        """
+        Calucaltes the radial profile of the selected quantity. Name of
+        the quantity must be the same as the one of the simulation
+        methods.
+        Returns: time, radius, profile
+        If the array contains polarization (i.e. the magnetic fields)
+        besides the regular angular and radial dependence, this will be
+        returned as the last axis.
+        """
+        return calculate_profile(self, quantity)
+        
