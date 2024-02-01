@@ -92,8 +92,13 @@ class SphericalHarmonics(AssociatedLegendrePolynomials):
                 array
         """
         return (-1) ** m * self.Ylm(-m, l, theta, phi)
-    ## not working yet
+
     def spin_weighted_Ylm(self, s, m, l, theta, phi):
+        """
+        Calculates the spin weighted spherical harmonic of order m and
+        degree l, with spin s.
+
+        """
         assert np.abs(m) <= l, "m must be smaller or equal than l"
         if l < np.abs(s):
             return 0
@@ -102,14 +107,16 @@ class SphericalHarmonics(AssociatedLegendrePolynomials):
         if phi.size > 1:
             phi = phi[..., None]
             theta = theta[None, ...]
-        norm = (-1) ** (l + m - s) * np.sin(0.5 * theta) ** (2 * l) * \
-            np.exp(1j * m * phi) * np.sqrt((factorial(l + m) * \
-                factorial(l - m) * factorial(2 * l + 1)) / (4 * np.pi * \
-                    factorial(l + s) * factorial(l - s)))
+        norm = (-1) ** (l + m - s) * \
+            (((2 * l +1) / (4 * np.pi)) * (factorial(l + m) / 
+                                             factorial(l + s)) * \
+                (factorial(l - m) / factorial(l - s))) ** 0.5 * \
+                (np.sin(0.5 * theta)) ** (2 * l) * np.exp(1j * m * phi)
         summ = 0
-        for r in range(0, l - s):
-            summ += (-1) ** r * binom(l - s, r) * \
-                binom(l + s, r + s - m) * np.tan(0.5 * (np.pi - theta)) ** \
-                    (2 * r  + s - m)
+        for n in range(0, l - s + 1):
+            summ += np.nan_to_num((-1) ** (n) * binom(l - s, n) * \
+                binom(l + s, n + s - m) * (np.cos(0.5 * theta) / \
+                                     np.sin(0.5 * theta)) ** (2 * n + s - m), 
+                                       False,  0)
         return norm * summ
         
