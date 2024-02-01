@@ -557,6 +557,30 @@
         "documentation": {}
     },
     {
+        "label": "sph_harm",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
+        "label": "factorial",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
+        "label": "binom",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
         "label": "fft",
         "importPath": "numpy.fft",
         "description": "numpy.fft",
@@ -643,22 +667,6 @@
         "importPath": "pandas",
         "description": "pandas",
         "detail": "pandas",
-        "documentation": {}
-    },
-    {
-        "label": "factorial",
-        "importPath": "scipy.special",
-        "description": "scipy.special",
-        "isExtraImport": true,
-        "detail": "scipy.special",
-        "documentation": {}
-    },
-    {
-        "label": "binom",
-        "importPath": "scipy.special",
-        "description": "scipy.special",
-        "isExtraImport": true,
-        "detail": "scipy.special",
         "documentation": {}
     },
     {
@@ -1180,11 +1188,11 @@
         "documentation": {}
     },
     {
-        "label": "calculate_strain",
+        "label": "calculate_strain_2D",
         "kind": 2,
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
-        "peekOfCode": "def calculate_strain(time, NE220, full_NE220, nuc_NE220, conv_NE220,\n                     outer_NE220):\n    \"\"\"\n    Derives ancd fixes the constants of the strain.\n    \"\"\"\n    const =  -0.125 *  np.sqrt(15/np.pi) * \\\n        (u.G * 16 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))\n    return time, const * IDL_derivative(time, NE220), const * \\\n        IDL_derivative(time, full_NE220), const * \\\n        IDL_derivative(time, nuc_NE220), const * \\",
+        "peekOfCode": "def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,\n                     outer_NE220):\n    \"\"\"\n    Derives ancd fixes the constants of the strain.\n    \"\"\"\n    const =  -0.125 *  np.sqrt(15/np.pi) * \\\n        (u.G * 16 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))\n    return time, const * IDL_derivative(time, NE220), const * \\\n        IDL_derivative(time, full_NE220), const * \\\n        IDL_derivative(time, nuc_NE220), const * \\",
         "detail": "AeViz.utils.GW_utils",
         "documentation": {}
     },
@@ -1234,20 +1242,20 @@
         "documentation": {}
     },
     {
-        "label": "legendre_polynomials",
+        "label": "AssociatedLegendrePolynomials",
         "kind": 6,
         "importPath": "AeViz.utils.legendre",
         "description": "AeViz.utils.legendre",
-        "peekOfCode": "class legendre_polynomials:\n    \"\"\"\n    Class that allows the calculation of the legendre polynomials\n    Parameters:\n        x: (npumpy array) quantity to use as polinomial generator\n    Methods:\n        P_(from 0 to 4): legendre polynomials from order 0 to 4\n            result: (numpy array) polynomial\n    Legendre polynomials are calculated following:\n    `https://en.wikipedia.org/wiki/Legendre_polynomials`",
+        "peekOfCode": "class AssociatedLegendrePolynomials:\n    def __init__(self):\n        pass\n    def change_m_sign(self, m, l, P):\n        \"\"\"\n        Renormaqlizes the polynomial order from m to -m, using the\n        relation:\n        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)\n        Takes as input:\n            l: original degree of the polynomial",
         "detail": "AeViz.utils.legendre",
         "documentation": {}
     },
     {
-        "label": "associated_legendre_polynomials",
+        "label": "SphericalHarmonics",
         "kind": 6,
         "importPath": "AeViz.utils.legendre",
         "description": "AeViz.utils.legendre",
-        "peekOfCode": "class associated_legendre_polynomials:\n    \"\"\"\n    Class that allows the calculation of the legendre associated\n    polynomials\n    Parameters:\n        x: (npumpy array) quantity to use as polinomial generator\n    Methods:\n        polynomial: \n    Legendre associated polynomials are calculated following:\n    `https://en.wikipedia.org/wiki/Associated_Legendre_polynomials`",
+        "peekOfCode": "class SphericalHarmonics(AssociatedLegendrePolynomials):\n    def __init__(self):\n        pass\n    def Ylm(self, m, l, theta, phi):\n        \"\"\"\n        Calculates the spherical harmonic of order m and degree l.\n        Uses the definition:\n        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(\n            cos(theta)) exp(i m phi)\n        Takes as input:",
         "detail": "AeViz.utils.legendre",
         "documentation": {}
     },

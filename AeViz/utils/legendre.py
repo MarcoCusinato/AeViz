@@ -1,102 +1,115 @@
 import numpy as np
 from scipy.special import factorial, binom
-
-
 import numpy as np
 
-class legendre_polynomials:
-    """
-    Class that allows the calculation of the legendre polynomials
-    Parameters:
-        x: (npumpy array) quantity to use as polinomial generator
-    Methods:
-        P_(from 0 to 4): legendre polynomials from order 0 to 4
-            result: (numpy array) polynomial
-    Legendre polynomials are calculated following:
-    `https://en.wikipedia.org/wiki/Legendre_polynomials`
-    """
-    def __init__(self, x):
-        self.variable = x
+class AssociatedLegendrePolynomials:
+    def __init__(self):
+        pass
     
-    def P_0(self):
-        return np.ones(self.variable.shape)
+    def change_m_sign(self, m, l, P):
+        """
+        Renormaqlizes the polynomial order from m to -m, using the
+        relation:
+        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)
+        Takes as input:
+            l: original degree of the polynomial
+            m: original order of the polynomial
+            P: original polynomial
+        """
+        assert m >= 0, "m must be a positive integer"
+        assert l >= m, "l must be greater or equal than m"
+        return (-1)**m * factorial(l-m) / factorial(l+m) * P
     
-    def P_1(self):
-        return self.variable
-    
-    def P_2(self):
-        return 0.5 * (3 * self.variable**2 - 1)
-    
-    def P_3(self):
-        return 0.5 * (5 * self.variable**3 - 3 * self.variable)
-
-    def P_4(self):
-        return 0.125 * (35 * self.variable**4 - 30 * self.variable**2 + 3)
-    
-    def P_5(self):
-        return 0.125 * (63 * self.variable**5 - 70 * self.variable**3 + 
-               15 * self.variable)
-
-    def P_6(self):
-        return 0.0625 * (231 * self.variable**6 - 315 * self.variable**4 + 
-               105 * self.variable**2 - 5)
-
-class associated_legendre_polynomials:
-    """
-    Class that allows the calculation of the legendre associated
-    polynomials
-    Parameters:
-        x: (npumpy array) quantity to use as polinomial generator
-    Methods:
-        polynomial: 
-    Legendre associated polynomials are calculated following:
-    `https://en.wikipedia.org/wiki/Associated_Legendre_polynomials`
-    It calculates the associated polynomials 
-    ```
-        P^m_l
-    ```
-    to change the indices positioning use the "change_indices" method.
-    """
-    def __init__(self, x, l, m = 0):
-        assert l >= m, "Must insert l >= m."
-        self.variable = x
-        self.l = l
-        self.m = m
-    
-    def polynomial(self):
-        if self.m == 0 and self.l <= 6:
-            pol = legendre_polynomials(self.variable)
-            return getattr(pol, "P_" + str(self.l))()
-        elif self.l == self.m and self.l <= 4:
-            return getattr(self, "_P" + str(self.m) + "_" + str(self.l))()
+    def P(self, m, l, x):
+        """
+        Calculates the associated Legendre polynomial of order m and
+        degree l. Uses the polynomials closed form expression:
+        P^m_l(x) = (-)^m 2^l (1-x^2)^(m/2) Σ_k=m^l k!/(k-m)! binom(
+            (l+k-1)/2, l)
+        Takes as input:
+            m: order of the polynomial
+            l: degree of the polynomial
+            x: value at which the polynomial is evaluated, array or
+                scalar
+        Returns:
+            P^m_l(x): value of the polynomial at x, array
+        """
+        assert np.abs(m) <= l, "m must be smaller or equal than l"
+        x = np.asarray(x)
+        if l == 0:
+            return 1
+        if m<0:
+            return self.change_m_sign(-m, l, self.P(-m, l, x))
         else:
-            return self._norm() * self._sum()
-
-    def change_indices(self):
-        return (-1) ** self.m * self.polynomial()
-    
-    def _sum(self):
-        k = np.arange(self.m, self.l + 1)
-        sum = factorial(k) / factorial(k - self.m)
-        sum *= binom(self.l, k) * binom((self.l + k - 1) / 2, self.l) 
-        sum = self.variable[..., None] **(k - self.m) * sum
-        return sum.sum(axis = -1) 
+            summ = np.zeros(x.shape)
+            for k in range(m, l+1):
+                summ += factorial(k) / factorial(k-m) * \
+                    binom((l + k - 1) / 2, l) * x ** (k - m)
+            return (-1)**m * 2**l * (1 - x ** 2) ** (m / 2) * summ
     
 
-    def _norm(self):
-        if self.m == 0:
-            return 2 ** self.l
-        return (-1) ** self.m * 2 ** self.l * (1 - self.variable ** 2) ** \
-            (self.m / 2)
+class SphericalHarmonics(AssociatedLegendrePolynomials):
+    def __init__(self):
+        pass
     
-    def _P1_1(self):
-        return -(1 - self.variable ** 2) ** 0.5
+    def Ylm(self, m, l, theta, phi):
+        """
+        Calculates the spherical harmonic of order m and degree l.
+        Uses the definition:
+        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(
+            cos(theta)) exp(i m phi)
+        Takes as input:
+            m: order of the polynomial
+            l: degree of the polynomial
+            theta: azimutal angle, array or scalar
+            phi: polar angle, array or scalar
+        Returns:
+            Y^m_l(theta, phi): value of the polynomial at (theta, phi),
+                array
+        """
+        assert np.abs(m) <= l, "m must be smaller or equal than l"
+        theta = np.cos(np.asarray(theta))
+        phi = np.asarray(phi)
+        if phi.size > 1:
+            phi = phi[..., None]
+            theta = theta[None, ...]
+        norm = np.sqrt((2 * l + 1) / (4 * np.pi) * factorial(l - m) / \
+            factorial(l + m))
+        Plm = self.P(m, l, theta)
+        return norm * Plm * np.exp(1j * m * phi)
     
-    def _P2_2(self):
-        return 3. * (1 - self.variable **2)
-    
-    def _P3_3(self):
-        return -15 * (1 - self.variable ** 2) ** 1.5
-    
-    def _P4_4(self):
-        return 105. * (1 - self.variable ** 2) ** 2
+    def Ylm_conj(self, m, l, theta, phi):
+        """
+        Calculates the complex conjugate of the spherical harmonic of
+        order m and degree l.
+        Takes as input:
+            m: order of the polynomial
+            l: degree of the polynomial
+            theta: azimutal angle, array or scalar
+            phi: polar angle, array or scalar
+        Returns:
+            Y^m_l(theta, phi): value of the polynomial at (theta, phi),
+                array
+        """
+        return (-1) ** m * self.Ylm(-m, l, theta, phi)
+    ## not working yet
+    def spin_weighted_Ylm(self, s, m, l, theta, phi):
+        assert np.abs(m) <= l, "m must be smaller or equal than l"
+        if l < np.abs(s):
+            return 0
+        theta = np.asarray(theta)
+        phi = np.asarray(phi)
+        if phi.size > 1:
+            phi = phi[..., None]
+            theta = theta[None, ...]
+        norm = (-1) ** (l + m - s) * np.sin(0.5 * theta) ** (2 * l) * \
+            np.exp(1j * m * phi) * np.sqrt((factorial(l + m) * \
+                factorial(l - m) * factorial(2 * l + 1)) / (4 * np.pi * \
+                    factorial(l + s) * factorial(l - s)))
+        summ = 0
+        for r in range(0, l - s):
+            summ += (-1) ** r * binom(l - s, r) * \
+                binom(l + s, r + s - m) * np.tan(0.5 * (np.pi - theta)) ** \
+                    (2 * r  + s - m)
+        return norm * summ
+        

@@ -2,6 +2,7 @@ import numpy as np
 from AeViz.units.units import units
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.signal import stft
+from scipy.special import sph_harm
 from numpy.fft import fft, fftfreq
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar
@@ -262,7 +263,7 @@ def calculate_h(simulation, save_checkpoints=True):
         time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
             read_NE220(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain(time, NE220, full_NE220, nuc_NE220,
+            return calculate_strain_2D(time, NE220, full_NE220, nuc_NE220,
                                      conv_NE220, outer_NE220)
         else:
             start_point = len(time)
@@ -317,7 +318,7 @@ def calculate_h(simulation, save_checkpoints=True):
                       'convection_NE220', 'outer_NE220'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
                       outer_NE220])
-    return calculate_strain(time, NE220, full_NE220, nuc_NE220,
+    return calculate_strain_2D(time, NE220, full_NE220, nuc_NE220,
                                         conv_NE220, outer_NE220)
 
 ## 2D
@@ -357,7 +358,7 @@ def read_NE220(simulation):
     data.close()
     return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220
 
-def calculate_strain(time, NE220, full_NE220, nuc_NE220, conv_NE220,
+def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
                      outer_NE220):
     """
     Derives ancd fixes the constants of the strain.
@@ -371,4 +372,3 @@ def calculate_strain(time, NE220, full_NE220, nuc_NE220, conv_NE220,
         IDL_derivative(time, outer_NE220)
 
 ## 3D
-

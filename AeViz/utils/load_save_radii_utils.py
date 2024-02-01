@@ -49,8 +49,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 ghost_cells
         else:
             start_point = len(time)
-            print('Checkpoint found for the' + radius + ' radius, starting from' \
-                ' checkpoint.\nPlease wait...')
+            print('Checkpoint found for the' + radius + ' radius, starting' \
+                ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
         print('No checkpoint found for ' + radius + 'radius, starting from' \
@@ -131,7 +131,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                                                 simulation.dim, dOmega)])
             try:
                 time = np.concatenate((time, simulation.time(file)))
-                full_radius = np.concatenate((full_radius, rad_step[..., None]),
+                full_radius = np.concatenate((full_radius,
+                                            rad_step[..., None]),
                                             axis=-1)
                 max_radius = np.concatenate((max_radius, max_rad_step))
                 min_radius = np.concatenate((min_radius, min_rad_step))
