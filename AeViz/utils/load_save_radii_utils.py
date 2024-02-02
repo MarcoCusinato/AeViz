@@ -60,7 +60,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     elif simulation.dim == 2:
         checkpoint = 600
     else:
-        checkpoint = 200
+        checkpoint = 5
     g = 0
     dOmega = simulation.cell.dOmega(simulation.ghost)
     simulation.ghost.update_ghost_cells(t_l = g, t_r = g, p_l = g, p_r = g)
@@ -79,7 +79,9 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             try:
                 rad_step = functions[radius](simulation, file)
             except:
+                print('Error in file ' + file + ', skipping...')
                 check_index += 1
+                progress_index += 1
                 continue
         if radius == 'neutrino':
             try:
@@ -124,7 +126,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                                 ['nue', 'nua', 'nux']}
         else:
             nog_rad_step = simulation.ghost.remove_ghost_cells_radii(rad_step,
-                                                                simulation.dim)
+                                                               simulation.dim)
+            nog_rad_step = rad_step
             max_rad_step = np.array([np.nanmax(nog_rad_step)])
             min_rad_step = np.array([np.nanmin(nog_rad_step)])
             avg_rad_step = np.array([function_average_radii(nog_rad_step, 

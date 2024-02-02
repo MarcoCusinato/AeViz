@@ -59,8 +59,8 @@ def neutrino_sphere_radii(simulation, file_name):
     k = np.nansum(momenta * kappa, axis=(-1, simulation.dim)) / \
                np.nansum(momenta, axis=(-1, simulation.dim))
     dr = simulation.cell.dr(simulation.ghost)[..., None]
-    while k.ndim < dr.ndim:
-        k = k[..., None]
+    while dr.ndim < k.ndim:
+        dr = dr[None, ...]
     k = np.nancumsum(np.flip(k * dr, axis=-2), axis=-2)
     return np.flip(simulation.cell.radius(simulation.ghost))\
                                 [np.argmax(k >= tau, axis=-2)]
@@ -103,9 +103,7 @@ def shock_radius(simulation, file_name):
             shock_radius_2D(simulation, file_name)),
                            simulation.cell.theta(simulation.ghost))
     elif simulation.dim == 3:
-        return interpol_2D(shock_radius_3D(simulation, file_name), 
-                            simulation.cell.theta(simulation.ghost),
-                            simulation.cell.phi(simulation.ghost))
+        return hampel_filter(shock_radius_3D(simulation, file_name))
     else:
         raise ValueError("Invalid dimension")
     
@@ -141,6 +139,8 @@ def shock_radius_2D(simulation, file_name):
                                                 dP.shape[1] - 1)] < -20):
                 shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
                 break
+    ## COPY over the gcells
+    
     return shock_r
 
 
@@ -163,15 +163,17 @@ def shock_radius_3D(simulation, file_name):
                                                     < -20):
                     shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
                     break
+    print(shock_r)
     return shock_r
 
 def hampel_filter(shock_radius, sigma=3):
     """
     Applies a hampel filter to the shock radius.
     """
+    
     assert shock_radius.size > 1 and shock_radius.ndim >= 1, "Expected 1 or 2 \
             dimensional array, with at least 2 elements."
-    
+    print("here")
     for i in range(10):
         rmedian = np.nanmedian(shock_radius)
         diff = np.abs(shock_radius - rmedian)
@@ -184,6 +186,7 @@ def hampel_filter(shock_radius, sigma=3):
         num_outliers = np.sum(mask)
         if num_outliers == 0:
             break
+    print("Number of outliers: ", num_outliers)
     return shock_radius
         
     
@@ -205,6 +208,6 @@ def interpol_2D(shock_radius, theta, phi):
         griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),
                  shock_radius.ravel(), (Phi[shock_radius.mask], 
                                         Theta[shock_radius.mask]),
-                    method='nearest', fill_value=None)
+                    method='linear', fill_value=None)
     return shock_radius
     

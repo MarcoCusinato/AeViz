@@ -710,6 +710,15 @@
         "documentation": {}
     },
     {
+        "label": "AeViz.utils.radii_utils",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "AeViz.utils.radii_utils",
+        "description": "AeViz.utils.radii_utils",
+        "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
         "label": "PNS_radius",
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
@@ -743,14 +752,6 @@
     },
     {
         "label": "PNS_nucleus",
-        "importPath": "AeViz.utils.radii_utils",
-        "description": "AeViz.utils.radii_utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.radii_utils",
-        "documentation": {}
-    },
-    {
-        "label": "shock_radius",
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
         "isExtraImport": true,
@@ -1242,24 +1243,6 @@
         "documentation": {}
     },
     {
-        "label": "AssociatedLegendrePolynomials",
-        "kind": 6,
-        "importPath": "AeViz.utils.legendre",
-        "description": "AeViz.utils.legendre",
-        "peekOfCode": "class AssociatedLegendrePolynomials:\n    def __init__(self):\n        pass\n    def change_m_sign(self, m, l, P):\n        \"\"\"\n        Renormaqlizes the polynomial order from m to -m, using the\n        relation:\n        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)\n        Takes as input:\n            l: original degree of the polynomial",
-        "detail": "AeViz.utils.legendre",
-        "documentation": {}
-    },
-    {
-        "label": "SphericalHarmonics",
-        "kind": 6,
-        "importPath": "AeViz.utils.legendre",
-        "description": "AeViz.utils.legendre",
-        "peekOfCode": "class SphericalHarmonics(AssociatedLegendrePolynomials):\n    def __init__(self):\n        pass\n    def Ylm(self, m, l, theta, phi):\n        \"\"\"\n        Calculates the spherical harmonic of order m and degree l.\n        Uses the definition:\n        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(\n            cos(theta)) exp(i m phi)\n        Takes as input:",
-        "detail": "AeViz.utils.legendre",
-        "documentation": {}
-    },
-    {
         "label": "calculate_masses_energies",
         "kind": 2,
         "importPath": "AeViz.utils.load_save_mass_ene_utils",
@@ -1709,7 +1692,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
-        "peekOfCode": "def hampel_filter(shock_radius, sigma=3):\n    \"\"\"\n    Applies a hampel filter to the shock radius.\n    \"\"\"\n    assert shock_radius.size > 1 and shock_radius.ndim >= 1, \"Expected 1 or 2 \\\n            dimensional array, with at least 2 elements.\"\n    for i in range(10):\n        rmedian = np.nanmedian(shock_radius)\n        diff = np.abs(shock_radius - rmedian)\n        diffmedian = np.nanmedian(diff)",
+        "peekOfCode": "def hampel_filter(shock_radius, sigma=3):\n    \"\"\"\n    Applies a hampel filter to the shock radius.\n    \"\"\"\n    assert shock_radius.size > 1 and shock_radius.ndim >= 1, \"Expected 1 or 2 \\\n            dimensional array, with at least 2 elements.\"\n    print(\"here\")\n    for i in range(10):\n        rmedian = np.nanmedian(shock_radius)\n        diff = np.abs(shock_radius - rmedian)",
         "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
@@ -1729,6 +1712,24 @@
         "description": "AeViz.utils.radii_utils",
         "peekOfCode": "def interpol_2D(shock_radius, theta, phi):\n    mask = np.isnan(shock_radius)\n    if mask.sum() == 0:\n        return shock_radius\n    Phi, Theta = np.meshgrid(phi, theta)\n    shock_radius = np.ma.masked_invalid(shock_radius)\n    shock_radius[shock_radius.mask] = \\\n        griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),\n                 shock_radius.ravel(), (Phi[shock_radius.mask], \n                                        Theta[shock_radius.mask]),",
         "detail": "AeViz.utils.radii_utils",
+        "documentation": {}
+    },
+    {
+        "label": "AssociatedLegendrePolynomials",
+        "kind": 6,
+        "importPath": "AeViz.utils.spherical_harmonics",
+        "description": "AeViz.utils.spherical_harmonics",
+        "peekOfCode": "class AssociatedLegendrePolynomials:\n    def __init__(self):\n        pass\n    def change_m_sign(self, m, l, P):\n        \"\"\"\n        Renormaqlizes the polynomial order from m to -m, using the\n        relation:\n        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)\n        Takes as input:\n            l: original degree of the polynomial",
+        "detail": "AeViz.utils.spherical_harmonics",
+        "documentation": {}
+    },
+    {
+        "label": "SphericalHarmonics",
+        "kind": 6,
+        "importPath": "AeViz.utils.spherical_harmonics",
+        "description": "AeViz.utils.spherical_harmonics",
+        "peekOfCode": "class SphericalHarmonics(AssociatedLegendrePolynomials):\n    def __init__(self):\n        pass\n    def Ylm(self, m, l, theta, phi):\n        \"\"\"\n        Calculates the spherical harmonic of order m and degree l.\n        Uses the definition:\n        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(\n            cos(theta)) exp(i m phi)\n        Takes as input:",
+        "detail": "AeViz.utils.spherical_harmonics",
         "documentation": {}
     },
     {
@@ -1772,7 +1773,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)",
+        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"",
         "detail": "prova",
         "documentation": {}
     },
@@ -1781,7 +1782,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)\naxs[0].plot(sim.cell.radius(sim.ghost), P[32,...])",
+        "peekOfCode": "sim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
         "detail": "prova",
         "documentation": {}
     },

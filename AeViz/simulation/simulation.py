@@ -422,6 +422,7 @@ class Simulation:
         """
         nu_flux = self.ghost.remove_ghost_cells(np.squeeze(np.array(
             self.__data_h5['neutrino/e'])[..., 1:]), self.dim)
+        
         ## Insert a new axis to be consistent with the other dimensions
         if self.dim == 1:
             nu_flux = nu_flux[..., None]

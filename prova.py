@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from AeViz.quantities_plotting.plotting import Plotting
 from AeViz.plot_utils.plotting_utils import PlottingUtils
-from AeViz.utils.radii_utils import shock_radius
+import AeViz.utils.radii_utils
 from AeViz.simulation.simulation import Simulation
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
@@ -52,7 +52,8 @@ Plot.plot1D('ENTR', 'radius', 32, None)
 input()
 """
 
-sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B', '/home/marco/Escritorio/Simulations/sn2d/s16.5-SW14')
+sim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
+# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
 """
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00045000.h5')
@@ -78,5 +79,5 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-time, radius, pr = sim.radial_profile('magnetic_fields')
-print(time.shape, radius.shape, pr.shape)
+time, radius, pr = sim.PNS_nucleus_radius()
+#print(time.shape, radius.shape, pr.shape)
