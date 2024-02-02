@@ -68,19 +68,12 @@ def neutrino_sphere_radii(simulation, file_name):
 def PNS_nucleus(simulation, file_name):
     """
     Calculates the radius of the PNS nucleus for each timestep.
-    Employed method: point at minimum Ye inside the PNS. If such point
-                        does not exist it returns the point at which the
-                        density is greater then 5x10^{12} g/cm³.
+    Employed method: entropy jump at s=4kb from the inside out.
     """
     radius = simulation.cell.radius(simulation.ghost)
     R_30Km_index = np.argmax(radius >= 30e5)
-    rho_thres_index = np.argmax(simulation.rho(file_name) <= 5e12, axis=-1)
-    Ye = simulation.Ye(file_name)[..., :R_30Km_index]
-    dYedr = IDL_derivative(radius[:R_30Km_index], Ye)
-    minYe = np.argmax(Ye, axis=-1)
-    mask =  (dYedr[np.arange(len(minYe)), minYe-1] < 0) & \
-        (dYedr[np.arange(len(minYe)), minYe+1] > 0)
-    minYe = np.where(mask, minYe, rho_thres_index)
+    s = simulation.entropy(file_name)[..., :R_30Km_index]
+    minYe = np.argmax(s >= 4, axis=-1)
     return radius[minYe]
 
 

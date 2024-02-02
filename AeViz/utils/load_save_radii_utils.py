@@ -49,11 +49,11 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 ghost_cells
         else:
             start_point = len(time)
-            print('Checkpoint found for the' + radius + ' radius, starting' \
+            print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
-        print('No checkpoint found for ' + radius + 'radius, starting from' \
+        print('No checkpoint found for ' + radius + ' radius, starting from' \
             ' the beginning.\nPlease wait...')
     if (simulation.dim == 1) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)

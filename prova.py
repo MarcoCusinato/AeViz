@@ -52,7 +52,7 @@ Plot.plot1D('ENTR', 'radius', 32, None)
 input()
 """
 
-sim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
+sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
 # sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
 """
 radius = sim.cell.radius(sim.ghost)
@@ -79,5 +79,10 @@ ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[
 
 
 #plt.show()
-time, radius, pr = sim.PNS_nucleus_radius()
+data = sim.AE220()
+fig, axs = plt.subplots(3, 1, sharex=True)
+axs[0].plot(data[1], data[3])
+axs[1].plot(data[1], data[4])
+axs[2].plot(data[1], data[5])
+plt.show()
 #print(time.shape, radius.shape, pr.shape)

@@ -1647,7 +1647,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
-        "peekOfCode": "def PNS_nucleus(simulation, file_name):\n    \"\"\"\n    Calculates the radius of the PNS nucleus for each timestep.\n    Employed method: point at minimum Ye inside the PNS. If such point\n                        does not exist it returns the point at which the\n                        density is greater then 5x10^{12} g/cm³.\n    \"\"\"\n    radius = simulation.cell.radius(simulation.ghost)\n    R_30Km_index = np.argmax(radius >= 30e5)\n    rho_thres_index = np.argmax(simulation.rho(file_name) <= 5e12, axis=-1)",
+        "peekOfCode": "def PNS_nucleus(simulation, file_name):\n    \"\"\"\n    Calculates the radius of the PNS nucleus for each timestep.\n    Employed method: entropy jump at s=4kb from the inside out.\n    \"\"\"\n    radius = simulation.cell.radius(simulation.ghost)\n    R_30Km_index = np.argmax(radius >= 30e5)\n    s = simulation.entropy(file_name)[..., :R_30Km_index]\n    minYe = np.argmax(s >= 4, axis=-1)\n    return radius[minYe]",
         "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
@@ -1773,7 +1773,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"",
+        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"",
         "detail": "prova",
         "documentation": {}
     },
@@ -1782,7 +1782,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "sim = Simulation('s16.5-SFHo-2.0omg-5e+08-1e+09B', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
+        "peekOfCode": "sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
         "detail": "prova",
         "documentation": {}
     },
@@ -1819,6 +1819,15 @@
         "importPath": "prova",
         "description": "prova",
         "peekOfCode": "shock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)\naxs[0].plot(sim.cell.radius(sim.ghost), P[32,...])\naxs[0].set_xscale('log')\naxs[0].set_yscale('log')\naxs[0].axvline(shock[32], color='k')\nax1 =axs[0].twinx()\nax1.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, P[32,:])/P[32, :] * radius, color='b')",
+        "detail": "prova",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "prova",
+        "description": "prova",
+        "peekOfCode": "data = sim.AE220()\nfig, axs = plt.subplots(3, 1, sharex=True)\naxs[0].plot(data[1], data[3])\naxs[1].plot(data[1], data[4])\naxs[2].plot(data[1], data[5])\nplt.show()\n#print(time.shape, radius.shape, pr.shape)",
         "detail": "prova",
         "documentation": {}
     }
