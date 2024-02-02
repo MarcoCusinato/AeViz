@@ -127,7 +127,6 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         else:
             nog_rad_step = simulation.ghost.remove_ghost_cells_radii(rad_step,
                                                                simulation.dim)
-            nog_rad_step = rad_step
             max_rad_step = np.array([np.nanmax(nog_rad_step)])
             min_rad_step = np.array([np.nanmin(nog_rad_step)])
             avg_rad_step = np.array([function_average_radii(nog_rad_step, 
