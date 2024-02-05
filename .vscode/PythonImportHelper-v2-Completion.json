@@ -1377,7 +1377,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` \n    \"\"\"\n    if not xvariable == 'radius':\n        raise TypeError(\"Not implemented yet, sorry :)\")\n    assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \\\n                      \"Arrays must have equal last dimension\"\n    while x.ndim != y.ndim:",
+        "peekOfCode": "def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` \n    \"\"\"\n    if xvariable == 'theta':\n        y = np.moveaxis(y, -2, -1)\n    elif xvariable == 'phi':\n        y = np.moveaxis(y, -3, -1)\n    assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \\",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -1773,7 +1773,16 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\nsim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"",
+        "peekOfCode": "Plot = Plotting()\nPlot.Load('/almacen/marco/Simulations/sn2d/s16.5-SW14/s16.5-SFHo-1.0omg-5e+08-1e+09B/outp-hdf/h00045000.h5')\nPlot.plot1D('PGAS', 'radius', 32, None)\nPlot.plot1D('ENTR', 'radius', 32, None)\n#Plot.plot2DwithPar('V')\ninput()\n\"\"\"\n#sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\nsim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"",
+        "detail": "prova",
+        "documentation": {}
+    },
+    {
+        "label": "#sim",
+        "kind": 5,
+        "importPath": "prova",
+        "description": "prova",
+        "peekOfCode": "#sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\nsim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
         "detail": "prova",
         "documentation": {}
     },
@@ -1782,7 +1791,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\n# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)",
+        "peekOfCode": "sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\n\"\"\"\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00045000.h5')\nvx = sim.radial_velocity('h00045000.h5')\nshock = shock_radius(sim, 'h00045000.h5')\nprint(np.any(shock==np.nan))\nfig, axs = plt.subplots(1, 2, figsize=(10, 5))\naxs[0].plot(sim.cell.theta(sim.ghost), shock)\naxs[0].plot(sim.cell.radius(sim.ghost), P[32,...])",
         "detail": "prova",
         "documentation": {}
     },
@@ -1827,7 +1836,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "data = sim.AE220()\nfig, axs = plt.subplots(3, 1, sharex=True)\naxs[0].plot(data[1], data[3])\naxs[1].plot(data[1], data[4])\naxs[2].plot(data[1], data[5])\nplt.show()\n#print(time.shape, radius.shape, pr.shape)",
+        "peekOfCode": "data = sim.AE220()\nfig, axs = plt.subplots(3, 1, sharex=True)\naxs[0].plot(data[1], data[3])\naxs[1].plot(data[1], data[4])\naxs[2].plot(data[1], data[5])\nplt.show()\n#print(time.shape, radius.shape, pr.shape)\n\"\"\"",
         "detail": "prova",
         "documentation": {}
     }

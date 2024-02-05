@@ -48,8 +48,11 @@ def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'
     Derivatie performed using three point Lagrangian interpolation, as in:
     `https://www.l3harrisgeospatial.com/docs/deriv.html` 
     """
-    if not xvariable == 'radius':
-        raise TypeError("Not implemented yet, sorry :)")
+    if xvariable == 'theta':
+        y = np.moveaxis(y, -2, -1)
+    elif xvariable == 'phi':
+        y = np.moveaxis(y, -3, -1)
+    
     assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \
                       "Arrays must have equal last dimension"
     while x.ndim != y.ndim:
@@ -75,6 +78,19 @@ def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'
     x01 = x[..., -3] - x[..., -2]
     x02 = x[..., -3] - x[..., -1]
     x12 = x[..., -2] - x[..., -1]
+    
+    derivative = np.concatenate((derivative, (-y[...,-3] * x12 / (x01 * x02) +\
+                                        y[..., -2] * x02 / (x01 * x12) - \
+                                        y[..., -1] * (x02 + x12) / \
+                                            (x02 * x12))[..., None]), 
+                            axis = -1)
+    
+    if xvariable == 'radius':
+        return derivative
+    elif xvariable == 'theta':
+        return np.moveaxis(derivative, -1, -2)
+    elif xvariable == 'phi':
+        return np.moveaxis(derivative, -1, -3)
     
     return np.concatenate((derivative, (-y[...,-3] * x12 / (x01 * x02) +\
                                         y[..., -2] * x02 / (x01 * x12) - \

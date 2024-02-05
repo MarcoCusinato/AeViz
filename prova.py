@@ -52,8 +52,8 @@ Plot.plot1D('ENTR', 'radius', 32, None)
 input()
 """
 
-sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
-# sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
+#sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
+sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
 """
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00045000.h5')
@@ -76,8 +76,9 @@ ax2=axs[1].twinx()
 ax2.plot(sim.cell.radius(sim.ghost), IDL_derivative(radius, vx[32,:])/np.abs(vx[32, :]) * radius, color='b')
 """
 
-
-
+sim.innercore_radius()
+sim.PNS_nucleus_radius()
+"""
 #plt.show()
 data = sim.AE220()
 fig, axs = plt.subplots(3, 1, sharex=True)
@@ -86,3 +87,4 @@ axs[1].plot(data[1], data[4])
 axs[2].plot(data[1], data[5])
 plt.show()
 #print(time.shape, radius.shape, pr.shape)
+"""
