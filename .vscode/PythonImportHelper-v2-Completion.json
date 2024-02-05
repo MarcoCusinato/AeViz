@@ -549,22 +549,6 @@
         "documentation": {}
     },
     {
-        "label": "stft",
-        "importPath": "scipy.signal",
-        "description": "scipy.signal",
-        "isExtraImport": true,
-        "detail": "scipy.signal",
-        "documentation": {}
-    },
-    {
-        "label": "sph_harm",
-        "importPath": "scipy.special",
-        "description": "scipy.special",
-        "isExtraImport": true,
-        "detail": "scipy.special",
-        "documentation": {}
-    },
-    {
         "label": "factorial",
         "importPath": "scipy.special",
         "description": "scipy.special",
@@ -578,6 +562,22 @@
         "description": "scipy.special",
         "isExtraImport": true,
         "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
+        "label": "sph_harm",
+        "importPath": "scipy.special",
+        "description": "scipy.special",
+        "isExtraImport": true,
+        "detail": "scipy.special",
+        "documentation": {}
+    },
+    {
+        "label": "stft",
+        "importPath": "scipy.signal",
+        "description": "scipy.signal",
+        "isExtraImport": true,
+        "detail": "scipy.signal",
         "documentation": {}
     },
     {
@@ -658,6 +658,14 @@
         "description": "AeViz.utils.utils",
         "isExtraImport": true,
         "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "SphericalHarmonics",
+        "importPath": "AeViz.spherical_harmonics.spherical_harmonics",
+        "description": "AeViz.spherical_harmonics.spherical_harmonics",
+        "isExtraImport": true,
+        "detail": "AeViz.spherical_harmonics.spherical_harmonics",
         "documentation": {}
     },
     {
@@ -1033,6 +1041,24 @@
         "description": "AeViz.simulation.simulation",
         "peekOfCode": "u = units()\nclass Simulation:\n    def __init__(self, simulation_name, simulation_folder_path=None,\n                 dim = None):\n        \"\"\"\n        Simulation class initialization. Attibutes:\n        \"\"\"\n        ## Public attributes\n        self.simulation_name = simulation_name\n        self.path = find_simulation(self.simulation_name, pltf(),",
         "detail": "AeViz.simulation.simulation",
+        "documentation": {}
+    },
+    {
+        "label": "AssociatedLegendrePolynomials",
+        "kind": 6,
+        "importPath": "AeViz.spherical_harmonics.spherical_harmonics",
+        "description": "AeViz.spherical_harmonics.spherical_harmonics",
+        "peekOfCode": "class AssociatedLegendrePolynomials:\n    def __init__(self):\n        pass\n    def change_m_sign(self, m, l, P):\n        \"\"\"\n        Renormaqlizes the polynomial order from m to -m, using the\n        relation:\n        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)\n        Takes as input:\n            l: original degree of the polynomial",
+        "detail": "AeViz.spherical_harmonics.spherical_harmonics",
+        "documentation": {}
+    },
+    {
+        "label": "SphericalHarmonics",
+        "kind": 6,
+        "importPath": "AeViz.spherical_harmonics.spherical_harmonics",
+        "description": "AeViz.spherical_harmonics.spherical_harmonics",
+        "peekOfCode": "class SphericalHarmonics(AssociatedLegendrePolynomials):\n    def __init__(self):\n        pass\n    def Ylm(self, m, l, theta, phi):\n        \"\"\"\n        Calculates the spherical harmonic of order m and degree l.\n        Uses the definition:\n        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(\n            cos(theta)) exp(i m phi)\n        Takes as input:",
+        "detail": "AeViz.spherical_harmonics.spherical_harmonics",
         "documentation": {}
     },
     {
@@ -1712,24 +1738,6 @@
         "description": "AeViz.utils.radii_utils",
         "peekOfCode": "def interpol_2D(shock_radius, theta, phi):\n    mask = np.isnan(shock_radius)\n    if mask.sum() == 0:\n        return shock_radius\n    Phi, Theta = np.meshgrid(phi, theta)\n    shock_radius = np.ma.masked_invalid(shock_radius)\n    shock_radius[shock_radius.mask] = \\\n        griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),\n                 shock_radius.ravel(), (Phi[shock_radius.mask], \n                                        Theta[shock_radius.mask]),",
         "detail": "AeViz.utils.radii_utils",
-        "documentation": {}
-    },
-    {
-        "label": "AssociatedLegendrePolynomials",
-        "kind": 6,
-        "importPath": "AeViz.utils.spherical_harmonics",
-        "description": "AeViz.utils.spherical_harmonics",
-        "peekOfCode": "class AssociatedLegendrePolynomials:\n    def __init__(self):\n        pass\n    def change_m_sign(self, m, l, P):\n        \"\"\"\n        Renormaqlizes the polynomial order from m to -m, using the\n        relation:\n        P^m_l(x) = (-1)^m (l-m)!/(l+m)! P^-m_l(x)\n        Takes as input:\n            l: original degree of the polynomial",
-        "detail": "AeViz.utils.spherical_harmonics",
-        "documentation": {}
-    },
-    {
-        "label": "SphericalHarmonics",
-        "kind": 6,
-        "importPath": "AeViz.utils.spherical_harmonics",
-        "description": "AeViz.utils.spherical_harmonics",
-        "peekOfCode": "class SphericalHarmonics(AssociatedLegendrePolynomials):\n    def __init__(self):\n        pass\n    def Ylm(self, m, l, theta, phi):\n        \"\"\"\n        Calculates the spherical harmonic of order m and degree l.\n        Uses the definition:\n        Y^m_l(theta, phi) = (-)^m (2l+1)/(4π) (l-m)!/(l+m)! P^m_l(\n            cos(theta)) exp(i m phi)\n        Takes as input:",
-        "detail": "AeViz.utils.spherical_harmonics",
         "documentation": {}
     },
     {

@@ -7,6 +7,7 @@ from numpy.fft import fft, fftfreq
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar
 from AeViz.utils.file_utils import save_hdf
+from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 
 u = units()
 
@@ -372,3 +373,4 @@ def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
         IDL_derivative(time, outer_NE220)
 
 ## 3D
+
