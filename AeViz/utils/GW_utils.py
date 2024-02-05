@@ -253,13 +253,21 @@ def calculate_h(simulation, save_checkpoints=True):
     if simulation.dim == 1:
         print("No GWs for you :'(")
         return None
+    elif simulation.dim == 2:
+        return NE220_2D_timeseries(simulation, save_checkpoints)
     elif simulation.dim == 3:
         print("Not implemented yet")
-        checkpoint = 200
+        checkpoint = 50
         return None
-    elif simulation.dim == 2:
-        checkpoint = 600
-    
+
+## 2D
+
+def NE220_2D_timeseries(simulation, save_checkpoints):
+    """
+    Calculates the NE220 from density and velocities for every timestep
+    of a 2D simulation. It also calculates the full, nucleus, convection
+    and outer core contributions to the strain.
+    """
     if check_existence(simulation, 'NE220.h5'):
         time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
             read_NE220(simulation)
@@ -273,6 +281,7 @@ def calculate_h(simulation, save_checkpoints=True):
     else:
         start_point = 0
         print("No checkpoint found. Starting from step 0")
+    checkpoint = 600
     findex = start_point
     check_index = 0
     progress_index = 0
@@ -321,8 +330,6 @@ def calculate_h(simulation, save_checkpoints=True):
                       outer_NE220])
     return calculate_strain_2D(time, NE220, full_NE220, nuc_NE220,
                                         conv_NE220, outer_NE220)
-
-## 2D
 
 def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
           nuc_rad, ngcells):
@@ -373,4 +380,131 @@ def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
         IDL_derivative(time, outer_NE220)
 
 ## 3D
+
+def Qdot_mask_timeseries(simulation, save_checkpoints):
+    """
+    Calculates the NE220 from density and velocities for every timestep
+    of a 2D simulation. It also calculates the full, nucleus, convection
+    and outer core contributions to the strain.
+    """
+    if check_existence(simulation, 'Qdot.h5'):
+        time, Qdot, mask_inner, mask_nuc, mask_outer = \
+            read_Qdot_masks(simulation)
+        if len(simulation.hdf_file_list) == len(time):
+            pass
+        #    return calculate_strain_3D(time, NE220, full_NE220, nuc_NE220,
+        #                             conv_NE220, outer_NE220)
+        else:
+            start_point = len(time)
+            print("Checkpoint found." \
+                "Starting from step {}".format(start_point))
+    else:
+        start_point = 0
+        print("No checkpoint found. Starting from step 0")
+    checkpoint = 5
+    findex = start_point
+    check_index = 0
+    progress_index = 0
+    dV = simulation.cell.dVolume_integration(simulation.ghost)
+    _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
+    _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
+    
+    grad = spherical_harmonics_gradient(
+                                    simulation.cell.radius(simulation.ghost),
+                                    simulation.cell.theta(simulation.ghost),
+                                    simulation.cell.phi(simulation.ghost))
+    
+    for file in simulation.hdf_file_list[start_point:]:
+        Qd, minn, mnuc, mout = calculate_Qdot_masks(simulation, grad, file, dV,
+                            inner_rad[..., findex], igcells,
+                            nuc_rad[..., findex], ngcells)
+        try:
+            time = np.concatenate((time, simulation.time(file)))
+            Qdot = np.concatenate((Qdot, Qd[..., None]), axis=-1)
+            mask_inner = np.concatenate((mask_inner, minn[..., None]), axis=-1)
+            mask_nuc = np.concatenate((mask_nuc, mnuc[..., None]), axis=-1)
+            mask_outer = np.concatenate((mask_outer, mout[..., None]), axis=-1)
+        except:
+            time = simulation.time(file)
+            Qdot = Qd[..., None]
+            mask_inner = minn[..., None]
+            mask_nuc = mnuc[..., None]
+            mask_outer = mout[..., None]
+            
+        if save_checkpoints and check_index == checkpoint:
+            save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
+                     ['time', 'Qdot', 'mask_inner', 'mask_nucleus',
+                      'mask_outer'],
+                     [time, Qdot, mask_inner, mask_nuc, mask_outer])
+            check_index = 0
+        check_index += 1
+        progress_index += 1
+        findex += 1
+        progressBar(progress_index, len(simulation.hdf_file_list))
+    
+    print("Computations done, saving...")
+    save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
+                     ['time', 'Qdot', 'mask_inner', 'mask_nucleus',
+                      'mask_outer'],
+                     [time, Qdot, mask_inner, mask_nuc, mask_outer])
+    return None
+
+def spherical_harmonics_gradient(radius, theta, phi):
+    """
+    Calculates the gradient of the conjugate spherical harmonics times
+    the radius for l = 2.
+    Returns a list of arrays with dimension (len(phi), lewn(theta),
+    len(radius), 3) containing the gradient of the conjugate spherical
+    harmonics times the radius from m=-2 to m=2.
+    """
+    gradient = []
+    harmonics = SphericalHarmonics()
+    for m in range(-2, 3):
+        Y2m_r = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
+            radius[None, None, :] ** 2
+        gradient.append(np.concatenate(
+                        (IDL_derivative(phi, Y2m_r, 'phi')[..., None],
+                        IDL_derivative(theta, Y2m_r, 'theta')[..., None],
+                        IDL_derivative(radius, Y2m_r, 'radius')[..., None]),
+                        axis=-1))
+    return gradient
+
+def calculate_Qdot_masks(simulation, gradY, file_name, dV, inner_rad, igcells,
+          nuc_rad, ngcells):
+    """
+    Calculates the Qdot for the different regions of the star.
+    \dot{Q} = dV ρ ∇(v Y*_2m)
+    """
+    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
+        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
+                                                    **ngcells)[..., None]
+    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
+        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
+                                             **igcells)[..., None] + 2e6) & \
+        (np.logical_not(mask_nuc))
+    mask_outer = np.logical_not(mask_inner + mask_nuc)
+    
+    rho = simulation.rho(file_name)* dV
+    v_r = simulation.radial_velocity(file_name)
+    v_t = simulation.theta_velocity(file_name)
+    v_p = simulation.phi_velocity(file_name)
+    Qdot = (rho * (v_r * gradY[0][..., 0] + v_t * gradY[0][..., 1] + v_p \
+        * gradY[0][..., 2]))[..., None]
+    for i in range(1, 5):
+        Qdot = np.concatenate((Qdot, (rho * (v_r * gradY[i][..., 0] + v_t * \
+            gradY[i][..., 1] + v_p * gradY[i][..., 2]))[..., None]), axis=-1)
+    return Qdot, mask_inner, mask_nuc, mask_outer
+
+def read_Qdot_masks(simulation):
+    """
+    Reads the Qdot and masks from a checkpoint file.
+    """
+    data = h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5'), 'r')
+    time = data['time'][...]
+    Qdot = data['Qdot'][...]
+    mask_inner = data['mask_inner'][...]
+    mask_nuc = data['mask_nucleus'][...]
+    mask_outer = data['mask_outer'][...]
+    data.close()
+    return time, Qdot, mask_inner, mask_nuc, mask_outer
 
