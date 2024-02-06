@@ -1,0 +1,22 @@
+Metadata-Version: 2.1
+Name: AeViz
+Version: 0.1.0
+Summary: Library to analyze data from simulation of core collapse supernovae done with Aenus-ALCAR.
+Home-page: https://github.com/MarcoCusinato/AeViz
+Download-URL: https://github.com/MarcoCusinato/AeViz
+Author: Marco Cusinato
+Author-email: marco.cusinato@uv.es
+Keywords: Aenus-ALCAR,astrophysics,supernovae
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: Topic :: Scientific/Engineering :: Astrophysics
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE

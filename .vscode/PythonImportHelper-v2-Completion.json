@@ -825,6 +825,80 @@
         "documentation": {}
     },
     {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "platform",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "platform",
+        "description": "platform",
+        "detail": "platform",
+        "documentation": {}
+    },
+    {
+        "label": "clean",
+        "importPath": "distutils.command.clean",
+        "description": "distutils.command.clean",
+        "isExtraImport": true,
+        "detail": "distutils.command.clean",
+        "documentation": {}
+    },
+    {
+        "label": "Extension",
+        "importPath": "setuptools",
+        "description": "setuptools",
+        "isExtraImport": true,
+        "detail": "setuptools",
+        "documentation": {}
+    },
+    {
+        "label": "setup",
+        "importPath": "setuptools",
+        "description": "setuptools",
+        "isExtraImport": true,
+        "detail": "setuptools",
+        "documentation": {}
+    },
+    {
+        "label": "Command",
+        "importPath": "setuptools",
+        "description": "setuptools",
+        "isExtraImport": true,
+        "detail": "setuptools",
+        "documentation": {}
+    },
+    {
+        "label": "find_packages",
+        "importPath": "setuptools",
+        "description": "setuptools",
+        "isExtraImport": true,
+        "detail": "setuptools",
+        "documentation": {}
+    },
+    {
+        "label": "build_ext",
+        "importPath": "setuptools.command.build_ext",
+        "description": "setuptools.command.build_ext",
+        "isExtraImport": true,
+        "detail": "setuptools.command.build_ext",
+        "documentation": {}
+    },
+    {
+        "label": "install",
+        "importPath": "setuptools.command.install",
+        "description": "setuptools.command.install",
+        "isExtraImport": true,
+        "detail": "setuptools.command.install",
+        "documentation": {}
+    },
+    {
         "label": "cell",
         "kind": 6,
         "importPath": "AeViz.cell.cell",
@@ -1933,6 +2007,78 @@
         "description": "prova",
         "peekOfCode": "#data = sim.AE220()\n#fig, axs = plt.subplots(3, 1, sharex=True)\n#axs[0].plot(data[1], data[3])\n#axs[1].plot(data[1], data[4])\n#axs[2].plot(data[1], data[5])\nplt.show()\n#print(time.shape, radius.shape, pr.shape)",
         "detail": "prova",
+        "documentation": {}
+    },
+    {
+        "label": "CustomInstallCommand",
+        "kind": 6,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "class CustomInstallCommand(install):\n    def run(self):\n        install.run(self)\nVERSION = get_version()\nsetup_requires = []\ninstall_requires = setup_requires + get_requirements()\nsetup(\n    name = 'AeViz',\n    version = VERSION,\n    description = 'Library to analyze data from simulation of core ' \\",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "find_files",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def find_files(dirname, relpath=None):\n    def find_paths(dirname):\n        items = []\n        for fname in os.listdir(dirname):\n            path = os.path.join(dirname, fname)\n            if os.path.isdir(path):\n                items += find_paths(path)\n            elif not path.endswith(\".py\") and not path.endswith(\".pyc\"):\n                items.append(path)\n        return items",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "get_version",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def get_version():\n    \"\"\"Get the version info from the __version_ file\"\"\"\n    with open(os.path.join('__version__')) as version_file:\n        for line in version_file:\n            if line.startswith('__version__'):\n                return eval(line.split('=')[-1])\ndef get_requirements():\n    \"\"\"Get the requirements from the requirements file\"\"\"\n    with open(os.path.join('requirements.txt')) as requirements_file:\n        requirements = requirements_file.readlines()",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "get_requirements",
+        "kind": 2,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "def get_requirements():\n    \"\"\"Get the requirements from the requirements file\"\"\"\n    with open(os.path.join('requirements.txt')) as requirements_file:\n        requirements = requirements_file.readlines()\n    return [r.replace('\\n', '') for r in requirements]\nclass CustomInstallCommand(install):\n    def run(self):\n        install.run(self)\nVERSION = get_version()\nsetup_requires = []",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "requires",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "requires = []\ndef find_files(dirname, relpath=None):\n    def find_paths(dirname):\n        items = []\n        for fname in os.listdir(dirname):\n            path = os.path.join(dirname, fname)\n            if os.path.isdir(path):\n                items += find_paths(path)\n            elif not path.endswith(\".py\") and not path.endswith(\".pyc\"):\n                items.append(path)",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "VERSION",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "VERSION = get_version()\nsetup_requires = []\ninstall_requires = setup_requires + get_requirements()\nsetup(\n    name = 'AeViz',\n    version = VERSION,\n    description = 'Library to analyze data from simulation of core ' \\\n        'collapse supernovae done with Aenus-ALCAR.',\n    long_description = open('README.md').read(),\n    long_description_content_type='text/markdown',",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "setup_requires",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "setup_requires = []\ninstall_requires = setup_requires + get_requirements()\nsetup(\n    name = 'AeViz',\n    version = VERSION,\n    description = 'Library to analyze data from simulation of core ' \\\n        'collapse supernovae done with Aenus-ALCAR.',\n    long_description = open('README.md').read(),\n    long_description_content_type='text/markdown',\n    author = 'Marco Cusinato',",
+        "detail": "setup",
+        "documentation": {}
+    },
+    {
+        "label": "install_requires",
+        "kind": 5,
+        "importPath": "setup",
+        "description": "setup",
+        "peekOfCode": "install_requires = setup_requires + get_requirements()\nsetup(\n    name = 'AeViz',\n    version = VERSION,\n    description = 'Library to analyze data from simulation of core ' \\\n        'collapse supernovae done with Aenus-ALCAR.',\n    long_description = open('README.md').read(),\n    long_description_content_type='text/markdown',\n    author = 'Marco Cusinato',\n    author_email = 'marco.cusinato@uv.es',",
+        "detail": "setup",
         "documentation": {}
     }
 ]
