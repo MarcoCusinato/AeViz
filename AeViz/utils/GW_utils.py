@@ -507,4 +507,3 @@ def read_Qdot_masks(simulation):
     mask_outer = data['mask_outer'][...]
     data.close()
     return time, Qdot, mask_inner, mask_nuc, mask_outer
-

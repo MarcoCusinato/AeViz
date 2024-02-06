@@ -96,7 +96,11 @@ def shock_radius(simulation, file_name):
             shock_radius_2D(simulation, file_name)),
                            simulation.cell.theta(simulation.ghost))
     elif simulation.dim == 3:
-        return hampel_filter(shock_radius_3D(simulation, file_name))
+        Theta, Phi = np.meshgrid(simulation.cell.theta(simulation.ghost), 
+                                 simulation.cell.phi(simulation.ghost))
+        return interpol_2D(shock_radius_3D(simulation,
+                                                         file_name),
+                           Theta, Phi)
     else:
         raise ValueError("Invalid dimension")
     
@@ -146,17 +150,19 @@ def shock_radius_3D(simulation, file_name):
                          simulation.radial_velocity(file_name)) * \
                              simulation.cell.radius(simulation.ghost) / \
                              np.abs(simulation.radial_velocity(file_name))
+    s = simulation.entropy(file_name)
     shock_r = np.empty((dP.shape[0], dP.shape[1]))
     shock_r.fill(np.nan)
     for ip in range(dP.shape[0]):
         for it in range(dP.shape[1]):
             for ir in reversed(range(dP.shape[2] - 1)):
-                if (dP[ip, it, ir] < -10) and np.any(dvr[ip, it, max(0,ir-5):
-                                                    min(ir+6, dP.shape[2] - 1)] 
-                                                    < -20):
-                    shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
+                if (dP[ip, it, ir] < -10) and \
+                (np.any(dvr[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)] 
+                    < -20)) and \
+                (np.all(s[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)]
+                        < 100)):
+                    shock_r[ip, it] = simulation.cell.radius(simulation.ghost)[ir]
                     break
-    print(shock_r)
     return shock_r
 
 def hampel_filter(shock_radius, sigma=3):
@@ -166,7 +172,6 @@ def hampel_filter(shock_radius, sigma=3):
     
     assert shock_radius.size > 1 and shock_radius.ndim >= 1, "Expected 1 or 2 \
             dimensional array, with at least 2 elements."
-    print("here")
     for i in range(10):
         rmedian = np.nanmedian(shock_radius)
         diff = np.abs(shock_radius - rmedian)
@@ -179,7 +184,6 @@ def hampel_filter(shock_radius, sigma=3):
         num_outliers = np.sum(mask)
         if num_outliers == 0:
             break
-    print("Number of outliers: ", num_outliers)
     return shock_radius
         
     
@@ -191,16 +195,16 @@ def interpol_1D(shock_radius, theta):
                                    shock_radius[~mask])
     return shock_radius
 
-def interpol_2D(shock_radius, theta, phi):
+def interpol_2D(shock_radius, Theta, Phi):
     mask = np.isnan(shock_radius)
     if mask.sum() == 0:
         return shock_radius
-    Phi, Theta = np.meshgrid(phi, theta)
+    median = np.nanmedian(shock_radius)
     shock_radius = np.ma.masked_invalid(shock_radius)
     shock_radius[shock_radius.mask] = \
         griddata((Phi[~shock_radius.mask], Theta[~shock_radius.mask]),
-                 shock_radius.ravel(), (Phi[shock_radius.mask], 
+                 shock_radius[~shock_radius.mask].ravel(), (Phi[shock_radius.mask], 
                                         Theta[shock_radius.mask]),
-                    method='linear', fill_value=None)
+                    method='linear', fill_value=median)
     return shock_radius
     

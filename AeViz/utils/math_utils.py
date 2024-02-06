@@ -9,38 +9,39 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
         indices = {'r': 1, 't': 0, 'p': None}
     elif dim == 3:
         indices = {'r': 2, 't': 1, 'p': 0}
-
+    mask = np.isnan(qt)
     if av_type == 'Omega':
         if dim < 2:
             return qt
         if dV.ndim != qt.ndim:
             dV = dV[..., None]
-        av = np.sum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
+        av = np.nansum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV[~mask])
     elif av_type == 'theta':
         if dim < 2:
             return qt
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], 
+        av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['p']] 
-                                         if i is not None])) / np.sum(dV)
+                                         if i is not None])) / np.sum(dV[~mask])
     elif av_type == 'phi':
         if dim < 2:
             return qt
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['r'], 
+        av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['t']]
-                                         if i is not None])) / np.sum(dV)
+                                         if i is not None])) / np.sum(dV[~mask])
     elif av_type == 'radius':
-        av = np.sum(qt * dV, axis=tuple([i for i in [indices['t'], 
+        av = np.nansum(qt * dV, axis=tuple([i for i in [indices['t'], 
                                                      indices['p']] 
-                                         if i is not None])) / np.sum(dV)
+                                         if i is not None])) / np.sum(dV[~mask])
     elif av_type == 'volume':
-        av = np.sum(qt * dV) / np.sum(dV)
+        av = np.nansum(qt * dV) / np.sum(dV[~mask])
     return av
 
 def function_average_radii(qt, dim, dOmega):
     if dim == 1:
         return qt
     else:
-        return np.nansum(qt * dOmega) / (4 * np.pi)
+        mask = np.isnan(qt)
+        return np.nansum(qt * dOmega) / (dOmega[~mask]).sum()
         
 
 def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):
