@@ -138,7 +138,6 @@ def shock_radius_2D(simulation, file_name):
                 shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
                 break
     ## COPY over the gcells
-    print(shock_r)
     return shock_r
 
 
