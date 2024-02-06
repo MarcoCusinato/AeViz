@@ -58,10 +58,11 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
         unb_data = unbound_mass_energy(simulation, file, dV)
         try:
             time = np.concatenate((time, simulation.time(file)))
-            mdot = np.concatenate((mdot, np.array(mass_flux(simulation, file, 
-                                                       dOmega, radius_index))))
+            mdot = np.concatenate((mdot, np.array([mass_flux(simulation, file, 
+                                                    dOmega, radius_index)])))
             inner_me['mass'] = np.concatenate((inner_me['mass'], 
                                                 np.array([in_data[0]])))
+            
             inner_me['kinetic_ene'] = np.concatenate((inner_me['kinetic_ene'],
                                                 np.array([in_data[1]])))
             inner_me['magnetic_ene'] = np.concatenate((inner_me['magnetic_ene'],
@@ -74,6 +75,7 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 inner_me['total_ene'], np.array([in_data[5]])))
             inner_me['T_W'] = np.concatenate((
                 inner_me['T_W'], np.array([in_data[6]])))
+            
             gain_me['mass'] = np.concatenate((gain_me['mass'], 
                                                 np.array([gr_data[0]])))
             gain_me['heating_ene'] = np.concatenate((gain_me['heating_ene'],
@@ -98,7 +100,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                                                 np.array([unb_data[1]])))
         except:
             time = simulation.time(file)
-            mdot = np.array(mass_flux(simulation, file, dOmega, radius_index))
+            mdot = np.array([mass_flux(simulation, file, dOmega,
+                                       radius_index)])
             inner_me = {
                 'mass': np.array([in_data[0]]),
                 'kinetic_ene': np.array([in_data[1]]),
@@ -152,9 +155,9 @@ def read_masses_energies(simulation):
         masses_energies_data['mass_flux'][...],
         {
             'mass': masses_energies_data['innercore/mass'][...],
-            'kinetic_ene': masses_energies_data['innercore/kinetic_energy']\
+            'kinetic_ene': masses_energies_data['innercore/kinetic_ene']\
                 [...],
-            'magnetic_ene': masses_energies_data['innercore/magnetic_energy']\
+            'magnetic_ene': masses_energies_data['innercore/magnetic_ene']\
                 [...],
             'rotational_ene': masses_energies_data['innercore/rotational_ene']\
                 [...],
@@ -169,8 +172,8 @@ def read_masses_energies(simulation):
         },
         {
             'mass': masses_energies_data['PNS/mass'][...],
-            'kinetic_ene': masses_energies_data['PNS/kinetic_energy'][...],
-            'magnetic_ene': masses_energies_data['PNS/magnetic_energy'][...],
+            'kinetic_ene': masses_energies_data['PNS/kinetic_ene'][...],
+            'magnetic_ene': masses_energies_data['PNS/magnetic_ene'][...],
             'rotational_ene': masses_energies_data['PNS/rotational_ene'][...],
             'grav_ene': masses_energies_data['PNS/grav_ene'][...],
             'total_ene': masses_energies_data['PNS/total_ene'][...],

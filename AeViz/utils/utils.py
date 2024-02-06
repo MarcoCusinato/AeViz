@@ -26,8 +26,8 @@ def time_array(simulation):
     Get the time array of the local simulation output.
     """
     if check_existence(simulation, 'time.h5'):
-        data = h5py.File('time.h5', 'r')
-        time_array = data['time'][:]
+        data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
+        time_array = data['time'][...]
         data.close()
         if len(time_array) == len(simulation.hdf_file_list):
             return time_array
@@ -45,7 +45,8 @@ def time_array(simulation):
             time_array = simulation.time(file_name)
         progressBar(progress_index, total_index, 'Storing timeseries')
         progress_index += 1
-    save_hdf('time.h5', ['time'], ['time'])
+    save_hdf(os.path.join(simulation.storage_path, 'time.h5'),
+             ['time'], [time_array])
     return time_array
         
         

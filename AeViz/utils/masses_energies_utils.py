@@ -115,11 +115,13 @@ def mass_flux(simulation, file_name, dOmega, radius_index):
     """
     if simulation.dim == 1:
         return -u.convert_to_solar_masses(4 * np.pi * \
-                simulation.cell.radius(radius_index) ** 2 * np.sum( \
-                simulation.radial_velocity(file_name)[radius_index] * \
-                    simulation.rho(file_name)[radius_index]))
+                simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \
+                np.sum(simulation.radial_velocity(file_name)[radius_index] * \
+                simulation.rho(file_name)[radius_index]))
     
-    return -u.convert_to_solar_masses(
-        simulation.cell.radius(simulation.ghost) ** 2 * np.sum(dOmega * \
-            simulation.radial_velocity(file_name)[..., radius_index] * \
+    return  -u.convert_to_solar_masses(
+        simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \
+            np.sum(dOmega *\
+                simulation.radial_velocity(file_name)[..., radius_index] * \
             simulation.rho(file_name)[..., radius_index]))
+    

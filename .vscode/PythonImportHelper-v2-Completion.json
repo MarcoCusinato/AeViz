@@ -2146,7 +2146,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.load_save_mass_ene_utils",
         "description": "AeViz.utils.load_save_mass_ene_utils",
-        "peekOfCode": "def read_masses_energies(simulation):\n    masses_energies_data = h5py.File(os.path.join(simulation.storage_path, \n                                            'masses_energies.h5'), 'r')\n    data = [\n        masses_energies_data['time'][...],\n        masses_energies_data['mass_flux'][...],\n        {\n            'mass': masses_energies_data['innercore/mass'][...],\n            'kinetic_ene': masses_energies_data['innercore/kinetic_energy']\\\n                [...],",
+        "peekOfCode": "def read_masses_energies(simulation):\n    masses_energies_data = h5py.File(os.path.join(simulation.storage_path, \n                                            'masses_energies.h5'), 'r')\n    data = [\n        masses_energies_data['time'][...],\n        masses_energies_data['mass_flux'][...],\n        {\n            'mass': masses_energies_data['innercore/mass'][...],\n            'kinetic_ene': masses_energies_data['innercore/kinetic_ene']\\\n                [...],",
         "detail": "AeViz.utils.load_save_mass_ene_utils",
         "documentation": {}
     },
@@ -2231,7 +2231,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.masses_energies_utils",
         "description": "AeViz.utils.masses_energies_utils",
-        "peekOfCode": "def mass_flux(simulation, file_name, dOmega, radius_index):\n    \"\"\"\n    Callulates the flow of matter at the index\n    \"\"\"\n    if simulation.dim == 1:\n        return -u.convert_to_solar_masses(4 * np.pi * \\\n                simulation.cell.radius(radius_index) ** 2 * np.sum( \\\n                simulation.radial_velocity(file_name)[radius_index] * \\\n                    simulation.rho(file_name)[radius_index]))\n    return -u.convert_to_solar_masses(",
+        "peekOfCode": "def mass_flux(simulation, file_name, dOmega, radius_index):\n    \"\"\"\n    Callulates the flow of matter at the index\n    \"\"\"\n    if simulation.dim == 1:\n        return -u.convert_to_solar_masses(4 * np.pi * \\\n                simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \\\n                np.sum(simulation.radial_velocity(file_name)[radius_index] * \\\n                simulation.rho(file_name)[radius_index]))\n    return  -u.convert_to_solar_masses(",
         "detail": "AeViz.utils.masses_energies_utils",
         "documentation": {}
     },
@@ -2627,7 +2627,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
-        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File('time.h5', 'r')\n        time_array = data['time'][:]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
+        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')\n        time_array = data['time'][...]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
         "detail": "AeViz.utils.utils",
         "documentation": {}
     },
@@ -3167,7 +3167,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.load_save_mass_ene_utils",
         "description": "build.lib.AeViz.utils.load_save_mass_ene_utils",
-        "peekOfCode": "def read_masses_energies(simulation):\n    masses_energies_data = h5py.File(os.path.join(simulation.storage_path, \n                                            'masses_energies.h5'), 'r')\n    data = [\n        masses_energies_data['time'][...],\n        masses_energies_data['mass_flux'][...],\n        {\n            'mass': masses_energies_data['innercore/mass'][...],\n            'kinetic_ene': masses_energies_data['innercore/kinetic_energy']\\\n                [...],",
+        "peekOfCode": "def read_masses_energies(simulation):\n    masses_energies_data = h5py.File(os.path.join(simulation.storage_path, \n                                            'masses_energies.h5'), 'r')\n    data = [\n        masses_energies_data['time'][...],\n        masses_energies_data['mass_flux'][...],\n        {\n            'mass': masses_energies_data['innercore/mass'][...],\n            'kinetic_ene': masses_energies_data['innercore/kinetic_ene']\\\n                [...],",
         "detail": "build.lib.AeViz.utils.load_save_mass_ene_utils",
         "documentation": {}
     },
@@ -3252,7 +3252,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.masses_energies_utils",
         "description": "build.lib.AeViz.utils.masses_energies_utils",
-        "peekOfCode": "def mass_flux(simulation, file_name, dOmega, radius_index):\n    \"\"\"\n    Callulates the flow of matter at the index\n    \"\"\"\n    if simulation.dim == 1:\n        return -u.convert_to_solar_masses(4 * np.pi * \\\n                simulation.cell.radius(radius_index) ** 2 * np.sum( \\\n                simulation.radial_velocity(file_name)[radius_index] * \\\n                    simulation.rho(file_name)[radius_index]))\n    return -u.convert_to_solar_masses(",
+        "peekOfCode": "def mass_flux(simulation, file_name, dOmega, radius_index):\n    \"\"\"\n    Callulates the flow of matter at the index\n    \"\"\"\n    if simulation.dim == 1:\n        return -u.convert_to_solar_masses(4 * np.pi * \\\n                simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \\\n                np.sum(simulation.radial_velocity(file_name)[radius_index] * \\\n                simulation.rho(file_name)[radius_index]))\n    return  -u.convert_to_solar_masses(",
         "detail": "build.lib.AeViz.utils.masses_energies_utils",
         "documentation": {}
     },
@@ -3648,7 +3648,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.utils",
         "description": "build.lib.AeViz.utils.utils",
-        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File('time.h5', 'r')\n        time_array = data['time'][:]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
+        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')\n        time_array = data['time'][...]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
         "detail": "build.lib.AeViz.utils.utils",
         "documentation": {}
     },
