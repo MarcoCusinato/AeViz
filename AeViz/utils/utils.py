@@ -35,13 +35,16 @@ def time_array(simulation):
             start_time = len(time_array)
     else:
         start_time = 0
-    
+    progress_index = start_time
+    total_index = len(simulation.hdf_file_list[start_time:])
     for file_name in simulation.hdf_file_list[start_time:]:
         try:
             time_array = np.concatenate((time_array,
                                          simulation.time(file_name)))
         except:
             time_array = simulation.time(file_name)
+        progressBar(progress_index, total_index, 'Storing timeseries')
+        progress_index += 1
     save_hdf('time.h5', ['time'], ['time'])
     return time_array
         

@@ -339,6 +339,14 @@
         "documentation": {}
     },
     {
+        "label": "cell",
+        "importPath": "AeViz.cell.cell",
+        "description": "AeViz.cell.cell",
+        "isExtraImport": true,
+        "detail": "AeViz.cell.cell",
+        "documentation": {}
+    },
+    {
         "label": "ghost",
         "importPath": "AeViz.cell.ghost",
         "description": "AeViz.cell.ghost",
@@ -3397,7 +3405,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.path_utils",
         "description": "build.lib.AeViz.utils.path_utils",
-        "peekOfCode": "def check_subpaths_for_simulations(path, simDict, simulations):\n    \"\"\"\n    Recursively checks a folder and its subfolders to ensure the presence\n    of a simulation. Since every simulation contains a 'outp-hdf' folder\n    we use its presence as a criterion. If a simulation is fuond, it is stored\n    in the simulations dictionary.\n    \"\"\"\n    try:\n        dirs = remove_not_useful_folders(os.listdir(path))\n        print('foooooooooo')",
+        "peekOfCode": "def check_subpaths_for_simulations(path, simDict, simulations):\n    \"\"\"\n    Recursively checks a folder and its subfolders to ensure the presence\n    of a simulation. Since every simulation contains a 'outp-hdf' folder\n    we use its presence as a criterion. If a simulation is fuond, it is stored\n    in the simulations dictionary.\n    \"\"\"\n    try:\n        dirs = remove_not_useful_folders(os.listdir(path))\n    except:",
         "detail": "build.lib.AeViz.utils.path_utils",
         "documentation": {}
     },

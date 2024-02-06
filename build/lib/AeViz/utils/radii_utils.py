@@ -134,13 +134,11 @@ def shock_radius_2D(simulation, file_name):
     for it in range(dP.shape[0]):
         for ir in reversed(range(dP.shape[1] - 1)):
             if (dP[it, ir] < -10) and \
-                (np.any(dvr[it, max(0,ir-5):min(ir+6, dP.shape[1]-1)] < -20)) \
-                and (np.all(s[it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)]
-                        < 100)):
+                (np.any(dvr[it, max(0,ir-5):min(ir+6, dP.shape[1]-1)] < -20)):
                 shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
                 break
     ## COPY over the gcells
-    
+    print(shock_r)
     return shock_r
 
 
