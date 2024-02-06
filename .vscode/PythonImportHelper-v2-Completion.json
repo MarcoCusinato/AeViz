@@ -332,6 +332,14 @@
         "documentation": {}
     },
     {
+        "label": "function_average",
+        "importPath": "AeViz.utils.math_utils",
+        "description": "AeViz.utils.math_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.math_utils",
+        "documentation": {}
+    },
+    {
         "label": "function_average_radii",
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
@@ -509,7 +517,7 @@
         "documentation": {}
     },
     {
-        "label": "Qdot_mask_timeseries",
+        "label": "Qdot_timeseries",
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
         "isExtraImport": true,
@@ -566,14 +574,6 @@
     },
     {
         "label": "binom",
-        "importPath": "scipy.special",
-        "description": "scipy.special",
-        "isExtraImport": true,
-        "detail": "scipy.special",
-        "documentation": {}
-    },
-    {
-        "label": "sph_harm",
         "importPath": "scipy.special",
         "description": "scipy.special",
         "isExtraImport": true,
@@ -1257,11 +1257,11 @@
         "documentation": {}
     },
     {
-        "label": "Qdot_mask_timeseries",
+        "label": "Qdot_timeseries",
         "kind": 2,
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
-        "peekOfCode": "def Qdot_mask_timeseries(simulation, save_checkpoints):\n    \"\"\"\n    Calculates the NE220 from density and velocities for every timestep\n    of a 2D simulation. It also calculates the full, nucleus, convection\n    and outer core contributions to the strain.\n    \"\"\"\n    if check_existence(simulation, 'Qdot.h5'):\n        time, Qdot, mask_inner, mask_nuc, mask_outer = \\\n            read_Qdot_masks(simulation)\n        if len(simulation.hdf_file_list) == len(time):",
+        "peekOfCode": "def Qdot_timeseries(simulation, save_checkpoints):\n    \"\"\"\n    Calculates the NE220 from density and velocities for every timestep\n    of a 2D simulation. It also calculates the full, nucleus, convection\n    and outer core contributions to the strain.\n    \"\"\"\n    if check_existence(simulation, 'Qdot.h5'):\n        time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer = \\\n            read_Qdot(simulation)\n        if len(simulation.hdf_file_list) == len(time):",
         "detail": "AeViz.utils.GW_utils",
         "documentation": {}
     },
@@ -1275,20 +1275,29 @@
         "documentation": {}
     },
     {
-        "label": "calculate_Qdot_masks",
+        "label": "calculate_Qdot",
         "kind": 2,
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
-        "peekOfCode": "def calculate_Qdot_masks(simulation, gradY, file_name, dV, inner_rad, igcells,\n          nuc_rad, ngcells):\n    \"\"\"\n    Calculates the Qdot for the different regions of the star.\n    \\dot{Q} = dV ρ ∇(v Y*_2m)\n    \"\"\"\n    mask_nuc = simulation.cell.radius(simulation.ghost) <= \\\n        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,\n                                                    **ngcells)[..., None]\n    mask_inner = (simulation.cell.radius(simulation.ghost) <= \\",
+        "peekOfCode": "def calculate_Qdot(simulation, gradY, file_name, dV, dOmega, \n                        inner_rad, igcells, nuc_rad, ngcells):\n    \"\"\"\n    Calculates the Qdot for the different regions of the star.\n    \\dot{Q} = dV ρ ∇(v Y*_2m)\n    \"\"\"\n    mask_nuc = simulation.cell.radius(simulation.ghost) <= \\\n        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,\n                                                    **ngcells)[..., None]\n    mask_inner = (simulation.cell.radius(simulation.ghost) <= \\",
         "detail": "AeViz.utils.GW_utils",
         "documentation": {}
     },
     {
-        "label": "read_Qdot_masks",
+        "label": "read_Qdot",
         "kind": 2,
         "importPath": "AeViz.utils.GW_utils",
         "description": "AeViz.utils.GW_utils",
-        "peekOfCode": "def read_Qdot_masks(simulation):\n    \"\"\"\n    Reads the Qdot and masks from a checkpoint file.\n    \"\"\"\n    data = h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5'), 'r')\n    time = data['time'][...]\n    Qdot = data['Qdot'][...]\n    mask_inner = data['mask_inner'][...]\n    mask_nuc = data['mask_nucleus'][...]\n    mask_outer = data['mask_outer'][...]",
+        "peekOfCode": "def read_Qdot(simulation):\n    \"\"\"\n    Reads the Qdot and masks from a checkpoint file.\n    \"\"\"\n    data = h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5'), 'r')\n    time = data['time'][...]\n    Qdot_radial = data['Qdot_radial'][...]\n    Qdot_total = data['Qdot_total'][...]\n    Qdot_inner = data['Qdot_inner'][...]\n    Qdot_nucleus = data['Qdot_nucleus'][...]",
+        "detail": "AeViz.utils.GW_utils",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_strain_3D",
+        "kind": 2,
+        "importPath": "AeViz.utils.GW_utils",
+        "description": "AeViz.utils.GW_utils",
+        "peekOfCode": "def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,\n                        Qdot_inner, Qdot_nucleus, Qdot_outer):\n    harmonics = SphericalHarmonics()\n    h = 0 + 0j\n    for m in range(-2, 3):\n        Y22m = harmonics.spin_weighted_Ylm(-2, m, 2, THETA, PHI)\n        Qdot_radial[:, m, :] = IDL_derivative(time, Qdot_radial[:, m, :]) * \\\n            Y22m\n        Qdot_total[m, :]= IDL_derivative(time, Qdot_total[m, :]) * Y22m\n        Qdot_inner[m, :]= IDL_derivative(time, Qdot_inner[m, :]) * Y22m",
         "detail": "AeViz.utils.GW_utils",
         "documentation": {}
     },
@@ -1463,7 +1472,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def function_average_radii(qt, dim, dOmega):\n    if dim == 1:\n        return qt\n    else:\n        mask = np.isnan(qt)\n        return np.nansum(qt * dOmega) / (dOmega[~mask]).sum()\ndef IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` ",
+        "peekOfCode": "def function_average_radii(qt, dim, dOmega):\n    if dim == 1:\n        return qt\n    else:\n        mask = np.isnan(qt)\n        return np.nansum(qt * dOmega) / (dOmega[~mask]).sum()\ndef IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` ",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -1472,7 +1481,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.math_utils",
         "description": "AeViz.utils.math_utils",
-        "peekOfCode": "def IDL_derivative(x, y, xvariable: Literal['radius', 'theta', 'phi'] = 'radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` \n    \"\"\"\n    if xvariable == 'theta':\n        y = np.moveaxis(y, -2, -1)\n    elif xvariable == 'phi':\n        y = np.moveaxis(y, -3, -1)\n    assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \\",
+        "peekOfCode": "def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius'):\n    \"\"\"\n    Derivatie performed using three point Lagrangian interpolation, as in:\n    `https://www.l3harrisgeospatial.com/docs/deriv.html` \n    \"\"\"\n    if xvariable == 'theta':\n        y = np.moveaxis(y, -2, -1)\n    elif xvariable == 'phi':\n        y = np.moveaxis(y, -3, -1)\n    assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \\",
         "detail": "AeViz.utils.math_utils",
         "documentation": {}
     },
@@ -1859,7 +1868,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "#sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\nsim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\nsim.shock_radius()\n#Qdot_mask_timeseries(sim, True)\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00003300.h5')\nvx = sim.radial_velocity('h00003300.h5')\ns = sim.entropy('h00003300.h5')\nshock = shock_radius(sim, 'h00003300.h5')\nprint(shock[ 100,  7])",
+        "peekOfCode": "#sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')\nsim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\nsim.shock_radius()\nh =Qdot_timeseries(sim, True)\nplt.plot(h[0], h[2][0])\nplt.show()\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00003300.h5')\nvx = sim.radial_velocity('h00003300.h5')\ns = sim.entropy('h00003300.h5')",
         "detail": "prova",
         "documentation": {}
     },
@@ -1868,7 +1877,7 @@
         "kind": 5,
         "importPath": "prova",
         "description": "prova",
-        "peekOfCode": "sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\nsim.shock_radius()\n#Qdot_mask_timeseries(sim, True)\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00003300.h5')\nvx = sim.radial_velocity('h00003300.h5')\ns = sim.entropy('h00003300.h5')\nshock = shock_radius(sim, 'h00003300.h5')\nprint(shock[ 100,  7])\n#print(np.any(shock==np.nan))",
+        "peekOfCode": "sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')\nsim.shock_radius()\nh =Qdot_timeseries(sim, True)\nplt.plot(h[0], h[2][0])\nplt.show()\nradius = sim.cell.radius(sim.ghost)\nP = sim.gas_pressure('h00003300.h5')\nvx = sim.radial_velocity('h00003300.h5')\ns = sim.entropy('h00003300.h5')\nshock = shock_radius(sim, 'h00003300.h5')",
         "detail": "prova",
         "documentation": {}
     },

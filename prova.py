@@ -8,7 +8,7 @@ from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.utils.profiles import calculate_profile
-from AeViz.utils.GW_utils import Qdot_mask_timeseries
+from AeViz.utils.GW_utils import Qdot_timeseries
 from AeViz.utils.radii_utils import shock_radius, shock_radius_3D
 
 """
@@ -57,7 +57,9 @@ input()
 #sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
 sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
 sim.shock_radius()
-#Qdot_mask_timeseries(sim, True)
+h =Qdot_timeseries(sim, True)
+plt.plot(h[0], h[2][0])
+plt.show()
 
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00003300.h5')
