@@ -81,7 +81,7 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
         * dV[mask])
     if simulation.dim == 1:
         ene_rot = 0
-        ene_kin = np.sum(0.5 * simulation.rho(file_name) * \
+        ene_kin = np.sum(0.5 * rho * \
             simulation.radial_velocity(file_name)[mask] ** 2)
         ene_mag = 0
         conv_ene = 0
@@ -89,8 +89,8 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
         ene_rot = np.sum(0.5 * rho * \
             simulation.phi_velocity(file_name)[mask] ** 2)
         ene_kin = np.sum(0.5 * rho * \
-            (simulation.radial_velocity(file_name)[mask] + \
-            simulation.theta_velocity(file_name)[mask]) ** 2)
+            (simulation.radial_velocity(file_name)[mask] ** 2 + \
+            simulation.theta_velocity(file_name)[mask] ** 2))
         ene_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] \
             * dV[mask])
         conv_ene = np.sum(simulation.theta_velocity(file_name)[mask] ** 2 \

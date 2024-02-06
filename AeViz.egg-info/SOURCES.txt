@@ -41,3 +41,4 @@ AeViz/utils/radii_utils.py
 AeViz/utils/utils.py
 bin/add_Aenus_sim_paths
 bin/delete_Aenus_postprocessing
+bin/run_postprocessing

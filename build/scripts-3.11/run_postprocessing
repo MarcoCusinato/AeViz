@@ -1,0 +1,31 @@
+#!python
+
+import argparse
+from AeViz.simulation.simulation import Simulation
+from AeViz.utils.utils import time_array
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--sim-name', type=str, required=True,
+                    help="Name of the simulation of which postprocessing ' \
+                        'will be done.")
+parser.add_argument('--sim-path', type=str, default=None, required=False,
+                    help="Path of the simulation.")
+parser.add_argument('--profiles', action='store_false', default=True, 
+                    required=False, help="Ye, T, s, Fconv profiles are not " \
+                        "calculated.")
+parser.add_argument('--GWs', action='store_false', default=True,
+                    required=False, help="GWs postprocessing is not " \
+                        "calculated.")
+
+args = parser.parse_args()
+sim = Simulation(args.sim_name, args.sim_path)
+time_array(sim)
+sim.PNS_radius()
+sim.shock_radius()
+sim.neutrino_spheres()
+sim.gain_radius()
+sim.PNS_mass_ene()
+if args.profiles:
+    sim.radial_profile('Ye')
+if args.GWs:
+    sim.AE220()

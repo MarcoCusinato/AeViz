@@ -331,6 +331,14 @@
         "documentation": {}
     },
     {
+        "label": "cell",
+        "importPath": "AeViz.cell.cell",
+        "description": "AeViz.cell.cell",
+        "isExtraImport": true,
+        "detail": "AeViz.cell.cell",
+        "documentation": {}
+    },
+    {
         "label": "ghost",
         "importPath": "AeViz.cell.ghost",
         "description": "AeViz.cell.ghost",
@@ -853,6 +861,14 @@
         "documentation": {}
     },
     {
+        "label": "save_hdf",
+        "importPath": "AeViz.utils.file_utils",
+        "description": "AeViz.utils.file_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
         "label": "hdf_isopen",
         "importPath": "AeViz.utils.decorators",
         "description": "AeViz.utils.decorators",
@@ -1102,6 +1118,14 @@
     },
     {
         "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "time_array",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
         "isExtraImport": true,
@@ -3373,7 +3397,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.path_utils",
         "description": "build.lib.AeViz.utils.path_utils",
-        "peekOfCode": "def check_subpaths_for_simulations(path, simDict, simulations):\n    \"\"\"\n    Recursively checks a folder and its subfolders to ensure the presence\n    of a simulation. Since every simulation contains a 'outp-hdf' folder\n    we use its presence as a criterion. If a simulation is fuond, it is stored\n    in the simulations dictionary.\n    \"\"\"\n    try:\n        dirs = remove_not_useful_folders(os.listdir(path))\n    except:",
+        "peekOfCode": "def check_subpaths_for_simulations(path, simDict, simulations):\n    \"\"\"\n    Recursively checks a folder and its subfolders to ensure the presence\n    of a simulation. Since every simulation contains a 'outp-hdf' folder\n    we use its presence as a criterion. If a simulation is fuond, it is stored\n    in the simulations dictionary.\n    \"\"\"\n    try:\n        dirs = remove_not_useful_folders(os.listdir(path))\n        print('foooooooooo')",
         "detail": "build.lib.AeViz.utils.path_utils",
         "documentation": {}
     },
@@ -3553,7 +3577,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.radii_utils",
         "description": "build.lib.AeViz.utils.radii_utils",
-        "peekOfCode": "def shock_radius_2D(simulation, file_name):\n    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                        simulation.gas_pressure(file_name)) * \\\n                            simulation.cell.radius(simulation.ghost) / \\\n                            simulation.gas_pressure(file_name)\n    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                         simulation.radial_velocity(file_name)) * \\\n                             simulation.cell.radius(simulation.ghost) / \\\n                             np.abs(simulation.radial_velocity(file_name))\n    shock_r = np.empty(dP.shape[0])",
+        "peekOfCode": "def shock_radius_2D(simulation, file_name):\n    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                        simulation.gas_pressure(file_name)) * \\\n                            simulation.cell.radius(simulation.ghost) / \\\n                            simulation.gas_pressure(file_name)\n    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                         simulation.radial_velocity(file_name)) * \\\n                             simulation.cell.radius(simulation.ghost) / \\\n                             np.abs(simulation.radial_velocity(file_name))\n    s = simulation.entropy(file_name)",
         "detail": "build.lib.AeViz.utils.radii_utils",
         "documentation": {}
     },
@@ -3608,6 +3632,15 @@
         "importPath": "build.lib.AeViz.utils.utils",
         "description": "build.lib.AeViz.utils.utils",
         "peekOfCode": "def check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at\n    least partially performed.\n    \"\"\"\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       file_name)):\n        return True\n    else:\n        return False",
+        "detail": "build.lib.AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "time_array",
+        "kind": 2,
+        "importPath": "build.lib.AeViz.utils.utils",
+        "description": "build.lib.AeViz.utils.utils",
+        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File('time.h5', 'r')\n        time_array = data['time'][:]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
         "detail": "build.lib.AeViz.utils.utils",
         "documentation": {}
     },

@@ -1,5 +1,5 @@
 import os, platform, sys
-
+from AeViz.cell.cell import cell as cl
 
 dim_keys = {1: '1D', 2: '2D', 3: '3D'}
 
