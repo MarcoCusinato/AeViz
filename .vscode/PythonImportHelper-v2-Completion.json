@@ -789,6 +789,14 @@
         "documentation": {}
     },
     {
+        "label": "save_hdf",
+        "importPath": "AeViz.utils.file_utils",
+        "description": "AeViz.utils.file_utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.file_utils",
+        "documentation": {}
+    },
+    {
         "label": "load_file",
         "importPath": "AeViz.utils.file_utils",
         "description": "AeViz.utils.file_utils",
@@ -1029,6 +1037,142 @@
         "documentation": {}
     },
     {
+        "label": "time_array",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "progressBar",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "factorial",
         "importPath": "scipy.special",
         "description": "scipy.special",
@@ -1106,134 +1250,6 @@
         "description": "numpy.fft",
         "isExtraImport": true,
         "detail": "numpy.fft",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "check_existence",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
-        "documentation": {}
-    },
-    {
-        "label": "progressBar",
-        "importPath": "AeViz.utils.utils",
-        "description": "AeViz.utils.utils",
-        "isExtraImport": true,
-        "detail": "AeViz.utils.utils",
         "documentation": {}
     },
     {
@@ -2516,7 +2532,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.radii_utils",
         "description": "AeViz.utils.radii_utils",
-        "peekOfCode": "def shock_radius_2D(simulation, file_name):\n    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                        simulation.gas_pressure(file_name)) * \\\n                            simulation.cell.radius(simulation.ghost) / \\\n                            simulation.gas_pressure(file_name)\n    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                         simulation.radial_velocity(file_name)) * \\\n                             simulation.cell.radius(simulation.ghost) / \\\n                             np.abs(simulation.radial_velocity(file_name))\n    shock_r = np.empty(dP.shape[0])",
+        "peekOfCode": "def shock_radius_2D(simulation, file_name):\n    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                        simulation.gas_pressure(file_name)) * \\\n                            simulation.cell.radius(simulation.ghost) / \\\n                            simulation.gas_pressure(file_name)\n    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),\n                         simulation.radial_velocity(file_name)) * \\\n                             simulation.cell.radius(simulation.ghost) / \\\n                             np.abs(simulation.radial_velocity(file_name))\n    s = simulation.entropy(file_name)",
         "detail": "AeViz.utils.radii_utils",
         "documentation": {}
     },
@@ -2571,6 +2587,15 @@
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
         "peekOfCode": "def check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at\n    least partially performed.\n    \"\"\"\n    if os.path.exists(os.path.join(simulation.storage_path, \n                                       file_name)):\n        return True\n    else:\n        return False",
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "time_array",
+        "kind": 2,
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File('time.h5', 'r')\n        time_array = data['time'][:]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
         "detail": "AeViz.utils.utils",
         "documentation": {}
     },

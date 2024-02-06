@@ -19,6 +19,7 @@ from AeViz.units.units import units
 from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
+from AeViz.utils.utils import time_array
 
 u = units()
 
@@ -86,8 +87,10 @@ class Simulation:
         if time_in_ms:
             time_to_find = u.convert_to_s(time_to_find)
         
-        file_list = self.file_list_hdf()
-        time = self.get_PNS_radius(ret_time=True, tob_corrected=tob_corrected)
+        file_list = self.hdf_file_list
+        time = time_array(self)
+        if not tob_corrected:
+            time += self.tob
         if return_index:
             index = np.argmax(time>=time_to_find)
             return file_list[index], index
