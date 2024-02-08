@@ -58,7 +58,8 @@ def return_positioning(number, form_factor):
     else:
         gs_kw = {"wspace": 0.2,
                  "hspace": 0.2}
-    return positioning[number][form_factor], width_ratio[number][form_factor], height_ratio[number][form_factor], gs_kw
+    return positioning[number][form_factor], width_ratio[number][form_factor],\
+            height_ratio[number][form_factor], gs_kw
 
 
 def return_fig_size(number, form_factor):
@@ -93,14 +94,16 @@ def change_x_aspect(axd, axd_left, axd_right):
     axd_position = axd.get_position()
     axd_left_position = axd_left.get_position()
     axd_right_position = axd_right.get_position()
-    axd_position.x0, axd_position.x1 = axd_left_position.x0, axd_right_position.x1
+    axd_position.x0, axd_position.x1 = axd_left_position.x0, \
+        axd_right_position.x1
     axd.set_position(axd_position)
 
 def change_y_aspect(axd, axd_bottom, axd_top):
     axd_position = axd.get_position()
     axd_bottom_position = axd_bottom.get_position()
     axd_top_position = axd_top.get_position()
-    axd_position.y0, axd_position.y1 = axd_bottom_position.y0, axd_top_position.y1
+    axd_position.y0, axd_position.y1 = axd_bottom_position.y0,\
+        axd_top_position.y1
     axd.set_position(axd_position)
 
 class PlotCreation(object):
@@ -133,28 +136,40 @@ class PlotCreation(object):
         if not self.fig_is_open():
             self.__setup_figure()
         if not self.axd_is_open():
-            position, width_ratio, height_ratio, gs_kw = return_positioning(self.number, self.form_factor)
+            position, width_ratio, height_ratio, gs_kw = \
+                return_positioning(self.number, self.form_factor)
             self.axd = self.fig.subplot_mosaic(position,
                                                gridspec_kw=gs_kw,
                                                width_ratios=width_ratio, 
                                                height_ratios=height_ratio)
             if self.number  == 2:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["A"], [self.axd["B"]], False, True)
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], False,
+                                      True)
             elif self.number == 3:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["B"], [self.axd["C"]], False, True)
+                    self.__share_axis(self.axd["B"], [self.axd["C"]], False,
+                                      True)
             elif self.number == 4:
                 if self.form_factor == 2:
-                    self.__share_axis(self.axd["A"], [self.axd["B"]], True, False)
-                    self.__share_axis(self.axd["C"], [self.axd["D"]], True, False)
-                    self.__share_axis(self.axd["A"], [self.axd["C"]], False, True)
-                    self.__share_axis(self.axd["B"], [self.axd["D"]], False, True)
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], True,
+                                      False)
+                    self.__share_axis(self.axd["C"], [self.axd["D"]], True,
+                                      False)
+                    self.__share_axis(self.axd["A"], [self.axd["C"]], False,
+                                      True)
+                    self.__share_axis(self.axd["B"], [self.axd["D"]], False,
+                                      True)
             elif self.number == 5:
                 if self.form_factor == 1:
-                    self.__share_axis(self.axd["A"], [self.axd["B"], self.axd["C"], self.axd["D"], self.axd["E"]], True, False)
+                    self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                      self.axd["C"],
+                                                      self.axd["D"],
+                                                      self.axd["E"]],
+                                        True, False)
             self.__setup_label_position()
-            self.fig.set_size_inches(return_fig_size(self.number, self.form_factor))
+            self.fig.set_size_inches(return_fig_size(self.number,
+                                                     self.form_factor))
     
     def change_figsize(self, multiplies=1):
         if self.fig_is_open():

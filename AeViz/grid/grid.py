@@ -25,34 +25,34 @@ class grid:
         self.phi = phi
         if self.dim == 1:
             self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                            'r_0': self.radius[0],
-                                            'r_0_log': self.radius[50],
-                                            'r_max': self.radius[-1],
-                                            'n_r_lin': int(0.5*self.radius.shape[0]),
-                                            'n_r_log': int(0.5*self.radius.shape[0])}
+                                    'r_0': self.radius[0],
+                                    'r_0_log': self.radius[50],
+                                    'r_max': self.radius[-1],
+                                    'n_r_lin': int(0.5*self.radius.shape[0]),
+                                    'n_r_log': int(0.5*self.radius.shape[0])}
         elif self.dim == 2:
             self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                            'r_0': self.radius[0],
-                                            'r_0_log': self.radius[50],
-                                            'r_max': self.radius[-1],
-                                            'n_r_lin': int(0.5*self.radius.shape[0]),
-                                            'n_r_log': int(0.5*self.radius.shape[0]),
-                                            'theta_0': self.theta[0],
-                                            'theta_max': self.theta[-1],
-                                            'n_theta': self.theta.shape[0]}
+                                    'r_0': self.radius[0],
+                                    'r_0_log': self.radius[50],
+                                    'r_max': self.radius[-1],
+                                    'n_r_lin': int(0.5*self.radius.shape[0]),
+                                    'n_r_log': int(0.5*self.radius.shape[0]),
+                                    'theta_0': self.theta[0],
+                                    'theta_max': self.theta[-1],
+                                    'n_theta': self.theta.shape[0]}
         else:
             self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                            'r_0': self.radius[0],
-                                            'r_0_log': self.radius[50],
-                                            'r_max': self.radius[-1],
-                                            'n_r_lin': int(0.5*self.radius.shape[0]),
-                                            'n_r_log': int(0.5*self.radius.shape[0]),
-                                            'theta_0': self.theta[0],
-                                            'theta_max': self.theta[-1],
-                                            'n_theta': self.theta.shape[0],
-                                            'phi_0': self.phi[0],
-                                            'phi_max': self.phi[-1],
-                                            'n_phi': self.phi.shape[0]}
+                                    'r_0': self.radius[0],
+                                    'r_0_log': self.radius[50],
+                                    'r_max': self.radius[-1],
+                                    'n_r_lin': int(0.5*self.radius.shape[0]),
+                                    'n_r_log': int(0.5*self.radius.shape[0]),
+                                    'theta_0': self.theta[0],
+                                    'theta_max': self.theta[-1],
+                                    'n_theta': self.theta.shape[0],
+                                    'phi_0': self.phi[0],
+                                    'phi_max': self.phi[-1],
+                                    'n_phi': self.phi.shape[0]}
 
     def cartesian_grid(self):
         """
@@ -102,7 +102,8 @@ class grid:
         if self.dim == 2:    
             points = np.array( (grid[0].flatten(), grid[1].flatten()) ).T
             values = (quantity.T).flatten()
-            return griddata(points, values, (new_grid[0], new_grid[1]), 'cubic')
+            return griddata(points, values, (new_grid[0], new_grid[1]),
+                            'cubic')
         if self.dim == 3:
             raise TypeError("Not implemented yet :\").")
 
@@ -124,8 +125,10 @@ class grid:
         return X, Y, Z
     
     def __new_radius(par):
-        r = np.linspace(par['r_0'], par['r_0_log'], par['n_r_lin'], endpoint=False)
-        r_log = 10**np.linspace(np.log10(par['r_0_log']), np.log10(par['r_max_log']), 
+        r = np.linspace(par['r_0'], par['r_0_log'], par['n_r_lin'],
+                        endpoint=False)
+        r_log = 10**np.linspace(np.log10(par['r_0_log']),
+                                np.log10(par['r_max_log']), 
                                 par['n_r_log']+1)
         return np.concatenate((r, r_log))
     

@@ -1,6 +1,5 @@
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
-from AeViz.plot_utils.plot_creation import PlotCreation
 import matplotlib.pyplot as plt
 from AeViz.grid.grid import grid
 from AeViz.units.units import units
@@ -123,7 +122,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 for i in index1:
                     data.append(post_data[i, :])
             elif index1 is None:
-                data = function_average(post_data, 2, 'Omega', dV[1][:, None] * dV[2])
+                data = function_average(post_data, 2, 'Omega', dV[1][:, None] \
+                    * dV[2])
             else:
                 data = post_data[index1, :]
         elif xaxis == 'theta':
@@ -133,7 +133,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 for i in index1:
                     data.append(post_data[:, i])
             elif index1 is None:
-                data = function_average(post_data, 2, 'theta', dV[0][None, :] * dV[2])
+                data = function_average(post_data, 2, 'theta', dV[0][None, :] \
+                    * dV[2])
             else:
                 data = post_data[:, index1]
     elif post_data.ndim == 3:
@@ -147,7 +148,9 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 for i in index2:
                     data.append(post_data[index1, i, :])
             elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'Omega', dV[0][:, None, None] * dV[1][None, :, None])
+                data = function_average(post_data, 3, 'Omega', 
+                                        dV[0][:, None, None] * \
+                                            dV[1][None, :, None])
             else:
                 data = post_data[index1, index2, :]
         elif xaxis == 'theta':
@@ -160,7 +163,9 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 for i in index2:
                     data.append(post_data[index1, :, i])
             elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'theta', dV[0][:, None, None] * dV[2][None, None, :])
+                data = function_average(post_data, 3, 'theta',
+                                        dV[0][:, None, None] \
+                                            * dV[2][None, None, :])
             else:
                 data = post_data[index1, :, index2]
         elif xaxis == 'phi':
@@ -173,7 +178,9 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 for i in index2:
                     data.append(post_data[:, index1, i])
             elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'phi', dV[1][None, :, None] * dV[2][None, None, None])
+                data = function_average(post_data, 3, 'phi',
+                                        dV[1][None, :, None] \
+                                            * dV[2][None, None, None])
             else:
                 data = post_data[:, index1, index2]
     return data
@@ -192,31 +199,36 @@ class Plotting(PlottingUtils, Data):
         post_data = self._Data__get_data_from_name(qt)
         if xaxis == 'radius':
             grid = u.convert_to_km(self.cell.radius(self.ghost))
-            self.labels('R [km]', plot_labels[qt]['label'], axd_letters[number])
+            self.labels('R [km]', plot_labels[qt]['label'],
+                        axd_letters[number])
             self.Xscale('log', axd_letters[number])
         elif xaxis == 'theta':
             if self.sim_dim == 1:
                 raise ValueError('Cannot plot theta in 1D.')
             grid = self.cell.theta(self.ghost)
-            self.labels(r'$\theta$ [rad]', plot_labels[qt]['label'], axd_letters[number])
+            self.labels(r'$\theta$ [rad]', plot_labels[qt]['label'],
+                        axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'phi':
             if self.sim_dim == 1 or self.sim_dim == 2:
                 raise ValueError('Cannot plot phi in 1D or 2D.')
             grid = self.cell.phi(self.ghost)
-            self.labels('$\phi$ [rad]', plot_labels[qt]['label'], axd_letters[number])
+            self.labels('$\phi$ [rad]', plot_labels[qt]['label'],
+                        axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta or phi.')
         
         index1, index2 = normalize_indices(index1, index2)
         
-        data = get_data_to_plot(index1, index2, post_data, xaxis, (self.cell.dr_integration(self.ghost), 
-                                                                    self.cell.dtheta_integration(self.ghost), 
-                                                                    self.cell.dphi(self.ghost)))
+        data = get_data_to_plot(index1, index2, post_data, xaxis,
+                                (self.cell.dr_integration(self.ghost), 
+                                    self.cell.dtheta_integration(self.ghost),
+                                    self.cell.dphi(self.ghost)))
         
-        self._PlottingUtils__update_params(axd_letters[number], grid, data, None, 
-                                           plot_labels[qt]['log'], None, 1, None, None) 
+        self._PlottingUtils__update_params(axd_letters[number], grid, data,
+                                           None, plot_labels[qt]['log'], None,
+                                           1, None, None) 
         
         self._PlottingUtils__plot1D(axd_letters[number])
         
@@ -232,22 +244,31 @@ class Plotting(PlottingUtils, Data):
             self._PlotCreation__setup_axd(number, 1)
         elif self.number == 2 and self.form_factor == 2:
             self.number = 3
-            self.dim['C'], self.grid['C'], self.data['C'] = self.dim['B'], self.grid['B'], self.data['B']
-            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
-            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], self.cbar_label['B']
+            self.dim['C'], self.grid['C'], self.data['C'] = self.dim['B'], \
+                self.grid['B'], self.data['B']
+            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = \
+                self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
+            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], \
+                self.cbar_label['B']
             self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
             self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
-            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], self.ylabels['B']
+            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], \
+                self.ylabels['B']
             
-            self.dim['B'], self.grid['B'], self.data['B'] = self.dim['A'], self.grid['A'], self.data['A']
-            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
-            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'], self.cbar_label['A']
+            self.dim['B'], self.grid['B'], self.data['B'] = self.dim['A'], \
+                self.grid['A'], self.data['A']
+            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = \
+                self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
+            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'],\
+                self.cbar_label['A']
             self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
             self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
-            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'], self.ylabels['A']
+            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'],\
+                self.ylabels['A']
 
             self.dim['A'], self.grid['A'], self.data['A'] = None, None, None
-            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = None, None, None
+            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = \
+                None, None, None
             self.cmap_color['A'], self.cbar_label['A'] = None, None
             self.xlims['A'], self.ylims['A'] = None, None
             self.logX['A'], self.logY['A'] = None, None
@@ -264,8 +285,10 @@ class Plotting(PlottingUtils, Data):
         else:
             number = 1
             for axd_letter in self.axd:
-                if (plot_labels[qt]['label'] == self.axd[axd_letter].get_ylabel()) and \
-                        (xaxis_labels[xaxis] == self.axd[axd_letter].get_xlabel()):
+                if (plot_labels[qt]['label'] == \
+                    self.axd[axd_letter].get_ylabel()) and \
+                        (xaxis_labels[xaxis] == \
+                            self.axd[axd_letter].get_xlabel()):
                     return number - 1
                 number += 1
             if number > 4:
@@ -278,7 +301,8 @@ class Plotting(PlottingUtils, Data):
         plt.show()
         plt.ion()
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
-        gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)), self.cell.theta(self.ghost), self.cell.phi(self.ghost))
+        gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
+                  self.cell.theta(self.ghost), self.cell.phi(self.ghost))
         X, Y = gr.cartesian_grid()
 
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
@@ -286,30 +310,54 @@ class Plotting(PlottingUtils, Data):
         number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
         
-        self._PlottingUtils__update_params('A', (X, Y), self._Data__get_data_from_name(qt1), cbars['A'], 
-                                           plot_labels[qt1]['log'], plot_labels[qt1]['lim'], 2, plot_labels[qt1]['cmap'], plot_labels[qt1]['label'])  
+        self._PlottingUtils__update_params('A', (X, Y), 
+                                           self._Data__get_data_from_name(qt1),
+                                           cbars['A'], plot_labels[qt1]['log'],
+                                           plot_labels[qt1]['lim'], 2, 
+                                           plot_labels[qt1]['cmap'], 
+                                           plot_labels[qt1]['label'])  
         self._PlottingUtils__plot2D('A')
         self.labels('X [km]', 'Z [km]', 'A')
         if qt2 is not None:
-            self._PlottingUtils__update_params('B', (X, Y), self._Data__get_data_from_name(qt2), cbars['B'], 
-                                               plot_labels[qt2]['log'], plot_labels[qt2]['lim'], 2, plot_labels[qt2]['cmap'], plot_labels[qt2]['label'])
+            self._PlottingUtils__update_params('B', (X, Y),
+                                        self._Data__get_data_from_name(qt2),
+                                        cbars['B'], plot_labels[qt2]['log'],
+                                        plot_labels[qt2]['lim'], 2,
+                                        plot_labels[qt2]['cmap'],
+                                        plot_labels[qt2]['label'])
             self._PlottingUtils__plot2D('B')
             self.labels('X [km]', 'Z [km]', 'B')
         if qt3 is not None and qt4 is None:
-            self._PlottingUtils__update_params('C', (X, Y), self._Data__get_data_from_name(qt3), cbars['C'], 
-                                                  plot_labels[qt3]['log'], plot_labels[qt3]['lim'], 2, plot_labels[qt3]['cmap'], plot_labels[qt3]['label'])
+            self._PlottingUtils__update_params('C', (X, Y),
+                                        self._Data__get_data_from_name(qt3),
+                                        cbars['C'], plot_labels[qt3]['log'],
+                                        plot_labels[qt3]['lim'], 2, 
+                                        plot_labels[qt3]['cmap'],
+                                        plot_labels[qt3]['label'])
             self._PlottingUtils__plot2D('C')
             self.labels('X [km]', 'Z [km]', 'C')
-            self._PlottingUtils__update_params('D', (X, Y), self._Data__get_data_from_name(qt3), cbars['D'], 
-                                                  plot_labels[qt3]['log'], plot_labels[qt3]['lim'], 2, plot_labels[qt3]['cmap'], plot_labels[qt3]['label'])
+            self._PlottingUtils__update_params('D', (X, Y),
+                                        self._Data__get_data_from_name(qt3),
+                                        cbars['D'], plot_labels[qt3]['log'],
+                                        plot_labels[qt3]['lim'], 2,
+                                        plot_labels[qt3]['cmap'],
+                                        plot_labels[qt3]['label'])
             self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
         if qt4 is not None:
-            self._PlottingUtils__update_params('C', (X, Y), self._Data__get_data_from_name(qt3), cbars['C'], 
-                                                  plot_labels[qt3]['log'], plot_labels[qt3]['lim'], 2, plot_labels[qt3]['cmap'], plot_labels[qt3]['label'])
+            self._PlottingUtils__update_params('C', (X, Y),
+                                        self._Data__get_data_from_name(qt3),
+                                        cbars['C'], plot_labels[qt3]['log'],
+                                        plot_labels[qt3]['lim'], 2,
+                                        plot_labels[qt3]['cmap'],
+                                        plot_labels[qt3]['label'])
             self._PlottingUtils__plot2D('C')
-            self._PlottingUtils__update_params('D', (X, Y), self._Data__get_data_from_name(qt4), cbars['D'],
-                                                  plot_labels[qt4]['log'], plot_labels[qt4]['lim'], 2, plot_labels[qt4]['cmap'], plot_labels[qt4]['label'])
+            self._PlottingUtils__update_params('D', (X, Y),
+                                        self._Data__get_data_from_name(qt4),
+                                        cbars['D'], plot_labels[qt4]['log'],
+                                        plot_labels[qt4]['lim'], 2,
+                                        plot_labels[qt4]['cmap'],
+                                        plot_labels[qt4]['label'])
             self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
         self.ghost.restore_default()

@@ -38,9 +38,11 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 4 and form_factor == 2:
         ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]), aspect=1)
+        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]),
+                    aspect=1)
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]), aspect=1)
+        ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
+                    aspect=1)
 
 
 class PlottingUtils(PlotCreation):
@@ -83,23 +85,38 @@ class PlottingUtils(PlotCreation):
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.cbar_lv[ax_letter][0]),
                     np.log10(self.cbar_lv[ax_letter][1]))) - 6)
-                cbar_levels = np.concatenate((-np.logspace(np.log10(-self.cbar_lv[ax_letter][0]), np.log10(lntresh), 45, endpoint=False),
-                                              np.linspace(-lntresh, lntresh, 10, endpoint=False),
-                                              np.logspace(np.log10(lntresh), np.log10(self.cbar_lv[ax_letter][1]), 45)))
-                norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])    
+                cbar_levels = np.concatenate((
+                    -np.logspace(np.log10(-self.cbar_lv[ax_letter][0]),
+                                 np.log10(lntresh), 45, endpoint=False),
+                    np.linspace(-lntresh, lntresh, 10, endpoint=False),
+                    np.logspace(np.log10(lntresh),
+                                np.log10(self.cbar_lv[ax_letter][1]), 45)))
+                norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0],
+                                  vmax=self.cbar_lv[ax_letter][1])    
             else:
-                cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]), np.log10(self.cbar_lv[ax_letter][1]), 100)
-                norm=   LogNorm(vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])
+                cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]),
+                                          np.log10(self.cbar_lv[ax_letter][1]),
+                                          100)
+                norm=   LogNorm(vmin=self.cbar_lv[ax_letter][0],
+                                vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.0e}'.format(x)
         else:
-            cbar_levels = np.linspace(self.cbar_lv[ax_letter][0], self.cbar_lv[ax_letter][1], 100)
-            norm = Normalize(vmin=self.cbar_lv[ax_letter][0], vmax=self.cbar_lv[ax_letter][1])
+            cbar_levels = np.linspace(self.cbar_lv[ax_letter][0],
+                                      self.cbar_lv[ax_letter][1], 100)
+            norm = Normalize(vmin=self.cbar_lv[ax_letter][0],
+                             vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.1f}'.format(x)
-        pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0], self.grid[ax_letter][1], self.data[ax_letter], norm=norm,
-                                            levels=cbar_levels, antialiased=True, cmap=self.cmap_color[ax_letter],
-                                            extend='both')
-        cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()], format=ticker.FuncFormatter(fmt), 
-                                   location=cbar_loaction(self.cbar_position[ax_letter]))
+        pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0],
+                                           self.grid[ax_letter][1],
+                                           self.data[ax_letter], norm=norm,
+                                           levels=cbar_levels,
+                                           antialiased=True,
+                                           cmap=self.cmap_color[ax_letter],
+                                           extend='both')
+        cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
+                                 format=ticker.FuncFormatter(fmt), 
+                                location=cbar_loaction(
+                                    self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
         if self.cbar_position[ax_letter] in ['L', 'R']:
             self.axd[ax_letter].yaxis.labelpad = -10
@@ -109,7 +126,8 @@ class PlottingUtils(PlotCreation):
             for data in self.data[ax_letter]:
                 self.axd[ax_letter].plot(self.grid[ax_letter], data)
         else:
-            self.axd[ax_letter].plot(self.grid[ax_letter], self.data[ax_letter])
+            self.axd[ax_letter].plot(self.grid[ax_letter],
+                                     self.data[ax_letter])
         
 
     def __redo_plot(self):
@@ -122,7 +140,8 @@ class PlottingUtils(PlotCreation):
                 continue
             if self.plot_dim[ax_letter] == 2:
                 self.__plot2D(ax_letter)
-                set2Dlims(self.axd, self.xlims[ax_letter], None, self.number, self.form_factor)
+                set2Dlims(self.axd, self.xlims[ax_letter], None, self.number,
+                          self.form_factor)
             else:
                 self.__plot1D(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
@@ -131,7 +150,8 @@ class PlottingUtils(PlotCreation):
                 self.Yscale(self.logY[ax_letter], ax_letter)
         
             
-            self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter], ax_letter)
+            self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
+                        ax_letter)
         self._PlotCreation__setup_aspect()
 
 
