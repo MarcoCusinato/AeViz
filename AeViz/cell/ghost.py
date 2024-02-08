@@ -6,14 +6,17 @@ class ghost:
     Class that allows to remove the selected number of ghost cell from
     an array.
     Input parameters:
-            ghost_cells: (int) number of ghost cell of the simulation (usually 4)
+            ghost_cells: (int) number of ghost cell of the simulation
+            (usually 4)
     Parameters:
             ghost: (int) number of ghost cells
             r_l: (int) ghost cells at the beginning of the radius array
             r_r: (int) ghost cells at the end of the radius array
-            t_l: (int) ghost cells at the beginning of the theta angle array
+            t_l: (int) ghost cells at the beginning of the theta angle
+            array
             t_r: (int) ghost cells at the end of the theta angle array
-            p_l: (int) ghost cells at the beginning of the phi angle array
+            p_l: (int) ghost cells at the beginning of the phi angle
+            array
             p_r: (int) ghost cells at the end of the phi angle array
     """
     def __init__(self, ghost_cells):
@@ -43,15 +46,19 @@ class ghost:
     def update_ghost_cells(self, **kwargs):
         """
         Method that allows change the default number of ghost cells.
-        Optional parameters allow to select a custom number of ghost cells
-        for a specific grid quantity. They must be between 0 (Keep all the cells)
+        Optional parameters allow to select a custom number of ghost
+        cells
+        for a specific grid quantity. They must be between 0 (Keep all
+        the cells)
         and ghost_cell (keep only physical cells)
         Parameters:
             r_l: (int) ghost cells at the beginning of the radius array
             r_r: (int) ghost cells at the end of the radius array
-            t_l: (int) ghost cells at the beginning of the theta angle array
+            t_l: (int) ghost cells at the beginning of the theta angle
+                array
             t_r: (int) ghost cells at the end of the theta angle array
-            p_l: (int) ghost cells at the beginning of the phi angle array
+            p_l: (int) ghost cells at the beginning of the phi angle
+                array
             p_r: (int) ghost cells at the end of the phi angle array
         """
         self.restore_default()
@@ -59,7 +66,8 @@ class ghost:
         updated_parameters.update(kwargs)
         values = np.array(list(updated_parameters.values()))
         if np.min(values)<0 or np.max(values)>self.ghost:
-            raise TypeError("The number of ghost cells MUST be between 0 and " + str(self.ghost))
+            raise TypeError("The number of ghost cells MUST be between 0 and " 
+                + str(self.ghost))
         for key, value in updated_parameters.items():
             self.__setattr__(key, value)
         self.__options_1D = {'radius': [self.r_l, self.r_r],
@@ -76,11 +84,14 @@ class ghost:
     def remove_ghost_cells(self, array, dim, quantity_1D: 
                            Literal['radius', 'theta', 'phi'] = None):
         """
-        Class method that allows to remove ghost cells from a given array
+        Class method that allows to remove ghost cells from a given 
+        array
         Parameters:
-            array: (numpy array) quantity from which you want to remove the ghost cells
+            array: (numpy array) quantity from which you want to remove
+            the ghost cells
             dim: (int) dimension of the supernova simulation
-            quantity_1D: (string, optional), only for 1D array, allows to select which grid 
+            quantity_1D: (string, optional), only for 1D array, allows
+            to select which grid 
                          parameter to use
         Method result:
             array: (numpy array) quantity with ghost cells removed 
@@ -103,7 +114,8 @@ class ghost:
                 if quantity_1D == 'phi':
                     return None
                 if not quantity_1D in ['radius', 'theta']:
-                    raise TypeError("Quantity type required: " + str(['radius', 'theta']))
+                    raise TypeError("Quantity type required: " + \
+                        str(['radius', 'theta']))
                 return self.__remove_1D_ghost_cells(array, quantity_1D)
             elif array_dim == 2:
                 return self.__remove_2D_ghost_cells(array)
@@ -118,7 +130,8 @@ class ghost:
                 raise TypeError("Array MUST be 1, 3, 4, 5 or 6D")
             if array_dim == 1:
                 if not quantity_1D in ['radius', 'theta', 'phi']:
-                    raise TypeError("Quantity type required: " + str(['radius', 'theta', 'phi']))
+                    raise TypeError("Quantity type required: " + \
+                        str(['radius', 'theta', 'phi']))
                 return self.__remove_1D_ghost_cells(array, quantity_1D)
             elif array_dim == 3:
                 return self.__remove_3D_ghost_cells(array)
@@ -198,7 +211,8 @@ class ghost:
         assert array.ndim == 3, "Array must be 3-dimensional"
         size_y = array.shape[0]
         size_x = array.shape[1]
-        return array[self.t_l : size_y - self.t_r, self.r_l : size_x - self.r_r, :]
+        return array[self.t_l : size_y - self.t_r, self.r_l : size_x - \
+            self.r_r, :]
 
     def __remove_ghost_cells_4D_ar_2D_sim(self, array):
         assert array.ndim == 4, "Array must be 4-dimensional"

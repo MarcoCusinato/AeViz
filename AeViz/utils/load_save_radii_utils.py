@@ -6,7 +6,7 @@ import numpy as np
 from typing import Literal
 import os, h5py
 from AeViz.utils.math_utils import function_average_radii
-from AeViz.utils.utils import progressBar, check_existence
+from AeViz.utils.utils import progressBar, check_existence, checkpoints
 
 
 functions = {
@@ -55,12 +55,10 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         start_point = 0
         print('No checkpoint found for ' + radius + ' radius, starting from' \
             ' the beginning.\nPlease wait...')
-    if (simulation.dim == 1) or (not save_checkpoints):
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
-    elif simulation.dim == 2:
-        checkpoint = 600
     else:
-        checkpoint = 5
+        checkpoint = checkpoints[simulation.dim]
     g = 0
     dOmega = simulation.cell.dOmega(simulation.ghost)
     simulation.ghost.update_ghost_cells(t_l = g, t_r = g, p_l = g, p_r = g)

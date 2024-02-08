@@ -1085,6 +1085,14 @@
         "documentation": {}
     },
     {
+        "label": "checkpoints",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "check_existence",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
@@ -1101,6 +1109,14 @@
         "documentation": {}
     },
     {
+        "label": "checkpoints",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "progressBar",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
@@ -1110,6 +1126,14 @@
     },
     {
         "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "checkpoints",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
         "isExtraImport": true,
@@ -1157,6 +1181,14 @@
         "documentation": {}
     },
     {
+        "label": "checkpoints",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "check_existence",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
@@ -1173,6 +1205,14 @@
         "documentation": {}
     },
     {
+        "label": "checkpoints",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "progressBar",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
@@ -1182,6 +1222,14 @@
     },
     {
         "label": "check_existence",
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "isExtraImport": true,
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "checkpoints",
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
         "isExtraImport": true,
@@ -1624,7 +1672,7 @@
         "kind": 6,
         "importPath": "AeViz.cell.ghost",
         "description": "AeViz.cell.ghost",
-        "peekOfCode": "class ghost:\n    \"\"\"\n    Class that allows to remove the selected number of ghost cell from\n    an array.\n    Input parameters:\n            ghost_cells: (int) number of ghost cell of the simulation (usually 4)\n    Parameters:\n            ghost: (int) number of ghost cells\n            r_l: (int) ghost cells at the beginning of the radius array\n            r_r: (int) ghost cells at the end of the radius array",
+        "peekOfCode": "class ghost:\n    \"\"\"\n    Class that allows to remove the selected number of ghost cell from\n    an array.\n    Input parameters:\n            ghost_cells: (int) number of ghost cell of the simulation\n            (usually 4)\n    Parameters:\n            ghost: (int) number of ghost cells\n            r_l: (int) ghost cells at the beginning of the radius array",
         "detail": "AeViz.cell.ghost",
         "documentation": {}
     },
@@ -2609,7 +2657,7 @@
         "kind": 2,
         "importPath": "AeViz.utils.utils",
         "description": "AeViz.utils.utils",
-        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '#' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()\ndef check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at",
+        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    \"\"\"\n    Display a progress bar in the terminal.\n    \"\"\"\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '#' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()",
         "detail": "AeViz.utils.utils",
         "documentation": {}
     },
@@ -2632,6 +2680,15 @@
         "documentation": {}
     },
     {
+        "label": "checkpoints",
+        "kind": 5,
+        "importPath": "AeViz.utils.utils",
+        "description": "AeViz.utils.utils",
+        "peekOfCode": "checkpoints = {\n    1: False,\n    2: 400,\n    3: 20\n}\ndef progressBar(count_value, total, suffix=''):\n    \"\"\"\n    Display a progress bar in the terminal.\n    \"\"\"\n    bar_length = 100",
+        "detail": "AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
         "label": "cell",
         "kind": 6,
         "importPath": "build.lib.AeViz.cell.cell",
@@ -2645,7 +2702,7 @@
         "kind": 6,
         "importPath": "build.lib.AeViz.cell.ghost",
         "description": "build.lib.AeViz.cell.ghost",
-        "peekOfCode": "class ghost:\n    \"\"\"\n    Class that allows to remove the selected number of ghost cell from\n    an array.\n    Input parameters:\n            ghost_cells: (int) number of ghost cell of the simulation (usually 4)\n    Parameters:\n            ghost: (int) number of ghost cells\n            r_l: (int) ghost cells at the beginning of the radius array\n            r_r: (int) ghost cells at the end of the radius array",
+        "peekOfCode": "class ghost:\n    \"\"\"\n    Class that allows to remove the selected number of ghost cell from\n    an array.\n    Input parameters:\n            ghost_cells: (int) number of ghost cell of the simulation\n            (usually 4)\n    Parameters:\n            ghost: (int) number of ghost cells\n            r_l: (int) ghost cells at the beginning of the radius array",
         "detail": "build.lib.AeViz.cell.ghost",
         "documentation": {}
     },
@@ -3630,7 +3687,7 @@
         "kind": 2,
         "importPath": "build.lib.AeViz.utils.utils",
         "description": "build.lib.AeViz.utils.utils",
-        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '#' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()\ndef check_existence(simulation, file_name):\n    \"\"\"\n    Check if the radius calculation has already been performed or at",
+        "peekOfCode": "def progressBar(count_value, total, suffix=''):\n    \"\"\"\n    Display a progress bar in the terminal.\n    \"\"\"\n    bar_length = 100\n    filled_up_Length = int(round(bar_length * count_value / float(total)))\n    percentage = round(100.0 * count_value/float(total),1)\n    bar = '#' * filled_up_Length + '-' * (bar_length - filled_up_Length)\n    sys.stdout.write('[%s] %s%s ...%s\\r' %(bar, percentage, '%', suffix))\n    sys.stdout.flush()",
         "detail": "build.lib.AeViz.utils.utils",
         "documentation": {}
     },
@@ -3649,6 +3706,15 @@
         "importPath": "build.lib.AeViz.utils.utils",
         "description": "build.lib.AeViz.utils.utils",
         "peekOfCode": "def time_array(simulation):\n    \"\"\"\n    Get the time array of the local simulation output.\n    \"\"\"\n    if check_existence(simulation, 'time.h5'):\n        data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')\n        time_array = data['time'][...]\n        data.close()\n        if len(time_array) == len(simulation.hdf_file_list):\n            return time_array",
+        "detail": "build.lib.AeViz.utils.utils",
+        "documentation": {}
+    },
+    {
+        "label": "checkpoints",
+        "kind": 5,
+        "importPath": "build.lib.AeViz.utils.utils",
+        "description": "build.lib.AeViz.utils.utils",
+        "peekOfCode": "checkpoints = {\n    1: False,\n    2: 400,\n    3: 20\n}\ndef progressBar(count_value, total, suffix=''):\n    \"\"\"\n    Display a progress bar in the terminal.\n    \"\"\"\n    bar_length = 100",
         "detail": "build.lib.AeViz.utils.utils",
         "documentation": {}
     },

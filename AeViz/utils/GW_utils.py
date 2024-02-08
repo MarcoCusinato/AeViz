@@ -4,7 +4,7 @@ from AeViz.utils.math_utils import IDL_derivative, function_average
 from scipy.signal import stft
 from numpy.fft import fft, fftfreq
 import os, h5py
-from AeViz.utils.utils import check_existence, progressBar
+from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from AeViz.utils.file_utils import save_hdf
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 
@@ -256,7 +256,7 @@ def calculate_h(simulation, save_checkpoints=True):
         return NE220_2D_timeseries(simulation, save_checkpoints)
     elif simulation.dim == 3:
         print("Not implemented yet")
-        checkpoint = 50
+        checkpoint = checkpoints[simulation.dim]
         return None
 
 ## 2D
@@ -280,7 +280,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints):
     else:
         start_point = 0
         print("No checkpoint found. Starting from step 0")
-    checkpoint = 600
+    checkpoint = checkpoints[simulation.dim]
     findex = start_point
     check_index = 0
     progress_index = 0

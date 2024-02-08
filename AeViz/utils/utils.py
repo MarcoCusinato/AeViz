@@ -2,7 +2,17 @@ import sys, os, h5py
 import numpy as np
 from AeViz.utils.file_utils import save_hdf
 
+## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
+checkpoints = {
+    1: False,
+    2: 400,
+    3: 20
+}
+
 def progressBar(count_value, total, suffix=''):
+    """
+    Display a progress bar in the terminal.
+    """
     bar_length = 100
     filled_up_Length = int(round(bar_length * count_value / float(total)))
     percentage = round(100.0 * count_value/float(total),1)

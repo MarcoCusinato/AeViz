@@ -3,7 +3,7 @@ from AeViz.utils.masses_energies_utils import (innercore_mass_energy,
                                                PNS_mass_energy,
                                                unbound_mass_energy,
                                                mass_flux)
-from AeViz.utils.utils import (check_existence, progressBar)
+from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
 from AeViz.utils.file_utils import save_hdf
 import os, h5py
 import numpy as np
@@ -23,12 +23,10 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
         start_point = 0
         print('No checkpoint found for the mass and energy file, starting' \
               ' from the beginning.\nPlease wait...')
-    if (simulation.dim == 1) or (not save_checkpoints):
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
-    elif simulation.dim == 2:
-        checkpoint = 600
     else:
-        checkpoint = 200
+        checkpoint = checkpoints[simulation.dim]
     ## Get the radii
     _, innercore_radius, _, _, _, igcells  = simulation.innercore_radius()
     _, shock_radius, _, _, _, sgcells = simulation.shock_radius()
@@ -129,6 +127,7 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 'energy': np.array([unb_data[1]])
             }
         if (check_index >= checkpoint) and save_checkpoints:
+            print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path,
                     'masses_energies.h5'),
                      ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
