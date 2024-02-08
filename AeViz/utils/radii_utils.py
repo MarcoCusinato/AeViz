@@ -156,7 +156,7 @@ def shock_radius_3D(simulation, file_name):
     for ip in range(dP.shape[0]):
         for it in range(dP.shape[1]):
             for ir in range(dP.shape[2] - 1):
-                if (dP[ip, it, ir] < -10) and \
+                if (dP[ip, it, ir] < -500) and \
                 (np.any(dvr[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)] 
                     < -20)) and \
                 (np.all(s[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)]
