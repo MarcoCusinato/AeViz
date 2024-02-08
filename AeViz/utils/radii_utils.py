@@ -140,8 +140,39 @@ def shock_radius_2D(simulation, file_name):
     ## COPY over the gcells
     return shock_r
 
-
 def shock_radius_3D(simulation, file_name):
+    """
+    Copied from Martin's IDL script.
+    """
+    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                        simulation.gas_pressure(file_name)) * np.abs(
+                            simulation.cell.radius(simulation.ghost) / \
+                            simulation.gas_pressure(file_name))
+    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                         simulation.radial_velocity(file_name)) * \
+                             simulation.cell.radius(simulation.ghost) / \
+                             np.abs(simulation.soundspeed(file_name))
+    ds = IDL_derivative(simulation.cell.radius(simulation.ghost),
+                        simulation.entropy(file_name)) * np.abs(
+                            simulation.cell.radius(simulation.ghost) / \
+                            simulation.entropy(file_name))
+                        
+    vr = simulation.radial_velocity(file_name)
+    shock_r = np.empty((dP.shape[0], dP.shape[1]))
+    shock_r.fill(np.nan)
+    for ip in range(dP.shape[0]):
+        for it in range(dP.shape[1]):
+            for ir in range(dP.shape[2] - 1):
+                if (ds[ip, it, ir] < -0.25) and \
+                    (vr[ip, it, ir] >= 5e-7) and \
+                    (dvr[ip, it, ir] <= -1) and \
+                    (dP[ip, it, ir] <= -1) and \
+                    (vr[ip, it, max(0, ir-10)] >= vr[ip, it, min(0, ir+10)]):
+                    shock_r[ip, it] = simulation.cell.radius(simulation.ghost)[ir]
+                    break
+    return shock_r
+    
+def shock_radius_3D_OLD(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
                         simulation.gas_pressure(file_name)) * \
                             simulation.cell.radius(simulation.ghost) / \
