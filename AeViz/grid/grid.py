@@ -16,7 +16,8 @@ class grid:
     def __init__(self, dim, radius, theta = None, phi = None):
         assert dim in (1, 2, 3), "Supernova simulation MUST be 1, 2 or 3D."
         if dim in (2, 3) and theta is None:
-            raise TypeError("Theta angle MUST not be None in 2D or 3D simulations.")
+            raise TypeError("Theta angle MUST not be None in 2D or 3D " \
+                "simulations.")
         if dim == 3 and phi is None:
             raise TypeError("Phi angle MUST not be None in 3D simulations.")
         self.dim = dim
@@ -56,8 +57,9 @@ class grid:
 
     def cartesian_grid(self):
         """
-        Returns grid-like arrays (similar to the ones returned by mehgrid). Returns
-        1, 2 or 3 arrays depending on the simulation dimension.
+        Returns grid-like arrays (similar to the ones returned by
+        mehgrid).
+        Returns  1, 2 or 3 arrays depending on the simulation dimension.
         """
         if self.dim == 1:
             return self.__1D_cartesian_grid(self.radius)
