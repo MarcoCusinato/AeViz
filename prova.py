@@ -62,11 +62,11 @@ sim = Simulation('A05-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/'
 #plt.show()
 
 radius = sim.cell.radius(sim.ghost)
-P = sim.gas_pressure('h00003300.h5')
-vx = sim.radial_velocity('h00003300.h5')
-s = sim.entropy('h00003300.h5')
+P = sim.gas_pressure('h00015200.h5')
+vx = sim.radial_velocity('h00015200.h5')
+s = sim.entropy('h00015200.h5')
 
-shock = shock_radius(sim, 'h00003300.h5')
+shock = shock_radius(sim, 'h00015200.h5')
 print(shock[ 100,  7])
 #print(np.any(shock==np.nan))
 fig, axs = plt.subplots(1, 3, figsize=(10, 5), sharex=True)
