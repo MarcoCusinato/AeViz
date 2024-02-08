@@ -55,11 +55,11 @@ input()
 """
 
 #sim = Simulation('s16.5-SFHo-1.0omg-5e+08-1e+09B-timestep0.1ms', '/almacen/marco/Simulations/sn2d/s16.5-SW14/')
-sim = Simulation('A26-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
-sim.shock_radius()
-h =Qdot_timeseries(sim, True)
-plt.plot(h[0], h[2][0])
-plt.show()
+sim = Simulation('A05-1', '/home/marco/Escritorio/Simulations/martin/sn3d/Bonn/')
+#sim.shock_radius()
+#h =Qdot_timeseries(sim, True)
+#plt.plot(h[0], h[2][0])
+#plt.show()
 
 radius = sim.cell.radius(sim.ghost)
 P = sim.gas_pressure('h00003300.h5')
