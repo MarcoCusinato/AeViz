@@ -167,7 +167,8 @@ def shock_radius_3D(simulation, file_name):
                     (vr[ip, it, ir] >= 5e-7) and \
                     (dvr[ip, it, ir] <= -1) and \
                     (dP[ip, it, ir] <= -1) and \
-                    (vr[ip, it, max(0, ir-10)] >= vr[ip, it, min(0, ir+10)]):
+                    (vr[ip, it, max(0, ir-10)] >= vr[ip, it, min(vr.shape[2],
+                                                                 ir+10)]):
                     shock_r[ip, it] = simulation.cell.radius(simulation.ghost)[ir]
                     break
     return shock_r
