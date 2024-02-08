@@ -15,25 +15,25 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
             return qt
         if dV.ndim != qt.ndim:
             dV = dV[..., None]
-        av = np.nansum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV * ~mask)
+        av = np.nansum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
     elif av_type == 'theta':
         if dim < 2:
             return qt
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['p']] 
-                                         if i is not None])) / np.sum(dV * ~mask)
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'phi':
         if dim < 2:
             return qt
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['t']]
-                                         if i is not None])) / np.sum(dV * ~mask)
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'radius':
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['t'], 
                                                      indices['p']] 
-                                         if i is not None])) / np.sum(dV * ~mask)
+                                         if i is not None])) / np.sum(dV)
     elif av_type == 'volume':
-        av = np.nansum(qt * dV) / np.sum(dV * ~mask)
+        av = np.nansum(qt * dV) / np.sum(dV)
     return av
 
 def function_average_radii(qt, dim, dOmega):
