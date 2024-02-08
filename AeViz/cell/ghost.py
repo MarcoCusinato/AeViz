@@ -57,8 +57,8 @@ class ghost:
         self.restore_default()
         updated_parameters = self.__options_default.copy()
         updated_parameters.update(kwargs)
-        values = list(updated_parameters.values())
-        if min(values)<0 or max(values)>self.ghost:
+        values = np.array(list(updated_parameters.values()))
+        if np.min(values)<0 or np.max(values)>self.ghost:
             raise TypeError("The number of ghost cells MUST be between 0 and " + str(self.ghost))
         for key, value in updated_parameters.items():
             self.__setattr__(key, value)
