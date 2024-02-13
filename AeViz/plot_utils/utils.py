@@ -185,14 +185,17 @@ plot_labels = {
         'NUAX': {'log': True, 
                  'lim': (-1e39, 1e39), 
                  'cmap': 'Spectral_r', 
-                 'label': r'F$_{\overline{\nu}_e,r}$ [$\#_\nu\cdot$ s$^{-1}$]'},
+                 'label': r'F$_{\overline{\nu}_e,r}$' \
+                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
         'NUAY': {'log': True, 'lim': (-1e38, 1e38),
                  'cmap': 'Spectral_r',
-                 'label': r'F$_{\overline{\nu}_e,\theta}$ [$\#_\nu\cdot$ s$^{-1}$]'},
+                 'label': r'F$_{\overline{\nu}_e,\theta}$' \
+                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
         'NUAZ': {'log': True,
                  'lim': (-1e38, 1e38),
                  'cmap': 'Spectral_r',
-                 'label': r'F$_{\overline{\nu}_e,\phi}$ [$\#_\nu\cdot$ s$^{-1}$]'},
+                 'label': r'F$_{\overline{\nu}_e,\phi}$' \
+                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
         'NUAE': {'log': True, 
                  'lim': (1e25, 1e34),
                  'cmap': 'viridis',
