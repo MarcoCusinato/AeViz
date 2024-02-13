@@ -5,18 +5,18 @@ from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from AeViz.utils.file_utils import save_hdf
 
 
-def calculate_profile(simulation, profile):
+def calculate_profile(simulation, profile, save_checkpoints):
     """
     Returns the radial profile of the desired quantity. Quantity names
     must be the same as the ones in the simulation class.
     """
     if profile in ['BV_frequency', 'Rossby_number', 'Ye', 'temperature', 'rho',
                    'entropy', 'convective_flux', 'gas_pressure']:
-        return read_profile(simulation, profile)
+        return read_profile(simulation, profile, save_checkpoints)
     else:
         return derive_profile(simulation, profile)
 
-def read_profile(simulation, profile):
+def read_profile(simulation, profile, save_checkpoints):
     """
     Reads the radial profile saved in the profiles.h5 file.
     """
@@ -27,11 +27,11 @@ def read_profile(simulation, profile):
             data.close()
             return t, simulation.cell.radius(simulation.ghost), pr
         else:
-            derive_profiles(simulation, data)
-            return read_profile(simulation, profile)
+            derive_profiles(simulation, data, save_checkpoints)
+            return read_profile(simulation, profile, save_checkpoints)
     else:
-        derive_profiles(simulation, None)
-        return read_profile(simulation, profile)
+        derive_profiles(simulation, None, save_checkpoints)
+        return read_profile(simulation, profile, save_checkpoints)
 
 def derive_profile(simulation, profile):
     """
