@@ -158,7 +158,7 @@ def derive_profiles(simulation, data, save_checkpoints):
                 'convective_flux': Fc_av,
                 'gas_pressure': P_av
             }
-        if checkpoint_index == checkpoint:
+        if checkpoint_index >= checkpoint:
             checkpoint_index = 0
             print('Saving checkpoint...')
             save_hdf(os.path.join(simulation.storage_path, 'profiles.h5'),
