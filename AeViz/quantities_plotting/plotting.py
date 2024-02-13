@@ -1,3 +1,4 @@
+from AeViz import TERMINAL
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
@@ -126,7 +127,13 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 data = post_data[:, index1, index2]
     return data
         
-
+def show_figure():
+    """
+    Show the figure if the module is imported from the terminal.
+    """
+    if TERMINAL:
+        plt.show()
+        plt.ion()
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
@@ -180,8 +187,7 @@ class Plotting(PlottingUtils, Data):
     def __check_axd_1D(self, qt, xaxis):
         number = 1 
         if not self.fig_is_open():
-            plt.show()
-            plt.ion()
+            show_figure()
             self._PlotCreation__setup_axd(number, 1)
         elif self.number == 2 and self.form_factor == 2:
             self.number = 3
@@ -220,8 +226,7 @@ class Plotting(PlottingUtils, Data):
             if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
                         (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
                 self.Close()
-                plt.show()
-                plt.ion()
+                show_figure()
                 self._PlotCreation__setup_axd(number, 1)
         else:
             number = 1
@@ -239,8 +244,7 @@ class Plotting(PlottingUtils, Data):
         return number - 1
 
     def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
-        plt.show()
-        plt.ion()
+        show_figure()
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
                   self.cell.theta(self.ghost), self.cell.phi(self.ghost))
@@ -313,8 +317,7 @@ class Plotting(PlottingUtils, Data):
 
     def plot2DnoPar(self, qt1=None, type1='hydro', qt2=None, type2='hydro', 
                     qt3=None, type3='hydro', qt4=None, type4='hydro'):
-        plt.show()
-        plt.ion()
+        show_figure()
 
         gr = grid(self.sim_dim, self.radius, self.theta, self.phi)
         X, Y = gr.cartesian_grid()

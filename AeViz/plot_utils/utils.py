@@ -1,3 +1,7 @@
+## PLOTTING UTILS DICTIONARIES
+
+## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
+## SCALES (LOG, LINEAR, or SYMLOG)
 plot_labels = {
         'RHO': {'log': True,
                 'lim': (1e4, 1e15),
@@ -230,6 +234,7 @@ plot_labels = {
                'label': r'B$_\phi$ [G]'},
 }
 
+## PLOT LABELS FOR X-AXIS
 xaxis_labels = {'radius': 'R [km]',
                 'theta': r'$\theta$ [rad]',
                 'phi': r'$\phi$ [rad]',

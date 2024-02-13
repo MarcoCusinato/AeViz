@@ -102,7 +102,7 @@ def derive_profiles(simulation, data, save_checkpoints):
         checkpoint = checkpoints[simulation.dim]
     dOmega = simulation.cell.dOmega(simulation.ghost)
     checkpoint_index = 0
-    progress_index = start_point
+    progress_index = 0
     total_points = len(simulation.hdf_file_list) - start_point
     for file in simulation.hdf_file_list[start_point:]:
         t_file = simulation.time(file, True)
