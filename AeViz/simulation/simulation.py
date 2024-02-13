@@ -968,7 +968,7 @@ class Simulation:
     ## Profiles
     ## -----------------------------------------------------------------
     
-    def radial_profile(self, quantity):
+    def radial_profile(self, quantity, save_checkpoints=True):
         """
         Calucaltes the radial profile of the selected quantity. Name of
         the quantity must be the same as the one of the simulation
@@ -978,5 +978,5 @@ class Simulation:
         besides the regular angular and radial dependence, this will be
         returned as the last axis.
         """
-        return calculate_profile(self, quantity)
+        return calculate_profile(self, quantity, save_checkpoints)
         

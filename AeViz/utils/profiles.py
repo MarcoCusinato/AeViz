@@ -1,7 +1,7 @@
 import numpy as np
 from AeViz.utils.math_utils import function_average
 import os, h5py
-from AeViz.utils.utils import check_existence, progressBar
+from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from AeViz.utils.file_utils import save_hdf
 
 
@@ -75,7 +75,7 @@ def derive_profile(simulation, profile):
         profiles = profiles.swapaxes(-2, -1)
     return time, simulation.cell.radius(simulation.ghost), profiles
 
-def derive_profiles(simulation, data):
+def derive_profiles(simulation, data, save_checkpoints):
     """
     Calculates and saves the pressure, temperature, Ye, entropy, 
     density, Rossby number, BV frequency, and convective flux radial
@@ -96,12 +96,10 @@ def derive_profiles(simulation, data):
                     'gas_pressure': data['profiles/gas_pressure'][...]}
         data.close()
     
-    if simulation.dim == 1:
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
-    elif simulation.dim == 2:
-        checkpoint = 600
-    elif simulation.dim == 3:
-        checkpoint = 200
+    else:
+        checkpoint = checkpoints[simulation.dim]
     dOmega = simulation.cell.dOmega(simulation.ghost)
     checkpoint_index = 0
     progress_index = start_point
