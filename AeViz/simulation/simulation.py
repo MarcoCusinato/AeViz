@@ -241,8 +241,13 @@ class Simulation:
     
     @hdf_isopen
     def gravitational_potential(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['gravpot/data'])), self.dim)
+        data = np.squeeze(np.array(
+            self.__data_h5['gravpot/data']))
+        ## The following IF is here to address problem in saving 3D
+        ## arrays on MN4 
+        if data.shape[-1] == 2:
+            data = data[..., 0]
+        return self.ghost.remove_ghost_cells(data, self.dim)
     
     def gravitational_energy(self, file_name):
         return 0.5 * self.rho(file_name) * \
