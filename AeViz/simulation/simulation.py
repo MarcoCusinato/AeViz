@@ -149,8 +149,8 @@ class Simulation:
     
     @hdf_isopen
     def rho(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
