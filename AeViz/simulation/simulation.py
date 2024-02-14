@@ -149,40 +149,40 @@ class Simulation:
     
     @hdf_isopen
     def rho(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
     @hdf_isopen
     def MHD_energy(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_EN']]), self.dim)
     
     ## VELOCITY
     @hdf_isopen
     def radial_velocity(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELX']]), self.dim)
     
     @hdf_isopen
     def theta_velocity(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELY']]), self.dim)
     
     @hdf_isopen
     def phi_velocity(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELZ']]), self.dim)
     
     @hdf_isopen
     def soundspeed(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CSND']]), self.dim)
     
     def omega(self, file_name):
@@ -204,45 +204,45 @@ class Simulation:
     ## THERMODYNAMICAL
     @hdf_isopen
     def gas_pressure(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_PGAS']]), self.dim)
     
     @hdf_isopen
     def temperature(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_TMPR']]), self.dim)
     
     @hdf_isopen
     def enthalpy(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTH']]), self.dim)
     
     @hdf_isopen
     def entropy(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTR']]), self.dim)
     
     @hdf_isopen
     def adiabatic_index(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_GAMM']]), self.dim)
     
     ## RELATIVITY AND GRAVITY
     @hdf_isopen
     def lorentz(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_LRTZ']]), self.dim)
     
     @hdf_isopen
     def gravitational_potential(self, file_name):
-        data = np.squeeze(np.array(
-            self.__data_h5['gravpot/data']))
+        data = np.squeeze(
+            self.__data_h5['gravpot/data'][...])
         ## The following IF is here to address problem in saving 3D
         ## arrays on MN4 
         if data.shape[-1] == 2:
@@ -256,82 +256,82 @@ class Simulation:
     ## ENERGY
     @hdf_isopen
     def internal_energy(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_EINT']]), self.dim)
     
     @hdf_isopen
     def nu_heat(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_HEAT']]), self.dim)
     
     ## COMPOSITION
     @hdf_isopen
     def Ye(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
             ['I_YE']]), self.dim) / self.rho(file_name)
     
     @hdf_isopen
     def neutron_fraction(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][0]]), self.dim)
     
     @hdf_isopen
     def proton_fraction(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][1]]), self.dim)
     
     @hdf_isopen
     def alpha_fraction(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][2]]), self.dim)
     
     @hdf_isopen
     def heavy_fraction(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][3]]), self.dim)
     
     @hdf_isopen
     def Abar(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][4]]), self.dim)
     
     @hdf_isopen
     def Zbar(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][5]]), self.dim)
     
     ## CHEMICAL POTENTIAL
     @hdf_isopen
     def electron_chemical_potential(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][0]]), self.dim)
     
     @hdf_isopen
     def neutron_chemical_potential(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][1]]), self.dim)
     
     @hdf_isopen
     def proton_chemical_potential(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][2]]), self.dim)
     
     @hdf_isopen
     def neutrino_chemical_potential(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['thd/data'])[..., self.hydroTHD_index['thd']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][3]]), self.dim)
     
     ## -----------------------------------------------------------------
@@ -341,8 +341,8 @@ class Simulation:
     ## ERROR
     @hdf_isopen
     def error(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['hydro/data'])[..., self.hydroTHD_index['hydro']
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_EOSERR']]), self.dim)
 
     ## TIME
@@ -367,16 +367,16 @@ class Simulation:
         streamlines. If you want to plot the actual magnetic fields use
         the 'magnetic_field' method.
         """
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['mag_CT/data'])), self.dim)
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['mag_CT/data'][...]), self.dim)
     
     @hdf_isopen
     def magnetic_fields(self, file_name):
         """
         Magnetic field at the cells center.
         """
-        return self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['mag_vol/data'])), self.dim)
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['mag_vol/data'][...]), self.dim)
     
     def poloidal_magnetic_fields(self, file_name):
         data = self.magnetic_fields(file_name)
@@ -417,8 +417,8 @@ class Simulation:
     ## ENERGY DEPENDENT
     @hdf_isopen
     def neutrino_energy_density(self, file_name):
-        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['neutrino/e'])[..., 0]), self.dim)
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['neutrino/e'][..., 0]), self.dim)
         nu_ene[..., 2] /= 4
         return nu_ene
     
@@ -428,8 +428,8 @@ class Simulation:
         In the comoving rest frame of the fluid are equal to the
         neutrino energy fluxes
         """
-        nu_flux = self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['neutrino/e'])[..., 1:]), self.dim)
+        nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['neutrino/e'][..., 1:]), self.dim)
         
         ## Insert a new axis to be consistent with the other dimensions
         if self.dim == 1:
@@ -439,8 +439,8 @@ class Simulation:
     
     @hdf_isopen
     def neutrino_momenta_opacities(self, file_name):
-        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['neutrino/oe'])[..., 1:]), self.dim)
+        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['neutrino/oe'][..., 1:]), self.dim)
         if self.dim == 1:
             nu_opac = nu_opac[..., None]
         return nu_opac
@@ -461,8 +461,8 @@ class Simulation:
     ## GREY
     @hdf_isopen
     def neutrino_energy_density_grey(self, file_name):
-        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['/neutrinogrey/egrey'])[..., 0]), self.dim)
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
         nu_ene[..., 2] /= 4
         return nu_ene
     
@@ -472,8 +472,8 @@ class Simulation:
         In the comoving rest frame of the fluid are equal to the 
         neutrino energy fluxes
         """
-        nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(np.array(
-            self.__data_h5['/neutrinogrey/egrey'])[..., 1:]), self.dim)
+        nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['/neutrinogrey/egrey'][..., 1:]), self.dim)
         if self.dim == 1:
             nu_flux = nu_flux[..., None]
         nu_flux[..., 2, :] /= 4
