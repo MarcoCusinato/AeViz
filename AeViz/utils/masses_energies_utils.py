@@ -100,14 +100,28 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
 
 def unbound_mass_energy(simulation, file_name, dV):
     """
-    Calculates the explosion energy and the unbound mass for one timestep.
+    Calculates the explosion energy and the unbound mass
+    for one timestep. It also returns the ejecta kinetic and magnetic
+    energy.
     """
     rho = simulation.rho(file_name)
     mhd_ene = simulation.MHD_energy(file_name) + rho * \
         simulation.gravitational_potential(file_name)
     mask = (mhd_ene > 0) & (simulation.cell.radius(simulation.ghost) < 1e10)
-    return u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask])), \
-        np.sum(mhd_ene[mask] * dV[mask])
+    ej_mass = u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask]))
+    expl_ene = np.sum(mhd_ene[mask] * dV[mask])
+    if simulation.dim == 1:
+        ej_kin = np.sum(0.5 * rho[mask] * \
+            simulation.radial_velocity(file_name)[mask] ** 2)
+        ej_mag = 0
+    else:
+        ej_kin = np.sum(0.5 * dV[mask] * rho[mask] * \
+            (simulation.radial_velocity(file_name)[mask] ** 2 + \
+            simulation.theta_velocity(file_name)[mask] ** 2 + \
+            simulation.phi_velocity(file_name)[mask] ** 2))
+        ej_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] * \
+            dV[mask])
+    return ej_mass, expl_ene, ej_kin, ej_mag
 
 def mass_flux(simulation, file_name, dOmega, radius_index):
     """
