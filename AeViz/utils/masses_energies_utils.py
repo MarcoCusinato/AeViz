@@ -103,8 +103,7 @@ def unbound_mass_energy(simulation, file_name, dV):
     Calculates the explosion energy and the unbound mass for one timestep.
     """
     rho = simulation.rho(file_name)
-    mhd_ene = simulation.MHD_energy(file_name) + rho * \
-        simulation.gravitational_potential(file_name)
+    mhd_ene = simulation.MHD_energy(file_name)
     mask = (mhd_ene > 0) & (simulation.cell.radius(simulation.ghost) < 1e10)
     return u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask])), \
         np.sum(mhd_ene[mask] * dV[mask])

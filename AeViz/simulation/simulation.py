@@ -154,11 +154,16 @@ class Simulation:
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
-    @hdf_isopen
     def MHD_energy(self, file_name):
-        return self.ghost.remove_ghost_cells(np.squeeze(
-            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
-                                          ['I_EN']]), self.dim)
+        energy = self.internal_energy(file_name) + \
+            self.gravitational_energy(file_name) + \
+            self.magnetic_energy(file_name) + \
+            self.rho(file_name) * self.radial_velocity(file_name) ** 2
+        if self.dim > 1:
+            energy += self.rho(file_name) * \
+                (self.theta_velocity(file_name) ** 2 + \
+                self.phi_velocity(file_name) ** 2)
+        return energy
     
     ## VELOCITY
     @hdf_isopen
@@ -390,11 +395,14 @@ class Simulation:
         """
         Magnetic energy density. Total, poloidal and toroidal.
         """
-        data = self.magnetic_fields(file_name)
-        return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
+        try:
+            data = self.magnetic_fields(file_name)
+            return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
                        + data[..., 2] ** 2), \
                  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
                  0.5 * data[..., 2] ** 2
+        except:
+            return 0
     
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
