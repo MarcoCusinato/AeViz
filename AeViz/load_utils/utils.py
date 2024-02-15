@@ -53,6 +53,7 @@ def convert_name(name):
       'magnetic_field_x': 'magnetic_fields_0', 'bx': 'magnetic_fields_0',
       'magnetic_field_y': 'magnetic_fields_1', 'by': 'magnetic_fields_1',
       'magnetic_field_z': 'magnetic_fields_2', 'bz': 'magnetic_fields_2',
+      'magnetic_fields': 'magnetic_fields', 'b': 'magnetic_fields',
       'poloidal_magnetic_fields': 'poloidal_magnetic_fields', 
       'bpol': 'poloidal_magnetic_fields',
       'toroidal_magnetic_fields': 'toroidal_magnetic_fields', 
