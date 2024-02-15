@@ -155,15 +155,9 @@ class Simulation:
     
     ## ENERGY
     def MHD_energy(self, file_name):
-        energy = self.internal_energy(file_name) + \
-            self.gravitational_energy(file_name) + \
-            self.magnetic_energy(file_name) + \
-            self.rho(file_name) * self.radial_velocity(file_name) ** 2
-        if self.dim > 1:
-            energy += self.rho(file_name) * \
-                (self.theta_velocity(file_name) ** 2 + \
-                self.phi_velocity(file_name) ** 2)
-        return energy
+        return self.ghost.remove_ghost_cells(np.squeeze(
+            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
+                                          ['I_EN']]), self.dim)
     
     ## VELOCITY
     @hdf_isopen
@@ -347,7 +341,7 @@ class Simulation:
     @hdf_isopen
     def error(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(
-            self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
+            self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
 
     ## TIME
@@ -844,13 +838,15 @@ class Simulation:
         If tob_corrected is True, the time is corrected for the time of
         bounce. If save_checkpoints is True, the checkpoints are saved
         during the calculation.
-        Returns: time, mass, energy
+        Returns: time, unbound mass, energy, and 
+            kinetic energy, magnetic energy of unbounded material
         """
         time, _, _, _, _, data = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
-        return [time, data['mass'], data['energy']]
+        return [time, data['mass'], data['energy'], data['kinetic_ene'],
+                data['magnetic_ene']]
     
     def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True):
         """

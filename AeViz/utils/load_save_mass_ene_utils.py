@@ -96,6 +96,10 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                                                 np.array([unb_data[0]])))
             unb_me['energy'] = np.concatenate((unb_me['energy'],
                                                 np.array([unb_data[1]])))
+            unb_me['kinetic_ene'] = np.concatenate((unb_me['kinetic_ene'],
+                                                np.array([unb_data[2]])))
+            unb_me['magnetic_ene'] = np.concatenate((unb_me['magnetic_ene'],
+                                                np.array([unb_data[3]])))
         except:
             time = simulation.time(file)
             mdot = np.array([mass_flux(simulation, file, dOmega,
@@ -124,7 +128,9 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
             }
             unb_me = {
                 'mass': np.array([unb_data[0]]),
-                'energy': np.array([unb_data[1]])
+                'energy': np.array([unb_data[1]]),
+                'kinetic_ene': np.array([unb_data[2]]),
+                'magnetic_ene': np.array([unb_data[3]])
             }
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
@@ -181,7 +187,9 @@ def read_masses_energies(simulation):
         },
         {
             'mass': masses_energies_data['unbound/mass'][...],
-            'energy': masses_energies_data['unbound/energy'][...]
+            'energy': masses_energies_data['unbound/energy'][...],
+            'kinetic_ene': masses_energies_data['unbound/kinetic_ene'][...],
+            'magnetic_ene': masses_energies_data['unbound/magnetic_ene'][...]
         }
     ]
     return data

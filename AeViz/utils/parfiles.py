@@ -13,9 +13,9 @@ def get_indices_from_parfile(file_name, path_folder):
 
                                       HYDRO
             |----------------------------------------------------------|
-            |'I_RH' : density           |   'I_EN' : entropy           |
+            |'I_RH' : density           |   'I_EN' : conserved energy  |
             |'I_VX' : radial velocity   |   'I_YE' : electron fraction |
-            |'I_VY' : polar velocity    |   'I_YZ' :                   |
+            |'I_VY' : polar velocity    |   'I_YN' :                   |
             |'I_VZ' : azimutal velocity |   'I_LRTZ' : lorentz factor  |
             ------------------------------------------------------------
                                        THD
