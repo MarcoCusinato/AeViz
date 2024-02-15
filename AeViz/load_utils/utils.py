@@ -8,7 +8,26 @@ def check_file_to_load(path):
 
 def convert_name(name):
     name_dict = {
-        'rho': 'rho', 'rho_max': 'rho_max'
+      'rho': 'rho', 'rh': 'rho', 'rho_max': 'rho_max', 'rhom': 'rho_max',
+      'mhd_energy': 'MHD_energy', 'mhd': 'MHD_energy', 'mhd_e': 'MHD_energy',
+      'internal_energy': 'MHD_energy', 'internal': 'MHD_energy',
+      'int_ene': 'MHD_energy',
+      'radial_velocity': 'radial_velocity', 'vr': 'radial_velocity', 
+      'vx': 'radial_velocity',
+      'theta_velocity': 'theta_velocity', 'vtheta': 'theta_velocity',
+      'vy': 'theta_velocity',
+      'phi_velocity': 'phi_velocity', 'vphi': 'phi_velocity', 
+      'vz': 'phi_velocity',
+      'souundspeed': 'soundspeed', 'cs': 'soundspeed', 'csound': 'soundspeed',
+      'omega': 'omega', 'w': 'omega',
+      'pressure': 'gas_pressure', 'p': 'gas_pressure', 'pgas': 'gas_pressure',
+      'temperature': 'temperature', 't': 'temperature', 'temp': 'temperature',
+      'enthalpy': 'enthalpy', 'h': 'enthalpy', 'enth': 'enthalpy',
+      'adiabatic_index': 'adiabatic_index', 'gamma': 'adiabatic_index',
+      'lorentz_factor': 'lorentz', 'lorentz': 'lorentz',
+      'gravitational_potential': 'gravitational_potential', 
+      'phi': 'gravitational_potential', 'gpot': 'gravitational_potential',
+      
     }
 
 def return_index(hydro_dict, name):
