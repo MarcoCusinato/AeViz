@@ -389,15 +389,12 @@ class Simulation:
         """
         Magnetic energy density. Total, poloidal and toroidal.
         """
-        try:
-            data = self.magnetic_fields(file_name)
-            return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
-                       + data[..., 2] ** 2), \
-                 0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
-                 0.5 * data[..., 2] ** 2
-        except:
-            return 0
-    
+        data = self.magnetic_fields(file_name)
+        return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
+                    + data[..., 2] ** 2), \
+                0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
+                0.5 * data[..., 2] ** 2
+
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                         self.ghost, plane)
