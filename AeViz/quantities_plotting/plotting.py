@@ -269,23 +269,28 @@ class Plotting(PlottingUtils, Data):
             elif number_of_quantities == 1:
                 if 'C' in self.axd:
                     qt4 = qt1
-                    number, form_factor, cbars = setup_cbars(True, True, True, qt4)
+                    number, form_factor, cbars = setup_cbars(True, True, True,
+                                                             qt4)
                 elif 'B' in self.axd:
                     qt3 = qt1
-                    number, form_factor, cbars = setup_cbars(True, True, qt3, qt4)
+                    number, form_factor, cbars = setup_cbars(True, True, qt3,
+                                                             qt4)
                 elif 'A' in self.axd:
                     qt2 = qt1
-                    number, form_factor, cbars = setup_cbars(True, qt2, qt3, qt4)
+                    number, form_factor, cbars = setup_cbars(True, qt2, qt3,
+                                                             qt4)
                 qt1 = None
             elif number_of_quantities == 2:
                 if 'B' in self.axd:
                     qt4 = qt2
                     qt3 = qt1
-                    number, form_factor, cbars = setup_cbars(True, True, qt3, qt4)
+                    number, form_factor, cbars = setup_cbars(True, True, qt3,
+                                                             qt4)
                 elif 'A' in self.axd:
                     qt2 = qt1
                     qt3 = qt2
-                    number, form_factor, cbars = setup_cbars(True, qt2, qt3, qt4)
+                    number, form_factor, cbars = setup_cbars(True, qt2, qt3,
+                                                             qt4)
                 qt1 = None
                 qt2 = None
             elif number_of_quantities == 3:

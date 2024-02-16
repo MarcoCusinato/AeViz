@@ -72,7 +72,7 @@ class Data(object):
                 del self.loaded_data
             self.loaded_data = None
     
-    def __get_data_from_name(self, name):
+    def __get_data_from_name(self, name, file=None):
         if self.data_type == 'hdf5':
             if return_index(self.hydroTHD_index, name)['index'] is None:
                 raise ValueError('The selected quantity is not present in the'\
@@ -90,7 +90,7 @@ class Data(object):
                                    [..., self.hydroTHD_index['hydro']['I_RH']])
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
-            raise NotImplementedError('Not implemented yet.')
+            return getattr(self.loaded_data, name)(file)
     
 
         

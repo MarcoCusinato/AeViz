@@ -194,7 +194,7 @@ class Simulation:
             return self.phi_velocity(file_name) / (np.cos(self.cell.phi(
                 self.ghost))[:, None, None] * np.sin(self.cell.theta(
                 self.ghost))[None, :, None] * \
-                self.cell.radius(self.ghost))[None, None, :]
+                self.cell.radius(self.ghost)[None, None, :])
 
     ## -----------------------------------------------------------------
     ## THERMODYNAMICAL DATA
