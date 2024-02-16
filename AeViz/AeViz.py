@@ -1,101 +1,202 @@
 from AeViz.quantities_plotting.plotting import Plotting
+import AeViz.utils.radii_utils
 from typing import Literal
+from AeViz.utils.GW_utils import GW_spectrogram
 
 class AeViz(Plotting):
     def __init__(self):
         Plotting.__init__(self)
     
-    def rho(self, projection:Literal['1D', '2D']='1D', index1=None, 
+    def rho(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
         pass
     
-    def MHD_energy(self, projection:Literal['1D', '2D']='1D', index1=None, 
+    def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
         pass
     
-    def velocity(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, comp:Literal['all', 'r', 'th', 'ph', 'sound']='all',
+    def velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, comp:Literal['all', 'r', 'th', 'ph']='all',
+            plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 
+                          'time']='radius'):
+        pass
+    def soundspeed(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
+            index2=None, plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
+                                              'time']='radius'):
+            pass
+    
+    def alfven_velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
+            index2=None, plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
+                          'time']='radius'):
+        pass
+    
+    def convection_velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
+            index2=None, comp:Literal['all', 'convection', 'turbulent']='all',
+            plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 
+                          'time']='radius'):
+        pass
+    
+    def omega(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def gas_pressure(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def temperature(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+
+    def enthalphy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+
+    def entropy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def adiabatic_index(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def lorentz_factor(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+
+    def grav_pot(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def grav_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def int_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def nu_heat(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Ye(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Xn(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Xp(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Xalpha(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Xheavy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Abar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def Zbar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+
+    def cpot_e(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def cpot_n(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def cpot_p(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def cpot_nu(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def error(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, plane:Literal['xy', 'xz', 'radius',
+                          'theta', 'phi', 'time']='radius'):
+        pass
+    
+    def magnetic_fields(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
+            index2=None, comp:Literal['all', 'r', 'th', 'ph', 'poloidal',
+                                      'toroidal']='all',
             plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 'time']='radius'):
         pass
     
-    def omega(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def magnetic_energy(self, file=None, projection:Literal['1D', '2D']='1D', 
+                        index1=None, index2=None, comp:Literal['tot', 
+                                                'poloidal', 'toroidal']='tot', 
+                        plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
+                                     'time']='radius'):
         pass
     
-    def gas_pressure(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def PNS_radius(self, comp:Literal['min', 'max', 'avg']='avg'):
         pass
     
-    def temperature(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-
-    def enthalphy(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-
-    def entropy(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def shock_radius(self, comp:Literal['min', 'max','avg']='avg'):
         pass
     
-    def adiabatic_index(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def neutrino_spheres(self, comp:Literal['min', 'max', 'avg']='avg'):
         pass
     
-    def lorentz_factor(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-
-    def grav_pot(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def gain_radius(self,  comp:Literal['min', 'max', 'avg']='avg'):
         pass
     
-    def grav_ene(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def innercore_radius(self, comp:Literal['min', 'max','avg']='avg'):
         pass
     
-    def int_ene(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def PNS_nucleus_radius(self, comp:Literal['min', 'max', 'avg']='avg'):
         pass
     
-    def nu_heat(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def explosion(self, comp: Literal['mass', 'ene', 'kin', 'mag']):
         pass
     
-    def Ye(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def gain(self, comp: Literal['mass', 'ene']):
         pass
     
-    def Xn(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
+                                      'grav', 'tot', 'T_W']):
         pass
     
-    def Xp(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def mass_accretion(self):
         pass
     
-    def Xalpha(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-    
-    def Xheavy(self, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
+    def GWs(self, comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
+            decomposition=False, GW_spectrogram=False):
         pass

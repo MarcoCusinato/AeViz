@@ -611,7 +611,7 @@ class Simulation:
         Returns the energy carried away by the GWs in erg/s
         """
         GWs = self.GW_Amplitudes(tob_corrected)
-        GWs[:, 1] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
+        GWs[:, 1:] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
         return GWs
 
     def AE220(self, tob_corrected=True, save_checkpoints=True):
