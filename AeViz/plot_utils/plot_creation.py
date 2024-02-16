@@ -133,6 +133,8 @@ class PlotCreation(object):
     def __setup_axd(self, number=1, form_factor=1):
         self.number = number
         self.form_factor = form_factor
+        if self.fig_is_open():
+            self.__close_figure()
         if not self.fig_is_open():
             self.__setup_figure()
         if not self.axd_is_open():
@@ -170,6 +172,7 @@ class PlotCreation(object):
             self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
+        
     
     def change_figsize(self, multiplies=1):
         if self.fig_is_open():

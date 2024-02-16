@@ -1,4 +1,5 @@
 from AeViz import TERMINAL
+import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
@@ -132,8 +133,9 @@ def show_figure():
     Show the figure if the module is imported from the terminal.
     """
     if TERMINAL:
-        plt.show()
         plt.ion()
+        plt.show()
+        
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
@@ -243,26 +245,71 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         return number - 1
 
-    def plot2DwithPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
-        show_figure()
+    def plot2DPar(self, qt1=None, qt2=None, qt3=None, qt4=None):
+        
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
                   self.cell.theta(self.ghost), self.cell.phi(self.ghost))
         X, Y = gr.cartesian_grid()
 
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
-
-        number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
+        number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
+        redo = False
+        if self.axd is not None:
+            redo = True
+            if 'C' in self.axd and 'D' in self.axd:
+                if np.all(self.data['C'] == self.data['D']):
+                    del self.axd['D']
+            if (number_of_quantities == 4) or \
+                (number_of_quantities == 3 and 'B' in self.axd) or \
+                (number_of_quantities == 2 and 'C' in self.axd) or \
+                (number_of_quantities == 1 and 'D' in self.axd):
+                self.Close()
+                number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
+            elif number_of_quantities == 1:
+                if 'C' in self.axd:
+                    qt4 = qt1
+                    number, form_factor, cbars = setup_cbars(True, True, True, qt4)
+                elif 'B' in self.axd:
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars(True, True, qt3, qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    number, form_factor, cbars = setup_cbars(True, qt2, qt3, qt4)
+                qt1 = None
+            elif number_of_quantities == 2:
+                if 'B' in self.axd:
+                    qt4 = qt2
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars(True, True, qt3, qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    qt3 = qt2
+                    number, form_factor, cbars = setup_cbars(True, qt2, qt3, qt4)
+                qt1 = None
+                qt2 = None
+            elif number_of_quantities == 3:
+                qt2 = qt1
+                qt3 = qt2
+                qt4 = qt3
+                number, form_factor, cbars = setup_cbars(True, qt2, qt3, qt4)
+                qt1 = None
+        else:
+            number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
+        print(qt1, qt2, qt3, qt4, self.axd.keys())
         
-        self._PlottingUtils__update_params('A', (X, Y), 
-                                           self._Data__get_data_from_name(qt1),
-                                           cbars['A'], plot_labels[qt1]['log'],
-                                           plot_labels[qt1]['lim'], 2, 
-                                           plot_labels[qt1]['cmap'], 
-                                           plot_labels[qt1]['label'])  
-        self._PlottingUtils__plot2D('A')
-        self.labels('X [km]', 'Z [km]', 'A')
+        if qt1 is not None:
+            self._PlottingUtils__update_params('A', (X, Y), 
+                                            self._Data__get_data_from_name(qt1),
+                                            cbars['A'], plot_labels[qt1]['log'],
+                                            plot_labels[qt1]['lim'], 2, 
+                                            plot_labels[qt1]['cmap'], 
+                                            plot_labels[qt1]['label'])  
+            self.labels('X [km]', 'Z [km]', 'A')
+            self._PlottingUtils__plot2D('A')
+            self.Xscale('linear', 'A')
+            self.Yscale('linear', 'A')
         if qt2 is not None:
             self._PlottingUtils__update_params('B', (X, Y),
                                         self._Data__get_data_from_name(qt2),
@@ -270,8 +317,10 @@ class Plotting(PlottingUtils, Data):
                                         plot_labels[qt2]['lim'], 2,
                                         plot_labels[qt2]['cmap'],
                                         plot_labels[qt2]['label'])
-            self._PlottingUtils__plot2D('B')
             self.labels('X [km]', 'Z [km]', 'B')
+            self._PlottingUtils__plot2D('B')
+            self.Xscale('linear', 'B')
+            self.Yscale('linear', 'B')
         if qt3 is not None and qt4 is None:
             self._PlottingUtils__update_params('C', (X, Y),
                                         self._Data__get_data_from_name(qt3),
@@ -279,55 +328,56 @@ class Plotting(PlottingUtils, Data):
                                         plot_labels[qt3]['lim'], 2, 
                                         plot_labels[qt3]['cmap'],
                                         plot_labels[qt3]['label'])
-            self._PlottingUtils__plot2D('C')
             self.labels('X [km]', 'Z [km]', 'C')
+            self._PlottingUtils__plot2D('C')
+            self.Xscale('linear', 'C')
+            self.Yscale('linear', 'C')
             self._PlottingUtils__update_params('D', (X, Y),
                                         self._Data__get_data_from_name(qt3),
                                         cbars['D'], plot_labels[qt3]['log'],
                                         plot_labels[qt3]['lim'], 2,
                                         plot_labels[qt3]['cmap'],
                                         plot_labels[qt3]['label'])
-            self._PlottingUtils__plot2D('D')
             self.labels('X [km]', 'Z [km]', 'D')
-        if qt4 is not None:
+            self._PlottingUtils__plot2D('D')
+            self.Xscale('linear', 'D')
+            self.Yscale('linear', 'D')
+        elif qt3 is not None:
             self._PlottingUtils__update_params('C', (X, Y),
                                         self._Data__get_data_from_name(qt3),
                                         cbars['C'], plot_labels[qt3]['log'],
-                                        plot_labels[qt3]['lim'], 2,
+                                        plot_labels[qt3]['lim'], 2, 
                                         plot_labels[qt3]['cmap'],
                                         plot_labels[qt3]['label'])
+            self.labels('X [km]', 'Z [km]', 'C')
             self._PlottingUtils__plot2D('C')
+            self.Xscale('linear', 'C')
+            self.Yscale('linear', 'C')
+        if qt4 is not None:
             self._PlottingUtils__update_params('D', (X, Y),
                                         self._Data__get_data_from_name(qt4),
                                         cbars['D'], plot_labels[qt4]['log'],
                                         plot_labels[qt4]['lim'], 2,
                                         plot_labels[qt4]['cmap'],
-                                        plot_labels[qt4]['label'])
-            self._PlottingUtils__plot2D('D')
+                                        plot_labels[qt4]['label'])    
             self.labels('X [km]', 'Z [km]', 'D')
+            self._PlottingUtils__plot2D('D')
+            self.Xscale('linear', 'D')
+            self.Yscale('linear', 'D')
         self.ghost.restore_default()
         self.xlim((0, 100), "A")
-
-        for ax_letter in self.axd:
-            if ax_letter in ['a', 'b', 'c', 'd']:
-                continue
-            self.Xscale('linear', ax_letter)
-            self.Yscale('linear', ax_letter)
-
-
-    def plot2DnoPar(self, qt1=None, type1='hydro', qt2=None, type2='hydro', 
-                    qt3=None, type3='hydro', qt4=None, type4='hydro'):
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter in ['a', 'b', 'c', 'd']:
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        
         show_figure()
-
-        gr = grid(self.sim_dim, self.radius, self.theta, self.phi)
-        X, Y = gr.cartesian_grid()
-
-        qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, False)
-
-        number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
-        self._PlotCreation__setup_axd(number, form_factor)
         
     def Close(self):
         self._PlotCreation__close_figure()
+        self._PlottingUtils__reset_params()
 
         

@@ -62,6 +62,9 @@ class PlottingUtils(PlotCreation):
         self.cbar_label[ax_letter] = cbar_label
         if self.plot_dim[ax_letter] == 2:
             self.data[ax_letter] = self.data[ax_letter].T
+            
+    def __update_cbar_position(self, ax_letter, cbar_position):
+        self.cbar_position[ax_letter] = cbar_position
     
     def __reset_params(self):
         self.plot_dim = {}
