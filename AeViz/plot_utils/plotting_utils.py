@@ -121,9 +121,10 @@ class PlottingUtils(PlotCreation):
                                 location=cbar_loaction(
                                     self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
-        if self.cbar_position[ax_letter] in ['L', 'R']:
+        if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
             self.axd[ax_letter].yaxis.labelpad = -10
-
+        
+    
     def __plot1D(self, ax_letter):
         if type(self.data[ax_letter]) == list:
             for data in self.data[ax_letter]:
@@ -145,6 +146,11 @@ class PlottingUtils(PlotCreation):
                 self.__plot2D(ax_letter)
                 set2Dlims(self.axd, self.xlims[ax_letter], None, self.number,
                           self.form_factor)
+            elif self.plot_dim[ax_letter] == -1:
+                self.__plot2D(ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
             else:
                 self.__plot1D(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)

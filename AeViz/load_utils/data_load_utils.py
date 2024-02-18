@@ -73,6 +73,13 @@ class Data(object):
                 del self.loaded_data
             self.loaded_data = None
     
+    def __get_profile(self, name):
+        if self.data_type == 'hdf5':
+            raise ValueError('The profile method is not implemented for hdf5' \
+                             ' files.')
+        elif self.data_type == 'sim':
+            return self.loaded_data.radial_profile(name)
+
     def __get_data_from_name(self, name, file=None):
         if self.data_type == 'hdf5':
             if return_index(self.hydroTHD_index, name)['index'] is None:

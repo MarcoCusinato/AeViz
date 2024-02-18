@@ -16,7 +16,10 @@ class AeViz(Plotting):
                 qt = 'rho_max'
             self.plot1D(file, qt, plane, index1, index2)
         elif projection == '2D':
-            self.plot2D(file,'rho')
+            if plane == 'time':
+                self.plotProfile(qt)
+            else:
+                self.plot2D(file, qt)
     
     def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',

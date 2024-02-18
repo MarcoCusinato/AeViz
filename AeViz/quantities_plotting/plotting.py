@@ -46,6 +46,23 @@ def setup_cbars(qt1, qt2, qt3, qt4):
         raise ValueError('No quantity given.')
     return number, form_factor, cbars
 
+def setup_cbars_profile(qt1, qt2, qt3, qt4):
+    if qt4 is not None:
+        number, form_factor = 4, 4
+        cbars = {'A': 'L', 'B': 'R', 'C': 'L', 'D': 'R'}
+    elif qt3 is not None:
+        number, form_factor = 3, 4
+        cbars = {'A': 'R', 'B': 'L', 'C': 'R'}
+    elif qt2 is not None:
+        number, form_factor = 2, 4
+        cbars = {'A': 'R', 'B': 'R'}
+    elif qt1 is not None:
+        number, form_factor = 1, 4
+        cbars = {'A': 'R'}
+    else:
+        raise ValueError('No quantity given.')
+    return number, form_factor, cbars
+
 def normalize_indices(index1, index2):
     if type(index1) == range:
         index1 = list(index1)
@@ -275,7 +292,7 @@ class Plotting(PlottingUtils, Data):
                 (number_of_quantities == 3 and 'B' in self.axd) or \
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
-                (np.any([self.plot_dim[axd_letter] == 1 for axd_letter 
+                (np.any([self.plot_dim[axd_letter] != 2 for axd_letter 
                         in [ax_l for ax_l in self.axd if ax_l not in 
                             ['a', 'b', 'c', 'd']]])):
                 self.Close()
@@ -316,7 +333,6 @@ class Plotting(PlottingUtils, Data):
         else:
             number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
-        print(qt1, qt2, qt3, qt4, self.axd.keys())
         
         if qt1 is not None:
             self._PlottingUtils__update_params('A', (X, Y), 
@@ -402,7 +418,127 @@ class Plotting(PlottingUtils, Data):
         show_figure()
     
     def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None):
-        pass
+        number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
+        redo = False
+        if self.axd is not None:
+            redo = True            
+            if (number_of_quantities == 4) or \
+                (number_of_quantities == 3 and 'B' in self.axd) or \
+                (number_of_quantities == 2 and 'C' in self.axd) or \
+                (number_of_quantities == 1 and 'D' in self.axd) or \
+                (np.any([self.plot_dim[axd_letter] != -1 for axd_letter 
+                        in [ax_l for ax_l in self.axd if ax_l not in 
+                            ['a', 'b', 'c', 'd']]])):
+                self.Close()
+                number, form_factor, cbars = setup_cbars_profile(qt1, qt2,
+                                                                 qt3, qt4)
+            elif number_of_quantities == 1:
+                if 'C' in self.axd:
+                    qt4 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True,
+                                                            True, True, qt4)
+                elif 'B' in self.axd:
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, True, qt3,
+                                                             qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                     qt3, qt4)
+                qt1 = None
+            elif number_of_quantities == 2:
+                if 'B' in self.axd:
+                    qt4 = qt2
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, 
+                                                                True, qt3, qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    qt3 = qt2
+                    number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                     qt3, qt4)
+                qt1 = None
+                qt2 = None
+            elif number_of_quantities == 3:
+                qt2 = qt1
+                qt3 = qt2
+                qt4 = qt3
+                number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                 qt3, qt4)
+                qt1 = None
+        else:
+            number, form_factor, cbars = setup_cbars_profile(qt1, qt2, qt3,
+                                                             qt4)
+        self._PlotCreation__setup_axd(number, form_factor)
+        X, Y = None, None
+        if qt1 is not None:
+            time, _, prof = self._Data__get_profile(qt1)
+            if X is None or Y is None:
+                X, Y = np.meshgrid(time,
+                                u.convert_to_km(self.cell.radius(self.ghost)))
+            self._PlottingUtils__update_params('A', (X, Y), prof,
+                                            cbars['A'], plot_labels[qt1]['log'],
+                                            plot_labels[qt1]['lim'], -1, 
+                                            plot_labels[qt1]['cmap'], 
+                                            plot_labels[qt1]['label'])
+            self.labels('t-t$_b$ [s]', 'R [km]', 'A')
+            self._PlottingUtils__plot2D('A')
+            self.xlim((-0.005, time.max()), 'A')
+            self.Yscale('log', 'A')
+            self.Xscale('linear', 'A')
+        if qt2 is not None:
+            time, _, prof = self._Data__get_profile(qt2)
+            if X is None or Y is None:
+                X, Y = np.meshgrid(time,
+                                u.convert_to_km(self.cell.radius(self.ghost)))
+            self._PlottingUtils__update_params('B', (X, Y), prof,
+                                            cbars['B'], plot_labels[qt2]['log'],
+                                            plot_labels[qt2]['lim'], -1,
+                                            plot_labels[qt2]['cmap'],
+                                            plot_labels[qt2]['label'])
+            self.labels('t-t$_b$ [s]', 'R [km]', 'B')
+            self._PlottingUtils__plot2D('B')
+            self.xlim((-0.005, time.max()), 'B')
+            self.Yscale('log', 'B')
+            self.Xscale('linear', 'B')
+        if qt3 is not None:
+            time, _, prof = self._Data__get_profile(qt3)
+            if X is None or Y is None:
+                X, Y = np.meshgrid(time,
+                                u.convert_to_km(self.cell.radius(self.ghost)))
+            self._PlottingUtils__update_params('C', (X, Y), prof,
+                                            cbars['C'], plot_labels[qt3]['log'],
+                                            plot_labels[qt3]['lim'], -1,
+                                            plot_labels[qt3]['cmap'],
+                                            plot_labels[qt3]['label'])
+            self.labels('t-t$_b$ [s]', 'R [km]', 'C')
+            self._PlottingUtils__plot2D('C')
+            self.xlim((-0.005, time.max()), 'C')
+            self.Yscale('log', 'C')
+            self.Xscale('linear', 'C')
+        if qt4 is not None:
+            time, _, prof = self._Data__get_profile(qt4)
+            if X is None or Y is None:
+                X, Y = np.meshgrid(time,
+                                u.convert_to_km(self.cell.radius(self.ghost)))
+            self._PlottingUtils__update_params('D', (X, Y), prof,
+                                            cbars['D'], plot_labels[qt4]['log'],
+                                            plot_labels[qt4]['lim'], -1,
+                                            plot_labels[qt4]['cmap'],
+                                            plot_labels[qt4]['label'])
+            self.labels('t-t$_b$ [s]', 'R [km]', 'D')
+            self._PlottingUtils__plot2D('D')
+            self.xlim((-0.005, time.max()), 'D')
+            self.Yscale('log', 'D')
+            self.Xscale('linear', 'D')
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter in ['a', 'b', 'c', 'd']:
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        show_figure()
 
     def Close(self):
         self._PlotCreation__close_figure()

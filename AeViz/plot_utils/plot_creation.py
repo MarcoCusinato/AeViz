@@ -2,18 +2,21 @@ import matplotlib.pyplot as plt
 
 def return_positioning(number, form_factor):
     positioning = {1: {1: """A""",
-                       2: """A.a"""},
+                       2: """A.a""",
+                       4: """A.a"""},
                    2: {1: """AB""",
                        2: """a.AB.b""",
                        3: """A
                              B""",
                        4: """A.a
-                             B.b""",
+                             B.b"""
                        },
                     3: {1:"""AA
                            BC""",
                         2:"""..AA..
-                           b.BC.c"""},
+                           b.BC.c""",
+                        4: """..AAA.a
+                              b.B.C.c"""},
                     4: {1:"""AB
                            CD""",
                         2:"""ac
@@ -21,7 +24,9 @@ def return_positioning(number, form_factor):
                              AC
                              BD
                              ..
-                             bd"""},
+                             bd""",
+                        4: """a.A.B.b
+                              c.C.D.d"""},
                     5: {1:"""A..
                              B..
                              C..
@@ -29,30 +34,38 @@ def return_positioning(number, form_factor):
                              E.e"""}}
     
     width_ratio = {1: {1: [1],
-                       2: [1.1, 0.4, 0.08]},
+                       2: [1.1, 0.4, 0.08],
+                       4: [1.1, 0.1, 0.08]},
                    2: {1: [1, 1],
                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
                        3: [1],
-                       4: [1.1, 0.4, 0.08]},
+                       4: [1.1, 0.1, 0.08]},
                    3: {1: [1, 1],
-                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08]},
+                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
+                       4:[0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
                    4: {1: [1, 1],
-                       2: [1, 1]},
+                       2: [1, 1],
+                       4: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
                     5: {1: [1, 0.03, 0.04]}}
     
     height_ratio = {1: {1: [1],
-                        2: [1]},
+                        2: [1],
+                        4: [1]},
                     2: {1: [1],
                         2: [1],
                         3: [1, 1],
                         4: [1, 1]},
                     3: {1: [0.25, 0.75],
-                        2: [0.25, 0.75]},
+                        2: [0.25, 0.75],
+                        4: [1, 1]},
                     4: {1: [1, 1],
-                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08]},
+                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
+                        4: [1, 1]},
                     5: {1: [0.5, 0.5, 0.5, 0.5, 2]}}
-    
-    if '.' in positioning[number][form_factor]:
+    if form_factor == 4:
+        gs_kw = {"wspace": 0,
+                 "hspace": 0.2}
+    elif '.' in positioning[number][form_factor]:
         gs_kw = {"wspace": 0,
                  "hspace": 0}
     else:
@@ -64,15 +77,18 @@ def return_positioning(number, form_factor):
 
 def return_fig_size(number, form_factor):
     fig_size = {1: {1: (8, 8),
-                    2: (8, 8)},
+                    2: (8, 8),
+                    4: (6, 4)},
                 2: {1: (8, 8),
                     2: (8, 8),
                     3: (8, 8),
-                    4: (8, 8)},
+                    4: (6, 8)},
                 3: {1: (9, 8.42),
-                    2: (9, 8.42)},
+                    2: (9, 8.42),
+                    4: (12, 8)},
                 4: {1: (8, 4),
-                    2: (8, 11.6)},
+                    2: (8, 11.6),
+                    4: (12, 8)},
                 5: {1: (4.5, 8)}}
     return fig_size[number][form_factor]
 
@@ -187,8 +203,7 @@ class PlotCreation(object):
     def __setup_aspect(self):
         if self.number == 1 and self.form_factor == 2:
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
-        elif (self.number == 2 and self.form_factor == 2) or \
-            (self.number == 2 and self.form_factor == 4):
+        elif (self.number == 2 and self.form_factor == 2):
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
         elif self.number == 3 and self.form_factor == 2:
@@ -222,15 +237,6 @@ class PlotCreation(object):
                         right=True, labelright=True)
                 self.axd["A"].yaxis.set_label_position('left')
                 self.axd["B"].yaxis.set_label_position('right')
-            elif self.form_factor == 4:
-                self.axd["A"].tick_params(top=False, labeltop=False,
-                        bottom=False, labelbottom=False,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
-                self.axd["B"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
         elif self.number == 3 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
                         bottom=False, labelbottom=False,
