@@ -203,10 +203,10 @@ class Plotting(PlottingUtils, Data):
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
                                            None, plot_labels[qt]['log'], None,
                                            1, None, None) 
-        
+        self.ylim(plot_labels[qt]['lim'], axd_letters[number])
         self._PlottingUtils__plot1D(axd_letters[number])
         
-        self.ylim(plot_labels[qt]['lim'], axd_letters[number])
+        
         if xaxis != 'time':
             self.xlim((grid.min(), grid.max()), axd_letters[number])
         else:
@@ -272,7 +272,8 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         return number - 1
 
-    def plot2D(self, file, qt1=None, qt2=None, qt3=None, qt4=None):
+    def plot2D(self, file, plane, index1, qt1=None, qt2=None, qt3=None,
+               qt4=None):
         
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),

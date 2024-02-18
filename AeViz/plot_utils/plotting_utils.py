@@ -84,7 +84,8 @@ class PlottingUtils(PlotCreation):
 
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
-            if self.cbar_lv[ax_letter][0] < 0:
+            if self.cbar_lv[ax_letter][0] < 0 and \
+                self.cbar_lv[ax_letter][1] > 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.cbar_lv[ax_letter][0]),
                     np.log10(self.cbar_lv[ax_letter][1]))) - 6)
@@ -95,12 +96,25 @@ class PlottingUtils(PlotCreation):
                     np.logspace(np.log10(lntresh),
                                 np.log10(self.cbar_lv[ax_letter][1]), 45)))
                 norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0],
-                                  vmax=self.cbar_lv[ax_letter][1])    
+                                  vmax=self.cbar_lv[ax_letter][1])
+            elif self.cbar_lv[ax_letter][0] < 0 and \
+                self.cbar_lv[ax_letter][1] <= 0:
+                if self.cbar_lv[ax_letter][1] == 0:
+                    self.cbar_lv[ax_letter] = list(self.cbar_lv[ax_letter])
+                    self.cbar_lv[ax_letter][1] = -10 ** (
+                        np.log10(-self.cbar_lv[ax_letter][1]) - 10)
+                    self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
+                cbar_levels = -np.logspace(np.log10(-self.cbar_lv[ax_letter][0]),
+                                          np.log10(-self.cbar_lv[ax_letter][1]),
+                                          100)
+                norm = SymLogNorm(-self.cbar_lv[ax_letter][1],
+                                  vmin=self.cbar_lv[ax_letter][0],
+                                  vmax=self.cbar_lv[ax_letter][1])
             else:
                 cbar_levels = np.logspace(np.log10(self.cbar_lv[ax_letter][0]),
                                           np.log10(self.cbar_lv[ax_letter][1]),
                                           100)
-                norm=   LogNorm(vmin=self.cbar_lv[ax_letter][0],
+                norm = LogNorm(vmin=self.cbar_lv[ax_letter][0],
                                 vmax=self.cbar_lv[ax_letter][1])
             fmt = lambda x, pos: '{:.0e}'.format(x)
         else:
@@ -123,6 +137,10 @@ class PlottingUtils(PlotCreation):
         cbar.set_label(self.cbar_label[ax_letter])
         if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
             self.axd[ax_letter].yaxis.labelpad = -10
+        if self.cbar_position[ax_letter] in ['T', 'B']:
+            for lb in cbar.ax.xaxis.get_ticklabels()[::2]:
+                lb.set_visible(False)
+
         
     
     def __plot1D(self, ax_letter):
@@ -152,11 +170,11 @@ class PlottingUtils(PlotCreation):
                 self.Yscale(self.logY[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
             else:
-                self.__plot1D(ax_letter)
-                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
+                self.__plot1D(ax_letter)
         
             
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
@@ -170,7 +188,7 @@ class PlottingUtils(PlotCreation):
             self.__save_lims()
         else:
             self.axd[axd_letter].set_xlim(xlim)
-        self.__save_lims(axd_letter)
+        self.__save_xlims(axd_letter)
         self._PlotCreation__setup_aspect()
     
     def ylim(self, ylim, axd_letter="A"):
@@ -179,7 +197,7 @@ class PlottingUtils(PlotCreation):
             self.__save_lims()
         else:
             self.axd[axd_letter].set_ylim(ylim)
-        self.__save_lims(axd_letter)
+        self.__save_ylims(axd_letter)
         self._PlotCreation__setup_aspect()
     
     def Xscale(self, scale, ax_letter="A"):
@@ -226,6 +244,20 @@ class PlottingUtils(PlotCreation):
             self.axd[axd_letter].set_ylabel(ylabel)
         self.__save_labels(axd_letter)
 
+    def __save_xlims(self, ax_letter=None):
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
+        else:
+            self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
+    
+    def __save_ylims(self, ax_letter=None):
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+        else:
+            self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+    
     def __save_lims(self, ax_letter=None):
         if ax_letter is None:
             for ax_letter in self.axd:
@@ -234,8 +266,6 @@ class PlottingUtils(PlotCreation):
         else:
             self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
             self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
-    
-
 
     
     def __save_labels(self, ax_letter=None):

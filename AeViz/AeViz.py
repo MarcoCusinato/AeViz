@@ -1,7 +1,6 @@
 from AeViz.quantities_plotting.plotting import Plotting
-import AeViz.utils.radii_utils
 from typing import Literal
-from AeViz.utils.GW_utils import GW_spectrogram
+from AeViz.utils.aeviz_utils import plot_qt
 
 class AeViz(Plotting):
     def __init__(self):
@@ -19,188 +18,252 @@ class AeViz(Plotting):
             if plane == 'time':
                 self.plotProfile(qt)
             else:
-                self.plot2D(file, qt)
+                self.plot2D(file, plane, index1, qt)
     
-    def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        if projection == '1D':
-            self.plot1D(file, 'MHD_energy', plane, index1, index2)
-        elif projection == '2D':
-            self.plot2D(file,'MHD_energy')
+    def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
+                   index1=None, index2=None, plane:Literal['xy', 'xz',
+                        'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'MHD_energy'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def velocity(self, file=None, projection:Literal['1D', '2D']='1D', 
+                 index1=None, index2=None, comp:Literal['all', 'r', 'th',
+                 'ph']='all', plane:Literal['xy', 'xz', 'radius', 'theta',
+                                            'phi', 'time']='radius'):
+        if comp == 'all':
+            qt = ['radial_velocity', 'theta_velocity', 'phi_velocity']
+        elif comp == 'r':
+            qt = ['radial_velocity']
+        elif comp == 'th':
+            qt = ['theta_velocity']
+        elif comp == 'ph':
+            qt = ['phi_velocity']
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+
+    def soundspeed(self, file=None, projection:Literal['1D', '2D']='1D',
+                   index1=None, index2=None, plane:Literal['xy', 'xz',
+                   'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'soundspeed'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def alfven_velocity(self, file=None, projection:Literal['1D', '2D']='1D',
+                        index1=None, index2=None, plane:Literal['xy', 'xz',
+                                'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'alfven_velocity'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
 
     
-    def velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, comp:Literal['all', 'r', 'th', 'ph']='all',
-            plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 
-                          'time']='radius'):
-        pass
-    def soundspeed(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
-            index2=None, plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
-                                              'time']='radius'):
-            pass
-    
-    def alfven_velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
-            index2=None, plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
-                          'time']='radius'):
-        pass
-    
-    def convection_velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None,
-            index2=None, comp:Literal['all', 'convection', 'turbulent']='all',
-            plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 
-                          'time']='radius'):
-        pass
-    
-    def omega(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-    
-    def gas_pressure(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-    
-    def temperature(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
+    def convection_velocity(self, file=None,
+                         comp:Literal['all', 'convection', 'turbulent']='all'):
+        if comp == 'all':
+            qt = ['convective_velocity', 'turbulent_velocity']
+        elif comp == 'convection':
+            qt = ['convective_velocity']
+        elif comp == 'turbulent':
+            qt = ['turbulent_velocity']
 
-    def enthalphy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
-
-    def entropy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
-                          'theta', 'phi', 'time']='radius'):
-        pass
+        for q in qt:
+            self.plot1D(file, q, 'radius', None, None)
+        
     
-    def adiabatic_index(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+    def omega(self, file=None, projection:Literal['1D', '2D']='1D', 
+              index1=None, index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'omega'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def gas_pressure(self, file=None, projection:Literal['1D', '2D']='1D',
+                     index1=None, index2=None, plane:Literal['xy', 'xz',
+                     'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'gas_pressure'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def temperature(self, file=None, projection:Literal['1D', '2D']='1D',
+                    index1=None, index2=None, plane:Literal['xy', 'xz',
+                    'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'temperature'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+
+    def enthalphy(self, file=None, projection:Literal['1D', '2D']='1D',
+                  index1=None, index2=None, plane:Literal['xy', 'xz',
+                  'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'enthalphy'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+
+    def entropy(self, file=None, projection:Literal['1D', '2D']='1D',
+                index1=None, index2=None, plane:Literal['xy', 'xz', 'radius',
+                'theta', 'phi', 'time']='radius'):
+        qt = 'entropy'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def adiabatic_index(self, file=None, projection:Literal['1D', '2D']='1D',
+                        index1=None, index2=None, plane:Literal['xy', 'xz',
+                        'radius', 'theta', 'phi', 'time']='radius'):
+        qt = 'adiabatic_index'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def lorentz_factor(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'lorentz'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def grav_pot(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'gravitational_potential'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def grav_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'gravitational_energy'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def int_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'internal_energy'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def nu_heat(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'nu_heat'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Ye(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'Ye'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xn(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'neutron_fraction'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xp(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'proton_fraction'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xalpha(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'alpha_fraction'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xheavy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'heavy_fraction'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Abar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'Abar'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Zbar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'Zbar'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def cpot_e(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'electron_chemical_potential'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_n(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'neutron_chemical_potential'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_p(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'proton_chemical_potential'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_nu(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'neutrino_chemical_potential'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def error(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'error'
+        plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def magnetic_fields(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, comp:Literal['all', 'r', 'th', 'ph', 'poloidal',
-                                      'toroidal']='all',
+            index2=None, comp:Literal['all', 'r', 'th', 'ph', 'torpol', 
+                                      'poloidal', 'toroidal']='all',
             plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 'time']='radius'):
-        pass
+        if comp == 'all':
+            qt = ['BX', 'BY', 'BZ']
+        elif comp == 'r':
+            qt = ['BX']
+        elif comp == 'th':
+            qt = ['BY']
+        elif comp == 'ph':
+            qt = ['BZ']
+        elif comp == 'poloidal':
+            qt = ['poloidal_magnetic_fields']
+        elif comp == 'toroidal':
+            qt = ['toroidal_magnetic_fields']
+        elif comp == 'torpol':
+            qt = ['poloidal_magnetic_fields', 'toroidal_magnetic_fields']
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+
     
     def magnetic_energy(self, file=None, projection:Literal['1D', '2D']='1D', 
-                        index1=None, index2=None, comp:Literal['tot', 
-                                                'poloidal', 'toroidal']='tot', 
+                        index1=None, index2=None, comp:Literal['all', 'tot', 
+                                                'poloidal', 'toroidal']='all', 
                         plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
                                      'time']='radius'):
+        if comp == 'all':
+            qt = ['total_magnetic_energy', 'poloidal_magnetic_energy',
+                  'toroidal_magnetic_energy']
+        elif comp == 'tot':
+            qt = ['total_magnetic_energy']
+        elif comp == 'poloidal':
+            qt = ['poloidal_magnetic_energy']
+        elif comp == 'toroidal':
+            qt = ['toroidal_magnetic_energy']
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
         pass
     
-    def PNS_radius(self, comp:Literal['min', 'max', 'avg']='avg'):
+    def shock_radius(self, comp:Literal['all', 'min', 'max','avg']='avg'):
         pass
     
-    def shock_radius(self, comp:Literal['min', 'max','avg']='avg'):
+    def neutrino_spheres(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
         pass
     
-    def neutrino_spheres(self, comp:Literal['min', 'max', 'avg']='avg'):
+    def gain_radius(self,  comp:Literal['all', 'min', 'max', 'avg']='avg'):
         pass
     
-    def gain_radius(self,  comp:Literal['min', 'max', 'avg']='avg'):
+    def innercore_radius(self, comp:Literal['all', 'min', 'max','avg']='avg'):
         pass
     
-    def innercore_radius(self, comp:Literal['min', 'max','avg']='avg'):
+    def PNS_nucleus_radius(self, comp:Literal['all', 'min', 'max',
+                                              'avg']='avg'):
         pass
     
-    def PNS_nucleus_radius(self, comp:Literal['min', 'max', 'avg']='avg'):
+    def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag']):
         pass
     
-    def explosion(self, comp: Literal['mass', 'ene', 'kin', 'mag']):
-        pass
-    
-    def gain(self, comp: Literal['mass', 'ene']):
+    def gain(self, comp: Literal['all', 'mass', 'ene']):
         pass
     
     def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',

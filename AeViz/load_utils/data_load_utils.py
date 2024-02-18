@@ -99,7 +99,24 @@ class Data(object):
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
             if file is not None:
-                return getattr(self.loaded_data, name)(file)
+                if name == 'BX':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 0]
+                elif name == 'BY':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 1]
+                elif name == 'BZ':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 2]
+                elif name == 'total_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[0]
+                elif name == 'poloidal_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[1]
+                elif name == 'toroidal_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[2]
+                else:
+                    out = getattr(self.loaded_data, name)(file)
+                return out
             else:
                 return getattr(self.loaded_data, name)()
     
