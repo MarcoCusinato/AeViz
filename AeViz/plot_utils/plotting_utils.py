@@ -81,6 +81,7 @@ class PlottingUtils(PlotCreation):
         self.logY = {}
         self.xlabels = {}
         self.ylabels = {}
+        self.legend = {}
 
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
@@ -175,8 +176,8 @@ class PlottingUtils(PlotCreation):
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
                 self.__plot1D(ax_letter)
-        
-            
+            if ax_letter in self.legend:
+                self.update_legend(self.legend[ax_letter], ax_letter)
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
                         ax_letter)
         self._PlotCreation__setup_aspect()
@@ -285,6 +286,18 @@ class PlottingUtils(PlotCreation):
         else:
             self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
             self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
+    
+    def update_legend(self, legend, axd_letter="A"):
+        if legend is None:
+            pass
+        elif len(self.axd[axd_letter].lines) != len(legend):
+            pass
+        else:
+            self.legend[axd_letter] = legend
+            for ll in range(len(self.legend[axd_letter])):
+                self.axd[axd_letter].lines[ll].set_label(
+                    self.legend[axd_letter][ll])
+            self.axd[axd_letter].legend()
     
     def __save_params(self):
         self.__save_lims()

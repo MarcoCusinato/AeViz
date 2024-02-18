@@ -120,5 +120,26 @@ class Data(object):
             else:
                 return getattr(self.loaded_data, name)()
     
-
+    def __get_1D_radii_data(self, name):
+        name = name.split('_')
+        rad_type = name[-1]
+        if not 'neutrino' in name:
+            name = '_'.join(name[:-1])
+            flavour = None
+        else:
+            flavour = name[-2]
+            name = '_'.join(name[:-2])
+        time, _, max_r, min_r, avg_r, _ = getattr(self.loaded_data, name)()
+        if flavour:
+            max_r = max_r[flavour]
+            min_r = min_r[flavour]
+            avg_r = avg_r[flavour]
+        if rad_type == 'max':
+            return time, max_r
+        elif rad_type == 'min':
+            return time, min_r
+        elif rad_type == 'avg':
+            return time, avg_r
+        else:
+            return time, max_r, min_r, avg_r
         

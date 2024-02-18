@@ -242,23 +242,25 @@ class AeViz(Plotting):
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
-        pass
+        self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None)
     
     def shock_radius(self, comp:Literal['all', 'min', 'max','avg']='avg'):
-        pass
+        self.plot1D(None, 'shock_radius_' + comp, 'time', None, None)
     
     def neutrino_spheres(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
-        pass
+        for flavour in ['nue', 'nua', 'nux']:
+            self.plot1D(None, 'neutrino_spheres_' + flavour + '_' + comp,
+                        'time', None, None)
     
     def gain_radius(self,  comp:Literal['all', 'min', 'max', 'avg']='avg'):
-        pass
+        self.plot1D(None, 'gain_radius_' + comp, 'time', None, None)
     
     def innercore_radius(self, comp:Literal['all', 'min', 'max','avg']='avg'):
-        pass
+        self.plot1D(None, 'innercore_radius_' + comp, 'time', None, None)
     
     def PNS_nucleus_radius(self, comp:Literal['all', 'min', 'max',
                                               'avg']='avg'):
-        pass
+        self.plot1D(None, 'PNS_nucleus_radius_' + comp, 'time', None, None)
     
     def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag']):
         pass

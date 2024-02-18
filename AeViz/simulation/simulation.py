@@ -758,7 +758,7 @@ class Simulation:
         during the calculation.
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
-        Radii are returned as disctionary of nue, nua and nux
+        Radii are returned as disctionaries of nue, nua and nux
         """
         data = calculate_radius(self, 'neutrino', save_checkpoints)
         if not tob_corrected:

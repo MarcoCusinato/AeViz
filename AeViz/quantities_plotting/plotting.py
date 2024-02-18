@@ -162,8 +162,17 @@ class Plotting(PlottingUtils, Data):
     def plot1D(self, file, qt, xaxis, index1, index2):
 
         axd_letters = ['A', 'B', 'C', 'D']
+        legend = None
+        if 'radius' not in qt and 'spheres' not in qt:
+            post_data = self._Data__get_data_from_name(qt, file)
+        else:
+            post_data = list(self._Data__get_1D_radii_data(qt))
+            if 'all' in qt:
+                legend = ['max', 'min', 'avg']
+            qt = "_".join(qt.split('_')[:-1])
+            for i in range(1, len(post_data)):
+                post_data[i] = u.convert_to_km(post_data[i])
         number = self.__check_axd_1D(qt, xaxis)
-        post_data = self._Data__get_data_from_name(qt, file)
         if xaxis == 'radius':
             grid = u.convert_to_km(self.cell.radius(self.ghost))
             self.labels('R [km]', plot_labels[qt]['label'],
@@ -184,7 +193,10 @@ class Plotting(PlottingUtils, Data):
                         axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'time':
-            grid = post_data[:, 0]
+            if 'radius' in qt or 'spheres' in qt:
+                grid = post_data[0]
+            else:
+                grid = post_data[:, 0]
             self.labels('t [s]', plot_labels[qt]['label'], axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         else:
@@ -197,14 +209,17 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
-        else:
+        elif 'radius' not in qt and 'spheres' not in qt:
             data = post_data[:, 1]
+        else:
+            data = post_data[1:]
         
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
                                            None, plot_labels[qt]['log'], None,
                                            1, None, None) 
         self.ylim(plot_labels[qt]['lim'], axd_letters[number])
         self._PlottingUtils__plot1D(axd_letters[number])
+        self.update_legend(legend, axd_letters[number])
         
         
         if xaxis != 'time':
