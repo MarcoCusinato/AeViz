@@ -304,7 +304,18 @@ plot_labels = {
         'PNS_nucleus_radius': {'log': False,
                          'lim': (0, 40),
                          'label': r'R$_\mathrm{PNS, nuc}$ [km]'},
-                             
+        'convective_flux': {'log': True,
+                         'lim': (-1e40, 1e40),
+                         'cmap': 'RdYlGn_r',
+                         'label': r'F$_\mathrm{conv}$ [erg$\cdot$s$^{-1}$]'},
+        'BV_frequency': {'log': True,
+                         'lim': (-1e5, 1e5),
+                         'cmap': 'RdYlBu_r',
+                         'label': r'$\omega_\mathrm{BV}$ [s$^{-1}$]'},            
+        'Rossby_number': {'log': True,
+                         'lim': (-1e-4, 1e-4),
+                         'cmap': 'RdYlBu_r',
+                         'label': r'Ro'},
 }
 
 ## PLOT LABELS FOR X-AXIS
