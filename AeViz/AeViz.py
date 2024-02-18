@@ -10,12 +10,22 @@ class AeViz(Plotting):
     def rho(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        qt = 'rho'
+        if projection == '1D':
+            if plane == 'time':
+                qt = 'rho_max'
+            self.plot1D(file, qt, plane, index1, index2)
+        elif projection == '2D':
+            self.plot2D(file,'rho')
     
     def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, plane:Literal['xy', 'xz', 'radius',
                           'theta', 'phi', 'time']='radius'):
-        pass
+        if projection == '1D':
+            self.plot1D(file, 'MHD_energy', plane, index1, index2)
+        elif projection == '2D':
+            self.plot2D(file,'MHD_energy')
+
     
     def velocity(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, comp:Literal['all', 'r', 'th', 'ph']='all',

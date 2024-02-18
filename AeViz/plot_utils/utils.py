@@ -3,11 +3,15 @@
 ## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
 ## SCALES (LOG, LINEAR, or SYMLOG)
 plot_labels = {
-        'RHO': {'log': True,
+        'rho': {'log': True,
                 'lim': (1e4, 1e15),
                 'cmap': 'viridis',
                 'label': r'$\rho$ [g$\cdot$cm$^{-3}$]'},
-        'ENE': {'log': True,
+        'rho_max': {'log': True,
+                'lim': (1e4, 1e15),
+                'cmap': 'viridis',
+                'label': r'$\rho$ [g$\cdot$cm$^{-3}$]'},
+        'MHD_energy': {'log': True,
                 'lim': (1e24, 1e35),
                 'cmap': 'nipy_spectral',
                 'label': r'$E$ [erg]'},

@@ -76,8 +76,8 @@ class Simulation:
         file_list.sort()
         return file_list
 
-    def find_file_from_time(self, time_in_ms=True, return_index=False,
-                            tob_corrected=True):
+    def find_file_from_time(self, time_to_find, time_in_ms=True, 
+                            return_index=False, tob_corrected=True):
         """
         Returns the name of the file corresponding to the given time. If
         return_index is True, returns the index of the file in the 

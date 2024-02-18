@@ -29,6 +29,7 @@ class Data(object):
             self.loaded_data = Simulation(path, simulation_path, dim)
             self.cell = self.loaded_data.cell
             self.ghost = self.loaded_data.ghost
+            self.sim_dim =self.loaded_data.dim
     
     def __load_hdf(self, path):
         """
@@ -90,7 +91,10 @@ class Data(object):
                                    [..., self.hydroTHD_index['hydro']['I_RH']])
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
-            return getattr(self.loaded_data, name)(file)
+            if file is not None:
+                return getattr(self.loaded_data, name)(file)
+            else:
+                return getattr(self.loaded_data, name)()
     
 
         
