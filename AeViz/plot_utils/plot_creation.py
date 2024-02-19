@@ -90,7 +90,7 @@ def return_fig_size(number, form_factor):
                 4: {1: (8, 4),
                     2: (8, 11.6),
                     4: (12, 8)},
-                5: {1: (4.5, 8)}}
+                5: {1: (9, 16)}}
     return fig_size[number][form_factor]
 
 def change_y_cbar_aspect(axd, axd_bar):

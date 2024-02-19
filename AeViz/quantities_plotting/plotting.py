@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from AeViz.grid.grid import grid
 from AeViz.units.units import units
 from AeViz.utils.math_utils import function_average
-from AeViz.plot_utils.utils import plot_labels, xaxis_labels
+from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
 
 u = units()
 
@@ -164,7 +164,12 @@ class Plotting(PlottingUtils, Data):
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
         if 'radius' not in qt and 'spheres' not in qt:
-            post_data = self._Data__get_data_from_name(qt, file)
+            if 'GW' in qt:
+                post_data = self._Data__get_data_from_name(
+                    "_".join(qt.split('_')[:-1]), file)
+                
+            else:
+                post_data = self._Data__get_data_from_name(qt, file)
         else:
             post_data = list(self._Data__get_1D_radii_data(qt))
             if 'all' in qt:
@@ -197,6 +202,7 @@ class Plotting(PlottingUtils, Data):
                 grid = post_data[0]
             else:
                 grid = post_data[:, 0]
+            
             self.labels('t [s]', plot_labels[qt]['label'], axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         else:
@@ -209,15 +215,30 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
-        elif 'radius' not in qt and 'spheres' not in qt:
+        elif 'radius' not in qt and 'spheres' not in qt and 'GW' not in qt:
             data = post_data[:, 1]
+        elif 'GW' in qt:
+            if self.sim_dim == 2:
+                data = post_data[:, 1:]
+            else:
+                if qt.endswith('h+eq'):
+                    data = post_data[:,1]
+                elif qt.endswith('h+pol'):
+                    data = post_data[:,2]
+                elif qt.endswith('hxeq'):
+                    data = post_data[:,3]
+                elif qt.endswith('hxpol'):
+                    data = post_data[:,4]
         else:
-            data = post_data[1:]
+            data = post_data[:, 1:]
         
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
                                            None, plot_labels[qt]['log'], None,
-                                           1, None, None) 
-        self.ylim(plot_labels[qt]['lim'], axd_letters[number])
+                                           1, None, None)
+        if xaxis != 'time':
+            self.ylim(plot_labels[qt]['lim'], axd_letters[number])
+        else:
+            self.ylim(plot_labels[qt]['lim'](data), axd_letters[number])
         self._PlottingUtils__plot1D(axd_letters[number])
         self.update_legend(legend, axd_letters[number])
         
@@ -556,6 +577,61 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         show_figure()
 
+    def plotGWDecomposition(self, qt):
+        self.Close()
+        self._PlotCreation__setup_axd(5, 1)
+        self.Xscale('linear', 'A')
+        self.Yscale('log', 'E')
+        t, AE220, f_h, nuc_h, conv_h, out_h  = \
+            self._Data__get_GW_decomposition_data(qt)
+        ylim = GW_limit(f_h)
+        if self.sim_dim == 2:
+            dec_label = r'$A^{E2}_{20}(r, t)$ [cm]'
+        else:
+            dec_label = None
+        _, convect_radius = \
+            self._Data__get_1D_radii_data('innercore_radius_avg')
+        _, nuc_radius = \
+            self._Data__get_1D_radii_data('PNS_nucleus_radius_avg')
+        self._PlottingUtils__update_params('A', t, f_h,
+                                           None, False, None,
+                                           1, None, None)
+        self._PlottingUtils__update_params('B', t, nuc_h,
+                                           None, False, None,
+                                           1, None, None)
+        self._PlottingUtils__update_params('C', t, conv_h,
+                                           None, False, None,
+                                           1, None, None)
+        self._PlottingUtils__update_params('D', t, out_h,
+                                           None, False, None,
+                                           1, None, None)
+        color = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        for (axd_letter, label, c) in zip(['A', 'B', 'C', 'D'],
+                                       [r'$h_f$', r'$h_{nuc}$', r'$h_{conv}$',
+                                        r'$h_{out}$'],
+                                       color[:4]):
+            self._PlottingUtils__plot1D(axd_letter)
+            self.axd[axd_letter].get_lines()[0].set_color(c)
+            self.update_legend([label], axd_letter)
+            self.ylim(ylim, axd_letter)
+        X, Y = np.meshgrid(t, u.convert_to_km(self.cell.radius(self.ghost)))
+        self._PlottingUtils__update_params('E', (X, Y),
+                                AE220.T,
+                                'R', False,
+                                (-3, 3), 2, 
+                                'seismic',
+                                dec_label)
+        self.axd['E'].plot(t, u.convert_to_km(convect_radius), ls='dashed',
+                           color='black', lw=0.75)
+        self.axd['E'].plot(t, u.convert_to_km(nuc_radius),
+                           color='black', lw=0.75)
+        self.labels('t-t$_b$ [s]', 'R [km]', 'E')
+        self._PlottingUtils__plot2D('E')
+        self.xlim((-0.005, t.max()), 'A')
+        
+        show_figure()
+        
+    
     def Close(self):
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()

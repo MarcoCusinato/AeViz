@@ -9,6 +9,12 @@ def cbar_loaction(loc):
     return location[loc]
 
 def set2Dlims(ax, xlim, ylim, number, form_factor):
+    if number == 5 and form_factor == 1:
+        if xlim == None:
+            ax["E"].set_ylim(ylim)
+        if ylim == None:
+            ax["E"].set_xlim(xlim)
+    
     if xlim==None:
         ylim = list(ylim)
         ylim.sort()
@@ -43,6 +49,7 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
                     aspect=1)
+        
 
 
 class PlottingUtils(PlotCreation):
@@ -297,7 +304,7 @@ class PlottingUtils(PlotCreation):
             for ll in range(len(self.legend[axd_letter])):
                 self.axd[axd_letter].lines[ll].set_label(
                     self.legend[axd_letter][ll])
-            self.axd[axd_letter].legend()
+            self.axd[axd_letter].legend(loc='upper right')
     
     def __save_params(self):
         self.__save_lims()

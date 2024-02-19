@@ -295,4 +295,22 @@ class AeViz(Plotting):
     
     def GWs(self, comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
             decomposition=False, GW_spectrogram=False):
-        pass
+        if self.sim_dim == 1:
+            pass
+        else:
+            if comp == 'all' and self.sim_dim == 3:
+                qt = ['h+eq', 'h+pol', 'hxeq', 'hxpol']
+            elif self.sim_dim == 2:
+                qt = ['h+eq']
+            else:
+                qt = [comp]
+            if decomposition:
+                for q in qt:
+                    self.plotGWDecomposition(q)
+                    
+            elif GW_spectrogram:
+                pass
+            else:
+                for q in qt:
+                    self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None)
+                    

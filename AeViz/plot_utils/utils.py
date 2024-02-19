@@ -1,4 +1,13 @@
+import numpy as np
 ## PLOTTING UTILS DICTIONARIES
+
+## GW limits
+def GW_limit(GW_data):
+       lim = np.max(np.abs(GW_data))
+       lim *= 1.1
+       if lim > 150:
+              lim = 150
+       return (-lim, lim)
 
 ## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
 ## SCALES (LOG, LINEAR, or SYMLOG)
@@ -316,6 +325,18 @@ plot_labels = {
                          'lim': (-1e-4, 1e-4),
                          'cmap': 'RdYlBu_r',
                          'label': r'Ro'},
+        'GW_Amplitudes_h+eq': {'log': False,
+                         'lim': GW_limit,
+                         'label': r'$h_+^{eq}$ [cm]'},
+        'GW_Amplitudes_hxeq': {'log': False,
+                         'lim': GW_limit, 
+                         'label': r'$h_\times^{eq}$ [cm]'},
+        'GW_Amplitudes_h+pol': {'log': False,
+                         'lim': GW_limit, 
+                         'label': r'$h_+^{pol}$ [cm]'},
+        'GW_Amplitudes_hxpol': {'log': False,
+                         'lim': GW_limit, 
+                         'label': r'$h_\times^{pol}$ [cm]'},
 }
 
 ## PLOT LABELS FOR X-AXIS

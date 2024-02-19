@@ -120,6 +120,13 @@ class Data(object):
             else:
                 return getattr(self.loaded_data, name)()
     
+    def __get_GW_decomposition_data(self, name):
+        if self.sim_dim == 2:
+            _, t, AE220, f_h, nuc_h, conv_h, out_h = self.loaded_data.AE220()
+            return t, AE220, f_h, nuc_h, conv_h, out_h
+        else:
+            raise TypeError('Not implemented for 3D simulations.')
+    
     def __get_1D_radii_data(self, name):
         name = name.split('_')
         rad_type = name[-1]
