@@ -69,10 +69,10 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV):
     and convective energy of the PNS for one timestep.
     """
     if simulation.dim == 1:
-        mask = (simulation.cell.radius(simulation.ghost) >= \
+        mask = (simulation.cell.radius(simulation.ghost) <= \
             PNS_radius)
     else:
-        mask = (simulation.cell.radius(simulation.ghost) >= \
+        mask = (simulation.cell.radius(simulation.ghost) <= \
             simulation.ghost.remove_ghost_cells_radii(PNS_radius,
                                                       simulation.dim,
                                                   **gcells)[..., None])

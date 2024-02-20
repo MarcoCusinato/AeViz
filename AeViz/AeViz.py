@@ -281,18 +281,29 @@ class AeViz(Plotting):
         self.plot1D(None, 'PNS_nucleus_radius_' + comp, 'time', None, None)
     
     def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag']):
-        pass
+        if comp == 'all':
+            qt = ['mass', 'ene', 'kin', 'mag']
+        else:
+            qt = [comp]
+        for q in qt:
+            self.plot1D(None, 'explosion_' + q, 'time', None, None)
     
     def gain(self, comp: Literal['all', 'mass', 'ene']):
-        pass
+        if comp == 'all':
+            qt = ['mass', 'ene']
+        else:
+            qt = [comp]
+        for q in qt:
+            self.plot1D(None, 'gain_' + q, 'time', None, None)
     
     def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
                                       'grav', 'T/W']):
-        pass
+        self.plot1D(None, 'innercore_' + comp, 'time', None, None)
     
     def PNS(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot', 'grav',
                                'conv']):
-        pass
+        self.plot1D(None, 'PNS_' + comp, 'time', None, None)
+    
     def mass_accretion(self):
         self.plot1D(None, 'mass_accretion_500km', 'time', None, None)
     
