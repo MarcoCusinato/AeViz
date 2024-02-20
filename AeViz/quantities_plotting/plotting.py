@@ -778,7 +778,7 @@ class Plotting(PlottingUtils, Data):
         self._PlottingUtils__plot2Dfield(axd_letter)
         
     
-    def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
+    def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
               plane='xz', index1=None, start_time=None, end_time=None,
               vfield=False, Bfield=False, top_time=False):
         TMN = globals()["TERMINAL"]
