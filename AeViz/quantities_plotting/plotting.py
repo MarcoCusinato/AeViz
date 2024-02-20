@@ -63,6 +63,21 @@ def setup_cbars_profile(qt1, qt2, qt3, qt4):
         raise ValueError('No quantity given.')
     return number, form_factor, cbars
 
+def setup_cbars_spectrogram(number):
+    if number == 1:
+        cbars = {'B': 'R'}
+        plots = ["A", "B"]
+    elif number == 2:
+        cbars = {'B': 'L', 'D': 'R'}
+        plots = ["C", "D"]
+    elif number == 3:
+        cbars = {'B': 'L', 'D': 'R', 'F': 'L'}
+        plots = ["E", "F"]
+    elif number == 4:
+        cbars = {'B': 'L', 'D': 'R', 'F': 'L', 'H': 'R'}
+        plots = ["G", "H"]
+    return cbars, plots
+
 def normalize_indices(index1, index2):
     if type(index1) == range:
         index1 = list(index1)
@@ -200,6 +215,8 @@ class Plotting(PlottingUtils, Data):
         elif xaxis == 'time':
             if 'radius' in qt or 'spheres' in qt:
                 grid = post_data[0]
+            elif type(post_data) == list or type(post_data) == tuple:
+                grid = post_data[0]
             else:
                 grid = post_data[:, 0]
             
@@ -215,6 +232,8 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
+        elif type(post_data) == list or type(post_data) == tuple:
+            data = post_data[1]
         elif 'radius' not in qt and 'spheres' not in qt and 'GW' not in qt:
             data = post_data[:, 1]
         elif 'GW' in qt:
@@ -235,18 +254,14 @@ class Plotting(PlottingUtils, Data):
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
                                            None, plot_labels[qt]['log'], None,
                                            1, None, None)
-        if xaxis != 'time':
+        if 'GW' not in qt:
             self.ylim(plot_labels[qt]['lim'], axd_letters[number])
         else:
             self.ylim(plot_labels[qt]['lim'](data), axd_letters[number])
         self._PlottingUtils__plot1D(axd_letters[number])
         self.update_legend(legend, axd_letters[number])
         
-        
-        if xaxis != 'time':
-            self.xlim((grid.min(), grid.max()), axd_letters[number])
-        else:
-            self.xlim((-0.005, grid.max()), axd_letters[number])
+        self.xlim((-0.005, grid.max()), axd_letters[number])
         self.Yscale(plot_labels[qt]['log'], axd_letters[number])
     
     def __check_axd_1D(self, qt, xaxis):
@@ -330,8 +345,8 @@ class Plotting(PlottingUtils, Data):
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
                 (np.any([self.plot_dim[axd_letter] != 2 for axd_letter 
-                        in [ax_l for ax_l in self.axd if ax_l not in 
-                            ['a', 'b', 'c', 'd']]])):
+                        in [ax_l for ax_l in self.axd if 
+                            not ax_l.islower()]])):
                 self.Close()
                 number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
             elif number_of_quantities == 1:
@@ -446,7 +461,7 @@ class Plotting(PlottingUtils, Data):
         self.xlim((0, 100), "A")
         if redo:
             for ax_letter in self.axd:
-                if ax_letter in ['a', 'b', 'c', 'd']:
+                if ax_letter.islower():
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
                                                           cbars[ax_letter]) 
@@ -570,7 +585,7 @@ class Plotting(PlottingUtils, Data):
             self.Xscale('linear', 'D')
         if redo:
             for ax_letter in self.axd:
-                if ax_letter in ['a', 'b', 'c', 'd']:
+                if ax_letter.islower():
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
                                                           cbars[ax_letter]) 
@@ -584,6 +599,14 @@ class Plotting(PlottingUtils, Data):
         self.Yscale('log', 'E')
         t, AE220, f_h, nuc_h, conv_h, out_h  = \
             self._Data__get_GW_decomposition_data(qt)
+        if qt == 'h+eq':
+            y_strain = r'$h_{+}^{eq}$ [cm]'
+        elif qt == 'h+pol':
+            y_strain = r'$h_{+}^{pol}$ [cm]'
+        elif qt == 'hx+eq':
+            y_strain = r'$h_{\times}^{eq}$ [cm]'
+        elif qt == 'hx+pol':
+            y_strain = r'$h_{\times}^{pol}$ [cm]'
         ylim = GW_limit(f_h)
         if self.sim_dim == 2:
             dec_label = r'$A^{E2}_{20}(r, t)$ [cm]'
@@ -625,13 +648,91 @@ class Plotting(PlottingUtils, Data):
                            color='black', lw=0.75)
         self.axd['E'].plot(t, u.convert_to_km(nuc_radius),
                            color='black', lw=0.75)
+        self.fig.text(0.04, 0.685, y_strain, va="center", rotation='vertical')
         self.labels('t-t$_b$ [s]', 'R [km]', 'E')
         self._PlottingUtils__plot2D('E')
         self.xlim((-0.005, t.max()), 'A')
         
         show_figure()
+
+    def plotGWspectrogram(self, qt):
+        redo = False
+        if self.axd is not None:
+            number_spect = sum([self.plot_dim[ax_letter] == -2 
+                                 for ax_letter in self.axd if ax_letter 
+                                 in self.plot_dim])
+            number_GW = sum([self.plot_dim[ax_letter] == 1
+                             for ax_letter in self.axd if ax_letter in 
+                             self.plot_dim])
+            if number_spect != number_GW:
+                self.Close()
+                number = 1
+            else:
+                number = number_GW + 1
+                redo = True
+        else:
+            number = 1
+        cbars, plots = setup_cbars_spectrogram(number)
+        self._PlotCreation__setup_axd(number, 5)
+        post_data_GWs = self._Data__get_data_from_name(
+                    'GW_Amplitudes')
+        post_data_spect = self._Data__get_data_from_name(
+                    'GW_spectrogram', 3.086e+22)
         
-    
+        if self.sim_dim == 2:
+            dataGWs = post_data_GWs[:, 1:]
+            t, f, Zxx = post_data_spect[0], post_data_spect[1], \
+                post_data_spect[2]
+        else:
+            if qt == 'h+eq':
+                dataGWs = post_data_GWs[:,1]
+                t, f, Zxx = post_data_spect[0][:, 0], \
+                    post_data_spect[1][..., 0], post_data_spect[2][..., 0]
+            elif qt == 'h+pol':
+                dataGWs = post_data_GWs[:,2]
+                t, f, Zxx = post_data_spect[0][:, 1], \
+                    post_data_spect[1][..., 1], post_data_spect[2][..., 1]
+            elif qt == 'hxeq':
+                dataGWs = post_data_GWs[:,3]
+                t, f, Zxx = post_data_spect[0][:,2], \
+                    post_data_spect[1][..., 2], post_data_spect[2][..., 2]
+            elif qt == 'hxpol':
+                dataGWs = post_data_GWs[:,4]
+                t, f, Zxx = post_data_spect[0][:, 3], \
+                    post_data_spect[1][..., 3], post_data_spect[2][..., 3]
+        f /= 1e3
+        ## 1D plot of GWs
+        self._PlottingUtils__update_params(plots[0], post_data_GWs[:,0],
+                                           dataGWs, None, False, None,
+                                           1, None, None)
+        
+        self.labels(None, plot_labels['GW_Amplitudes_'+qt]['label'], plots[0])
+        self.ylim(plot_labels['GW_Amplitudes_'+qt]['lim'](dataGWs), plots[0])
+        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[0])
+        self.Xscale('linear', plots[0])
+        self.Yscale('linear', plots[0])
+        self._PlottingUtils__plot1D(plots[0])
+        ## 2D plot of spectrogram
+        self._PlottingUtils__update_params(plots[1], (t, f),
+                                           Zxx, cbars[plots[1]], True, 
+                                           (1e-24, 1e-20),
+                                           -2, 'magma',
+                r'$\frac{\mathrm{dE_{GW}}}{\mathrm{df}}$ [B$\cdot$HZ$^{-1}$]')
+        self.labels('t-t$_b$ [s]', '$f$ [kHz]', plots[1])
+        self._PlottingUtils__plot2Dmesh(plots[1])
+        self.ylim((0, 2), plots[1])
+        self.Xscale('linear', plots[1])
+        self.Yscale('linear', plots[1])
+        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[1])
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter.islower() or self.plot_dim[ax_letter] == 1:
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        show_figure()
+        
     def Close(self):
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()

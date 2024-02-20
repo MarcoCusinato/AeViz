@@ -327,16 +327,19 @@ plot_labels = {
                          'label': r'Ro'},
         'GW_Amplitudes_h+eq': {'log': False,
                          'lim': GW_limit,
-                         'label': r'$h_+^{eq}$ [cm]'},
+                         'label': r'$\mathcal{D}h_+^{eq}$ [cm]'},
         'GW_Amplitudes_hxeq': {'log': False,
                          'lim': GW_limit, 
-                         'label': r'$h_\times^{eq}$ [cm]'},
+                         'label': r'$\mathcal{D}h_\times^{eq}$ [cm]'},
         'GW_Amplitudes_h+pol': {'log': False,
                          'lim': GW_limit, 
-                         'label': r'$h_+^{pol}$ [cm]'},
+                         'label': r'$\mathcal{D}h_+^{pol}$ [cm]'},
         'GW_Amplitudes_hxpol': {'log': False,
                          'lim': GW_limit, 
-                         'label': r'$h_\times^{pol}$ [cm]'},
+                         'label': r'$\mathcal{D}h_\times^{pol}$ [cm]'},
+        'mass_accretion_500km': {'log': False,
+                         'lim': (0, 3),
+                         'label': r'$\dot{M}_{500km}$ [M$_\odot\cdot$s$^{-1}$]'},
 }
 
 ## PLOT LABELS FOR X-AXIS

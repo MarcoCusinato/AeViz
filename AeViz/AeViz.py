@@ -287,14 +287,17 @@ class AeViz(Plotting):
         pass
     
     def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
-                                      'grav', 'tot', 'T_W']):
+                                      'grav', 'T/W']):
         pass
     
-    def mass_accretion(self):
+    def PNS(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot', 'grav',
+                               'conv']):
         pass
+    def mass_accretion(self):
+        self.plot1D(None, 'mass_accretion_500km', 'time', None, None)
     
     def GWs(self, comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
-            decomposition=False, GW_spectrogram=False):
+            decomposition=False, spectrogram=False):
         if self.sim_dim == 1:
             pass
         else:
@@ -308,8 +311,9 @@ class AeViz(Plotting):
                 for q in qt:
                     self.plotGWDecomposition(q)
                     
-            elif GW_spectrogram:
-                pass
+            elif spectrogram:
+                for q in qt:
+                    self.plotGWspectrogram(q)
             else:
                 for q in qt:
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None)

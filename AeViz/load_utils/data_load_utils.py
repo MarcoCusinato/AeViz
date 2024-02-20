@@ -118,6 +118,10 @@ class Data(object):
                     out = getattr(self.loaded_data, name)(file)
                 return out
             else:
+                if ('explosion' in name) or ('gain' in name) or \
+                    ('innercore' in name) or \
+                    ('PNS' in name and 'radius' not in name):
+                    return self.__get_energy_data(name)
                 return getattr(self.loaded_data, name)()
     
     def __get_GW_decomposition_data(self, name):
@@ -127,6 +131,57 @@ class Data(object):
         else:
             raise TypeError('Not implemented for 3D simulations.')
     
+    def __get_energy_data(self, name):
+        qt = name.split('_')[-1]
+        if 'explosion' in name:
+            data = getattr(self.loaded_data, 'explosion_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[2]
+            elif qt == 'kin':
+                return data[0], data[3]
+            elif qt == 'mag':
+                return data[0], data[4]
+        elif 'gain' in name:
+            data = getattr(self.loaded_data, 'gain_mass_nu_heat')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[2]
+        elif 'innercore' in name:
+            data = getattr(self.loaded_data, 'innercore_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[6]
+            elif qt == 'kin':
+                return data[0], data[2]
+            elif qt == 'mag':
+                return data[0], data[3]
+            elif qt == 'rot':
+                return data[0], data[4]
+            elif qt == 'grav':
+                return data[0], data[5]
+            elif qt == 'T_W':
+                return data[0], data[7]
+        elif 'PNS' in name:
+            data = getattr(self.loaded_data, 'PNS_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[6]
+            elif qt == 'kin':
+                return data[0], data[2]
+            elif qt == 'mag':
+                return data[0], data[3]
+            elif qt == 'rot':
+                return data[0], data[4]
+            elif qt == 'grav':
+                return data[0], data[5]
+            elif qt == 'conv':
+                return data[0], data[7]
+
     def __get_1D_radii_data(self, name):
         name = name.split('_')
         rad_type = name[-1]

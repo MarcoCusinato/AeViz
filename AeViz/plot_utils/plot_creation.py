@@ -3,13 +3,17 @@ import matplotlib.pyplot as plt
 def return_positioning(number, form_factor):
     positioning = {1: {1: """A""",
                        2: """A.a""",
-                       4: """A.a"""},
+                       4: """A.a""",
+                       5:"""A..
+                            B.b"""},
                    2: {1: """AB""",
                        2: """a.AB.b""",
                        3: """A
                              B""",
                        4: """A.a
-                             B.b"""
+                             B.b""",
+                       5: """..A.C..
+                             b.B.D.d"""
                        },
                     3: {1:"""A
                              B
@@ -17,7 +21,12 @@ def return_positioning(number, form_factor):
                         2:"""..AA..
                            b.BC.c""",
                         4: """..AAA.a
-                              b.B.C.c"""},
+                              b.B.C.c""",
+                        5: """..A.C..
+                              b.B.D.d
+                              .......
+                              ..E....
+                              f.F...."""},
                     4: {1:"""AB
                            CD""",
                         2:"""ac
@@ -27,7 +36,12 @@ def return_positioning(number, form_factor):
                              ..
                              bd""",
                         4: """a.A.B.b
-                              c.C.D.d"""},
+                              c.C.D.d""",
+                        5: """..A.C..
+                              b.B.D.d
+                              .......
+                              ..E.G..
+                              f.F.H.h"""},
                     5: {1:"""A..
                              B..
                              C..
@@ -36,32 +50,40 @@ def return_positioning(number, form_factor):
     
     width_ratio = {1: {1: [1],
                        2: [1.1, 0.4, 0.08],
-                       4: [1.1, 0.1, 0.08]},
+                       4: [1.1, 0.1, 0.08],
+                       5: [1.1, 0.1, 0.08]},
                    2: {1: [1, 1],
                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
                        3: [1],
-                       4: [1.1, 0.1, 0.08]},
+                       4: [1.1, 0.1, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
                    3: {1: [1],
                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                       4:[0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
+                       4:[0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
                    4: {1: [1, 1],
                        2: [1, 1],
-                       4: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
+                       4: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
                     5: {1: [1, 0.03, 0.04]}}
     
     height_ratio = {1: {1: [1],
                         2: [1],
-                        4: [1]},
+                        4: [1],
+                        5: [0.25, 0.75]},
                     2: {1: [1],
                         2: [1],
                         3: [1, 1],
-                        4: [1, 1]},
+                        4: [1, 1],
+                        5: [0.25, 0.75]},
                     3: {1: [1, 1, 1],
                         2: [0.25, 0.75],
-                        4: [1, 1]},
+                        4: [1, 1],
+                        5: [0.25, 0.75, 0.2, 0.25, 0.75]},
                     4: {1: [1, 1],
                         2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                        4: [1, 1]},
+                        4: [1, 1],
+                        5: [0.25, 0.75, 0.2, 0.25, 0.75]},
                     5: {1: [0.5, 0.5, 0.5, 0.5, 2]}}
     if form_factor == 4:
         gs_kw = {"wspace": 0,
@@ -79,17 +101,21 @@ def return_positioning(number, form_factor):
 def return_fig_size(number, form_factor):
     fig_size = {1: {1: (8, 8),
                     2: (8, 8),
-                    4: (6, 4)},
+                    4: (6, 4),
+                    5: (6, 6)},
                 2: {1: (8, 8),
                     2: (8, 8),
                     3: (8, 8),
-                    4: (6, 8)},
+                    4: (6, 8),
+                    5: (12, 6)},
                 3: {1: (9, 8.42),
                     2: (9, 8.42),
-                    4: (12, 8)},
+                    4: (12, 8),
+                    5: (12, 12)},
                 4: {1: (8, 4),
                     2: (8, 11.6),
-                    4: (12, 8)},
+                    4: (12, 8),
+                    5: (12, 12)},
                 5: {1: (9, 16)}}
     return fig_size[number][form_factor]
 
@@ -161,14 +187,30 @@ class PlotCreation(object):
                                                gridspec_kw=gs_kw,
                                                width_ratios=width_ratio, 
                                                height_ratios=height_ratio)
-            if self.number  == 2:
+            if self.number == 1:
+                if self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], True,
+                                      False)
+            elif self.number  == 2:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"]],
+                                        True, False)
             elif self.number == 3:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"],
+                                                    self.axd["E"],
+                                                    self.axd["F"]],
+                                        True, False)
             elif self.number == 4:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True,
@@ -179,6 +221,16 @@ class PlotCreation(object):
                                       True)
                     self.__share_axis(self.axd["B"], [self.axd["D"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    for ax_letter in self.axd:
+                        self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"],
+                                                    self.axd["E"],
+                                                    self.axd["F"],
+                                                    self.axd["G"],
+                                                    self.axd["H"]],
+                                        True, False)
             elif self.number == 5:
                 if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 

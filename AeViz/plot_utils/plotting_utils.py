@@ -90,6 +90,44 @@ class PlottingUtils(PlotCreation):
         self.ylabels = {}
         self.legend = {}
 
+    def __plot2Dmesh(self, ax_letter):
+        if self.cbar_log[ax_letter]:
+            if self.cbar_lv[ax_letter][0] < 0 and \
+                self.cbar_lv[ax_letter][1] > 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.cbar_lv[ax_letter][0]),
+                    np.log10(self.cbar_lv[ax_letter][1]))) - 6)
+                norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0],
+                                  vmax=self.cbar_lv[ax_letter][1])
+            elif self.cbar_lv[ax_letter][0] < 0 and \
+                self.cbar_lv[ax_letter][1] <= 0:
+                if self.cbar_lv[ax_letter][1] == 0:
+                    self.cbar_lv[ax_letter] = list(self.cbar_lv[ax_letter])
+                    self.cbar_lv[ax_letter][1] = -10 ** (
+                        np.log10(-self.cbar_lv[ax_letter][1]) - 10)
+                    self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
+                norm = SymLogNorm(-self.cbar_lv[ax_letter][1],
+                                  vmin=self.cbar_lv[ax_letter][0],
+                                  vmax=self.cbar_lv[ax_letter][1])
+            else:
+                norm = LogNorm(vmin=self.cbar_lv[ax_letter][0],
+                                vmax=self.cbar_lv[ax_letter][1])
+            fmt = lambda x, pos: '{:.0e}'.format(x)
+        else:
+            norm = Normalize(vmin=self.cbar_lv[ax_letter][0],
+                             vmax=self.cbar_lv[ax_letter][1])
+            fmt = lambda x, pos: '{:.1f}'.format(x)
+        pcm = self.axd[ax_letter].pcolormesh(self.grid[ax_letter][0],
+                                            self.grid[ax_letter][1],
+                                            self.data[ax_letter], norm=norm,
+                                            cmap=self.cmap_color[ax_letter],
+                                            shading='gouraud')
+        cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
+                                 format=ticker.FuncFormatter(fmt),
+                                 location=cbar_loaction(
+                                     self.cbar_position[ax_letter]))
+        cbar.set_label(self.cbar_label[ax_letter])
+        
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
             if self.cbar_lv[ax_letter][0] < 0 and \
@@ -177,6 +215,12 @@ class PlottingUtils(PlotCreation):
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
+            elif self.plot_dim[ax_letter] == -2:
+                self.__plot2Dmesh(ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
             else:
                 self.ylim(self.ylims[ax_letter], ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
