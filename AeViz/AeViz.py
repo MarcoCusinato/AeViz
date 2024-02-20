@@ -328,4 +328,10 @@ class AeViz(Plotting):
             else:
                 for q in qt:
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None)
-                    
+    
+    def add_field(self, file, plot, comp: Literal['velocity', 'Bfield'],
+                  plane: Literal['xy', 'yz']='xz', index1=None):
+        """
+        Adds velocity or magnetic field to the selected plot.
+        """
+        self.add_2Dfield(file, plot, comp, plane, index1)

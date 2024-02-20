@@ -73,6 +73,10 @@ class PlottingUtils(PlotCreation):
     def __update_cbar_position(self, ax_letter, cbar_position):
         self.cbar_position[ax_letter] = cbar_position
     
+    def __update_fields_params(self, ax_letter, field, field_type):
+        self.field[ax_letter] = field
+        self.field_type[ax_letter] = field_type
+    
     def __reset_params(self):
         self.plot_dim = {}
         self.grid = {}
@@ -89,6 +93,8 @@ class PlottingUtils(PlotCreation):
         self.xlabels = {}
         self.ylabels = {}
         self.legend = {}
+        self.field = {}
+        self.field_type = {}
 
     def __plot2Dmesh(self, ax_letter):
         if self.cbar_log[ax_letter]:
@@ -127,6 +133,25 @@ class PlottingUtils(PlotCreation):
                                  location=cbar_loaction(
                                      self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
+        
+    def __plot2Dfield(self, ax_letter):
+        if self.field_type[ax_letter] == 'v':
+            skip = (slice(None, None, 5), slice(None, None, 5))
+            self.axd[ax_letter].quiver(self.grid[ax_letter][0][skip],
+                                      self.grid[ax_letter][1][skip],
+                                      self.field[ax_letter][0][skip],
+                                      self.field[ax_letter][1][skip],
+                                      linewidths=0.01,
+                                      color='black'
+                                      )
+        elif self.field_type[ax_letter] == 'B':
+            self.axd[ax_letter].contour(self.grid[ax_letter][0],
+                                        self.grid[ax_letter][1],
+                                        self.field[ax_letter], 45,
+                                        colors = 'black',
+                                        linewidths=0.2)
+
+            pass
         
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:
@@ -229,6 +254,8 @@ class PlottingUtils(PlotCreation):
                 self.__plot1D(ax_letter)
             if ax_letter in self.legend:
                 self.update_legend(self.legend[ax_letter], ax_letter)
+            if ax_letter in self.field:
+                self.__plot2Dfield(ax_letter)
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
                         ax_letter)
         self._PlotCreation__setup_aspect()

@@ -1,5 +1,6 @@
 from AeViz.quantities_plotting import TERMINAL
 import numpy as np
+from scipy.interpolate import  griddata
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
@@ -732,6 +733,47 @@ class Plotting(PlottingUtils, Data):
                                                           cbars[ax_letter]) 
             self._PlottingUtils__redo_plot()
         show_figure()
+        
+    def add_2Dfield(self, file, axd_letter, comp, plane, index1):
+        if axd_letter not in self.axd:
+            raise ValueError('The axis letter is not in the figure.')
+        if self.plot_dim[axd_letter] != 2:
+            raise ValueError('The axis letter is not a 2D plot.')
+        self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
+        if comp == 'velocity':
+            self.__addVelocity_field(file, axd_letter, plane, index1)
+        elif comp == 'Bfield':
+            self.__addBfield(file, axd_letter, plane, index1)
+    
+    def __addVelocity_field(self, file, axd_letter, plane, index1):
+        if plane == 'xy':
+            vr = self._Data__get_data_from_name('radial_velocity', file)\
+                [:, index1, :]
+            va = self._Data__get_data_from_name('phi_velocity', file)\
+                [:, index1, :]
+            angle = self.cell.phi(self.ghost)
+        elif plane == 'xz':
+            if index1 is None or self.sim_dim == 2:
+                vr = self._Data__get_data_from_name('radial_velocity', file)
+                va = self._Data__get_data_from_name('theta_velocity', file)
+            else:
+                vr = self._Data__get_data_from_name('radial_velocity', file)\
+                    [index1, :, :]
+                va = self._Data__get_data_from_name('theta_velocity', file)\
+                    [index1, :, :]
+            angle = self.cell.theta(self.ghost)
+        vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
+        vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
+        self._PlottingUtils__update_fields_params(axd_letter,
+                                                  (vx.T, vy.T), 'v')
+        self._PlottingUtils__plot2Dfield(axd_letter)
+
+    def __addBfield(self, file, axd_letter, plane, index1):
+        streamlines = self.loaded_data.stream_function(file, plane)
+        self._PlottingUtils__update_fields_params(axd_letter,
+                                                  streamlines.T, 'B')
+        self._PlottingUtils__plot2Dfield(axd_letter)
+        
         
     def Close(self):
         self._PlotCreation__close_figure()
