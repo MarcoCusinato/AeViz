@@ -150,8 +150,6 @@ class PlottingUtils(PlotCreation):
                                         self.field[ax_letter], 45,
                                         colors = 'black',
                                         linewidths=0.2)
-
-            pass
         
     def __plot2D(self, ax_letter):
         if self.cbar_log[ax_letter]:

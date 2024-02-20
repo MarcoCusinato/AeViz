@@ -1,4 +1,5 @@
 from AeViz.quantities_plotting import TERMINAL
+import os
 import numpy as np
 from scipy.interpolate import  griddata
 from AeViz.load_utils.data_load_utils import Data
@@ -8,6 +9,7 @@ from AeViz.grid.grid import grid
 from AeViz.units.units import units
 from AeViz.utils.math_utils import function_average
 from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
+import cv2
 
 u = units()
 
@@ -473,6 +475,7 @@ class Plotting(PlottingUtils, Data):
     def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None):
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
         redo = False
+        print(TERMINAL)
         if self.axd is not None:
             redo = True            
             if (number_of_quantities == 4) or \
@@ -774,7 +777,79 @@ class Plotting(PlottingUtils, Data):
                                                   streamlines.T, 'B')
         self._PlottingUtils__plot2Dfield(axd_letter)
         
-        
+    
+    def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
+              plane='xz', index1=None, start_time=None, end_time=None,
+              vfield=False, Bfield=False, top_time=False):
+        TMN = globals()["TERMINAL"]
+        globals()["TERMINAL"] = False
+        number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
+        if number_of_quantities != 2:
+            top = None
+        if start_time is not None:
+            start_time = self.loaded_data.find_file_from_time(start_time)
+            start_time = self.loaded_data.hdf_file_list.index(start_time)
+        if end_time is not None:
+            end_time = self.loaded_data.find_file_from_time(end_time)
+            end_time = self.loaded_data.hdf_file_list.index(end_time)
+        frame_folder = os.path.join(self.save_path,
+                                    '_'.join( ' '.join(filter(None,
+                                              [qt1, qt2, qt3, qt4]))))
+        if not os.path.exists(frame_folder):
+            os.mkdir(frame_folder)
+        frame_list = []
+        for (fi, f) in enumerate(
+            self.loaded_data.hdf_file_list[start_time:end_time]):
+            self.Close()
+            self.plot2D(f, plane, index1, qt1, qt2, qt3, qt4)
+            if top is not None:
+                self.plot1D(f, top, 'time', None, None)
+                if top_time:
+                    self.axd['A'].axvline(self.loaded_data.time(f),
+                                          color='black', lw=0.75, ls='dashed')
+            if vfield:
+                if 'C' in self.axd and 'D' in self.axd:
+                    self.add_2Dfield(f, 'C', 'velocity', plane, index1)
+                    self.add_2Dfield(f, 'D', 'velocity', plane, index1)
+                elif 'C' in self.axd:
+                    self.add_2Dfield(f, 'C', 'velocity', plane, index1)
+                elif 'B' in self.axd:
+                    self.add_2Dfield(f, 'B', 'velocity', plane, index1)
+                else:
+                    self.add_2Dfield(f, 'A', 'velocity', plane, index1)
+            if Bfield:
+                if top is not None:
+                    self.add_2Dfield(f, 'B', 'Bfield', plane, index1)
+                else:
+                    if 'C' in self.axd and 'D' in self.axd:
+                        self.add_2Dfield(f, 'A', 'Bfield', plane, index1)
+                        self.add_2Dfield(f, 'B', 'Bfield', plane, index1)
+                    else:
+                        self.add_2Dfield(f, 'A', 'Bfield', plane, index1)
+            save_path = os.path.join(frame_folder,
+                                     'frame_{:04d}.png'.format(fi))
+            frame_list.append(save_path)
+            self.fig.savefig(save_path, dpi=300)
+        globals()["TERMINAL"] = TMN
+        ## RENDER MOVIE
+        frame = cv2.imread(frame_list[0])
+        height, width, channels = frame.shape
+
+        # Define the video codec and create a VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'vp80')
+        video_writer = cv2.VideoWriter(
+            os.path.join(self.save_path, '_'.join( ' '.join(filter(None,
+                                              [qt1, qt2, qt3, qt4])))+'.webm'), 
+            fourcc, 10.0, (width, height))
+
+        # Write each frame to the video
+        for frame_name in frame_list:
+            frame = cv2.imread(frame_name)
+            video_writer.write(frame)
+
+        # Release the video writer and print a success message
+        video_writer.release()
+
     def Close(self):
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()

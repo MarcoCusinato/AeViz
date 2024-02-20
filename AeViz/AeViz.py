@@ -1,6 +1,7 @@
 from AeViz.quantities_plotting.plotting import Plotting
 from typing import Literal
 from AeViz.utils.aeviz_utils import plot_qt
+import os
 
 class AeViz(Plotting):
     def __init__(self):
@@ -335,3 +336,27 @@ class AeViz(Plotting):
         Adds velocity or magnetic field to the selected plot.
         """
         self.add_2Dfield(file, plot, comp, plane, index1)
+
+    def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,
+              fields: Literal['velocity', 'Bfield', 'all']=None,
+              plane: Literal['xy', 'yz']='xz', 
+              start_time=None, end_time=None, index1=None):
+        if fields == 'all':
+            vf, bf = True, True
+        elif fields == 'velocity':
+            vf, bf = True, False
+        elif fields == 'Bfield':
+            vf, bf = False, True
+        else:
+            vf, bf = False, False
+
+        self.make_movie(qt1=qt1, qt2=qt2, qt3=qt3, qt4=qt4, top=top_qt,
+              plane=plane, index1=index1, start_time=start_time,
+              end_time=end_time, vfield=vf, Bfield=bf, top_time=True)
+
+    def save_plot(self, name):
+        if name.endswith('.png') or name.endswith('.pdf') or \
+            name.endswith('.jpg'):
+            self.fig.savefig(os.path.join(self.save_path, name))
+        else:
+            self.fig.savefig(os.path.join(name + '.png'))

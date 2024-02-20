@@ -19,7 +19,7 @@ def return_positioning(number, form_factor):
                              B
                              C""",
                         2:"""..AA..
-                           b.BC.c""",
+                             b.BC.c""",
                         4: """..AAA.a
                               b.B.C.c""",
                         5: """..A.C..
@@ -28,7 +28,7 @@ def return_positioning(number, form_factor):
                               ..E....
                               f.F...."""},
                     4: {1:"""AB
-                           CD""",
+                             CD""",
                         2:"""ac
                              ..
                              AC

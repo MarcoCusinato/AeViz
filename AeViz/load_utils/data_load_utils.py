@@ -6,6 +6,7 @@ import numpy as np
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost
 from AeViz.load_utils.utils import check_file_to_load, return_index
+from AeViz.utils.path_utils import local_storage_folder, simulation_local_storage_folder
 
 u = units()
     
@@ -29,7 +30,15 @@ class Data(object):
             self.loaded_data = Simulation(path, simulation_path, dim)
             self.cell = self.loaded_data.cell
             self.ghost = self.loaded_data.ghost
-            self.sim_dim =self.loaded_data.dim
+            self.sim_dim = self.loaded_data.dim
+        self.save_path = self.__save_path()
+    
+    def __save_path(self):
+        if self.data_type == 'hdf5':
+            return os.path.join(local_storage_folder(), 'hdf_plots')
+        elif self.data_type == 'sim':
+            return self.loaded_data.storage_path
+
     
     def __load_hdf(self, path):
         """

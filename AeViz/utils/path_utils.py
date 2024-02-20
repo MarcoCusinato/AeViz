@@ -31,7 +31,9 @@ def local_storage_folder(platf):
         dim_folder = os.path.join(storage_path, dim)
         if not os.path.exists(dim_folder):
             os.mkdir(dim_folder)
-    
+    hdf_plots = os.path.join(storage_path, 'hdf_plots')
+    if not os.path.exists(hdf_plots):
+        os.mkdir(hdf_plots)
     utils_path = os.path.join(storage_path, '.utils')
     if not os.path.exists(utils_path):
         os.mkdir(utils_path)
