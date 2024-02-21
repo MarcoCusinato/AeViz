@@ -792,9 +792,11 @@ class Plotting(PlottingUtils, Data):
         if end_time is not None:
             end_time = self.loaded_data.find_file_from_time(end_time)
             end_time = self.loaded_data.hdf_file_list.index(end_time)
-        frame_folder = os.path.join(self.save_path,
-                                    '_'.join( ' '.join(filter(None,
-                                              [qt1, qt2, qt3, qt4]))))
+        if number_of_quantities > 1:
+            save_name = '_'.join( ' '.join(filter(None, [qt1, qt2, qt3, qt4])))
+        else:
+            save_name = qt1
+        frame_folder = os.path.join(self.save_path, save_name)
         if not os.path.exists(frame_folder):
             os.mkdir(frame_folder)
         frame_list = []
@@ -807,6 +809,7 @@ class Plotting(PlottingUtils, Data):
                 if top_time:
                     self.axd['A'].axvline(self.loaded_data.time(f),
                                           color='black', lw=0.75, ls='dashed')
+                    self.xlim((start_time, end_time), 'A')
             if vfield:
                 if 'C' in self.axd and 'D' in self.axd:
                     self.add_2Dfield(f, 'C', 'velocity', plane, index1)
@@ -838,8 +841,7 @@ class Plotting(PlottingUtils, Data):
         # Define the video codec and create a VideoWriter object
         fourcc = cv2.VideoWriter_fourcc(*'vp80')
         video_writer = cv2.VideoWriter(
-            os.path.join(self.save_path, '_'.join( ' '.join(filter(None,
-                                              [qt1, qt2, qt3, qt4])))+'.webm'), 
+            os.path.join(self.save_path, save_name + '.webm'), 
             fourcc, 10.0, (width, height))
 
         # Write each frame to the video

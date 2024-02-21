@@ -243,7 +243,6 @@ class AeViz(Plotting):
             qt = ['poloidal_magnetic_fields', 'toroidal_magnetic_fields']
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
-    
     def magnetic_energy(self, file=None, projection:Literal['1D', '2D']='1D', 
                         index1=None, index2=None, comp:Literal['all', 'tot', 
                                                 'poloidal', 'toroidal']='all', 
@@ -260,6 +259,41 @@ class AeViz(Plotting):
             qt = ['toroidal_magnetic_energy']
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
+    def nue_moment(self, file=None, projection:Literal['1D', '2D']='1D',
+                  comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
+                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  'theta', 'phi', 'time']='radius'):
+        if comp == 'all':
+            qt = ['nue_moment_x', 'nue_moment_y', 'nue_moment_z',
+                  'nue_moment_e']
+        else:
+            qt = ['nue_moment_' + comp]
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+        
+    def nua_moment(self, file=None, projection:Literal['1D', '2D']='1D',
+                  comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
+                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  'theta', 'phi', 'time']='radius'):
+        if comp == 'all':
+            qt = ['nua_moment_x', 'nua_moment_y', 'nua_moment_z',
+                  'nua_moment_e']
+        else:
+            qt = ['nua_moment_' + comp]
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def nux_moment(self, file=None, projection:Literal['1D', '2D']='1D',
+                  comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
+                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  'theta', 'phi', 'time']='radius'):
+        if comp == 'all':
+            qt = ['nux_moment_x', 'nux_moment_y', 'nux_moment_z',
+                  'nux_moment_e']
+        else:
+            qt = ['nux_moment_' + comp]
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+        
+            
+
     def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
         self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None)
     

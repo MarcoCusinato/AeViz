@@ -5,8 +5,9 @@ import h5py, os
 import numpy as np
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost
-from AeViz.load_utils.utils import check_file_to_load, return_index
-from AeViz.utils.path_utils import local_storage_folder, simulation_local_storage_folder
+from AeViz.load_utils.utils import (check_file_to_load, return_index,
+                                    return_neutrino_flux)
+from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
     
@@ -123,6 +124,14 @@ class Data(object):
                     out = getattr(self.loaded_data, 'magnetic_energy')(file)[1]
                 elif name == 'toroidal_magnetic_energy':
                     out = getattr(self.loaded_data, 'magnetic_energy')(file)[2]
+                elif 'nu' in name and 'moment' in name:
+                    out = return_neutrino_flux(self.loaded_data, name, file)
+                elif name == 'nua_flux':
+                    out = self.loaded_data.neutrino_momenta_grey(file)
+                elif name == 'nux_flux':
+                    out = self.loaded_data.neutrino_momenta_grey(file)
+                elif name == 'nuee_flux':
+                    out = self.loaded_data.neutrino_energy_density_grey(file)
                 else:
                     out = getattr(self.loaded_data, name)(file)
                 return out

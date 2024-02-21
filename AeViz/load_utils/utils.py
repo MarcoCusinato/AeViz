@@ -1,5 +1,40 @@
 import os
 
+def return_neutrino_flux(sim, name, file):
+    comp = name.split('_')[-1]
+    if comp == 'e':
+        out = sim.neutrino_energy_density_grey(file)
+    else: 
+        out = sim.neutrino_momenta_grey(file)
+    if 'nue' in name:
+        if sim.dim == 1 or comp == 'e':
+            out = out[..., 0]
+        elif comp == 'x':
+            out = out[..., 0, 0]
+        elif comp == 'y':
+            out = out[..., 0, 1]
+        elif comp == 'z':
+            out = out[..., 0, 2]
+    elif 'nua' in name:
+        if sim.dim == 1 or comp == 'e':
+            out = out[..., 1]
+        elif comp == 'x':
+            out = out[..., 1, 0]
+        elif comp == 'y':
+            out = out[..., 1, 1]
+        elif comp == 'z':
+            out = out[..., 1, 2]
+    elif 'nux' in name:
+        if sim.dim == 1 or comp == 'e':
+            out = out[..., 2]
+        elif comp == 'x':
+            out = out[..., 2, 0]
+        elif comp == 'y':
+            out = out[..., 2, 1]
+        elif comp == 'z':
+            out = out[..., 2, 2]
+    return out
+
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
         return 'hdf5'
@@ -65,18 +100,18 @@ def return_index(hydro_dict, name):
         'neutrino_chemical_potential': {'type': 'thd/data', 'index': 
                     hydro_dict['thd']['I_CPOT'][3]},
         'BHEX': {'type': 'thd/data', 'index': hydro_dict['thd']['I_BHEX']},
-        'NUEE': {'type': 'neutrinogrey/egrey', 'index': [0, 0] },
-        'NUEX': {'type': 'neutrinogrey/egrey', 'index': [0, 1] },
-        'NUEY': {'type': 'neutrinogrey/egrey', 'index': [0, 2] },
-        'NUEZ': {'type': 'neutrinogrey/egrey', 'index': [0, 3] },
-        'NUAE': {'type': 'neutrinogrey/egrey', 'index': [1, 0] },
-        'NUAX': {'type': 'neutrinogrey/egrey', 'index': [1, 1] },
-        'NUAY': {'type': 'neutrinogrey/egrey', 'index': [1, 2] },
-        'NUAZ': {'type': 'neutrinogrey/egrey', 'index': [1, 3] },
-        'NUXE': {'type': 'neutrinogrey/egrey', 'index': [2, 0] },
-        'NUXX': {'type': 'neutrinogrey/egrey', 'index': [2, 1] },
-        'NUXY': {'type': 'neutrinogrey/egrey', 'index': [2, 2] },
-        'NUXZ': {'type': 'neutrinogrey/egrey', 'index': [2, 3] },
+        'nue_moment_e': {'type': 'neutrinogrey/egrey', 'index': [0, 0] },
+        'nue_moment_x': {'type': 'neutrinogrey/egrey', 'index': [0, 1] },
+        'nue_moment_y': {'type': 'neutrinogrey/egrey', 'index': [0, 2] },
+        'nue_moment_z': {'type': 'neutrinogrey/egrey', 'index': [0, 3] },
+        'nua_moment_e': {'type': 'neutrinogrey/egrey', 'index': [1, 0] },
+        'nua_moment_x': {'type': 'neutrinogrey/egrey', 'index': [1, 1] },
+        'nua_moment_y': {'type': 'neutrinogrey/egrey', 'index': [1, 2] },
+        'nua_moment_z': {'type': 'neutrinogrey/egrey', 'index': [1, 3] },
+        'nux_moment_e': {'type': 'neutrinogrey/egrey', 'index': [2, 0] },
+        'nux_moment_x': {'type': 'neutrinogrey/egrey', 'index': [2, 1] },
+        'nux_moment_y': {'type': 'neutrinogrey/egrey', 'index': [2, 2] },
+        'nux_moment_z': {'type': 'neutrinogrey/egrey', 'index': [2, 3] },
         'BX': {'type': 'mag_vol/data', 'index': 0},
         'BY': {'type': 'mag_vol/data','index': 1},
         'BZ': {'type': 'mag_vol/data', 'index': 2},
