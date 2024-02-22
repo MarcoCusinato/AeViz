@@ -1,7 +1,6 @@
 from AeViz.quantities_plotting import TERMINAL
 import os
 import numpy as np
-from scipy.interpolate import  griddata
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
