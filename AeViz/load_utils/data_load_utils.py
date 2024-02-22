@@ -5,96 +5,48 @@ import h5py, os
 import numpy as np
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost
+from AeViz.load_utils.utils import (check_file_to_load, return_index,
+                                    return_neutrino_flux,
+                                    return_neutrino_mean_ene,
+                                    return_integrated_neutrinos)
+from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
-
-def check_file_to_load(path):
-    if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
-        return 'hdf5'
-    elif not os.path.exists(path):
-        return 'sim'
-
-def return_index(hydro_dict, name):
-    convert_dict = {
-        'RHO': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_RH']},
-        'ENE': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_EN']},
-        'VX': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_VX']},
-        'VY': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_VY']},
-        'VZ': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_VZ']},
-        'YE': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_YE']},
-        'YN': {'type': 'hydro/data', 'index': hydro_dict['hydro']['I_YN']},
-        'ERR': {'type': 'thd/data', 'index': hydro_dict['thd']['I_EOSERR']},
-        'LRTZ': {'type': 'thd/data', 'index': hydro_dict['thd']['I_LRTZ']},
-        'DENS': {'type': 'thd/data', 'index': hydro_dict['thd']['I_DENS']},
-        'EINT': {'type': 'thd/data', 'index': hydro_dict['thd']['I_EINT']},
-        'ENTH': {'type': 'thd/data', 'index': hydro_dict['thd']['I_ENTH']},
-        'PELE': {'type': 'thd/data', 'index': hydro_dict['thd']['I_PELE']},
-        'TELE': {'type': 'thd/data', 'index': hydro_dict['thd']['I_TELE']},
-        'NELE': {'type': 'thd/data', 'index': hydro_dict['thd']['I_NELE']},
-        'PION': {'type': 'thd/data', 'index': hydro_dict['thd']['I_PION']},
-        'TION': {'type': 'thd/data', 'index': hydro_dict['thd']['I_TION']},
-        'NION': {'type': 'thd/data', 'index': hydro_dict['thd']['I_NION']},
-        'VELX': {'type': 'thd/data', 'index': hydro_dict['thd']['I_VELX']},
-        'VELY': {'type': 'thd/data', 'index': hydro_dict['thd']['I_VELY']},
-        'VELZ': {'type': 'thd/data', 'index': hydro_dict['thd']['I_VELZ']},
-        'T': {'type': 'thd/data', 'index': hydro_dict['thd']['I_TMPR']},
-        'ENTR': {'type': 'thd/data', 'index': hydro_dict['thd']['I_ENTR']},
-        'GAMM': {'type': 'thd/data', 'index': hydro_dict['thd']['I_GAMM']},
-        'HEAT': {'type': 'thd/data', 'index': hydro_dict['thd']['I_HEAT']},
-        'DELP': {'type': 'thd/data', 'index': hydro_dict['thd']['I_DELP']},
-        'JX': {'type': 'thd/data', 'index': hydro_dict['thd']['I_SMOMX']},
-        'JY': {'type': 'thd/data', 'index': hydro_dict['thd']['I_SMOMY']},
-        'JZ': {'type': 'thd/data', 'index': hydro_dict['thd']['I_SMOMZ']},
-        'PGAS': {'type': 'thd/data', 'index': hydro_dict['thd']['I_PGAS']},
-        'VSOUND': {'type': 'thd/data', 'index': hydro_dict['thd']['I_CSND']},
-        'X_n': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][0]},
-        'X_p': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][1]},
-        'X_alpha': {'type': 'thd/data', 'index':
-                    hydro_dict['thd']['I_COMP'][2]},
-        'X_h': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][3]},
-        'Abar': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][4]},
-        'Zbar': {'type': 'thd/data', 'index': hydro_dict['thd']['I_COMP'][5]},
-        'CPOT_e': {'type': 'thd/data', 'index': 
-                   hydro_dict['thd']['I_CPOT'][0]},
-        'CPOT_n': {'type': 'thd/data', 'index': 
-                   hydro_dict['thd']['I_CPOT'][1]},
-        'CPOT_p': {'type': 'thd/data', 'index': 
-                   hydro_dict['thd']['I_CPOT'][2]},
-        'CPOT_nu': {'type': 'thd/data', 'index': 
-                    hydro_dict['thd']['I_CPOT'][3]},
-        'BHEX': {'type': 'thd/data', 'index': hydro_dict['thd']['I_BHEX']},
-        'NUEE': {'type': 'neutrinogrey/egrey', 'index': [0, 0] },
-        'NUEX': {'type': 'neutrinogrey/egrey', 'index': [0, 1] },
-        'NUEY': {'type': 'neutrinogrey/egrey', 'index': [0, 2] },
-        'NUEZ': {'type': 'neutrinogrey/egrey', 'index': [0, 3] },
-        'NUAE': {'type': 'neutrinogrey/egrey', 'index': [1, 0] },
-        'NUAX': {'type': 'neutrinogrey/egrey', 'index': [1, 1] },
-        'NUAY': {'type': 'neutrinogrey/egrey', 'index': [1, 2] },
-        'NUAZ': {'type': 'neutrinogrey/egrey', 'index': [1, 3] },
-        'NUXE': {'type': 'neutrinogrey/egrey', 'index': [2, 0] },
-        'NUXX': {'type': 'neutrinogrey/egrey', 'index': [2, 1] },
-        'NUXY': {'type': 'neutrinogrey/egrey', 'index': [2, 2] },
-        'NUXZ': {'type': 'neutrinogrey/egrey', 'index': [2, 3] },
-        'BX': {'type': 'mag_vol/data', 'index': 0},
-        'BY': {'type': 'mag_vol/data','index': 1},
-        'BZ': {'type': 'mag_vol/data', 'index': 2},
-        }
-    return convert_dict[name]
     
 class Data(object):
+    """
+    Class to load either an hdf5 file or an entire simulation.
+    """
     def __init__(self):
         self.loaded_data = None
         self.hydroTHD_index, self.gh_cells = None, None
         self.sim_dim = None
 
     def Load(self, path, simulation_path=None, dim=None):
+        """
+        Load into the memory either an hdf5 file or an entire simulation.
+        """
         self.data_type = check_file_to_load(path)
         if self.data_type == 'hdf5':
             self.__load_hdf(path)
         elif self.data_type == 'sim':
             self.loaded_data = Simulation(path, simulation_path, dim)
+            self.cell = self.loaded_data.cell
+            self.ghost = self.loaded_data.ghost
+            self.sim_dim = self.loaded_data.dim
+        self.save_path = self.__save_path()
+    
+    def __save_path(self):
+        if self.data_type == 'hdf5':
+            return os.path.join(local_storage_folder(), 'hdf_plots')
+        elif self.data_type == 'sim':
+            return self.loaded_data.storage_path
+
     
     def __load_hdf(self, path):
+        """
+        Load an hdf5 file into the memory using its path. 
+        """
         self.loaded_data = h5py.File(path, 'r')
         dir_path = os.path.dirname(os.path.abspath(path))
         self.cell = cl(radius=np.stack((self.loaded_data['X']['znl'][...],
@@ -117,6 +69,7 @@ class Data(object):
             Warning.warn('No start.pars file found in the parent directory '\
                         ' of the hdf5 file. No auto-detection of the indices.'\
                             ' Please set them manually.')
+    
 
     def is_open(self):
         if self.loaded_data is None:
@@ -132,25 +85,143 @@ class Data(object):
                 del self.loaded_data
             self.loaded_data = None
     
-    def __get_data_from_name(self, name):
+    def __get_profile(self, name):
+        if self.data_type == 'hdf5':
+            raise ValueError('The profile method is not implemented for hdf5' \
+                             ' files.')
+        elif self.data_type == 'sim':
+            return self.loaded_data.radial_profile(name)
+
+    def __get_data_from_name(self, name, file=None):
         if self.data_type == 'hdf5':
             if return_index(self.hydroTHD_index, name)['index'] is None:
                 raise ValueError('The selected quantity is not present in the'\
                                  ' hdf5 file.')
             index = return_index(self.hydroTHD_index, name)['index']
             if type(index) == list:
-                data = np.squeeze(np.array(self.loaded_data[return_index(
-                    self.hydroTHD_index, name)['type']])[..., index[0],
+                data = np.squeeze(self.loaded_data[return_index(
+                    self.hydroTHD_index, name)['type']][..., index[0],
                                                          index[1]])
             else:
-                data = np.squeeze(np.array(self.loaded_data[return_index(
-                    self.hydroTHD_index, name)['type']])[..., index])
+                data = np.squeeze(self.loaded_data[return_index(
+                    self.hydroTHD_index, name)['type']][..., index])
             if name in ['YE', 'YN', 'VX', 'VY', 'VZ']:
-                data /= np.squeeze(np.array(self.loaded_data['hydro']['data'])\
+                data /= np.squeeze(self.loaded_data['hydro']['data']\
                                    [..., self.hydroTHD_index['hydro']['I_RH']])
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
-            raise NotImplementedError('Not implemented yet.')
+            if file is not None:
+                if name == 'BX':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 0]
+                elif name == 'BY':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 1]
+                elif name == 'BZ':
+                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
+                        [..., 2]
+                elif name == 'total_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[0]
+                elif name == 'poloidal_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[1]
+                elif name == 'toroidal_magnetic_energy':
+                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[2]
+                elif 'nu' in name and 'moment' in name:
+                    out = return_neutrino_flux(self.loaded_data, name, file)
+                elif 'nue_mean_ene' == name or 'nua_mean_ene' == name or \
+                    'nux_mean_ene' == name:
+                    out = return_neutrino_mean_ene(self.loaded_data,
+                                                   name, file)
+                else:
+                    out = getattr(self.loaded_data, name)(file)
+                return out
+            else:
+                if ('explosion' in name) or ('gain' in name) or \
+                    ('innercore' in name) or \
+                    ('PNS' in name and 'radius' not in name):
+                    return self.__get_energy_data(name)
+                elif 'nu_integrated_' in name:
+                    return  return_integrated_neutrinos(self.loaded_data, name)
+                return getattr(self.loaded_data, name)()
     
+    def __get_GW_decomposition_data(self, name):
+        if self.sim_dim == 2:
+            _, t, AE220, f_h, nuc_h, conv_h, out_h = self.loaded_data.AE220()
+            return t, AE220, f_h, nuc_h, conv_h, out_h
+        else:
+            raise TypeError('Not implemented for 3D simulations.')
+    
+    def __get_energy_data(self, name):
+        qt = name.split('_')[-1]
+        if 'explosion' in name:
+            data = getattr(self.loaded_data, 'explosion_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[2]
+            elif qt == 'kin':
+                return data[0], data[3]
+            elif qt == 'mag':
+                return data[0], data[4]
+        elif 'gain' in name:
+            data = getattr(self.loaded_data, 'gain_mass_nu_heat')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[2]
+        elif 'innercore' in name:
+            data = getattr(self.loaded_data, 'innercore_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[6]
+            elif qt == 'kin':
+                return data[0], data[2]
+            elif qt == 'mag':
+                return data[0], data[3]
+            elif qt == 'rot':
+                return data[0], data[4]
+            elif qt == 'grav':
+                return data[0], data[5]
+            elif qt == 'T_W':
+                return data[0], data[7]
+        elif 'PNS' in name:
+            data = getattr(self.loaded_data, 'PNS_mass_ene')()
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[6]
+            elif qt == 'kin':
+                return data[0], data[2]
+            elif qt == 'mag':
+                return data[0], data[3]
+            elif qt == 'rot':
+                return data[0], data[4]
+            elif qt == 'grav':
+                return data[0], data[5]
+            elif qt == 'conv':
+                return data[0], data[7]
 
+    def __get_1D_radii_data(self, name):
+        name = name.split('_')
+        rad_type = name[-1]
+        if not 'neutrino' in name:
+            name = '_'.join(name[:-1])
+            flavour = None
+        else:
+            flavour = name[-2]
+            name = '_'.join(name[:-2])
+        time, _, max_r, min_r, avg_r, _ = getattr(self.loaded_data, name)()
+        if flavour:
+            max_r = max_r[flavour]
+            min_r = min_r[flavour]
+            avg_r = avg_r[flavour]
+        if rad_type == 'max':
+            return time, max_r
+        elif rad_type == 'min':
+            return time, min_r
+        elif rad_type == 'avg':
+            return time, avg_r
+        else:
+            return time, max_r, min_r, avg_r
         

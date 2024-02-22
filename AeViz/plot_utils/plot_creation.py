@@ -2,26 +2,46 @@ import matplotlib.pyplot as plt
 
 def return_positioning(number, form_factor):
     positioning = {1: {1: """A""",
-                       2: """A.a"""},
+                       2: """A.a""",
+                       4: """A.a""",
+                       5:"""A..
+                            B.b"""},
                    2: {1: """AB""",
                        2: """a.AB.b""",
                        3: """A
                              B""",
                        4: """A.a
                              B.b""",
+                       5: """..A.C..
+                             b.B.D.d"""
                        },
-                    3: {1:"""AA
-                           BC""",
+                    3: {1:"""A
+                             B
+                             C""",
                         2:"""..AA..
-                           b.BC.c"""},
+                             b.BC.c""",
+                        4: """..AAA.a
+                              b.B.C.c""",
+                        5: """..A.C..
+                              b.B.D.d
+                              .......
+                              ..E....
+                              f.F...."""},
                     4: {1:"""AB
-                           CD""",
+                             CD""",
                         2:"""ac
                              ..
                              AC
                              BD
                              ..
-                             bd"""},
+                             bd""",
+                        4: """a.A.B.b
+                              c.C.D.d""",
+                        5: """..A.C..
+                              b.B.D.d
+                              .......
+                              ..E.G..
+                              f.F.H.h"""},
                     5: {1:"""A..
                              B..
                              C..
@@ -29,30 +49,46 @@ def return_positioning(number, form_factor):
                              E.e"""}}
     
     width_ratio = {1: {1: [1],
-                       2: [1.1, 0.4, 0.08]},
+                       2: [1.1, 0.4, 0.08],
+                       4: [1.1, 0.1, 0.08],
+                       5: [1.1, 0.1, 0.08]},
                    2: {1: [1, 1],
                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
                        3: [1],
-                       4: [1.1, 0.4, 0.08]},
-                   3: {1: [1, 1],
-                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08]},
+                       4: [1.1, 0.1, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
+                   3: {1: [1],
+                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
+                       4:[0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
                    4: {1: [1, 1],
-                       2: [1, 1]},
+                       2: [1, 1],
+                       4: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
+                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08]},
                     5: {1: [1, 0.03, 0.04]}}
     
     height_ratio = {1: {1: [1],
-                        2: [1]},
+                        2: [1],
+                        4: [1],
+                        5: [0.25, 0.75]},
                     2: {1: [1],
                         2: [1],
                         3: [1, 1],
-                        4: [1, 1]},
-                    3: {1: [0.25, 0.75],
-                        2: [0.25, 0.75]},
+                        4: [1, 1],
+                        5: [0.25, 0.75]},
+                    3: {1: [1, 1, 1],
+                        2: [0.25, 0.75],
+                        4: [1, 1],
+                        5: [0.25, 0.75, 0.2, 0.25, 0.75]},
                     4: {1: [1, 1],
-                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08]},
+                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
+                        4: [1, 1],
+                        5: [0.25, 0.75, 0.2, 0.25, 0.75]},
                     5: {1: [0.5, 0.5, 0.5, 0.5, 2]}}
-    
-    if '.' in positioning[number][form_factor]:
+    if form_factor == 4:
+        gs_kw = {"wspace": 0,
+                 "hspace": 0.2}
+    elif '.' in positioning[number][form_factor]:
         gs_kw = {"wspace": 0,
                  "hspace": 0}
     else:
@@ -64,16 +100,23 @@ def return_positioning(number, form_factor):
 
 def return_fig_size(number, form_factor):
     fig_size = {1: {1: (8, 8),
-                    2: (8, 8)},
-                2: {1: (8, 8),
+                    2: (8, 8),
+                    4: (6, 4),
+                    5: (6, 6)},
+                2: {1: (16, 8),
                     2: (8, 8),
                     3: (8, 8),
-                    4: (8, 8)},
+                    4: (6, 8),
+                    5: (12, 6)},
                 3: {1: (9, 8.42),
-                    2: (9, 8.42)},
-                4: {1: (8, 4),
-                    2: (8, 11.6)},
-                5: {1: (4.5, 8)}}
+                    2: (9, 8.42),
+                    4: (12, 8),
+                    5: (12, 12)},
+                4: {1: (16, 16),
+                    2: (8, 11.6),
+                    4: (12, 8),
+                    5: (12, 12)},
+                5: {1: (9, 16)}}
     return fig_size[number][form_factor]
 
 def change_y_cbar_aspect(axd, axd_bar):
@@ -133,6 +176,8 @@ class PlotCreation(object):
     def __setup_axd(self, number=1, form_factor=1):
         self.number = number
         self.form_factor = form_factor
+        if self.fig_is_open():
+            self.__close_figure()
         if not self.fig_is_open():
             self.__setup_figure()
         if not self.axd_is_open():
@@ -142,14 +187,30 @@ class PlotCreation(object):
                                                gridspec_kw=gs_kw,
                                                width_ratios=width_ratio, 
                                                height_ratios=height_ratio)
-            if self.number  == 2:
+            if self.number == 1:
+                if self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"]], True,
+                                      False)
+            elif self.number  == 2:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"]],
+                                        True, False)
             elif self.number == 3:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"],
+                                                    self.axd["E"],
+                                                    self.axd["F"]],
+                                        True, False)
             elif self.number == 4:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True,
@@ -160,6 +221,16 @@ class PlotCreation(object):
                                       True)
                     self.__share_axis(self.axd["B"], [self.axd["D"]], False,
                                       True)
+                elif self.form_factor == 5:
+                    for ax_letter in self.axd:
+                        self.__share_axis(self.axd["A"], [self.axd["B"], 
+                                                    self.axd["C"],
+                                                    self.axd["D"],
+                                                    self.axd["E"],
+                                                    self.axd["F"],
+                                                    self.axd["G"],
+                                                    self.axd["H"]],
+                                        True, False)
             elif self.number == 5:
                 if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 
@@ -170,6 +241,7 @@ class PlotCreation(object):
             self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
+        
     
     def change_figsize(self, multiplies=1):
         if self.fig_is_open():
@@ -184,8 +256,7 @@ class PlotCreation(object):
     def __setup_aspect(self):
         if self.number == 1 and self.form_factor == 2:
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
-        elif (self.number == 2 and self.form_factor == 2) or \
-            (self.number == 2 and self.form_factor == 4):
+        elif (self.number == 2 and self.form_factor == 2):
             change_y_cbar_aspect(self.axd["A"], self.axd["a"])
             change_y_cbar_aspect(self.axd["B"], self.axd["b"])
         elif self.number == 3 and self.form_factor == 2:
@@ -219,15 +290,6 @@ class PlotCreation(object):
                         right=True, labelright=True)
                 self.axd["A"].yaxis.set_label_position('left')
                 self.axd["B"].yaxis.set_label_position('right')
-            elif self.form_factor == 4:
-                self.axd["A"].tick_params(top=False, labeltop=False,
-                        bottom=False, labelbottom=False,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
-                self.axd["B"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
         elif self.number == 3 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
                         bottom=False, labelbottom=False,

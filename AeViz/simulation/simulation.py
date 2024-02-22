@@ -76,8 +76,8 @@ class Simulation:
         file_list.sort()
         return file_list
 
-    def find_file_from_time(self, time_in_ms=True, return_index=False,
-                            tob_corrected=True):
+    def find_file_from_time(self, time_to_find, time_in_ms=True, 
+                            return_index=False, tob_corrected=True):
         """
         Returns the name of the file corresponding to the given time. If
         return_index is True, returns the index of the file in the 
@@ -91,10 +91,10 @@ class Simulation:
         time = time_array(self)
         if not tob_corrected:
             time += self.tob
+        index = np.argmax(time>=time_to_find)
         if return_index:
-            index = np.argmax(time>=time_to_find)
             return file_list[index], index
-        return file_list[np.argmax(time>=time_to_find)]
+        return file_list[index]
 
     ## TIME POINTS           
     def time_of_bounce(self):
@@ -154,7 +154,6 @@ class Simulation:
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
-    @hdf_isopen
     def MHD_energy(self, file_name):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
@@ -195,7 +194,7 @@ class Simulation:
             return self.phi_velocity(file_name) / (np.cos(self.cell.phi(
                 self.ghost))[:, None, None] * np.sin(self.cell.theta(
                 self.ghost))[None, :, None] * \
-                self.cell.radius(self.ghost))[None, None, :]
+                self.cell.radius(self.ghost)[None, None, :])
 
     ## -----------------------------------------------------------------
     ## THERMODYNAMICAL DATA
@@ -392,10 +391,10 @@ class Simulation:
         """
         data = self.magnetic_fields(file_name)
         return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
-                       + data[..., 2] ** 2), \
-                 0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
-                 0.5 * data[..., 2] ** 2
-    
+                    + data[..., 2] ** 2), \
+                0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
+                0.5 * data[..., 2] ** 2
+
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                         self.ghost, plane)
@@ -526,8 +525,12 @@ class Simulation:
             index = None
         if tob_corrected and zero_correction:
             data[:,2] -= self.tob
-        
-        return GW_strain(self.dim, column_change, data, index) / distance
+        GWs = GW_strain(self.dim, column_change, data, index)
+        if GWs is None:
+            return None
+        print(distance)
+        GWs[:, 1:] /= distance
+        return GWs
     
     def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True):
         """
@@ -543,8 +546,7 @@ class Simulation:
         In 3D simulations:
             h_pl_e, h_pl_p, h_cr_e, h_cr_p
         """
-        GW_strain = self.GW_Amplitudes(correct_for_tob=False)
-        GW_strain[:, 1:] /= distance
+        GW_strain = self.GW_Amplitudes(distance=distance, tob_corrected=False)
         window = 0
         while (np.abs(GW_strain[window,0] - GW_strain[0,0]) < 
                u.convert_to_s(window_size)):
@@ -612,7 +614,7 @@ class Simulation:
         Returns the energy carried away by the GWs in erg/s
         """
         GWs = self.GW_Amplitudes(tob_corrected)
-        GWs[:, 1] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
+        GWs[:, 1:] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1] ** 2
         return GWs
 
     def AE220(self, tob_corrected=True, save_checkpoints=True):
@@ -759,7 +761,7 @@ class Simulation:
         during the calculation.
         Returns: time, radius(phi, theta), max_radius, min_radius,
                  average_radius, number of ghost cells
-        Radii are returned as disctionary of nue, nua and nux
+        Radii are returned as disctionaries of nue, nua and nux
         """
         data = calculate_radius(self, 'neutrino', save_checkpoints)
         if not tob_corrected:
