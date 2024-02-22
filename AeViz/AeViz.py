@@ -300,8 +300,13 @@ class AeViz(Plotting):
             qt = ['nue_mean_ene', 'nua_mean_ene', 'nux_mean_ene']
         else:
             qt = [comp + '_mean_ene']
-        plot_qt(self, file, qt, projection, index1, index2, plane)     
-
+        plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def nu_integrated(self, flavour:Literal['all', 'nue', 'nua', 'nux']='all',
+                      comp: Literal['ene', 'lum']='lum'):
+        qt = 'nu_integrated_' + comp + '_' + flavour
+        self.plot1D(None, qt, 'time', None, None)
+        
     def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
         self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None)
     
@@ -382,7 +387,7 @@ class AeViz(Plotting):
     def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,
               fields: Literal['velocity', 'Bfield', 'all']=None,
               plane: Literal['xy', 'yz']='xz', 
-              start_time=None, end_time=None, index1=None):
+              start_time=None, end_time=None, lims=None):
         if fields == 'all':
             vf, bf = True, True
         elif fields == 'velocity':
@@ -393,7 +398,7 @@ class AeViz(Plotting):
             vf, bf = False, False
 
         self.make_movie(qt1=qt1, qt2=qt2, qt3=qt3, qt4=qt4, top=top_qt,
-              plane=plane, index1=index1, start_time=start_time,
+              plane=plane, start_time=start_time, lims=lims,
               end_time=end_time, vfield=vf, Bfield=bf, top_time=True)
 
     def save_plot(self, name):

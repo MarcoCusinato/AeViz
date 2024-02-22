@@ -7,7 +7,8 @@ from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost
 from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_neutrino_flux,
-                                    return_neutrino_mean_ene)
+                                    return_neutrino_mean_ene,
+                                    return_integrated_neutrinos)
 from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
@@ -139,6 +140,8 @@ class Data(object):
                     ('innercore' in name) or \
                     ('PNS' in name and 'radius' not in name):
                     return self.__get_energy_data(name)
+                elif 'nu_integrated_' in name:
+                    return  return_integrated_neutrinos(self.loaded_data, name)
                 return getattr(self.loaded_data, name)()
     
     def __get_GW_decomposition_data(self, name):

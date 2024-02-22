@@ -1,4 +1,6 @@
+import AeViz.load_utils.utils
 import os
+import numpy as np
 
 def return_neutrino_flux(sim, name, file):
     comp = name.split('_')[-1]
@@ -43,6 +45,20 @@ def return_neutrino_mean_ene(sim, name, file):
     elif 'nux' in name:
         out = sim.neutrino_mean_energy(file)[..., 2]
     return out
+
+def return_integrated_neutrinos(sim, name):
+    if 'ene' in name:
+        out = sim.global_neutrino_mean_energies()
+    elif 'lum' in name:
+        out = sim.global_neutrino_luminosity()[:, :4]
+    if 'all' in name:
+        return out
+    elif 'nue' in name:
+        return out[:, :2]
+    elif 'nua' in name:
+        return np.stack((out[:, 0], out[:, 2]), axis=1)
+    elif 'nux' in name:
+        return np.stack((out[:, 0], out[:, 3]), axis=1)
 
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):

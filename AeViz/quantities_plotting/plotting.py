@@ -185,9 +185,12 @@ class Plotting(PlottingUtils, Data):
             if 'GW' in qt:
                 post_data = self._Data__get_data_from_name(
                     "_".join(qt.split('_')[:-1]), file)
-                
             else:
                 post_data = self._Data__get_data_from_name(qt, file)
+            if 'nu_integrated'in qt and 'all' in qt:
+                legend = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
+            if 'nu_integrated_lum' in qt:
+                post_data[:, 1:] *= 1e-53
         else:
             post_data = list(self._Data__get_1D_radii_data(qt))
             if 'all' in qt:
@@ -227,18 +230,14 @@ class Plotting(PlottingUtils, Data):
             self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta, phi or time.')
-        
         if xaxis != 'time':
             index1, index2 = normalize_indices(index1, index2)
-            
             data = get_data_to_plot(index1, index2, post_data, xaxis,
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
         elif type(post_data) == list or type(post_data) == tuple:
             data = post_data[1]
-        elif 'radius' not in qt and 'spheres' not in qt and 'GW' not in qt:
-            data = post_data[:, 1]
         elif 'GW' in qt:
             if self.sim_dim == 2:
                 data = post_data[:, 1:]
@@ -251,6 +250,9 @@ class Plotting(PlottingUtils, Data):
                     data = post_data[:,3]
                 elif qt.endswith('hxpol'):
                     data = post_data[:,4]
+        elif 'radius' not in qt and 'spheres' not in qt and \
+            'nu_integrated' not in qt:
+            data = post_data[:, 1]
         else:
             data = post_data[:, 1:]
         
@@ -475,7 +477,7 @@ class Plotting(PlottingUtils, Data):
     def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None):
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
         redo = False
-        print(TERMINAL)
+        
         if self.axd is not None:
             redo = True            
             if (number_of_quantities == 4) or \
@@ -779,21 +781,28 @@ class Plotting(PlottingUtils, Data):
         
     
     def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
-              plane='xz', index1=None, start_time=None, end_time=None,
-              vfield=False, Bfield=False, top_time=False):
+              plane='xz', start_time=None, end_time=None,
+              vfield=False, Bfield=False, top_time=False, lims=None):
         TMN = globals()["TERMINAL"]
         globals()["TERMINAL"] = False
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
         if number_of_quantities != 2:
             top = None
         if start_time is not None:
-            start_time = self.loaded_data.find_file_from_time(start_time)
-            start_time = self.loaded_data.hdf_file_list.index(start_time)
+            start_time_ind = self.loaded_data.find_file_from_time(start_time)
+            start_time_ind = self.loaded_data.hdf_file_list.index(
+                start_time_ind)
+            start_time = u.convert_to_s(start_time)
+        else:
+            start_time_ind = None
         if end_time is not None:
-            end_time = self.loaded_data.find_file_from_time(end_time)
-            end_time = self.loaded_data.hdf_file_list.index(end_time)
+            end_time_ind = self.loaded_data.find_file_from_time(end_time)
+            end_time_ind = self.loaded_data.hdf_file_list.index(end_time_ind)
+            end_time = u.convert_to_s(end_time)
+        else:
+            end_time_ind = None
         if number_of_quantities > 1:
-            save_name = '_'.join( ' '.join(filter(None, [qt1, qt2, qt3, qt4])))
+            save_name = '_'.join(filter(None, [qt1, qt2, qt3, qt4]))
         else:
             save_name = qt1
         frame_folder = os.path.join(self.save_path, save_name)
@@ -801,34 +810,37 @@ class Plotting(PlottingUtils, Data):
             os.mkdir(frame_folder)
         frame_list = []
         for (fi, f) in enumerate(
-            self.loaded_data.hdf_file_list[start_time:end_time]):
+            self.loaded_data.hdf_file_list[start_time_ind:end_time_ind]):
             self.Close()
-            self.plot2D(f, plane, index1, qt1, qt2, qt3, qt4)
+            self.plot2D(f, plane, None, qt1, qt2, qt3, qt4)
+            if lims is not None:
+                self.xlim(lims, 'A')
             if top is not None:
-                self.plot1D(f, top, 'time', None, None)
+                self.plot1D(None, top, 'time', None, None)
                 if top_time:
-                    self.axd['A'].axvline(self.loaded_data.time(f),
-                                          color='black', lw=0.75, ls='dashed')
+                    self.axd['A'].axvline(
+                        self.loaded_data.time(f),
+                        color='black', lw=0.75, ls='dashed')
                     self.xlim((start_time, end_time), 'A')
             if vfield:
                 if 'C' in self.axd and 'D' in self.axd:
-                    self.add_2Dfield(f, 'C', 'velocity', plane, index1)
-                    self.add_2Dfield(f, 'D', 'velocity', plane, index1)
+                    self.add_2Dfield(f, 'C', 'velocity', plane, None)
+                    self.add_2Dfield(f, 'D', 'velocity', plane, None)
                 elif 'C' in self.axd:
-                    self.add_2Dfield(f, 'C', 'velocity', plane, index1)
+                    self.add_2Dfield(f, 'C', 'velocity', plane, None)
                 elif 'B' in self.axd:
-                    self.add_2Dfield(f, 'B', 'velocity', plane, index1)
+                    self.add_2Dfield(f, 'B', 'velocity', plane, None)
                 else:
-                    self.add_2Dfield(f, 'A', 'velocity', plane, index1)
+                    self.add_2Dfield(f, 'A', 'velocity', plane, None)
             if Bfield:
                 if top is not None:
-                    self.add_2Dfield(f, 'B', 'Bfield', plane, index1)
+                    self.add_2Dfield(f, 'B', 'Bfield', plane, None)
                 else:
                     if 'C' in self.axd and 'D' in self.axd:
-                        self.add_2Dfield(f, 'A', 'Bfield', plane, index1)
-                        self.add_2Dfield(f, 'B', 'Bfield', plane, index1)
+                        self.add_2Dfield(f, 'A', 'Bfield', plane, None)
+                        self.add_2Dfield(f, 'B', 'Bfield', plane, None)
                     else:
-                        self.add_2Dfield(f, 'A', 'Bfield', plane, index1)
+                        self.add_2Dfield(f, 'A', 'Bfield', plane, None)
             save_path = os.path.join(frame_folder,
                                      'frame_{:04d}.png'.format(fi))
             frame_list.append(save_path)
