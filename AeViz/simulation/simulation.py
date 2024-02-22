@@ -91,10 +91,10 @@ class Simulation:
         time = time_array(self)
         if not tob_corrected:
             time += self.tob
+        index = np.argmax(time>=time_to_find)
         if return_index:
-            index = np.argmax(time>=time_to_find)
             return file_list[index], index
-        return file_list[np.argmax(time>=time_to_find)]
+        return file_list[index]
 
     ## TIME POINTS           
     def time_of_bounce(self):

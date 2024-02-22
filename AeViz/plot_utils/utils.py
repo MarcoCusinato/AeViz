@@ -339,7 +339,8 @@ plot_labels = {
                          'label': r'$\mathcal{D}h_\times^{pol}$ [cm]'},
         'mass_accretion_500km': {'log': False,
                          'lim': (0, 3),
-                         'label': r'$\dot{M}_{500km}$ [M$_\odot\cdot$s$^{-1}$]'},
+                         'label': r'$\dot{M}_{500km}$ '\
+                                r'[M$_\odot\cdot$s$^{-1}$]'},
          'explosion_mass': {'log': True,
                          'lim': (1e-4, 1e0),
                          'label': r'M$_\mathrm{exp}$ [M$_\odot$]'},
@@ -419,15 +420,18 @@ plot_labels = {
          'nua_moment_x': {'log': True,
                       'lim': (-1e40, 1e40),
                       'cmap': 'PuOr_r',
-                      'label': r'F$_{\overline{\nu}_{e, r}}$ [erg$\cdot$s$^{-1}$]'},
+                      'label': r'F$_{\overline{\nu}_{e, r}}$ '\
+                             r'[erg$\cdot$s$^{-1}$]'},
          'nua_moment_y': {'log': True,
                       'lim': (-1e39, 1e39),
                       'cmap': 'RdGy_r',
-                      'label': r'F$_{\{overline{\nu}_{e, \theta}}$ [erg$\cdot$s$^{-1}$]'},
+                      'label':r'F$_{\{overline{\nu}_{e, \theta}}$ '\
+                             r'[erg$\cdot$s$^{-1}$]'},
          'nua_moment_z': {'log': True,
                       'lim': (-1e39, 1e39),
                       'cmap': 'RdBu_r',
-                      'label': r'F$_{\overline{\nu}_{e, \phi}}$ [erg$\cdot$s$^{-1}$]'},
+                      'label': r'F$_{\overline{\nu}_{e, \phi}}$ '\
+                             '[erg$\cdot$s$^{-1}$]'},
          'nua_moment_e': {'log': True,
                        'lim': (1e28, 1e32),
                        'label': r'E$_{\{overline{\nu}_e}$ [erg]',
@@ -448,31 +452,19 @@ plot_labels = {
                        'lim': (1e28, 1e32),
                        'label': r'E$_{\nu_x}$ [erg]',
                        'cmap': 'plasma'},
-         'nue_flux_grey': {'log': False,
-                      'lim': (0, 1e53),
-                      'label': r'L$_{\nu_e}$ [erg$\cdot$s$^{-1}$]'},
-         'nua_flux': {'log': True,
-                      'lim': (-1e53, 1e53),
-                      'label': r'F$_{\overline{\nu}_e}$ [erg$\cdot$s$^{-1}$]'},
-         'nua_flux_grey': {'log': False,
-                      'lim': (0, 1e53),
-                      'label': r'L$_{\overline{\nu}_e}$ [erg$\cdot$s$^{-1}$]'},
-         'nux_flux': {'log': True,
-                      'lim': (-1e53, 1e53),
-                      'label': r'F$_{\nu_x}$ [erg$\cdot$s$^{-1}$]'},
-         'nux_flux_grey': {'log': False,
-                      'lim': (0, 1e53),
-                      'label': r'L$_{\nu_x}$ [erg$\cdot$s$^{-1}$]'},
-         'nuee_flux': {'log': False,
-                       'lim': (0, 1e53),
-                       'label': r'$\varepsilon_{\nu_e}$ [erg]'},
-         'nu_flux_grey': {'log': False,
-                      'lim': (0, 1e53),
-                      'label': r'L$_{\nu}$ [erg$\cdot$s$^{-1}$]'},
-         
-         
-         
-         
+        'nue_mean_ene': {'log': False,
+                         'lim': (10, 60),
+                         'cmap': 'CMRmap',
+                         'label': r'$\langle E_{\nu_e} \rangle$ [MeV]'},
+        'nua_mean_ene': {'log': False,
+                         'lim': (10, 50),
+                         'cmap': 'terrain',
+                         'label':\
+                            r'$\langle E_{\overline{\nu}_e} \rangle$ [MeV]'},
+        'nux_mean_ene': {'log': False,
+                         'lim': (15, 60),
+                         'cmap': 'brg',
+                         'label': r'$\langle E_{\nu_x} \rangle$ [MeV]'},
 }
 
 ## PLOT LABELS FOR X-AXIS

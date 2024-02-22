@@ -6,7 +6,8 @@ import numpy as np
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost
 from AeViz.load_utils.utils import (check_file_to_load, return_index,
-                                    return_neutrino_flux)
+                                    return_neutrino_flux,
+                                    return_neutrino_mean_ene)
 from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
@@ -126,12 +127,10 @@ class Data(object):
                     out = getattr(self.loaded_data, 'magnetic_energy')(file)[2]
                 elif 'nu' in name and 'moment' in name:
                     out = return_neutrino_flux(self.loaded_data, name, file)
-                elif name == 'nua_flux':
-                    out = self.loaded_data.neutrino_momenta_grey(file)
-                elif name == 'nux_flux':
-                    out = self.loaded_data.neutrino_momenta_grey(file)
-                elif name == 'nuee_flux':
-                    out = self.loaded_data.neutrino_energy_density_grey(file)
+                elif 'nue_mean_ene' == name or 'nua_mean_ene' == name or \
+                    'nux_mean_ene' == name:
+                    out = return_neutrino_mean_ene(self.loaded_data,
+                                                   name, file)
                 else:
                     out = getattr(self.loaded_data, name)(file)
                 return out

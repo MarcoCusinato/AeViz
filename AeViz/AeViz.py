@@ -292,7 +292,15 @@ class AeViz(Plotting):
             qt = ['nux_moment_' + comp]
         plot_qt(self, file, qt, projection, index1, index2, plane)
         
-            
+    def nu_mean_ene(self, file=None, projection:Literal['1D', '2D']='1D',
+                    comp:Literal['nue', 'nua', 'nux', 'all']='all', index1=None,
+                    index2=None, plane:Literal['xy', 'xz', 'radius', 'theta',
+                                               'phi', 'time']='radius'):
+        if comp == 'all':
+            qt = ['nue_mean_ene', 'nua_mean_ene', 'nux_mean_ene']
+        else:
+            qt = [comp + '_mean_ene']
+        plot_qt(self, file, qt, projection, index1, index2, plane)     
 
     def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg'):
         self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None)

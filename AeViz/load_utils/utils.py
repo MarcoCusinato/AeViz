@@ -35,6 +35,15 @@ def return_neutrino_flux(sim, name, file):
             out = out[..., 2, 2]
     return out
 
+def return_neutrino_mean_ene(sim, name, file):
+    if 'nue' in name:
+        out = sim.neutrino_mean_energy(file)[..., 0]
+    elif 'nua' in name:
+        out = sim.neutrino_mean_energy(file)[..., 1]
+    elif 'nux' in name:
+        out = sim.neutrino_mean_energy(file)[..., 2]
+    return out
+
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
         return 'hdf5'
