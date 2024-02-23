@@ -60,6 +60,20 @@ def return_integrated_neutrinos(sim, name):
     elif 'nux' in name:
         return np.stack((out[:, 0], out[:, 3]), axis=1)
 
+def return_angular_momentum(sim, name):
+    data = sim.PNS_angular_mom()
+    if 'all' in name:
+        return data
+    elif 'Lx' in name:
+        return [data[0], data[1]]
+    elif 'Ly' in name:
+        return [data[0], data[2]]
+    elif 'Lz' in name:
+        return [data[0], data[3]]
+    elif 'Ltot' in name:
+        return [data[0], data[4]]
+    
+
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
         return 'hdf5'

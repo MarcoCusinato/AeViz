@@ -831,6 +831,21 @@ class Simulation:
         return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
                 data['convective_ene']]
+        
+    def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the PNS angular momentum at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, Lx, Ly, Lz, L_tot
+        """
+        time, _, _, _, data, _ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['L']['Lx'], data['L']['Ly'],
+                data['L']['Lz'], data['L']['L_tot']]
     
     def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True):
         """

@@ -215,7 +215,13 @@ def read_masses_energies(simulation):
             'grav_ene': masses_energies_data['PNS/grav_ene'][...],
             'total_ene': masses_energies_data['PNS/total_ene'][...],
             'convective_ene': masses_energies_data['PNS/convective_ene']\
-                [...]
+                [...],
+            'L': {
+                'Lx': masses_energies_data['PNS/L/Lx'][...],
+                'Ly': masses_energies_data['PNS/L/Ly'][...],
+                'Lz': masses_energies_data['PNS/L/Lz'][...],
+                'L_tot': masses_energies_data['PNS/L/L_tot'][...]
+            }
         },
         {
             'mass': masses_energies_data['unbound/mass'][...],

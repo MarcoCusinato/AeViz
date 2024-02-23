@@ -180,6 +180,7 @@ class Plotting(PlottingUtils, Data):
 
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
+        
         if 'radius' not in qt and 'spheres' not in qt:
             if 'GW' in qt:
                 post_data = self._Data__get_data_from_name(
@@ -190,6 +191,8 @@ class Plotting(PlottingUtils, Data):
                 legend = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
             if 'nu_integrated_lum' in qt:
                 post_data[:, 1:] *= 1e-53
+            if 'PNS_angular_mom_all' == qt:
+                legend = ['L$_x$', 'L$_y$', 'L$_z$', r'L$_\mathrm{tot}$']
         else:
             post_data = list(self._Data__get_1D_radii_data(qt))
             if 'all' in qt:
@@ -235,6 +238,8 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
+        elif 'PNS_angular_mom_all':
+            data = post_data[1:]
         elif type(post_data) == list or type(post_data) == tuple:
             data = post_data[1]
         elif 'GW' in qt:
@@ -769,13 +774,13 @@ class Plotting(PlottingUtils, Data):
         vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
         vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
         self._PlottingUtils__update_fields_params(axd_letter,
-                                                  (vx.T, vy.T), 'v')
+                                                  (vx, vy), 'v')
         self._PlottingUtils__plot2Dfield(axd_letter)
 
     def __addBfield(self, file, axd_letter, plane, index1):
         streamlines = self.loaded_data.stream_function(file, plane)
         self._PlottingUtils__update_fields_params(axd_letter,
-                                                  streamlines.T, 'B')
+                                                  streamlines, 'B')
         self._PlottingUtils__plot2Dfield(axd_letter)
         
     

@@ -352,6 +352,10 @@ class AeViz(Plotting):
                                'conv']):
         self.plot1D(None, 'PNS_' + comp, 'time', None, None)
     
+    def PNS_angular_mom(self, comp: Literal['all', 'Lx', 'Ly', 'Lz', 'Ltot']):
+        
+        self.plot1D(None, 'PNS_angular_mom_' + comp, 'time', None, None)
+    
     def mass_accretion(self):
         self.plot1D(None, 'mass_accretion_500km', 'time', None, None)
     
