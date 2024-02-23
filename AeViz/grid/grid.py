@@ -73,7 +73,7 @@ class grid:
         Returns the cartesian components of the velocity.
         """
         if self.dim == 1:
-            return v_r
+            return v_r, 0, 0
         if self.dim == 2:
             return self.__2D_velocity_sph_to_cart(v_r, v_theta, v_phi)
         return self.__3D_velocity_sph_to_cart(v_r, v_theta, v_phi)
@@ -124,8 +124,8 @@ class grid:
         return radius
 
     def __2D_cartesian_grid(self, radius, theta):
-        X = (radius[None, :] * np.sin(theta)[:, None]).T
-        Y = (radius[None, :] * np.cos(theta)[:, None]).T
+        X = (radius[None, :] * np.sin(theta)[:, None])
+        Y = (radius[None, :] * np.cos(theta)[:, None])
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):

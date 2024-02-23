@@ -5,6 +5,7 @@ from AeViz.utils.masses_energies_utils import (innercore_mass_energy,
                                                mass_flux)
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
 from AeViz.utils.file_utils import save_hdf
+from AeViz.grid.grid import grid
 import os, h5py
 import numpy as np
 
@@ -32,6 +33,20 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
     _, shock_radius, _, _, _, sgcells = simulation.shock_radius()
     _, gain_radius, _, _, _, ggcells = simulation.gain_radius()
     _, PNS_radius, _, _, _, pgcells = simulation.PNS_radius()
+    ## Get the grid
+    if simulation.dim == 1:
+        gr = grid(1, simulation.cell.radius(simulation.ghost))
+        X, Y, Z = (gr.cartesian_grid(), 0, 0)
+    elif simulation.dim == 2:
+        gr = grid(2, simulation.cell.radius(simulation.ghost), 
+                  simulation.cell.theta(simulation.ghost))
+        X, Z = gr.cartesian_grid()
+        Y = 0
+    else:
+        gr = grid(3, simulation.cell.radius(simulation.ghost), 
+                  simulation.cell.theta(simulation.ghost),
+                  simulation.cell.phi(simulation.ghost))
+        X, Y, Z = gr.cartesian_grid()
 
     ## Get the volume elements
     dV = simulation.cell.dVolume_integration(simulation.ghost)
@@ -52,12 +67,13 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                                           gain_radius[..., findex], ggcells,
                                           dV)
         PNS_data = PNS_mass_energy(simulation, file, PNS_radius[..., findex],
-                                   pgcells, dV)
+                                   pgcells, dV, (X, Y, Z), gr)
         unb_data = unbound_mass_energy(simulation, file, dV)
         try:
             time = np.concatenate((time, simulation.time(file)))
             mdot = np.concatenate((mdot, np.array([mass_flux(simulation, file, 
                                                     dOmega, radius_index)])))
+            ## INNERCORE
             inner_me['mass'] = np.concatenate((inner_me['mass'], 
                                                 np.array([in_data[0]])))
             
@@ -73,11 +89,12 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 inner_me['total_ene'], np.array([in_data[5]])))
             inner_me['T_W'] = np.concatenate((
                 inner_me['T_W'], np.array([in_data[6]])))
-            
+            ## GAIN
             gain_me['mass'] = np.concatenate((gain_me['mass'], 
                                                 np.array([gr_data[0]])))
             gain_me['heating_ene'] = np.concatenate((gain_me['heating_ene'],
                                                 np.array([gr_data[1]])))
+            ## PNS
             PNS_me['mass'] = np.concatenate((PNS_me['mass'],
                                                 np.array([PNS_data[0]])))
             PNS_me['kinetic_ene'] = np.concatenate((PNS_me['kinetic_ene'],
@@ -92,6 +109,15 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 PNS_me['total_ene'], np.array([PNS_data[5]])))
             PNS_me['convective_ene'] = np.concatenate((
                 PNS_me['convective_ene'], np.array([PNS_data[6]])))
+            PNS_me['L']['Lx'] = np.concatenate((PNS_me['L']['Lx'],
+                                                np.array([PNS_data[7]])))
+            PNS_me['L']['Ly'] = np.concatenate((PNS_me['L']['Ly'],
+                                                np.array([PNS_data[8]])))
+            PNS_me['L']['Lz'] = np.concatenate((PNS_me['L']['Lz'],
+                                                np.array([PNS_data[9]])))
+            PNS_me['L']['L_tot'] = np.concatenate((PNS_me['L']['L_tot'],
+                                                np.array([PNS_data[10]])))
+            ## EXPLOSION
             unb_me['mass'] = np.concatenate((unb_me['mass'],
                                                 np.array([unb_data[0]])))
             unb_me['energy'] = np.concatenate((unb_me['energy'],
@@ -124,7 +150,13 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 'rotational_ene': np.array([PNS_data[3]]),
                 'grav_ene': np.array([PNS_data[4]]),
                 'total_ene': np.array([PNS_data[5]]),
-                'convective_ene': np.array([PNS_data[6]])
+                'convective_ene': np.array([PNS_data[6]]), 
+                'L': {
+                    'Lx': np.array([PNS_data[7]]),
+                    'Ly': np.array([PNS_data[8]]),
+                    'Lz': np.array([PNS_data[9]]),
+                    'L_tot': np.array([PNS_data[10]])
+                }
             }
             unb_me = {
                 'mass': np.array([unb_data[0]]),
