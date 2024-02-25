@@ -8,7 +8,8 @@ from AeViz.cell.ghost import ghost
 from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_neutrino_flux,
                                     return_neutrino_mean_ene,
-                                    return_integrated_neutrinos)
+                                    return_integrated_neutrinos,
+                                    return_angular_momentum)
 from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
@@ -186,6 +187,8 @@ class Data(object):
             elif qt == 'T_W':
                 return data[0], data[7]
         elif 'PNS' in name:
+            if 'PNS_angular_mom' in name:
+                return return_angular_momentum(self.loaded_data, name)
             data = getattr(self.loaded_data, 'PNS_mass_ene')()
             if qt == 'mass':
                 return data[0], data[1]

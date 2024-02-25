@@ -488,7 +488,22 @@ plot_labels = {
                                    'label': r'$L_{\overline{\nu}_e}$ [$10^{53}$ erg$\cdot$s$^{-1}$]'},
          'nu_integrated_lum_nux': {'log': False,
                                    'lim': (0, 1),
-                                   'label': r'$L_{\nu_x}$ [$10^{53}$ erg$\cdot$s$^{-1}$]'}
+                                   'label': r'$L_{\nu_x}$ [$10^{53}$ erg$\cdot$s$^{-1}$]'},
+         'PNS_angular_mom_all': {'log': False,
+                                      'lim': (-1e49, 1e49),
+                                      'label': r'L [erg$\cdot$s]'},
+         'PNS_angular_mom_Lx': {'log': False,
+                                     'lim': (-1e47, 1e47),
+                                     'label': r'L$_x$ [erg$\cdot$s]'},
+         'PNS_angular_mom_Ly': {'log': False,
+                                     'lim': (-1e47, 1e47),
+                                     'label': r'L$_y$ [erg$\cdot$s]'},
+         'PNS_angular_mom_Lz': {'log': False,
+                                     'lim': (0, 1e49),
+                                     'label': r'L$_z$ [erg$\cdot$s]'},
+         'PNS_angular_mom_Ltot': {'log': False,
+                                       'lim': (0, 1.e49),
+                                       'label': r'L$_\mathrm{tot}$ [erg$\cdot$s]'},
 }
 
 ## PLOT LABELS FOR X-AXIS

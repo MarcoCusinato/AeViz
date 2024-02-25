@@ -67,8 +67,7 @@ class PlottingUtils(PlotCreation):
         self.plot_dim[ax_letter] = dim
         self.cmap_color[ax_letter] = cmap
         self.cbar_label[ax_letter] = cbar_label
-        if self.plot_dim[ax_letter] == 2:
-            self.data[ax_letter] = self.data[ax_letter].T
+       
             
     def __update_cbar_position(self, ax_letter, cbar_position):
         self.cbar_position[ax_letter] = cbar_position
@@ -191,7 +190,10 @@ class PlottingUtils(PlotCreation):
                                       self.cbar_lv[ax_letter][1], 100)
             norm = Normalize(vmin=self.cbar_lv[ax_letter][0],
                              vmax=self.cbar_lv[ax_letter][1])
-            fmt = lambda x, pos: '{:.1f}'.format(x)
+            if self.cbar_label[ax_letter] == r'Y$_e$':
+                fmt = lambda x, pos: '{:.2f}'.format(x)
+            else: 
+                fmt = lambda x, pos: '{:.1f}'.format(x)
         pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][0],
                                            self.grid[ax_letter][1],
                                            self.data[ax_letter], norm=norm,

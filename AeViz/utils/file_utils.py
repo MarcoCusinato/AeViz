@@ -86,7 +86,12 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
         if type(value) == dict:
             group = file_out.create_group(key)
             for (k, v) in value.items():
-                group.create_dataset(k, data = v)
+                if type(v) == dict:
+                    subgroup = group.create_group(k)
+                    for (kk, vv) in v.items():
+                        subgroup.create_dataset(kk, data = vv)
+                else:
+                    group.create_dataset(k, data = v)
         else:
             file_out.create_dataset(key, data = value)
     file_out.close()

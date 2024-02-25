@@ -67,6 +67,16 @@ class grid:
             return self.__2D_cartesian_grid(self.radius, self.theta)
         else:
             return self.__3D_cartesian_grid(self.radius, self.theta, self.phi)
+    
+    def velocity_sph_to_cart(self, v_r=None, v_theta=None, v_phi=None):
+        """
+        Returns the cartesian components of the velocity.
+        """
+        if self.dim == 1:
+            return v_r, 0, 0
+        if self.dim == 2:
+            return self.__2D_velocity_sph_to_cart(v_r, v_theta, v_phi)
+        return self.__3D_velocity_sph_to_cart(v_r, v_theta, v_phi)
 
     def new_cartesian_grid(self, **kwargs):
         """
@@ -108,22 +118,23 @@ class grid:
                             'cubic')
         if self.dim == 3:
             raise TypeError("Not implemented yet :\").")
-
+    
+    
     def __1D_cartesian_grid(self, radius):
         return radius
 
     def __2D_cartesian_grid(self, radius, theta):
-        X = np.array([[ri*np.sin(j) for j in theta] for ri in radius])
-        Y = np.array([[ri*np.cos(j) for j in theta] for ri in radius])
+        X = (radius[None, :] * np.sin(theta)[:, None])
+        Y = (radius[None, :] * np.cos(theta)[:, None])
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
-        X = np.array([[[ri*np.cos(ph)*np.sin(th) for ph in phi] 
-                        for th in theta] for ri in radius])
-        Y = np.array([[[ri*np.sin(ph)*np.cos(th) for ph in phi]
-                        for th in theta] for ri in radius])
-        Z = np.array([[[ri*np.cos(th) for ph in phi]
-                        for th in theta] for ri in radius])
+        X = radius[None, None, :] * np.sin(theta)[None, :, None] * \
+            np.cos(phi)[:, None, None]
+        Y = radius[None, None, :] * np.sin(theta)[None, :, None] * \
+            np.sin(phi)[:, None, None]
+        Z = radius[None, None, :] * np.cos(theta)[None, :, None] * \
+            np.ones(phi.shape)[:, None, None]
         return X, Y, Z
     
     def __new_radius(par):
@@ -139,3 +150,26 @@ class grid:
 
     def __new_phi(par):
         return np.linspace(par['phi_0'], par['phi_max'], par['n_phi'])
+    
+    def __2D_velocity_sph_to_cart(self, v_r, v_theta, v_phi):
+        Vx = v_r * np.sin(self.theta)[:, None] + \
+            v_theta * np.cos(self.theta)[:, None]
+        Vy = v_phi * np.sin(self.theta)[:, None]
+        Vz = v_r * np.cos(self.theta)[:, None] - \
+            v_theta * np.sin(self.theta)[:, None]
+        return Vx, Vy, Vz
+    
+    def __3D_velocity_sph_to_cart(self, v_r, v_theta, v_phi):
+        Vx = v_r * np.sin(self.theta)[None, :, None] * \
+                            np.cos(self.phi)[:, None, None] + \
+            v_theta * np.cos(self.theta)[None, :, None] * \
+                            np.cos(self.phi)[:, None, None] - \
+            v_phi * np.sin(self.phi)[:, None, None]
+        Vy = v_r * np.sin(self.theta)[None, :, None] * \
+                            np.sin(self.phi)[:, None, None] + \
+            v_theta * np.cos(self.theta)[None, :, None] * \
+                            np.sin(self.phi)[:, None, None] + \
+            v_phi * np.cos(self.phi)[:, None, None]
+        Vz = v_r * np.cos(self.theta)[None, :, None] - \
+            v_theta * np.sin(self.theta)[None, :, None]
+        return Vx, Vy, Vz
