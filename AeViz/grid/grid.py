@@ -129,12 +129,12 @@ class grid:
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
-        X = np.array([[[ri*np.cos(ph)*np.sin(th) for ph in phi] 
-                        for th in theta] for ri in radius])
-        Y = np.array([[[ri*np.sin(ph)*np.cos(th) for ph in phi]
-                        for th in theta] for ri in radius])
-        Z = np.array([[[ri*np.cos(th) for ph in phi]
-                        for th in theta] for ri in radius])
+        X = radius[None, None, :] * np.sin(theta)[None, :, None] * \
+            np.cos(phi)[:, None, None]
+        Y = radius[None, None, :] * np.sin(theta)[None, :, None] * \
+            np.sin(phi)[:, None, None]
+        Z = radius[None, None, :] * np.cos(theta)[None, :, None] * \
+            np.ones(phi.shape)[:, None, None]
         return X, Y, Z
     
     def __new_radius(par):
