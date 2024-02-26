@@ -238,7 +238,7 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
-        elif qt == 'PNS_angular_mom_all':
+        elif qt == 'PNS_angular_mom_all' or 'radius' in qt:
             data = post_data[1:]
         elif 'GW' in qt:
             if self.sim_dim == 2:
