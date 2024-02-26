@@ -121,7 +121,7 @@ def unbound_mass_energy(simulation, file_name, dV):
     """
     rho = simulation.rho(file_name)
     mhd_ene = simulation.MHD_energy(file_name) + \
-        simulation.gravitational_energy(file_name)
+        2 * simulation.gravitational_energy(file_name)
     mask = (mhd_ene > 0) & (simulation.cell.radius(simulation.ghost) < 1e10)
     ej_mass = u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask]))
     expl_ene = np.sum(mhd_ene[mask] * dV[mask])
