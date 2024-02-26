@@ -410,4 +410,4 @@ class AeViz(Plotting):
             name.endswith('.jpg'):
             self.fig.savefig(os.path.join(self.save_path, name))
         else:
-            self.fig.savefig(os.path.join(name + '.png'))
+            self.fig.savefig(os.path.join(self.save_path, name + '.png'))

@@ -528,7 +528,6 @@ class Simulation:
         GWs = GW_strain(self.dim, column_change, data, index)
         if GWs is None:
             return None
-        print(distance)
         GWs[:, 1:] /= distance
         return GWs
     

@@ -184,7 +184,7 @@ class Data(object):
                 return data[0], data[4]
             elif qt == 'grav':
                 return data[0], data[5]
-            elif qt == 'T_W':
+            elif qt == 'T/W':
                 return data[0], data[7]
         elif 'PNS' in name:
             if 'PNS_angular_mom' in name:

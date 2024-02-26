@@ -10,12 +10,14 @@ parser.add_argument('--sim-name', type=str, required=True,
                         'will be done.")
 parser.add_argument('--sim-path', type=str, default=None, required=False,
                     help="Path of the simulation.")
-parser.add_argument('--profiles', action='store_false', default=True, 
+parser.add_argument('--noprofiles', action='store_true', default=False, 
                     required=False, help="Ye, T, s, Fconv profiles are not " \
                         "calculated.")
-parser.add_argument('--GWs', action='store_false', default=True,
+parser.add_argument('--noGWs', action='store_true', default=False,
                     required=False, help="GWs postprocessing is not " \
                         "calculated.")
+parser.add_argument('--plot', action='store_true', default=False,
+                    required=False, help="Plots are created.")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -25,7 +27,97 @@ sim.shock_radius()
 sim.neutrino_spheres()
 sim.gain_radius()
 sim.PNS_mass_ene()
-if args.profiles:
+if not args.noprofiles:
     sim.radial_profile('Ye')
-if args.GWs:
+if not args.noGWs:
     sim.AE220()
+if args.plot:
+    from AeViz import ae
+    ae.Load(args.sim_name)
+    ## EXPLOSION
+    ae.shock_radius('all')
+    ae.save_plot('shock_radius')
+    ae.Close()
+    ae.explosion('all')
+    ae.save_plot('explosion')
+    ae.Close()
+    ## GAIN REGION
+    ae.gain_radius('all')
+    ae.gain('all')
+    ae.save_plot('gain')
+    ae.Close()
+    ## NEUTRINOS
+    ae.neutrino_spheres('all')
+    ae.save_plot('neutrino_spheres')
+    ae.Close()
+    ae.nu_integrated('all', 'lum')
+    ae.nu_integrated('all', 'ene')
+    ae.save_plot('neutrinos')
+    ae.Close()
+    ## PNS
+    ae.PNS_radius('all')
+    ae.PNS('mass')
+    ae.PNS('ene')
+    ae.PNS('kin')
+    ae.save_plot('PNS_ME')
+    ae.Close()
+    ae.PNS('mag')
+    ae.PNS('rot')
+    ae.PNS('grav')
+    ae.PNS('conv')
+    ae.save_plot('PNS_E')
+    ae.Close()
+    ae.PNS_angular_mom('all')
+    ae.save_plot('PNS_L')
+    ae.Close()
+    ## INNERCORE
+    ae.innercore_radius('all')
+    ae.innercore('mass')
+    ae.innercore('ene')
+    ae.save_plot('innercore_ME')
+    ae.Close()
+    ae.innercore('kin')
+    ae.innercore('mag')
+    ae.innercore('rot')
+    ae.innercore('grav')
+    ae.save_plot('innercore_E')
+    ae.Close()
+    if not args.noprofiles:
+        ## PROFILES
+        ae.BV_frequency(projection='2D', plane='time')
+        ae.save_plot('BV_frequency')
+        ae.Close()
+        ae.Rossby_number(projection='2D', plane='time')
+        ae.save_plot('Rossby_number')
+        ae.Close()
+        ae.temperature(projection='2D', plane='time')
+        ae.save_plot('temperature')
+        ae.Close()
+        ae.entropy(projection='2D', plane='time')
+        ae.save_plot('entropy')
+        ae.Close()
+        ae.Ye(projection='2D', plane='time')
+        ae.save_plot('Ye')
+        ae.Close()
+        ae.convective_flux(plane='time')
+        ae.save_plot('convective_flux')
+        ae.Close()
+        ae.gas_pressure(projection='2D', plane='time')
+        ae.save_plot('gas_pressure')
+        ae.Close()
+        ae.rho(projection='2D', plane='time')
+        ae.save_plot('rho')
+        ae.Close()
+    ## GWs
+    ae.GWs('all')
+    ae.save_plot('GWs')
+    ae.Close()
+    ae.GWs('all', False, True)
+    ae.save_plot('GWs_spectrogram')
+    ae.Close()
+    if not args.noGWs:
+       ae.GWs('all', True) 
+    
+    
+    
+    

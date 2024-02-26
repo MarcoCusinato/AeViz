@@ -238,10 +238,8 @@ class Plotting(PlottingUtils, Data):
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
-        elif 'PNS_angular_mom_all':
+        elif qt == 'PNS_angular_mom_all':
             data = post_data[1:]
-        elif type(post_data) == list or type(post_data) == tuple:
-            data = post_data[1]
         elif 'GW' in qt:
             if self.sim_dim == 2:
                 data = post_data[:, 1:]
@@ -254,6 +252,8 @@ class Plotting(PlottingUtils, Data):
                     data = post_data[:,3]
                 elif qt.endswith('hxpol'):
                     data = post_data[:,4]
+        elif type(post_data) == list or type(post_data) == tuple:
+            data = post_data[1]
         elif 'radius' not in qt and 'spheres' not in qt and \
             'nu_integrated' not in qt:
             data = post_data[:, 1]
@@ -649,7 +649,7 @@ class Plotting(PlottingUtils, Data):
             self.ylim(ylim, axd_letter)
         X, Y = np.meshgrid(t, u.convert_to_km(self.cell.radius(self.ghost)))
         self._PlottingUtils__update_params('E', (X, Y),
-                                AE220.T,
+                                AE220,
                                 'R', False,
                                 (-3, 3), 2, 
                                 'seismic',
