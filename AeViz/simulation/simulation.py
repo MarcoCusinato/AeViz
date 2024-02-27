@@ -109,6 +109,15 @@ class Simulation:
         if rho_index == 0 or rho_data[rho_index, 0] >= 0.6:
             rho_index = np.argmax(rho_data[:,1]>2e14)
         return rho_data[rho_index, 0]
+    
+    def time_of_explosion(self):
+        """
+        Empirical criterion: time of explosion defined as the time at
+        which the explosion energy raises above 5e49 erg
+        """
+        time, _, ene, _, _ = self.explosion_mass_ene()
+        index = np.argmax(ene > 5e49)
+        return time[index]
 
     def time_of_BH(self):
         """
