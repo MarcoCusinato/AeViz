@@ -12,6 +12,7 @@ from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_h, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
+from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
@@ -113,10 +114,11 @@ class Simulation:
     def time_of_explosion(self):
         """
         Empirical criterion: time of explosion defined as the time at
-        which the explosion energy raises above 5e49 erg
+        which the explosion energy raises above 5e48 erg
         """
         time, _, ene, _, _ = self.explosion_mass_ene()
-        index = np.argmax(ene > 5e49)
+        _, _, shock_max, _, _, _ = self.shock_radius()
+        index = np.where((ene > 1e48) & (shock_max > 3e7))[0][0]
         return time[index]
 
     def time_of_BH(self):
@@ -916,6 +918,52 @@ class Simulation:
         if not tob_corrected:
             time += self.tob
         return [time, data]
+    
+    ## -----------------------------------------------------------------
+    ## VELOCITIES DATA
+    ## -----------------------------------------------------------------
+
+    def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the modeule of the PNS kick velocity at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, kick velocity
+        """
+        PNS_kick = self.PNS_kick_velocity_components(tob_corrected,
+                                                        save_checkpoints)
+        vk = np.sqrt(PNS_kick[1] ** 2 + PNS_kick[2] ** 2 + PNS_kick[3] ** 2 + \
+            PNS_kick[4] ** 2 + PNS_kick[5] ** 2 + PNS_kick[6] ** 2)
+        return [PNS_kick[0], vk]
+        
+        
+    
+    def PNS_kick_velocity_components(self, tob_corrected=True,
+                                     save_checkpoints=True):
+        """
+        Returns the components of the PNS kick velocity at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, vr, vtheta, vphi, v_nu
+                v_nu is returned for each neutrino species (nue, nuebar, nux)
+        """
+        time, vr, vtheta, vphi, nu_flux = \
+            calculate_kick(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        dt = np.zeros(time.shape[0])
+        dt[1:] = time[1:] - time[:-1]
+        dt[0] = dt[1]
+        _, PNSmass, _, _, _, _, _, _ = self.PNS_mass_ene()
+        PNSmass = u.convert_to_grams(PNSmass)
+        v_nu = {key: np.cumsum(nu_flux[key] * dt) / PNSmass 
+                for key in nu_flux.keys()}
+        vr /= PNSmass
+        vtheta /= PNSmass
+        vphi /= PNSmass
+        return [time, vr, vtheta, vphi, v_nu['nue'], v_nu['nua'], v_nu['nux']]
     
     ## -----------------------------------------------------------------
     ## CONVECTION AND TURBULENCE DATA
