@@ -949,7 +949,7 @@ class Simulation:
         Returns: time, vr, vtheta, vphi, v_nu
                 v_nu is returned for each neutrino species (nue, nuebar, nux)
         """
-        time, vr, vtheta, vphi, nu_flux = \
+        time, vx, vy, vz, nu_flux = \
             calculate_kick(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -957,13 +957,12 @@ class Simulation:
         dt[1:] = time[1:] - time[:-1]
         dt[0] = dt[1]
         _, PNSmass, _, _, _, _, _, _ = self.PNS_mass_ene()
-        PNSmass = u.convert_to_grams(PNSmass)
-        v_nu = {key: np.cumsum(nu_flux[key] * dt) / PNSmass 
+        v_nu = {key: np.cumsum(nu_flux[key] * dt) / PNSmass
                 for key in nu_flux.keys()}
-        vr /= PNSmass
-        vtheta /= PNSmass
-        vphi /= PNSmass
-        return [time, vr, vtheta, vphi, v_nu['nue'], v_nu['nua'], v_nu['nux']]
+        vx /= PNSmass
+        vy /= PNSmass
+        vz /= PNSmass
+        return [time, vx, vy, vz, v_nu['nue'], v_nu['nua'], v_nu['nux']]
     
     ## -----------------------------------------------------------------
     ## CONVECTION AND TURBULENCE DATA
