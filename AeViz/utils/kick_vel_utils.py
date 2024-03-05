@@ -28,7 +28,8 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
                                           simulation.phi_velocity(file_name))
     nu_flux = u.convert_to_solar_masses(
         np.sum(simulation.neutrino_momenta_grey(file_name)[..., r400, :, 0] / \
-        u.speed_light * 4e7 ** 2 * dOmega[..., None], axis=-1))
+        u.speed_light * 4e7 ** 2 * dOmega[..., None],
+        axis=tuple(range(simulation.dim-1))))
     vz = u.convert_to_solar_masses(np.sum(vz[mask] * rho))
     if simulation.dim == 2:
         vy = 0.0
