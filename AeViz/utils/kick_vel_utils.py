@@ -71,7 +71,6 @@ def calculate_kick(simulation, save_checkpoints=True):
     check_index = 0
     progress_index = 0
     total_points = len(simulation.hdf_file_list) - start_point
-    nu_flux = {}
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
         vx_f, vy_f, vz_f, nu_flux_f = velocity_kick(simulation, file, 
@@ -86,6 +85,7 @@ def calculate_kick(simulation, save_checkpoints=True):
             nu_flux['nua'] = np.append(nu_flux['nua'], nu_flux_f[1])
             nu_flux['nux'] = np.append(nu_flux['nux'], nu_flux_f[2])
         except:
+            nu_flux = {}
             time = np.array([simulation.time(file)])
             vx = np.array([vx_f])
             vy = np.array([vy_f])
