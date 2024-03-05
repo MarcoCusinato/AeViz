@@ -34,8 +34,8 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
         vy = 0.0
         vx = 0.0
     else:
-        vy = np.sum(vy[mask] * rho)
-        vx = np.sum(vx[mask] * rho)
+        vy = u.convert_to_solar_masses(np.sum(vy[mask] * rho))
+        vx = u.convert_to_solar_masses(np.sum(vx[mask] * rho))
     
     return -vx, -vy, -vz, -nu_flux
 
