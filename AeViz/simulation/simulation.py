@@ -949,7 +949,7 @@ class Simulation:
         Returns: time, vr, vtheta, vphi, v_nu
                 v_nu is returned for each neutrino species (nue, nuebar, nux)
         """
-        time, vx, vy, vz, nu_flux = \
+        time, hydro, nu_flux = \
             calculate_kick(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -957,12 +957,18 @@ class Simulation:
         dt[1:] = time[1:] - time[:-1]
         dt[0] = dt[1]
         _, PNSmass, _, _, _, _, _, _ = self.PNS_mass_ene()
-        v_nu = {key: np.cumsum(nu_flux[key] * dt) / PNSmass
-                for key in nu_flux.keys()}
-        vx /= PNSmass
-        vy /= PNSmass
-        vz /= PNSmass
-        return [time, vx, vy, vz, v_nu['nue'], v_nu['nua'], v_nu['nux']]
+        vnue = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nue']['x'],
+                                                        nu_flux['nue']['y'],
+                                                        nu_flux['nue']['z']]]
+        vnua = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nua']['x'],
+                                                        nu_flux['nua']['y'],
+                                                        nu_flux['nua']['z']]]
+        vnux = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nux']['x'],
+                                                        nu_flux['nux']['y'],
+                                                        nu_flux['nux']['z']]]
+        hydro = [comp / PNSmass for comp in [hydro['x'], hydro['y'],
+                                             hydro['z']]]
+        return time, hydro, vnue, vnua, vnux, 
     
     ## -----------------------------------------------------------------
     ## CONVECTION AND TURBULENCE DATA

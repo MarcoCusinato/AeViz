@@ -12,7 +12,7 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
     Calculates the velocity kick of the PNS for one timestep.
     """
     if simulation.time(file_name) <= 0 or simulation.dim == 1:
-        return 0., 0., 0., [0., 0., 0.]
+        return [0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]
     
     mask = (simulation.cell.radius(simulation.ghost) >= \
         simulation.ghost.remove_ghost_cells_radii(PNS_radius,
@@ -26,27 +26,43 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
     vx, vy, vz = gh.velocity_sph_to_cart(simulation.radial_velocity(file_name),
                                           simulation.theta_velocity(file_name),
                                           simulation.phi_velocity(file_name))
-    nu_flux = u.convert_to_solar_masses(
-        np.sum(simulation.neutrino_momenta_grey(file_name)[..., r400, :, 0] / \
-        u.speed_light * 4e7 ** 2 * dOmega[..., None],
-        axis=tuple(range(simulation.dim-1))))
+    nu_flux = simulation.neutrino_momenta_grey(file_name)[..., r400, :, :]
+    nue_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 0, 0][..., None],
+                                       nu_flux[..., 0, 1][..., None],
+                                       nu_flux[..., 0, 2][..., None]))
+    nua_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 1, 0][..., None],
+                                        nu_flux[..., 1, 1][..., None],
+                                        nu_flux[..., 1, 2][..., None]))
+    nux_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 2, 0][..., None],
+                                        nu_flux[..., 2, 1][..., None],
+                                        nu_flux[..., 2, 2][..., None]))
+    nue_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+                * (4e7 ** 2 / u.speed_light) for comp in nue_flux]
+    nua_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+                * (4e7 ** 2 / u.speed_light) for comp in nua_flux]
+    nux_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+                * (4 * 4e7 ** 2 / u.speed_light) for comp in nux_flux]
+    
     vz = u.convert_to_solar_masses(np.sum(vz[mask] * rho))
     if simulation.dim == 2:
         vy = 0.0
         vx = 0.0
+        for nu in [nue_flux, nua_flux, nux_flux]:
+            nu[0] = 0.0
+            nu[1] = 0.0
     else:
         vy = u.convert_to_solar_masses(np.sum(vy[mask] * rho))
         vx = u.convert_to_solar_masses(np.sum(vx[mask] * rho))
     
-    return -vx, -vy, -vz, -nu_flux
+    return [-vx, -vy, -vz], nue_flux, nua_flux, nux_flux
 
 
 def calculate_kick(simulation, save_checkpoints=True):
     if check_existence(simulation, 'kick_velocity.h5'):
-        time, vx, vy, vz, nu_flux  = \
+        time, hydro_v, nu_flux = \
             read_kick(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return time, vx, vy, vz, nu_flux
+            return time, hydro_v, nu_flux
         else:
             start_point = len(time)
             print('Checkpoint found for the kick file, starting' \
@@ -73,33 +89,45 @@ def calculate_kick(simulation, save_checkpoints=True):
     total_points = len(simulation.hdf_file_list) - start_point
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
-        vx_f, vy_f, vz_f, nu_flux_f = velocity_kick(simulation, file, 
+        hydro_v_f, nue_flux_f, nua_flux_f, nux_flux_f = \
+                                            velocity_kick(simulation, file, 
                                                     PNS_radius[..., findex],
                                                     pgcells, dV, dOmega, r400)
         try:
             time = np.append(time, simulation.time(file))
-            vx = np.append(vx, vx_f)
-            vy = np.append(vy, vy_f)
-            vz = np.append(vz, vz_f)
-            nu_flux['nue'] = np.append(nu_flux['nue'], nu_flux_f[0])
-            nu_flux['nua'] = np.append(nu_flux['nua'], nu_flux_f[1])
-            nu_flux['nux'] = np.append(nu_flux['nux'], nu_flux_f[2])
+            hydro_v = {'x': np.append(hydro_v['x'], hydro_v_f[0]),
+                       'y': np.append(hydro_v['y'], hydro_v_f[1]),
+                       'z': np.append(hydro_v['z'], hydro_v_f[2])}
+            nu_flux['nue'] = {'x': np.append(nu_flux['nue']['x'], nue_flux_f[0]),
+                              'y': np.append(nu_flux['nue']['y'], nue_flux_f[1]),
+                              'z': np.append(nu_flux['nue']['z'], nue_flux_f[2])}
+            nu_flux['nua'] = {'x': np.append(nu_flux['nua']['x'], nua_flux_f[0]),
+                              'y': np.append(nu_flux['nua']['y'], nua_flux_f[1]),
+                              'z': np.append(nu_flux['nua']['z'], nua_flux_f[2])}
+            nu_flux['nux'] = {'x': np.append(nu_flux['nux']['x'], nux_flux_f[0]),
+                              'y': np.append(nu_flux['nux']['y'], nux_flux_f[1]),
+                              'z': np.append(nu_flux['nux']['z'], nux_flux_f[2])}
         except:
-            nu_flux = {}
             time = np.array([simulation.time(file)])
-            vx = np.array([vx_f])
-            vy = np.array([vy_f])
-            vz = np.array([vz_f])
-            nu_flux['nue'] = np.array([nu_flux_f[0]])
-            nu_flux['nua'] = np.array([nu_flux_f[1]])
-            nu_flux['nux'] = np.array([nu_flux_f[2]])
-
+            hydro_v = {'x': np.array([hydro_v_f[0]]),
+                       'y': np.array([hydro_v_f[1]]),
+                       'z': np.array([hydro_v_f[2]])}
+            nu_flux = {'nue': {'x': np.array([nue_flux_f[0]]),
+                              'y': np.array([nue_flux_f[1]]),
+                              'z': np.array([nue_flux_f[2]])},
+                       'nua': {'x': np.array([nua_flux_f[0]]),
+                              'y': np.array([nua_flux_f[1]]),
+                              'z': np.array([nua_flux_f[2]])},
+                       'nux': {'x': np.array([nux_flux_f[0]]),
+                              'y': np.array([nux_flux_f[1]]),
+                              'z': np.array([nux_flux_f[2]])}
+                        }
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, 
                                   'kick_velocity.h5'),
-                     ['time', 'vx', 'vy', 'vz', 'nu_flux'],
-                     [time, vx, vy, vz, nu_flux])
+                     ['time', 'hydro', 'nu_flux'],
+                     [time, hydro_v, nu_flux])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -107,9 +135,9 @@ def calculate_kick(simulation, save_checkpoints=True):
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, 
                                   'kick_velocity.h5'),
-                     ['time', 'vx', 'vy', 'vz', 'nu_flux'],
-                     [time, vx, vy, vz, nu_flux])
-    return time, vx, vy, vz, nu_flux   
+                     ['time', 'hydro', 'nu_flux'],
+                     [time, hydro_v, nu_flux])
+    return time, hydro_v, nu_flux
     
 
 def read_kick(simulation):
@@ -119,11 +147,17 @@ def read_kick(simulation):
     with h5py.File(os.path.join(simulation.storage_path, 
                                   'kick_velocity.h5'), 'r') as f:
         time = f['time'][...]
-        vx = f['vx'][...]
-        vy = f['vy'][...]
-        vz = f['vz'][...]
-        nu_flux = {'nue': f['nu_flux']['nue'][...],
-                   'nua': f['nu_flux']['nua'][...],
-                   'nux': f['nu_flux']['nux'][...]}
-    return time, vx, vy, vz, nu_flux
+        hydro_v = {'x': f['hydro/x'][...],
+                   'y': f['hydro/y'][...],
+                   'z': f['hydro/z'][...]}
+        nu_flux = {'nue': {'x': f['nu_flux/nue/x'][...],
+                           'y': f['nu_flux/nue/y'][...],
+                           'z': f['nu_flux/nue/z'][...]},
+                   'nua': {'x': f['nu_flux/nua/x'][...],
+                           'y': f['nu_flux/nua/y'][...],
+                           'z': f['nu_flux/nua/z'][...]},
+                   'nux': {'x': f['nu_flux/nux/x'][...],
+                           'y': f['nu_flux/nux/y'][...],
+                           'z': f['nu_flux/nux/z'][...]}}
+    return time, hydro_v, nu_flux
     
