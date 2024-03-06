@@ -12,7 +12,7 @@ from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_h, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
-from AeViz.utils.kick_vel_utils import calculate_kick
+from AeViz.utils.kick_vel_utils import calculate_kick, velocity_kick
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
@@ -931,14 +931,25 @@ class Simulation:
         during the calculation.
         Returns: time, kick velocity
         """
-        PNS_kick = self.PNS_kick_velocity_components(tob_corrected,
+        def modulus(v):
+            vtot = 0
+            for comp in v:
+                vtot += comp ** 2
+            return vtot ** 0.5
+        def sum_components(vcomp):
+            vtot = 0
+            for comp in vcomp:
+                vtot += comp
+            return vtot
+            
+        time, hydro, vnue, vnua, vnux = \
+                        self.PNS_kick_velocity_components(tob_corrected,
                                                         save_checkpoints)
-        vk = np.sqrt(PNS_kick[1] ** 2 + PNS_kick[2] ** 2 + PNS_kick[3] ** 2 + \
-            PNS_kick[4] ** 2 + PNS_kick[5] ** 2 + PNS_kick[6] ** 2)
-        return [PNS_kick[0], vk]
-        
-        
-    
+        vkick = modulus([sum_components([hydro[0], vnue[0], vnua[0], vnux[0]]),
+                        sum_components([hydro[1], vnue[1], vnua[1], vnux[1]]),
+                        sum_components([hydro[2], vnue[2], vnua[2], vnux[2]])])
+        return time, vkick
+
     def PNS_kick_velocity_components(self, tob_corrected=True,
                                      save_checkpoints=True):
         """
