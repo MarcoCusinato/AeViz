@@ -1,6 +1,8 @@
-import AeViz.load_utils.utils
 import os
 import numpy as np
+from AeViz.units.units import units
+
+u = units()
 
 def return_neutrino_flux(sim, name, file):
     comp = name.split('_')[-1]
@@ -73,7 +75,20 @@ def return_angular_momentum(sim, name):
     elif 'Ltot' in name:
         return [data[0], data[4]]
     
-
+def return_PNS_kick(sim, name):
+    data = list(sim.PNS_kick_velocity())
+    data[1] = u.convert_to_km(data[1])
+    data[2] = u.convert_to_km(data[2])
+    data[3] = u.convert_to_km(data[3])
+    if 'all' in name:
+        return data
+    elif 'nu' in name:
+        return [data[0], data[3]]
+    elif 'modulus' in name:
+        return [data[0], data[1]]
+    elif 'hydro' in name:
+        return [data[0], data[2]]
+    
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
         return 'hdf5'

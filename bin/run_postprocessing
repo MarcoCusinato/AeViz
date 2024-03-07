@@ -27,6 +27,7 @@ sim.shock_radius()
 sim.neutrino_spheres()
 sim.gain_radius()
 sim.PNS_mass_ene()
+sim.PNS_kick_velocity()
 if not args.noprofiles:
     sim.radial_profile('Ye')
 if not args.noGWs:
@@ -81,6 +82,10 @@ if args.plot:
     ae.innercore('rot')
     ae.innercore('grav')
     ae.save_plot('innercore_E')
+    ae.Close()
+    ## KICK VELOCITY
+    ae.kick_velocity()
+    ae.save_plot('kick_velocity')
     ae.Close()
     if not args.noprofiles:
         ## PROFILES

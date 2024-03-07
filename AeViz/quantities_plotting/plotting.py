@@ -193,6 +193,8 @@ class Plotting(PlottingUtils, Data):
                 post_data[:, 1:] *= 1e-53
             if 'PNS_angular_mom_all' == qt:
                 legend = ['L$_x$', 'L$_y$', 'L$_z$', r'L$_\mathrm{tot}$']
+            if 'kick_velocity' in qt and 'all' in qt:
+                legend = ['tot',  'hydro', r'$\nu$']
         else:
             post_data = list(self._Data__get_1D_radii_data(qt))
             if 'all' in qt:
@@ -221,7 +223,7 @@ class Plotting(PlottingUtils, Data):
                         axd_letters[number])
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'time':
-            if 'radius' in qt or 'spheres' in qt:
+            if 'radius' in qt or 'spheres' in qt :
                 grid = post_data[0]
             elif type(post_data) == list or type(post_data) == tuple:
                 grid = post_data[0]
@@ -232,13 +234,15 @@ class Plotting(PlottingUtils, Data):
             self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta, phi or time.')
+
         if xaxis != 'time':
             index1, index2 = normalize_indices(index1, index2)
             data = get_data_to_plot(index1, index2, post_data, xaxis,
                                     (self.cell.dr_integration(self.ghost), 
                                     self.cell.dtheta_integration(self.ghost),
                                     self.cell.dphi(self.ghost)))
-        elif qt == 'PNS_angular_mom_all' or 'radius' in qt:
+        elif qt == 'PNS_angular_mom_all' or 'radius' in qt or \
+            'kick_velocity_all' in qt:
             data = post_data[1:]
         elif 'GW' in qt:
             if self.sim_dim == 2:
@@ -783,7 +787,6 @@ class Plotting(PlottingUtils, Data):
                                                   streamlines, 'B')
         self._PlottingUtils__plot2Dfield(axd_letter)
         
-    
     def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
               plane='xz', start_time=None, end_time=None,
               vfield=False, Bfield=False, top_time=False, lims=None):

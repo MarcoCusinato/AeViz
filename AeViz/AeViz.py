@@ -52,6 +52,10 @@ class AeViz(Plotting):
                                 'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'alfven_velocity'
         plot_qt(self, file, qt, projection, index1, index2, plane)
+    
+    def kick_velocity(self,
+                      comp:Literal['modulus', 'nu', 'hydro', 'all']='all'):
+        plot_qt(self, None, 'kick_velocity_'+comp, '1D', None, None, 'time')
 
     def convective_velocity(self, file=None,
                          comp:Literal['all', 'convective', 'turbulent']='all'):

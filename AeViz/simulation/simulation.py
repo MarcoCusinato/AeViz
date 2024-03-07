@@ -929,7 +929,8 @@ class Simulation:
         If tob_corrected is True, the time is corrected for the time of
         bounce. If save_checkpoints is True, the checkpoints are saved
         during the calculation.
-        Returns: time, kick velocity
+        Returns: time, kick velocity, hydro kick velocity, 
+                 nu kick velocity
         """
         def modulus(v):
             vtot = 0
@@ -948,7 +949,11 @@ class Simulation:
         vkick = modulus([sum_components([hydro[0], vnue[0], vnua[0], vnux[0]]),
                         sum_components([hydro[1], vnue[1], vnua[1], vnux[1]]),
                         sum_components([hydro[2], vnue[2], vnua[2], vnux[2]])])
-        return time, vkick
+        vkick_hydro = modulus(hydro)
+        vkick_nue = modulus([sum_components([vnue[0], vnua[0], vnux[0]]),
+                            sum_components([vnue[1], vnua[1], vnux[1]]),
+                            sum_components([vnue[2], vnua[2], vnux[2]])])
+        return time, vkick, vkick_hydro, vkick_nue
 
     def PNS_kick_velocity_components(self, tob_corrected=True,
                                      save_checkpoints=True):
