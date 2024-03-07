@@ -505,19 +505,19 @@ plot_labels = {
                                   'lim': (0, 1.e49),
                                   'label': r'L$_\mathrm{tot}$ [erg$\cdot$s]'},
          'kick_velocity_modulus': {'log': False,
-                                   'lim': (0, 2000),
+                                   'lim': (0, 750),
                                    'label': r'v$_\mathrm{kick}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
          'kick_velocity_hydro': {'log': False,
-                                 'lim': (0, 2000),
+                                 'lim': (0, 750),
                                  'label': r'v$_\mathrm{kick}^\mathrm{hydro}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
          'kick_velocity_nu': {'log': False,
-                              'lim': (0, 2000),
+                              'lim': (0, 750),
                               'label': r'v$_\mathrm{kick}^{\nu}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
          'kick_velocity_all': {'log': False,
-                               'lim': (0, 2000),
+                               'lim': (0, 750),
                                'label': r'v$_\mathrm{kick}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
          
