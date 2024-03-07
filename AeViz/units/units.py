@@ -39,3 +39,7 @@ class units:
 
     def convert_to_s(self, quantity):
         return quantity * self.ms
+    
+    def convert_to_grav_mass(self, mass, energy):
+        return mass + self.convert_to_solar_masses(
+            energy / self.speed_light ** 2)

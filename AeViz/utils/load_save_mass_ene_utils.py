@@ -182,7 +182,6 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                     'unbound'],
                     [time, mdot, inner_me, gain_me, PNS_me, unb_me])
     return time, mdot, inner_me, gain_me, PNS_me, unb_me
-        
 
 def read_masses_energies(simulation):
     masses_energies_data = h5py.File(os.path.join(simulation.storage_path, 

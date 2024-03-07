@@ -9,7 +9,8 @@ from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_neutrino_flux,
                                     return_neutrino_mean_ene,
                                     return_integrated_neutrinos,
-                                    return_angular_momentum)
+                                    return_angular_momentum,
+                                    return_PNS_kick)
 from AeViz.utils.path_utils import local_storage_folder
 
 u = units()
@@ -143,6 +144,10 @@ class Data(object):
                     return self.__get_energy_data(name)
                 elif 'nu_integrated_' in name:
                     return  return_integrated_neutrinos(self.loaded_data, name)
+                elif 'kick_velocity_' in name:
+                    return return_PNS_kick(self.loaded_data, name)
+                    
+                    
                 return getattr(self.loaded_data, name)()
     
     def __get_GW_decomposition_data(self, name):

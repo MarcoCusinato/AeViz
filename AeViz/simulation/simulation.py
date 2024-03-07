@@ -12,6 +12,7 @@ from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, calculate_h, GW_spectrogram,
                                   GWs_peak_indices, GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
+from AeViz.utils.kick_vel_utils import calculate_kick, velocity_kick
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
@@ -109,6 +110,16 @@ class Simulation:
         if rho_index == 0 or rho_data[rho_index, 0] >= 0.6:
             rho_index = np.argmax(rho_data[:,1]>2e14)
         return rho_data[rho_index, 0]
+    
+    def time_of_explosion(self):
+        """
+        Empirical criterion: time of explosion defined as the time at
+        which the explosion energy raises above 5e48 erg
+        """
+        time, _, ene, _, _ = self.explosion_mass_ene()
+        _, _, shock_max, _, _, _ = self.shock_radius()
+        index = np.where((ene > 1e48) & (shock_max > 3e7))[0][0]
+        return time[index]
 
     def time_of_BH(self):
         """
@@ -907,6 +918,73 @@ class Simulation:
         if not tob_corrected:
             time += self.tob
         return [time, data]
+    
+    ## -----------------------------------------------------------------
+    ## VELOCITIES DATA
+    ## -----------------------------------------------------------------
+
+    def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True):
+        """
+        Returns the modeule of the PNS kick velocity at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, kick velocity, hydro kick velocity, 
+                 nu kick velocity
+        """
+        def modulus(v):
+            vtot = 0
+            for comp in v:
+                vtot += comp ** 2
+            return vtot ** 0.5
+        def sum_components(vcomp):
+            vtot = 0
+            for comp in vcomp:
+                vtot += comp
+            return vtot
+            
+        time, hydro, vnue, vnua, vnux = \
+                        self.PNS_kick_velocity_components(tob_corrected,
+                                                        save_checkpoints)
+        vkick = modulus([sum_components([hydro[0], vnue[0], vnua[0], vnux[0]]),
+                        sum_components([hydro[1], vnue[1], vnua[1], vnux[1]]),
+                        sum_components([hydro[2], vnue[2], vnua[2], vnux[2]])])
+        vkick_hydro = modulus(hydro)
+        vkick_nue = modulus([sum_components([vnue[0], vnua[0], vnux[0]]),
+                            sum_components([vnue[1], vnua[1], vnux[1]]),
+                            sum_components([vnue[2], vnua[2], vnux[2]])])
+        return time, vkick, vkick_hydro, vkick_nue
+
+    def PNS_kick_velocity_components(self, tob_corrected=True,
+                                     save_checkpoints=True):
+        """
+        Returns the components of the PNS kick velocity at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, vr, vtheta, vphi, v_nu
+                v_nu is returned for each neutrino species (nue, nuebar, nux)
+        """
+        time, hydro, nu_flux = \
+            calculate_kick(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        dt = np.zeros(time.shape[0])
+        dt[1:] = time[1:] - time[:-1]
+        dt[0] = dt[1]
+        _, PNSmass, _, _, _, _, _, _ = self.PNS_mass_ene()
+        vnue = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nue']['x'],
+                                                        nu_flux['nue']['y'],
+                                                        nu_flux['nue']['z']]]
+        vnua = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nua']['x'],
+                                                        nu_flux['nua']['y'],
+                                                        nu_flux['nua']['z']]]
+        vnux = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nux']['x'],
+                                                        nu_flux['nux']['y'],
+                                                        nu_flux['nux']['z']]]
+        hydro = [comp / PNSmass for comp in [hydro['x'], hydro['y'],
+                                             hydro['z']]]
+        return time, hydro, vnue, vnua, vnux, 
     
     ## -----------------------------------------------------------------
     ## CONVECTION AND TURBULENCE DATA
