@@ -371,7 +371,7 @@ def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
     Derives ancd fixes the constants of the strain.
     """
     const =  -0.125 *  np.sqrt(15/np.pi) * \
-        (u.G * 16 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))
+        (u.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))
     return time, const * IDL_derivative(time, NE220), const * \
         IDL_derivative(time, full_NE220), const * \
         IDL_derivative(time, nuc_NE220), const * \
