@@ -155,7 +155,9 @@ def GWs_peak_indices(GWs, peak, interval, min_time, max_time):
         if interval[1] is not None:
             GWs = GWs[:np.argmax(GWs[:, 0] >= u.convert_to_s(interval[1])), :]
         ## FIND the peak
-        x_max = np.argmax(GWs[:, 1])
+        x_max = np.argmax(np.abs(GWs[:, 1]))
+        if GWs[x_max, 1] < 0:
+            GWs[:, 1] = -GWs[:, 1]
         ## FIND the min
         min_index = np.argmax(GWs[:, 0] >= (GWs[x_max, 0] - \
                                             u.convert_to_s(max_time)))
