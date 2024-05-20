@@ -166,7 +166,8 @@ def get_initial_parameters(path_folder):
             break
     if not Found_heger:
         run_path = os.path.join(path_folder, '.run')
-        run_files = os.listdir(run_path).sort()
+        run_files = os.listdir(run_path)
+        run_files.sort()
         for file in run_files:
             namelist = f90nml.read(os.path.join(run_path, file))
             if 'Hegerpars' in namelist and namelist["Hegerpars"]["Heger_model"]:
