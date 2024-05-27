@@ -65,6 +65,39 @@ def correct_zero(sim_dim, GWs, index):
         for i in range(1, GWs.shape[1]):
             GWs[:, i] -= GWs[:index, i].mean()
         return GWs
+
+## ---------------------------------------------------------------------
+## GW Energy
+## ---------------------------------------------------------------------
+
+def GWs_energy(GWs, sim_dim):
+    assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
+    if sim_dim == 1:
+        return GWs_energy_1D(GWs)
+    elif sim_dim == 2:
+        return GWs_energy_2D(GWs)
+    else:
+        return GW_strain_3D(GWs)
+
+def GWs_energy_1D(GWs):
+    print("No GW for you :'(")
+    return None
+
+def GWs_energy_2D(GWs):
+    """
+    Calculates the energy of the GWs in 2D
+    """
+    const = -0.125 *  np.sqrt(15/np.pi)
+    GWs[:, 1] = (IDL_derivative(GWs[:, 0], GWs[:, 1]) / const) ** 2 * \
+        (u.speed_light ** 3 / (u.G * 32 * np.pi))
+    return GWs
+
+def GWs_energy_3D(GWs):
+    """
+    Calculates the energy of the GWs in 3D
+    """
+    raise ValueError("Not implemented yet")
+   
     
 ## ---------------------------------------------------------------------
 ## GW spectrogram

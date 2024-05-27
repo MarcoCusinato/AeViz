@@ -9,8 +9,9 @@ from AeViz.utils.file_utils import load_file
 from AeViz.utils.decorators import hdf_isopen
 from AeViz.utils.math_utils import strfct2D, IDL_derivative
 from AeViz.utils.file_utils import load_file, find_column_changing_line
-from AeViz.utils.GW_utils import (GW_strain, calculate_h, GW_spectrogram,
-                                  GWs_peak_indices, GWs_fourier_transform,
+from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
+                                  GW_spectrogram, GWs_peak_indices,
+                                  GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.kick_vel_utils import calculate_kick, velocity_kick
 from AeViz.utils.load_save_radii_utils import calculate_radius
@@ -624,8 +625,7 @@ class Simulation:
         Returns the energy carried away by the GWs in erg/s
         """
         GWs = self.GW_Amplitudes(tob_corrected)
-        GWs[:, 1:] = u.speed_light ** 3 / u.G * 2 / 15 * GWs[:,1:]** 2
-        return GWs
+        return GWs_energy(GWs, self.dim)
 
     def AE220(self, tob_corrected=True, save_checkpoints=True):
         """
