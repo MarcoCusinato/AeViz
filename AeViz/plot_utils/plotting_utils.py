@@ -141,7 +141,8 @@ class PlottingUtils(PlotCreation):
                                       self.field[ax_letter][0][skip],
                                       self.field[ax_letter][1][skip],
                                       linewidths=0.01,
-                                      color='black'
+                                      color='black',
+                                      angles='xy'
                                       )
         elif self.field_type[ax_letter] == 'B':
             self.axd[ax_letter].contour(self.grid[ax_letter][0],
