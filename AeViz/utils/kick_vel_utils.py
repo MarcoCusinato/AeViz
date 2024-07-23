@@ -14,11 +14,15 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
     if simulation.time(file_name) <= 0 or simulation.dim == 1:
         return [0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]
     
+    outer_radius = 1e10
+    if outer_radius >= simulation.cell.radius(simulation.ghost)[-1]:
+        outer_radius = simulation.cell.radius(simulation.ghost)[-2]
+    
     mask = (simulation.cell.radius(simulation.ghost) >= \
         simulation.ghost.remove_ghost_cells_radii(PNS_radius,
                                                     simulation.dim,
-                                                **gcells)[..., None]) & \
-            (simulation.cell.radius(simulation.ghost) <= 1e9)
+                                                    **gcells)[..., None]) & \
+            (simulation.cell.radius(simulation.ghost) <= outer_radius)
     rho = simulation.rho(file_name)[mask] * dV[mask]
     gh = grid(simulation.dim, simulation.cell.radius(simulation.ghost),
             simulation.cell.theta(simulation.ghost),
@@ -26,21 +30,31 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
     vx, vy, vz = gh.velocity_sph_to_cart(simulation.radial_velocity(file_name),
                                           simulation.theta_velocity(file_name),
                                           simulation.phi_velocity(file_name))
-    nu_flux = simulation.neutrino_momenta_grey(file_name)[..., r400, :, :]
-    nue_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 0, 0][..., None],
-                                       nu_flux[..., 0, 1][..., None],
-                                       nu_flux[..., 0, 2][..., None]))
-    nua_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 1, 0][..., None],
+    nu_flux = simulation.neutrino_momenta_grey(file_name)[..., r400, :, :] * \
+                                          dOmega[..., None, None]
+    nue_flux = list(gh.velocity_sph_to_cart(
+                                        nu_flux[..., 0, 0][..., None],
+                                        nu_flux[..., 0, 1][..., None],
+                                        nu_flux[..., 0, 2][..., None]
+                                       )
+                    )
+    nua_flux = list(gh.velocity_sph_to_cart(
+                                        nu_flux[..., 1, 0][..., None],
                                         nu_flux[..., 1, 1][..., None],
-                                        nu_flux[..., 1, 2][..., None]))
-    nux_flux = list(gh.velocity_sph_to_cart(nu_flux[..., 2, 0][..., None],
+                                        nu_flux[..., 1, 2][..., None]
+                                        )
+                    )
+    nux_flux = list(gh.velocity_sph_to_cart(
+                                        nu_flux[..., 2, 0][..., None],
                                         nu_flux[..., 2, 1][..., None],
-                                        nu_flux[..., 2, 2][..., None]))
-    nue_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+                                        nu_flux[..., 2, 2][..., None]
+                                        )
+                    )
+    nue_flux = [-u.convert_to_solar_masses(np.sum(comp)) \
                 * (4e7 ** 2 / u.speed_light) for comp in nue_flux]
-    nua_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+    nua_flux = [-u.convert_to_solar_masses(np.sum(comp)) \
                 * (4e7 ** 2 / u.speed_light) for comp in nua_flux]
-    nux_flux = [-u.convert_to_solar_masses(np.sum(comp * dOmega[..., None])) \
+    nux_flux = [-u.convert_to_solar_masses(np.sum(comp)) \
                 * (4 * 4e7 ** 2 / u.speed_light) for comp in nux_flux]
     
     vz = u.convert_to_solar_masses(np.sum(vz[mask] * rho))
