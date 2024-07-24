@@ -49,8 +49,6 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
         ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
                     aspect=1)
-        
-
 
 class PlottingUtils(PlotCreation):
     def __init__(self):
@@ -67,8 +65,7 @@ class PlottingUtils(PlotCreation):
         self.plot_dim[ax_letter] = dim
         self.cmap_color[ax_letter] = cmap
         self.cbar_label[ax_letter] = cbar_label
-       
-            
+         
     def __update_cbar_position(self, ax_letter, cbar_position):
         self.cbar_position[ax_letter] = cbar_position
     
@@ -213,8 +210,6 @@ class PlottingUtils(PlotCreation):
             for lb in cbar.ax.xaxis.get_ticklabels()[::2]:
                 lb.set_visible(False)
 
-        
-    
     def __plot1D(self, ax_letter):
         if type(self.data[ax_letter]) == list:
             for data in self.data[ax_letter]:
@@ -222,7 +217,6 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[ax_letter].plot(self.grid[ax_letter],
                                      self.data[ax_letter])
-        
 
     def __redo_plot(self):
         self._PlotCreation__close_figure()
@@ -260,7 +254,6 @@ class PlottingUtils(PlotCreation):
             self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
                         ax_letter)
         self._PlotCreation__setup_aspect()
-
 
     def xlim(self, xlim, axd_letter="A"):
         if self.plot_dim[axd_letter] == 2:
@@ -307,8 +300,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[ax_letter].set_yscale('linear')
         self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
-        
-    
+ 
     def cmap(self, cmap, axd_letter="A"):
         self.cmap_color[axd_letter] = cmap
         self.__redo_plot()
@@ -346,8 +338,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
             self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
-
-    
+ 
     def __save_labels(self, ax_letter=None):
         if ax_letter is None:
             for ax_letter in self.axd:

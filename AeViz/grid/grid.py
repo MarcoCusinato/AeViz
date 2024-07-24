@@ -119,6 +119,17 @@ class grid:
         if self.dim == 3:
             raise TypeError("Not implemented yet :\").")
     
+    def cartesian_grid_2D(self, plane):
+        """
+        Returns a 2D cartesian grid.
+        """
+        if self.dim == 1:
+            return self.__1D_cartesian_grid(self.radius)
+        elif self.dim == 2:
+            return self.__2D_cartesian_grid(self.radius, self.theta)
+        else:
+            return self.__2D_cartesian_grid_from_3D(self.radius, self.theta,
+                                                     self.phi, plane)
     
     def __1D_cartesian_grid(self, radius):
         return radius
@@ -126,6 +137,18 @@ class grid:
     def __2D_cartesian_grid(self, radius, theta):
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
+        return X, Y
+    
+    def __2D_cartesian_grid_from_3D(self, radius, theta, phi, plane):
+        if plane == 'xy':
+            X = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
+                np.cos(phi)[:, None]
+            Y = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
+                np.sin(phi)[:, None]
+        elif plane in ['xz', 'yz']:
+            theta = np.concatenate([theta, theta + np.pi])
+            X = radius[None, :] * np.sin(theta)[:, None]
+            Y = radius[None, :] * np.cos(theta)[:, None]
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):

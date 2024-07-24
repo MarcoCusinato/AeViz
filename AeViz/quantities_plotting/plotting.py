@@ -12,8 +12,6 @@ import cv2
 
 u = units()
 
-
-
 def recognize_quantity(qt1, qt2, qt3, qt4, pars):
     if qt1 == 'NUE':
         qt1, qt2, qt3, qt4 = 'NUEX', 'NUEY', 'NUEZ', 'NUEE'
