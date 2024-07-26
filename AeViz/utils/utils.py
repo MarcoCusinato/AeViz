@@ -45,7 +45,7 @@ def time_array(simulation):
             start_time = len(time_array)
     else:
         start_time = 0
-    progress_index = start_time
+    progress_index = 0
     total_index = len(simulation.hdf_file_list[start_time:])
     for file_name in simulation.hdf_file_list[start_time:]:
         try:

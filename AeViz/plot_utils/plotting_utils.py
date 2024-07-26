@@ -8,14 +8,21 @@ def cbar_loaction(loc):
     location = {'T': 'top', 'B': 'bottom', 'L': 'left', 'R': 'right'}
     return location[loc]
 
-def set2Dlims(ax, xlim, ylim, number, form_factor):
+def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim):
+    
     if number == 5 and form_factor == 1:
         if xlim == None:
             ax["E"].set_ylim(ylim)
         if ylim == None:
             ax["E"].set_xlim(xlim)
-    
-    if xlim==None:
+    else:
+        if sim_dim == 2:
+            set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
+        else:
+            set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
+                
+def set2dlims2Dsim(ax, xlim, ylim, number, form_factor):
+    if xlim == None:
         ylim = list(ylim)
         ylim.sort()
         xlim = [0]
@@ -25,7 +32,7 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
             ylim[0] = -ylim[1]
         xlim.append(ylim[1])
         
-    if ylim==None:
+    if ylim == None:
         xlim = list(xlim)
         xlim.sort()
         xlim[0] = 0
@@ -50,13 +57,40 @@ def set2Dlims(ax, xlim, ylim, number, form_factor):
         ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
                     aspect=1)
 
+def set2Dlims3Dsim(ax, xlim, ylim, number, form_factor):
+    if xlim == None:
+        ylim = list(ylim)
+        ylim.sort()
+        ylim[0] = -ylim[1]
+        xlim = ylim
+    if ylim == None:
+        xlim = list(xlim)
+        xlim.sort()
+        xlim[0] = -xlim[1]
+        ylim = xlim
+            
+    if number == 1 and form_factor == 2:
+        ax["A"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
+    elif number == 2 and form_factor == 2:
+        ax["A"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["B"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
+    elif number == 3 and form_factor == 2:
+        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["C"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
+    elif number == 4 and form_factor == 2:
+        ax["A"].set(xlim=(xlim[0], 0), ylim=(0, ylim[1]), aspect=1)
+        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], 0), aspect=1)
+        ax["C"].set(xlim=(0, xlim[1]), ylim=(0, ylim[1]), aspect=1)
+        ax["D"].set(xlim=(0, xlim[1]), ylim=(ylim[0], 0), aspect=1)
+
 class PlottingUtils(PlotCreation):
     def __init__(self):
         self.__reset_params()
         PlotCreation.__init__(self)     
 
     def __update_params(self, ax_letter, grid, data, cbar_position, 
-                        cbar_log, cbar_levels, dim, cmap, cbar_label):
+                        cbar_log, cbar_levels, dim, cmap, cbar_label,
+                        sim_dim):
         self.grid[ax_letter] = grid
         self.cbar_position[ax_letter] = cbar_position
         self.cbar_log[ax_letter] = cbar_log
@@ -65,6 +99,7 @@ class PlottingUtils(PlotCreation):
         self.plot_dim[ax_letter] = dim
         self.cmap_color[ax_letter] = cmap
         self.cbar_label[ax_letter] = cbar_label
+        self.sim_dimension[ax_letter] = sim_dim
          
     def __update_cbar_position(self, ax_letter, cbar_position):
         self.cbar_position[ax_letter] = cbar_position
@@ -91,6 +126,7 @@ class PlottingUtils(PlotCreation):
         self.legend = {}
         self.field = {}
         self.field_type = {}
+        self.sim_dimension = {}
 
     def __plot2Dmesh(self, ax_letter):
         if self.cbar_log[ax_letter]:
@@ -229,7 +265,7 @@ class PlottingUtils(PlotCreation):
             if self.plot_dim[ax_letter] == 2:
                 self.__plot2D(ax_letter)
                 set2Dlims(self.axd, self.xlims[ax_letter], None, self.number,
-                          self.form_factor)
+                          self.form_factor, self.sim_dimension[ax_letter])
             elif self.plot_dim[ax_letter] == -1:
                 self.__plot2D(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
@@ -257,7 +293,8 @@ class PlottingUtils(PlotCreation):
 
     def xlim(self, xlim, axd_letter="A"):
         if self.plot_dim[axd_letter] == 2:
-            set2Dlims(self.axd, xlim, None, self.number, self.form_factor)
+            set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
+                      self.sim_dimension[axd_letter])
             self.__save_lims()
         else:
             self.axd[axd_letter].set_xlim(xlim)
@@ -266,7 +303,8 @@ class PlottingUtils(PlotCreation):
     
     def ylim(self, ylim, axd_letter="A"):
         if self.plot_dim[axd_letter] == 2:
-            set2Dlims(self.axd, None, ylim, self.number, self.form_factor)
+            set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
+                      self.sim_dimension[axd_letter])
             self.__save_lims()
         else:
             self.axd[axd_letter].set_ylim(ylim)

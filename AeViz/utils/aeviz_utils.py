@@ -10,7 +10,7 @@ def plot_qt(AeViz, file, qt, projection, index1, index2, plane):
             if plane == 'time':
                 AeViz.plotProfile(qt)
             else:
-                AeViz.plot2D(file, plane, index1, qt)
+                AeViz.plot2D(file, plane, qt)
     elif type(qt) == list:
         if projection == '1D':
             for q in qt:
@@ -27,11 +27,11 @@ def plot_qt(AeViz, file, qt, projection, index1, index2, plane):
                     AeViz.plotProfile(qt[0])
             else:
                 if len(qt) == 4:
-                    AeViz.plot2D(file, plane, index1, qt[0], qt[1], qt[2],
+                    AeViz.plot2D(file, plane, qt[0], qt[1], qt[2],
                                  qt[3])
                 elif len(qt) == 3:
-                    AeViz.plot2D(file, plane, index1, qt[0], qt[1], qt[2])
+                    AeViz.plot2D(file, plane, qt[0], qt[1], qt[2])
                 elif len(qt) == 2:
-                    AeViz.plot2D(file, plane, index1, qt[0], qt[1])
+                    AeViz.plot2D(file, plane, qt[0], qt[1])
                 else:
-                    AeViz.plot2D(file, plane, index1, qt[0])
+                    AeViz.plot2D(file, plane, qt[0])
