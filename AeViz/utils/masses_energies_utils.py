@@ -112,7 +112,6 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
     return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, conv_ene, Lx, Ly, Lz, L_tot
 
-
 def unbound_mass_energy(simulation, file_name, dV):
     """
     Calculates the explosion energy and the unbound mass
@@ -153,4 +152,3 @@ def mass_flux(simulation, file_name, dOmega, radius_index):
             np.sum(dOmega *\
                 simulation.radial_velocity(file_name)[..., radius_index] * \
             simulation.rho(file_name)[..., radius_index]))
-    

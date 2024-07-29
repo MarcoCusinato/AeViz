@@ -156,7 +156,6 @@ class PlotCreation(object):
         self.number = None
         self.form_factor = None
 
-
     def __setup_figure(self):
         if not self.fig_is_open():
             self.fig = plt.figure()
@@ -242,7 +241,6 @@ class PlotCreation(object):
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
         
-    
     def change_figsize(self, multiplies=1):
         if self.fig_is_open():
             self.fig.set_size_inches(self.fig.get_size_inches()*multiplies)

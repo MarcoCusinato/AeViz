@@ -8,7 +8,7 @@ class AeViz(Plotting):
         Plotting.__init__(self)
     
     def rho(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'rho'
         if projection == '1D':
@@ -22,14 +22,14 @@ class AeViz(Plotting):
                 self.plot2D(file, plane, index1, qt)
     
     def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
-                   index1=None, index2=None, plane:Literal['xy', 'xz',
+                   index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                         'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'MHD_energy'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def velocity(self, file=None, projection:Literal['1D', '2D']='1D', 
                  index1=None, index2=None, comp:Literal['all', 'r', 'th',
-                 'ph']='all', plane:Literal['xy', 'xz', 'radius', 'theta',
+                 'ph']='all', plane:Literal['xz', 'yz', 'xy', 'radius', 'theta',
                                             'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['radial_velocity', 'theta_velocity', 'phi_velocity']
@@ -42,13 +42,13 @@ class AeViz(Plotting):
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def soundspeed(self, file=None, projection:Literal['1D', '2D']='1D',
-                   index1=None, index2=None, plane:Literal['xy', 'xz',
+                   index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                    'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'soundspeed'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def alfven_velocity(self, file=None, projection:Literal['1D', '2D']='1D',
-                        index1=None, index2=None, plane:Literal['xy', 'xz',
+                        index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                                 'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'alfven_velocity'
         plot_qt(self, file, qt, projection, index1, index2, plane)
@@ -70,7 +70,7 @@ class AeViz(Plotting):
             self.plot1D(file, q, 'radius', None, None)
     
     def omega(self, file=None, projection:Literal['1D', '2D']='1D', 
-              index1=None, index2=None, plane:Literal['xy', 'xz', 'radius',
+              index1=None, index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'omega'
         plot_qt(self, file, qt, projection, index1, index2, plane)
@@ -84,145 +84,145 @@ class AeViz(Plotting):
             self.plot1D(file, qt, plane, None, None)
     
     def Rossby_number(self, file=None, projection:Literal['1D', '2D']='1D',
-                      index1=None, index2=None, plane:Literal['xy', 'xz',
+                      index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                       'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'Rossby_number'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def BV_frequency(self, file=None, projection:Literal['1D', '2D']='1D',
-                        index1=None, index2=None, plane:Literal['xy', 'xz',
+                        index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                         'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'BV_frequency'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def gas_pressure(self, file=None, projection:Literal['1D', '2D']='1D',
-                     index1=None, index2=None, plane:Literal['xy', 'xz',
+                     index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                      'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'gas_pressure'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def temperature(self, file=None, projection:Literal['1D', '2D']='1D',
-                    index1=None, index2=None, plane:Literal['xy', 'xz',
+                    index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                     'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'temperature'
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def enthalphy(self, file=None, projection:Literal['1D', '2D']='1D',
-                  index1=None, index2=None, plane:Literal['xy', 'xz',
+                  index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                   'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'enthalphy'
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def entropy(self, file=None, projection:Literal['1D', '2D']='1D',
-                index1=None, index2=None, plane:Literal['xy', 'xz', 'radius',
+                index1=None, index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                 'theta', 'phi', 'time']='radius'):
         qt = 'entropy'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def adiabatic_index(self, file=None, projection:Literal['1D', '2D']='1D',
-                        index1=None, index2=None, plane:Literal['xy', 'xz',
+                        index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
                         'radius', 'theta', 'phi', 'time']='radius'):
         qt = 'adiabatic_index'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def lorentz_factor(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'lorentz'
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def grav_pot(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'gravitational_potential'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def grav_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'gravitational_energy'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def int_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'internal_energy'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def nu_heat(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'nu_heat'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Ye(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'Ye'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xn(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'neutron_fraction'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xp(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'proton_fraction'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xalpha(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'alpha_fraction'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Xheavy(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'heavy_fraction'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Abar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'Abar'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def Zbar(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'Zbar'
         plot_qt(self, file, qt, projection, index1, index2, plane)
 
     def cpot_e(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'electron_chemical_potential'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_n(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'neutron_chemical_potential'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_p(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'proton_chemical_potential'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def cpot_nu(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'neutrino_chemical_potential'
         plot_qt(self, file, qt, projection, index1, index2, plane)
     
     def error(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-            index2=None, plane:Literal['xy', 'xz', 'radius',
+            index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                           'theta', 'phi', 'time']='radius'):
         qt = 'error'
         plot_qt(self, file, qt, projection, index1, index2, plane)
@@ -230,7 +230,7 @@ class AeViz(Plotting):
     def magnetic_fields(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
             index2=None, comp:Literal['all', 'r', 'th', 'ph', 'torpol', 
                                       'poloidal', 'toroidal']='all',
-            plane:Literal['xy', 'xz', 'radius', 'theta', 'phi', 'time']='radius'):
+            plane:Literal['xz', 'yz', 'xy', 'radius', 'theta', 'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['BX', 'BY', 'BZ']
         elif comp == 'r':
@@ -250,7 +250,7 @@ class AeViz(Plotting):
     def magnetic_energy(self, file=None, projection:Literal['1D', '2D']='1D', 
                         index1=None, index2=None, comp:Literal['all', 'tot', 
                                                 'poloidal', 'toroidal']='all', 
-                        plane:Literal['xy', 'xz', 'radius', 'theta', 'phi',
+                        plane:Literal['xz', 'yz', 'xy', 'radius', 'theta', 'phi',
                                      'time']='radius'):
         if comp == 'all':
             qt = ['total_magnetic_energy', 'poloidal_magnetic_energy',
@@ -265,7 +265,7 @@ class AeViz(Plotting):
     
     def nue_moment(self, file=None, projection:Literal['1D', '2D']='1D',
                   comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
-                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                   'theta', 'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['nue_moment_x', 'nue_moment_y', 'nue_moment_z',
@@ -276,7 +276,7 @@ class AeViz(Plotting):
         
     def nua_moment(self, file=None, projection:Literal['1D', '2D']='1D',
                   comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
-                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                   'theta', 'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['nua_moment_x', 'nua_moment_y', 'nua_moment_z',
@@ -287,7 +287,7 @@ class AeViz(Plotting):
     
     def nux_moment(self, file=None, projection:Literal['1D', '2D']='1D',
                   comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
-                  index2=None, plane:Literal['xy', 'xz', 'radius',
+                  index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
                   'theta', 'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['nux_moment_x', 'nux_moment_y', 'nux_moment_z',
@@ -298,7 +298,7 @@ class AeViz(Plotting):
         
     def nu_mean_ene(self, file=None, projection:Literal['1D', '2D']='1D',
                     comp:Literal['nue', 'nua', 'nux', 'all']='all', index1=None,
-                    index2=None, plane:Literal['xy', 'xz', 'radius', 'theta',
+                    index2=None, plane:Literal['xz', 'yz', 'xy', 'radius', 'theta',
                                                'phi', 'time']='radius'):
         if comp == 'all':
             qt = ['nue_mean_ene', 'nua_mean_ene', 'nux_mean_ene']
@@ -386,11 +386,11 @@ class AeViz(Plotting):
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None)
     
     def add_field(self, file, plot, comp: Literal['velocity', 'Bfield'],
-                  plane: Literal['xy', 'yz']='xz', index1=None):
+                  plane: Literal['xy', 'yz', 'xz']='xz'):
         """
         Adds velocity or magnetic field to the selected plot.
         """
-        self.add_2Dfield(file, plot, comp, plane, index1)
+        self.add_2Dfield(file, plot, comp, plane)
 
     def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,
               fields: Literal['velocity', 'Bfield', 'all']=None,

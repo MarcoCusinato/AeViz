@@ -150,6 +150,20 @@ class Data(object):
                     
                 return getattr(self.loaded_data, name)()
     
+    def __plane_cut(self, data, indextheta = None, indexphi = None):
+        if (indexphi == None and indextheta == None) or \
+            self.sim_dim == 2:
+            return data
+        if indexphi is not None:
+            return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
+                                   data[(indexphi + data.shape[0] // 2) % 
+                                        data.shape[0], :, :]], axis=0)
+        elif indextheta is not None:
+            
+            return data[:, indextheta, :]
+            
+        return data
+    
     def __get_GW_decomposition_data(self, name):
         if self.sim_dim == 2:
             _, t, AE220, f_h, nuc_h, conv_h, out_h = self.loaded_data.AE220()
