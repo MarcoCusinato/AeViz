@@ -159,7 +159,28 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
             else:
                 data = post_data[:, index1, index2]
     return data
-        
+
+def get_plane_indices(sim, plane):
+    ## Get the indices associated to the plane
+    if plane not in ['xy', 'xz', 'yz']:
+        plane = 'xz'
+    if sim.sim_dim == 2:
+        plane = 'xz'
+        index_phi = None
+        index_theta = None
+    elif plane == 'xy':
+        index_phi = None
+        index_theta = len(sim.cell.theta(sim.ghost)) // 2
+    elif plane == 'xz':
+        index_phi = len(sim.cell.phi(sim.ghost)) // 2
+        index_theta = None
+    elif plane == 'yz':
+        index_theta = None
+        index_phi = (len(sim.cell.phi(sim.ghost)) - (2 * \
+            sim.ghost.ghost - sim.ghost.p_l - sim.ghost.p_r)) // 4 + \
+                sim.ghost.ghost - sim.ghost.p_l
+    return plane, index_theta, index_phi
+
 def show_figure():
     """
     Show the figure if the module is imported from the terminal.
@@ -345,21 +366,7 @@ class Plotting(PlottingUtils, Data):
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
         ## Get the indices associated to the plane
-        if self.sim_dim == 2:
-            plane = 'xz'
-            index_phi = None
-            index_theta = None
-        elif plane == 'xy':
-            index_phi = None
-            index_theta = len(self.cell.theta(self.ghost)) // 2
-        elif plane == 'xz':
-            index_phi = self.ghost.ghost - self.ghost.p_l
-            index_theta = None
-        elif plane == 'yz':
-            index_theta = None
-            index_phi = (len(self.cell.phi(self.ghost)) - (2 * \
-                self.ghost.ghost - self.ghost.p_l - self.ghost.p_r)) // 4 + \
-                    self.ghost.ghost - self.ghost.p_l
+        plane, index_theta, index_phi = get_plane_indices(self, plane)
         ## Create the plot
         redo = False
         if self.axd is not None:
@@ -781,41 +788,71 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         show_figure()
         
-    def add_2Dfield(self, file, axd_letter, comp, plane, index1):
+    def add_2Dfield(self, file, axd_letter, comp, plane):
         if axd_letter not in self.axd:
             raise ValueError('The axis letter is not in the figure.')
         if self.plot_dim[axd_letter] != 2:
             raise ValueError('The axis letter is not a 2D plot.')
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         if comp == 'velocity':
-            self.__addVelocity_field(file, axd_letter, plane, index1)
+            self.__addVelocity_field(file, axd_letter, plane)
         elif comp == 'Bfield':
-            self.__addBfield(file, axd_letter, plane, index1)
+            self.__addBfield(file, axd_letter, plane)
     
-    def __addVelocity_field(self, file, axd_letter, plane, index1):
-        if plane == 'xy':
-            vr = self._Data__get_data_from_name('radial_velocity', file)\
-                [:, index1, :]
-            va = self._Data__get_data_from_name('phi_velocity', file)\
-                [:, index1, :]
-            angle = self.cell.phi(self.ghost)
-        elif plane == 'xz':
-            if index1 is None or self.sim_dim == 2:
-                vr = self._Data__get_data_from_name('radial_velocity', file)
-                va = self._Data__get_data_from_name('theta_velocity', file)
-            else:
-                vr = self._Data__get_data_from_name('radial_velocity', file)\
-                    [index1, :, :]
-                va = self._Data__get_data_from_name('theta_velocity', file)\
-                    [index1, :, :]
+    def __addVelocity_field(self, file, axd_letter, plane):
+        ## Get the plane indices
+        plane, index_theta, index_phi = get_plane_indices(self, plane)
+        vr = self._Data__get_data_from_name('radial_velocity', file)
+        vr = self._Data__plane_cut(vr, index_theta, index_phi)
+        if self.sim_dim == 2:
+            va = self._Data__get_data_from_name('theta_velocity', file)
+            va = self._Data__plane_cut(va, index_theta, index_phi)
             angle = self.cell.theta(self.ghost)
-        vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
-        vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
-        self._PlottingUtils__update_fields_params(axd_letter,
-                                                  (vx, vy), 'v')
+            vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
+            vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
+        else:
+            theta = self.cell.theta(self.ghost)
+            phi = self.cell.phi(self.ghost)
+            vtheta = self._Data__get_data_from_name('theta_velocity', file)
+            vtheta = self._Data__plane_cut(vtheta, index_theta, index_phi)
+            vphi = self._Data__get_data_from_name('phi_velocity', file)
+            vphi = self._Data__plane_cut(vphi, index_theta, index_phi)
+            
+            if plane == 'xy':
+                theta = theta[index_theta]
+                vx = vr * np.sin(theta) * np.cos(phi)[:, None] + \
+                     vtheta * np.cos(theta) * np.cos(phi)[:, None] - \
+                     vphi * np.sin(phi)[:, None]
+                vy = vr * np.sin(theta) * np.sin(phi)[:, None] + \
+                    vtheta * np.cos(theta) * np.sin(phi)[:, None] + \
+                    vphi * np.cos(phi)[:, None]
+            elif plane == 'xz':
+                ## We drop vphi because it is moduled by sin(phi)
+                ## that is zero in the xz plane
+                phi = phi[index_phi]
+                ## Theta angle is wrong, but gives the correct
+                ## modulation of phi
+                theta = np.concatenate((theta, theta + np.pi))
+                vx = vr * np.sin(theta)[:, None] * np.cos(phi) + \
+                     vtheta * np.cos(theta)[:, None] * np.cos(phi)
+                vy = vr * np.cos(theta)[:, None] - \
+                      vtheta * np.sin(theta)[:, None]
+            elif plane == 'yz':
+                ## We drop vphi because it is moduled by cos(phi)
+                ## that is zero in the yz plane
+                phi = phi[index_phi]
+                ## Theta angle is wrong, but gives the correct
+                ## modulation of phi
+                theta = np.concatenate((theta, theta + np.pi))
+                ## Minus are necessary to get the correct result
+                vx = -vr * np.sin(theta)[:, None] * np.sin(phi) + \
+                     -vtheta * np.cos(theta)[:, None] * np.sin(phi)
+                vy = vr * np.cos(theta)[:, None] - \
+                      vtheta * np.sin(theta)[:, None]
+        self._PlottingUtils__update_fields_params(axd_letter, (vx, vy), 'v')
         self._PlottingUtils__plot2Dfield(axd_letter)
 
-    def __addBfield(self, file, axd_letter, plane, index1):
+    def __addBfield(self, file, axd_letter, plane):
         streamlines = self.loaded_data.stream_function(file, plane)
         self._PlottingUtils__update_fields_params(axd_letter,
                                                   streamlines, 'B')
