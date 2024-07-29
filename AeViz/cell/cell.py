@@ -306,7 +306,7 @@ class cell:
         if self.dim == 2:
             return dtheta[:, None] * r[None, :]
         else:
-            phi = np.ones(self.phi(ghost))
+            phi = np.ones(self.phi(ghost).shape[0])
             return phi[:, None, None] * dtheta[None, :, None] * r[None, None, :]
     
     #integration methods

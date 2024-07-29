@@ -386,11 +386,11 @@ class AeViz(Plotting):
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None)
     
     def add_field(self, file, plot, comp: Literal['velocity', 'Bfield'],
-                  plane: Literal['xy', 'yz']='xz', index1=None):
+                  plane: Literal['xy', 'yz', 'xz']='xz'):
         """
         Adds velocity or magnetic field to the selected plot.
         """
-        self.add_2Dfield(file, plot, comp, plane, index1)
+        self.add_2Dfield(file, plot, comp, plane)
 
     def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,
               fields: Literal['velocity', 'Bfield', 'all']=None,
