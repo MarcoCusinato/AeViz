@@ -19,7 +19,7 @@ class AeViz(Plotting):
             if plane == 'time':
                 self.plotProfile(qt)
             else:
-                self.plot2D(file, plane, index1, qt)
+                self.plot2D(file, plane, qt)
     
     def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
                    index1=None, index2=None, plane:Literal['xz', 'yz', 'xy',
