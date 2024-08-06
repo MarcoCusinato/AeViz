@@ -440,7 +440,6 @@ class Plotting(PlottingUtils, Data):
         if qt2 is not None:
             data = self._Data__get_data_from_name(qt2, file)
             data = self._Data__plane_cut(data, index_theta, index_phi)
-            print('here')
             self._PlottingUtils__update_params('B', (X, Y),
                                         data,
                                         cbars['B'], plot_labels[qt2]['log'],
