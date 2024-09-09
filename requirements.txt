@@ -3,3 +3,5 @@ scipy
 h5py
 pandas
 f90nml
+matplotlib
+opencv-python

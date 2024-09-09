@@ -1,101 +1,53 @@
 # AeViz
 
-## Introduction
+AeViz is a python package to explore data from core collapse supernova simulations made with Aenus-ALCAR ([Obergaulinger, 2008](https://ui.adsabs.harvard.edu/abs/2008PhDT.........1O/abstract); [Just _et al._, 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.453.3386J/abstract); [Just _et al._, 2018](https://ui.adsabs.harvard.edu/abs/2018MNRAS.481.4786J/abstract)). It contains analysis and visualization subroutines for 1, 2 and 3 dimensional simulations.
 
-AeViz is a Python package meant to analyse and visualize core collapse supernova simulations from Aenus-ALCAR. It is spiritual successor of an old package (Scidata). 
-
-## Requirements
-
-This being a `Python` package, it requires a version of [Python3](https://www.python.org/) installed on your computer. Besides, it makes heavy use of five `Python` libraries
- - [NumPy](https://numpy.org/)
- - [SciPy](https://scipy.org/)
- - [h5Py](https://www.h5py.org/)
- - [Pandas](https://pandas.pydata.org/docs/index.html)
- - [f90nml](https://pypi.org/project/f90nml/)
-
-To install their latest version just run
-```
-pip install -r requirements.txt
-```
-inside the package folder.
 
 ## Installation
-To install this package just clone it
+### Package installation
+First make sure to have installed Python>=3.8.<br/>
+To install the latest AeViz version please clone the repository with
 ```
-git clone https://github.com/MarcoCusinato/scidata.git
+git clone https://github.com/MarcoCusinato/AeViz.git
 ```
-then navigate to the package folder and run install it with `pip`
+
+Then install the requirements needed to run all the functionalities of AeViz. You can either `pip install` or `conda install` them one by one taking them from this list
 ```
-cd scidata
+numpy
+scipy
+h5py
+pandas
+f90nml
+matplotlib
+opencv-python
+```
+or navigate into the package folder and install them from the `requirements.txt` file
+```
+cd AeViz
+pip install -r requirements.txt
+```
+After having installed the requirements, we can finally install the main package. If you are not yet in the package folder, navigate into it (`cd AeViz`) and simply run
+```
 pip install .
 ```
-Congrats you have successfully installed `scidata`! <br/>
-The first time you will import it, it will create a local storage folder called `Simulation_analysis_quantities`, if it does not already exist, in your home directory (Linux) or Desktop (Windows) to store some quantities that are numerically expensive to calculate.  Additionally, inside the scidata package will be created a dictionary to store the simulation path, and a symlink to the package will be added to the Desktop or home directory depending on the platform you are working on.<br/>
+### First import
+After the installation it is time for the first import of the package, after launching Python, let's tipe
+```
+import AeViz
+```
+After, this firts import a folder called `Aenus_simulation_postprocessing` will be created in your _home directory_, alongside several subfolders. These subfolders include three labelled as `*D` with `*` being 1, 2, or 3 and containing the postprocessing of the simulations according to their dimension, and a hidden folder called `.utils` containing the path of the simulations.
+## Quick start
+During AeViz installation, two system-wide scripts have been installed, namely `add_Aenus_sim_paths` and `run_postprocessing`.<br/>
+First of all, let's use the former to save some simulation's path as
+```
+add_Aenus_sim_paths --sim-name /path/to/parent/
+```
+This will scan the parent folder for simulations. Be careful that if you feed it the simulation path it will not recognize it.
 
-## Getting started
-
-### Add search paths
-First of all let's include some paths to search for simulations. Navigate to 
+After a simulation path has been saved you can access it by simply using the name of the simulation folder.<br/>
+Then we can run the second script with the additional keyword `--plot` as 
 ```
-scidata/paths
+run_postprocessing --sim-name simulation_name --plot
 ```
-and run `add_paths.py` with one or both of the following options:
-- `--add-paths-file`, followed by one or more paths to files containing search paths
-- `--add-paths`, followed by one or more search paths.
-A path file can be every text file or a `.bz2` or `.gz` archive containing a text file. Moreover, it should look like a list of paths. <br/>
-Let's name `foo.txt` a file with a list of path that looks like:
-```
-/first/path/to/search
-/second/path/to/search
-...
-```
-Then call 
-```
-python3 add_paths.py --add-paths-file /path/to/foo.txt
->Paths to search: [/first/path/to/search, /second/path/to/search]
->Path: /first/path/to/search
->Checking...
->   /subpath/one
->   /subpath/two
->   ...
->Added n simulations
-```
-This process can take from few seconds to several minutes depending on the number of simulations present in the chosen paths. <br/>
-In case you are working on windows, the first time it will ask you where your Linu server is mounted. If you are working with simulations downloaded in your current machine just leave it blank. <br/>
-PLEASE REMEMBER: every time you add a simulation to a folder you have to re-run the script. 
-
-### Data Analysis 
-
-Please before starting the data analysis bear in mind that this script will create a folder named `Simulations_analysis_quantities` in your home directory if you are working on Linux or Desktop on Windows to store some quantities that are numerically expensive to calculate.<br/>
-To start the analysis, first of all, load the _main_ script of the module
-```
-from scidata.quantities.quantities import SimulationAnalysis
-```
-then load a simulation (i. e. `s20-064`)
-```
-sim = SimulationAnalysis('s20-064')
-```
-If there are two simulations with different dimension (i. e. one is 1D and the other 3D) it will ask you to specify the requested one. <br/> 
-However, if you have not added any simulation path, you can supply it directly as
-``` 
-sim = SimulationAnalysis('sim_name', simulation_folder_path = '/path/to/sim/')
-```
-Now you have access to every `SimulationAnalys` method to get the most common quantities present in a simulation.
-Let's try, for example, to calculate the PNS radius for all simulation timestep. To do this just run:
-```
-sim.get_PNS_radius()
-> PNS radius file not found. Creating one with default settings.
-> If different settings are needed please refer to the "PNS_radius(...)"
-```
-With default settings this method would not return nothing but will create a file named `PNS_radius.h5` inside the local storage folder in your home or desktop directory. <br/>
-Now re-run the same method with some options enabled to get the averaged PNS radius,
-```
-averaged_pns_radius = sim.get_PNS_radius(PNS_radius = False, indices = False, min_max_average = True,
-                                        ret_time = False, ghost_cells = False, tob_corrected = True)
-```
-By plotting it you will get something like [this plot]()
-
-Similarly you can get other quantities and derive many useful stuff by using other `SimulationAnalysis` methods. Please refer to its methods description (when avaiable) to find the ones you need.
-
-## Future developments
-Probably what I will need to use at the moment :)
+where the `simulation_name` is the name of the simulation folder folder.
+By doing this we will have created `h5` postprocessing files as well postprocessing plots insede the folder folder with the corresponding simulation name inside the `Aenus_simulation_postprocessing/DIMENSION` directory.
