@@ -211,6 +211,8 @@ def GWs_peak_indices(GWs, peak, interval, min_time, max_time):
         zeros_end_index = np.argmax(zeros>x_min)
         end_index = zeros[zeros_end_index]
         start_index = zeros[np.argmax(zeros>x_max) - 4]
+    if start_index > x_max:
+        start_index = 0
     return start_index, x_min, x_max, end_index
 
 def GWs_max_peak(GWs, peak, interval, min_time, max_time):
