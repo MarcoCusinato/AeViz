@@ -14,6 +14,12 @@ def load_file(path_folder, file_name):
                  NxM, where N is the number of rows in the file and M 
                  the maximum number of colums. It assumes the last line 
                  as the one with the more colums.
+    - Attempt 5: read file line by line filling a matrix with dimension
+                 NxM, where N is the number of rows in the file and M
+                 the maximum number of colums. This time we process all
+                 the lines to get the maximum number of colums.
+                 Then we fill up the matrix with the data.
+    - Attempt 6: pray
     """
     path = os.path.join(path_folder, file_name)
     assert os.path.exists(path), "Selected file does not exists"
@@ -23,6 +29,8 @@ def load_file(path_folder, file_name):
         try:
             col_number = int(np.loadtxt(path.replace('.dat', '.txt'), 
                                         skiprows=1) + 2)
+
+
             data = np.loadtxt(path, usecols=tuple(range(col_number)))
         except:
             try:
@@ -42,12 +50,23 @@ def load_file(path_folder, file_name):
                 data_str = np.delete(data_str, index_list,0)
                 data = data_str.astype('float')
             except:
-                with open(path, 'r') as f:
-                    lines = f.readlines()
-                    data = np.zeros((len( lines ), len( lines[-1].split())))
-                    for (i, line) in zip(range(len(lines)), lines):
-                        line_data = np.array( line.split() ).astype(float)
-                        data[i, :len( line_data )] = line_data
+                try:
+                    with open(path, 'r') as f:
+                        lines = f.readlines()
+                        data = np.zeros((len(lines), len(lines[-1].split())))
+                        for (i, line) in zip(range(len(lines)), lines):
+                            line_data = np.array( line.split() ).astype(float)
+                            data[i, :len( line_data )] = line_data
+                except:
+                    with open(path, 'r') as f:
+                        n_cols = -1
+                        for line in f:
+                            n_cols = max(n_cols, len(line.split()))
+                        data = np.zeros((len(lines), n_cols))
+                        for (i, line) in zip(range(len(lines)), lines):
+                            line_data = np.array( line.split() ).astype(float)
+                            data[i, :len( line_data )] = line_data
+                        
     return data
 
 def find_column_changing_line(path_folder, file_name):
