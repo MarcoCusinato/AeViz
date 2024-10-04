@@ -495,7 +495,7 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     def GW_Amplitudes(self, distance=1, tob_corrected=True, 
-                      zero_correction=True, lower_refinement=True):
+                      zero_correction=True, lower_refinement=False):
         """
         Params:
             distance: distance of the observer from the GW source
