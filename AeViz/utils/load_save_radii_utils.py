@@ -92,6 +92,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             except Exception as ex:
                 print('Error in file ' + file + ', skipping...')
                 print(ex)
+                print(ex == 'Unable to open object (component not found)')
                 check_index += 1
                 progress_index += 1
                 continue
