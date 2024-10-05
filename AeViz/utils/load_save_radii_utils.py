@@ -42,13 +42,26 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
 
     """
     if check_existence(simulation, save_names[radius]):
-        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \
+        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells, \
+            processed_hdf = \
             read_radius(simulation, radius)
-        if len(simulation.hdf_file_list) == len(time):
+        ## Retrocompatibility option
+        if processed_hdf is None:
+            if len(simulation.hdf_file_list) == len(time):
+                save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
+                    ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
+                    [time, full_radius, max_radius, min_radius, avg_radius,
+                    simulation.ghost.return_ghost_dictionary(),
+                    simulation.hdf_file_list])
+                return time, full_radius, max_radius, min_radius, avg_radius, \
+                    ghost_cells
+            else:
+                start_point = 0
+        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
-            start_point = len(time)
+            start_point = len(processed_hdf)
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
@@ -206,6 +219,10 @@ def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     't_r':  list(radius_data['gcells/theta'])[1],
                     'r_l':  list(radius_data['gcells/radius'])[0],
                     'r_r':  list(radius_data['gcells/radius'])[1]}]
+    if 'processed' in radius_data:
+        data.append(radius_data['processed'][...])
+    else:
+        data.append(None)
     radius_data.close()
     return data
         
