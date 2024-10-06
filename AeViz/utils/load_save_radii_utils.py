@@ -64,7 +64,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 avg_radius = 0
                 ghost_cells = 0
                 processed_hdf = []
-        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:

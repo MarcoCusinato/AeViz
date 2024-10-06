@@ -89,7 +89,7 @@ def calculate_kick(simulation, save_checkpoints=True):
                 hydro_v = 0
                 nu_flux = 0
                 processed_hdf = []
-        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, hydro_v, nu_flux
         else:
             start_point = len(processed_hdf)

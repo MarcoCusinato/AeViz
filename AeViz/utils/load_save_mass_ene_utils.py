@@ -34,7 +34,7 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 PNS_me = 0
                 unb_data = 0
                 processed_hdf = []
-        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, mdot, inner_me, gain_me, PNS_me, unb_me
         else:
             start_point = len(processed_hdf)
