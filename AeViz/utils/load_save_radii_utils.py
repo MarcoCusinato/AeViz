@@ -57,6 +57,13 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     ghost_cells
             else:
                 start_point = 0
+                time = 0
+                full_radius = 0
+                max_radius = 0
+                min_radius = 0
+                avg_radius = 0
+                ghost_cells = 0
+                processed_hdf = np.array([])
         elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
@@ -89,10 +96,14 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         else:
             try:
                 rad_step = functions[radius](simulation, file)
-            except Exception as ex:
+            except KeyError:
                 print('Error in file ' + file + ', skipping...')
-                print(ex)
-                print(ex == 'Unable to open object (component not found)')
+                print('Key error')
+                check_index += 1
+                progress_index += 1
+                continue
+            except:
+                print('Error in file ' + file + ', skipping...')
                 check_index += 1
                 progress_index += 1
                 continue
