@@ -12,16 +12,37 @@ import numpy as np
 
 def calculate_masses_energies(simulation, save_checkpoints=True):
     if check_existence(simulation, 'masses_energies.h5'):
-        time, mdot, inner_me, gain_me, PNS_me, unb_me = \
+        time, mdot, inner_me, gain_me, PNS_me, unb_me, \
+            processed_hdf = \
             read_masses_energies(simulation)
-        if len(simulation.hdf_file_list) == len(time):
+        ## Retrocompatibility option
+        if processed_hdf is None:
+            if len(simulation.hdf_file_list) == len(time):
+                save_hdf(os.path.join(simulation.storage_path,
+                    'masses_energies.h5'),
+                    ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
+                      'unbound', 'processed'],
+                    [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                    simulation.hdf_file_list])
+                return time, mdot, inner_me, gain_me, PNS_me, unb_me
+            else:
+                start_point = 0
+                time = 0
+                mdot = 0
+                inner_me = 0
+                gain_me = 0
+                PNS_me = 0
+                unb_data = 0
+                processed_hdf = []
+        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time, mdot, inner_me, gain_me, PNS_me, unb_me
         else:
-            start_point = len(time)
+            start_point = len(processed_hdf)
             print('Checkpoint found for the mass and energy file, starting' \
                   ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
+        processed_hdf = []
         print('No checkpoint found for the mass and energy file, starting' \
               ' from the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -164,13 +185,14 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 'kinetic_ene': np.array([unb_data[2]]),
                 'magnetic_ene': np.array([unb_data[3]])
             }
+        processed_hdf.append(file)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path,
                     'masses_energies.h5'),
                      ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
-                      'unbound'],
-                     [time, mdot, inner_me, gain_me, PNS_me, unb_me])
+                      'unbound', 'processed'],
+                     [time, mdot, inner_me, gain_me, PNS_me, unb_me, processed_hdf])
             
             check_index = 0
         check_index += 1
@@ -179,8 +201,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, 'masses_energies.h5'),
                     ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
-                    'unbound'],
-                    [time, mdot, inner_me, gain_me, PNS_me, unb_me])
+                    'unbound', 'processed'],
+                    [time, mdot, inner_me, gain_me, PNS_me, unb_me, processed_hdf])
     return time, mdot, inner_me, gain_me, PNS_me, unb_me
 
 def read_masses_energies(simulation):
@@ -229,4 +251,8 @@ def read_masses_energies(simulation):
             'magnetic_ene': masses_energies_data['unbound/magnetic_ene'][...]
         }
     ]
+    if 'processed' in masses_energies_data:
+        data.append(masses_energies_data['processed'][...])
+    else:
+        data.append(None)
     return data

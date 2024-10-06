@@ -36,7 +36,7 @@ def innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):
     return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, ene_rot / np.abs(ene_grav)
         
-def  gain_region_mass_energy(simulation, file_name, shock_radius, sgcells, 
+def gain_region_mass_energy(simulation, file_name, shock_radius, sgcells, 
                              gain_radius, ggcells, dV):
     """
     Calculates the mass, neutrino heating energy of the gain region for

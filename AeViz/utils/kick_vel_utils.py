@@ -73,16 +73,32 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
 
 def calculate_kick(simulation, save_checkpoints=True):
     if check_existence(simulation, 'kick_velocity.h5'):
-        time, hydro_v, nu_flux = \
+        time, hydro_v, nu_flux, processed_hdf = \
             read_kick(simulation)
-        if len(simulation.hdf_file_list) == len(time):
+        ## Retrocompatibility with old files
+        if processed_hdf is None:
+            if len(simulation.hdf_file_list) == len(time):
+                save_hdf(os.path.join(simulation.storage_path, 
+                                  'kick_velocity.h5'),
+                     ['time', 'hydro', 'nu_flux', 'processed'],
+                     [time, hydro_v, nu_flux,
+                      simulation.hdf_file_list])
+                return time, hydro_v, nu_flux
+            else:
+                start_point = 0
+                hydro_v = 0
+                nu_flux = 0
+                processed_hdf = []
+        elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time, hydro_v, nu_flux
         else:
-            start_point = len(time)
+            start_point = len(processed_hdf)
+            processed_hdf = []
             print('Checkpoint found for the kick file, starting' \
                   ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
+        processed_hdf = []
         print('No checkpoint found for the kick file, starting' \
               ' from the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -136,12 +152,13 @@ def calculate_kick(simulation, save_checkpoints=True):
                               'y': np.array([nux_flux_f[1]]),
                               'z': np.array([nux_flux_f[2]])}
                         }
+        processed_hdf.append(file)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, 
                                   'kick_velocity.h5'),
-                     ['time', 'hydro', 'nu_flux'],
-                     [time, hydro_v, nu_flux])
+                     ['time', 'hydro', 'nu_flux', 'processed'],
+                     [time, hydro_v, nu_flux, processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -149,8 +166,8 @@ def calculate_kick(simulation, save_checkpoints=True):
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, 
                                   'kick_velocity.h5'),
-                     ['time', 'hydro', 'nu_flux'],
-                     [time, hydro_v, nu_flux])
+                     ['time', 'hydro', 'nu_flux', 'processed'],
+                     [time, hydro_v, nu_flux, processed_hdf])
     return time, hydro_v, nu_flux
     
 
@@ -173,5 +190,9 @@ def read_kick(simulation):
                    'nux': {'x': f['nu_flux/nux/x'][...],
                            'y': f['nu_flux/nux/y'][...],
                            'z': f['nu_flux/nux/z'][...]}}
-    return time, hydro_v, nu_flux
+        if 'processed' in f:
+            processed = f['processed'][...]
+        else:
+            processed = None
+    return time, hydro_v, nu_flux, processed
     

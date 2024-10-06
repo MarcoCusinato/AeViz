@@ -63,12 +63,12 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 min_radius = 0
                 avg_radius = 0
                 ghost_cells = 0
-                processed_hdf = np.array([])
+                processed_hdf = []
         elif processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
-            start_point = len(processed_hdf)
+            start_point = 0
             processed_hdf = []
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
@@ -188,8 +188,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     simulation.ghost.restore_default()
     return time, full_radius, max_radius, min_radius, avg_radius, \
         simulation.ghost.return_ghost_dictionary()
-
-    
+   
 def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus']):
     """
