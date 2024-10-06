@@ -42,17 +42,39 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
 
     """
     if check_existence(simulation, save_names[radius]):
-        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells = \
+        time, full_radius, max_radius, min_radius, avg_radius, ghost_cells, \
+            processed_hdf = \
             read_radius(simulation, radius)
-        if len(simulation.hdf_file_list) == len(time):
+        ## Retrocompatibility option
+        if processed_hdf is None:
+            if len(simulation.hdf_file_list) == len(time):
+                save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
+                    ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
+                    [time, full_radius, max_radius, min_radius, avg_radius,
+                    simulation.ghost.return_ghost_dictionary(),
+                    simulation.hdf_file_list])
+                return time, full_radius, max_radius, min_radius, avg_radius, \
+                    ghost_cells
+            else:
+                start_point = 0
+                time = 0
+                full_radius = 0
+                max_radius = 0
+                min_radius = 0
+                avg_radius = 0
+                ghost_cells = 0
+                processed_hdf = []
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
-            start_point = len(time)
+            start_point = 0
+            processed_hdf = []
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
+        processed_hdf = []
         print('No checkpoint found for ' + radius + ' radius, starting from' \
             ' the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -67,7 +89,6 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     total_points = len(simulation.hdf_file_list) - start_point
     if radius == 'gain':
         _, PNS_rad, _, _, _, _ = calculate_radius(simulation, 'PNS')
-    
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
         if radius == 'gain':
@@ -76,11 +97,15 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         else:
             try:
                 rad_step = functions[radius](simulation, file)
-            except:
-                print('Error in file ' + file + ', skipping...')
+            except KeyError:
+                print('Missing dataset in file ' + file + ', skipping but adding as processed...')
                 check_index += 1
                 progress_index += 1
+                processed_hdf.append(file)
                 continue
+            except Exception as e:
+                print('Error in file ' + file)
+                raise e
         if radius == 'neutrino':
             try:
                 time = np.concatenate((time, simulation.time(file)))
@@ -106,6 +131,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                                     nog_rad_step[key], simulation.dim,
                                     dOmega)]))) for key in
                                 ['nue', 'nua', 'nux']}
+                
             except:
                 time = simulation.time(file)
                 full_radius = {key: rad_step[..., i, None] for (key, i) in
@@ -143,26 +169,26 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 max_radius = max_rad_step
                 min_radius = min_rad_step
                 avg_radius = avg_rad_step
+        processed_hdf.append(file)
         if (check_index >= checkpoint and save_checkpoints):
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
-                     ['time', 'radii', 'max', 'min', 'avg', 'gcells'],
+                     ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
                      [time, full_radius, max_radius, min_radius, avg_radius,
-                      simulation.ghost.return_ghost_dictionary()])
+                      simulation.ghost.return_ghost_dictionary(), processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
-                ['time', 'radii', 'max', 'min', 'avg', 'gcells'],
+                ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
                 [time, full_radius, max_radius, min_radius, avg_radius,
-                simulation.ghost.return_ghost_dictionary()])
+                simulation.ghost.return_ghost_dictionary(), processed_hdf])
     print('Done!')
     simulation.ghost.restore_default()
     return time, full_radius, max_radius, min_radius, avg_radius, \
         simulation.ghost.return_ghost_dictionary()
-
-    
+   
 def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus']):
     """
@@ -206,6 +232,10 @@ def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     't_r':  list(radius_data['gcells/theta'])[1],
                     'r_l':  list(radius_data['gcells/radius'])[0],
                     'r_r':  list(radius_data['gcells/radius'])[1]}]
+    if 'processed' in radius_data:
+        data.append(radius_data['processed'][...])
+    else:
+        data.append(None)
     radius_data.close()
     return data
         
