@@ -87,7 +87,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     total_points = len(simulation.hdf_file_list) - start_point
     if radius == 'gain':
         _, PNS_rad, _, _, _, _ = calculate_radius(simulation, 'PNS')
-    processed_hdf = np.array([])
+    processed_hdf = []
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
         if radius == 'gain':
@@ -97,16 +97,14 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             try:
                 rad_step = functions[radius](simulation, file)
             except KeyError:
-                print('Error in file ' + file + ', skipping...')
-                print('Key error')
+                print('Missing dataset in file ' + file + ', skipping but adding as processed...')
                 check_index += 1
                 progress_index += 1
+                processed_hdf.append(file)
                 continue
-            except:
-                print('Error in file ' + file + ', skipping...')
-                check_index += 1
-                progress_index += 1
-                continue
+            except Exception as e:
+                print('Error in file ' + file)
+                raise e
         if radius == 'neutrino':
             try:
                 time = np.concatenate((time, simulation.time(file)))
@@ -170,7 +168,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 max_radius = max_rad_step
                 min_radius = min_rad_step
                 avg_radius = avg_rad_step
-        processed_hdf = np.append(processed_hdf, file)
+        processed_hdf.append(file)
         if (check_index >= checkpoint and save_checkpoints):
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
