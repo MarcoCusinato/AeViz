@@ -48,11 +48,13 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         ## Retrocompatibility option
         if processed_hdf is None:
             if len(simulation.hdf_file_list) == len(time):
-                save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
-                    ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
-                    [time, full_radius, max_radius, min_radius, avg_radius,
-                    simulation.ghost.return_ghost_dictionary(),
-                    simulation.hdf_file_list])
+                save_hdf(os.path.join(simulation.storage_path,
+                                      save_names[radius]),
+                        ['time', 'radii', 'max', 'min', 'avg', 'gcells',
+                         'processed'],
+                        [time, full_radius, max_radius, min_radius, avg_radius,
+                        simulation.ghost.return_ghost_dictionary(),
+                        simulation.hdf_file_list])
                 return time, full_radius, max_radius, min_radius, avg_radius, \
                     ghost_cells
             else:
@@ -69,11 +71,12 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 ghost_cells
         else:
             start_point = len(processed_hdf)
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
-        processed_hdf = np.array([])
+        processed_hdf = []
         print('No checkpoint found for ' + radius + ' radius, starting from' \
             ' the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -97,7 +100,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             try:
                 rad_step = functions[radius](simulation, file)
             except KeyError:
-                print('Missing dataset in file ' + file + ', skipping but adding as processed...')
+                print('Missing dataset in file ' + file + \
+                    ', skipping but adding as processed...')
                 check_index += 1
                 progress_index += 1
                 processed_hdf.append(file)
@@ -168,13 +172,15 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 max_radius = max_rad_step
                 min_radius = min_rad_step
                 avg_radius = avg_rad_step
-        processed_hdf = np.append(processed_hdf, file)
+        processed_hdf.append(file)
         if (check_index >= checkpoint and save_checkpoints):
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
-                     ['time', 'radii', 'max', 'min', 'avg', 'gcells', 'processed'],
+                     ['time', 'radii', 'max', 'min', 'avg', 'gcells',
+                      'processed'],
                      [time, full_radius, max_radius, min_radius, avg_radius,
-                      simulation.ghost.return_ghost_dictionary(), processed_hdf])
+                      simulation.ghost.return_ghost_dictionary(),
+                      processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
