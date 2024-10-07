@@ -33,17 +33,16 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 gain_me = 0
                 PNS_me = 0
                 unb_data = 0
-                processed_hdf = []
+                processed_hdf = np.array([])
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, mdot, inner_me, gain_me, PNS_me, unb_me
         else:
             start_point = len(processed_hdf)
-            processed_hdf = processed_hdf.tolist()
             print('Checkpoint found for the mass and energy file, starting' \
                   ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
-        processed_hdf = []
+        processed_hdf = np.array([])
         print('No checkpoint found for the mass and energy file, starting' \
               ' from the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -186,14 +185,15 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 'kinetic_ene': np.array([unb_data[2]]),
                 'magnetic_ene': np.array([unb_data[3]])
             }
-        processed_hdf.append(file)
+        processed_hdf = np.append(processed_hdf, file)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path,
                     'masses_energies.h5'),
                      ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
                       'unbound', 'processed'],
-                     [time, mdot, inner_me, gain_me, PNS_me, unb_me, processed_hdf])
+                     [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                      processed_hdf])
             
             check_index = 0
         check_index += 1
@@ -203,7 +203,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
     save_hdf(os.path.join(simulation.storage_path, 'masses_energies.h5'),
                     ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
                     'unbound', 'processed'],
-                    [time, mdot, inner_me, gain_me, PNS_me, unb_me, processed_hdf])
+                    [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                     processed_hdf])
     return time, mdot, inner_me, gain_me, PNS_me, unb_me
 
 def read_masses_energies(simulation):

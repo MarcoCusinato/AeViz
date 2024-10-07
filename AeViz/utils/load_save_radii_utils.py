@@ -63,18 +63,17 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 min_radius = 0
                 avg_radius = 0
                 ghost_cells = 0
-                processed_hdf = []
+                processed_hdf = np.array([])
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
             start_point = len(processed_hdf)
-            processed_hdf = processed_hdf.tolist()
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
         start_point = 0
-        processed_hdf = []
+        processed_hdf = np.array([])
         print('No checkpoint found for ' + radius + ' radius, starting from' \
             ' the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -169,7 +168,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 max_radius = max_rad_step
                 min_radius = min_rad_step
                 avg_radius = avg_rad_step
-        processed_hdf.append(file)
+        processed_hdf = np.append(processed_hdf, file)
         if (check_index >= checkpoint and save_checkpoints):
             print('Checkpoint reached, saving...\n')
             save_hdf(os.path.join(simulation.storage_path, save_names[radius]),
