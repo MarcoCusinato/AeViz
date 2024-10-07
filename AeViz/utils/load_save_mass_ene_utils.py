@@ -38,6 +38,7 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
             return time, mdot, inner_me, gain_me, PNS_me, unb_me
         else:
             start_point = len(processed_hdf)
+            processed_hdf = processed_hdf.tolist()
             print('Checkpoint found for the mass and energy file, starting' \
                   ' from checkpoint.\nPlease wait...')
     else:
