@@ -68,8 +68,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
             return time, full_radius, max_radius, min_radius, avg_radius, \
                 ghost_cells
         else:
-            start_point = 0
-            processed_hdf = []
+            start_point = len(processed_hdf)
             print('Checkpoint found for ' + radius + ' radius, starting' \
                 ' from checkpoint.\nPlease wait...')
     else:
