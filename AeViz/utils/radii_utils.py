@@ -116,8 +116,8 @@ def shock_radius_1D(simulation, file_name):
                              np.abs(simulation.radial_velocity(file_name))
     for ir in reversed(range(len(dP) - 1)):
         if (dP[ir] < 10) and np.any(dvr[ir-5:ir+6] < -20):
-            return simulation.cell.radius(simulation.ghost)[ir]
-    return np.float64(0)
+            return np.array([simulation.cell.radius(simulation.ghost)[ir]])
+    return np.array([0])
             
 
 def shock_radius_2D(simulation, file_name):
