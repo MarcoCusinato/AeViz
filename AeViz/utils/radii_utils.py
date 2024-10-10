@@ -139,6 +139,8 @@ def shock_radius_2D(simulation, file_name):
                 shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
                 break
     ## COPY over the gcells
+    if np.isnan(shock_r).all():
+        return np.zeros(dP.shape[0])
     return shock_r
 
 def shock_radius_3D(simulation, file_name):
