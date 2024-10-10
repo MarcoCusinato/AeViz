@@ -93,6 +93,7 @@ def calculate_kick(simulation, save_checkpoints=True):
             return time, hydro_v, nu_flux
         else:
             start_point = len(processed_hdf)
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print('Checkpoint found for the kick file, starting' \
                   ' from checkpoint.\nPlease wait...')
     else:
