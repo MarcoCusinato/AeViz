@@ -1,8 +1,9 @@
 import h5py, os
+import matplotlib.pyplot as plt
 
 def hdf_isopen(func):
     """
-    Takse as input the Simulation object and either the file name, or
+    Takes as input the Simulation object and either the file name, or
     file index or time. If the file is not open, it opens it.
     """
     def wrapper(*args):
@@ -22,3 +23,14 @@ def hdf_isopen(func):
                 os.path.join(args[0]._Simulation__hdf_path, file), 'r')
         return func(*args)
     return wrapper
+
+def fig_window_open(func):
+    """
+    Check if the window figure has been closed. If it has it destroys it.
+    """
+    def check_opens(*args, **kwargs):
+        if args[0].fig is not None:
+            if not plt.fignum_exists(args[0].fig.number):
+                args[0].Close()
+        return func(*args, **kwargs)
+    return check_opens
