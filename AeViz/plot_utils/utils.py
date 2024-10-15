@@ -529,7 +529,7 @@ for key in keys:
                                            'lim': (None, None),
                                            'cmap': plot_labels[key]['cmap'],
                                            'label':r'$\partial_r$ ' + \
-                                            plot_labels[key]['label'].split(']')[0] + ' /cm]',
+                                            plot_labels[key]['label'].split(']')[0] + '/cm]',
                                             }
               plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
                                               'lim': (None, None),
@@ -547,13 +547,13 @@ for key in keys:
                                           'lim': (None, None),
                                           'cmap': plot_labels[key]['cmap'],
                                           'label': r'$\partial_t$ ' + \
-                                          plot_labels[key]['label'].split(']')[0] + ' /s]',
+                                          plot_labels[key]['label'].split(']')[0] + '/s]',
                                           }
        else:
               plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
                                           'lim': (None, None),
                                           'label':r'$\partial_r$ ' + \
-                                          plot_labels[key]['label'].split(']')[0] + ' /cm]',
+                                          plot_labels[key]['label'].split(']')[0] + '/cm]',
                                           }
               plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
                                               'lim': (None, None),
@@ -568,7 +568,7 @@ for key in keys:
               plot_labels['dt_' + key] = {'log': plot_labels[key]['log'],
                                           'lim': (None, None),
                                           'label': r'$\partial_t$ ' + \
-                                                  plot_labels[key]['label'].split(']')[0] + ' /s]',
+                                                  plot_labels[key]['label'].split(']')[0] + '/s]',
                                           }
                                                          
 
