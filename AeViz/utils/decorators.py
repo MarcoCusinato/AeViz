@@ -143,6 +143,6 @@ def smooth(func):
             else:
                 window = np.ones([window_points] * data.ndim)
                 window /= np.sum(window)
-            return convolve(data, window, mode='constant')
+            return convolve(data, window, mode='warp')
 
     return wrapper
