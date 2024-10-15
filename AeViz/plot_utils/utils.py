@@ -553,7 +553,7 @@ for key in keys:
               plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
                                           'lim': (None, None),
                                           'label':r'$\partial_r$ ' + \
-                                          plot_labels[key]['label'].split(']') + ' /cm]',
+                                          plot_labels[key]['label'].split(']')[0] + ' /cm]',
                                           }
               plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
                                               'lim': (None, None),
