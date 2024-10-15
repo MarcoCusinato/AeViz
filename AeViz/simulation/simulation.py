@@ -6,7 +6,7 @@ from AeViz.utils.parfiles import (get_indices_from_parfile,
 from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
 from AeViz.utils.file_utils import load_file
-from AeViz.utils.decorators import hdf_isopen, derive
+from AeViz.utils.decorators import hdf_isopen, derive, smooth
 from AeViz.utils.math_utils import strfct2D, IDL_derivative
 from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
@@ -159,6 +159,7 @@ class Simulation:
     ## HYDRODYNAMICAL DATA
     ## -----------------------------------------------------------------
     
+    @smooth
     @derive
     @hdf_isopen
     def rho(self, file_name, **kwargs):
@@ -167,6 +168,7 @@ class Simulation:
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
+    @smooth
     @hdf_isopen
     def MHD_energy(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
@@ -174,6 +176,7 @@ class Simulation:
                                           ['I_EN']]), self.dim)
     
     ## VELOCITY
+    @smooth
     @derive
     @hdf_isopen
     def radial_velocity(self, file_name, **kwargs):
@@ -181,6 +184,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELX']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def theta_velocity(self, file_name, **kwargs):
@@ -188,6 +192,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELY']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def phi_velocity(self, file_name, **kwargs):
@@ -195,6 +200,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELZ']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def soundspeed(self, file_name, **kwargs):
@@ -202,6 +208,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CSND']]), self.dim)
     
+    @smooth
     @derive
     def omega(self, file_name, **kwargs):
         if self.dim == 1:
@@ -220,6 +227,7 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     ## THERMODYNAMICAL
+    @smooth
     @derive
     @hdf_isopen
     def gas_pressure(self, file_name, **kwargs):
@@ -227,6 +235,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_PGAS']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def temperature(self, file_name, **kwargs):
@@ -234,6 +243,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_TMPR']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def enthalpy(self, file_name, **kwargs):
@@ -241,6 +251,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTH']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def entropy(self, file_name, **kwargs):
@@ -248,6 +259,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTR']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def adiabatic_index(self, file_name, **kwargs):
@@ -256,6 +268,7 @@ class Simulation:
                                         ['I_GAMM']]), self.dim)
     
     ## RELATIVITY AND GRAVITY
+    @smooth
     @derive
     @hdf_isopen
     def lorentz(self, file_name, **kwargs):
@@ -263,6 +276,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_LRTZ']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def gravitational_potential(self, file_name, **kwargs):
@@ -274,12 +288,14 @@ class Simulation:
             data = data[..., 0]
         return self.ghost.remove_ghost_cells(data, self.dim)
     
+    @smooth
     @derive
     def gravitational_energy(self, file_name, **kwargs):
         return 0.5 * self.rho(file_name, **kwargs) * \
             self.gravitational_potential(file_name, **kwargs)
     
     ## ENERGY
+    @smooth
     @derive
     @hdf_isopen
     def internal_energy(self, file_name, **kwargs):
@@ -287,6 +303,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_EINT']]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def nu_heat(self, file_name, **kwargs):
@@ -295,6 +312,7 @@ class Simulation:
                                         ['I_HEAT']]), self.dim)
     
     ## COMPOSITION
+    @smooth
     @derive
     @hdf_isopen
     def Ye(self, file_name, **kwargs):
@@ -302,6 +320,7 @@ class Simulation:
             self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
             ['I_YE']]), self.dim) / self.rho(file_name, **kwargs)
     
+    @smooth
     @derive
     @hdf_isopen
     def neutron_fraction(self, file_name, **kwargs):
@@ -309,6 +328,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][0]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def proton_fraction(self, file_name, **kwargs):
@@ -316,6 +336,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][1]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def alpha_fraction(self, file_name, **kwargs):
@@ -323,6 +344,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][2]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def heavy_fraction(self, file_name, **kwargs):
@@ -330,6 +352,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][3]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def Abar(self, file_name, **kwargs):
@@ -337,6 +360,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][4]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def Zbar(self, file_name, **kwargs):
@@ -345,6 +369,7 @@ class Simulation:
                                         ['I_COMP'][5]]), self.dim)
     
     ## CHEMICAL POTENTIAL
+    @smooth
     @derive
     @hdf_isopen
     def electron_chemical_potential(self, file_name, **kwargs):
@@ -352,6 +377,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][0]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def neutron_chemical_potential(self, file_name, **kwargs):
@@ -359,6 +385,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][1]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def proton_chemical_potential(self, file_name, **kwargs):
@@ -366,6 +393,7 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][2]]), self.dim)
     
+    @smooth
     @derive
     @hdf_isopen
     def neutrino_chemical_potential(self, file_name, **kwargs):
@@ -398,7 +426,6 @@ class Simulation:
     ## -----------------------------------------------------------------
     ## MAGNETIC FIELDS DATA
     ## -----------------------------------------------------------------
-
     @hdf_isopen
     def __CT_magnetic_fields(self, file_name, **kwargs):
         """
@@ -409,6 +436,7 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['mag_CT/data'][...]), self.dim)
     
+    @smooth
     @hdf_isopen
     def magnetic_fields(self, file_name, **kwargs):
         """
@@ -417,16 +445,19 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['mag_vol/data'][...]), self.dim)
     
+    @smooth
     @derive
     def poloidal_magnetic_fields(self, file_name, **kwargs):
         data = self.magnetic_fields(file_name, **kwargs)
         return np.sqrt(data[..., 0] ** 2 + data[..., 1] ** 2)
     
+    @smooth
     @derive
     def toroidal_magnetic_fields(self, file_name, **kwargs):
         data = self.magnetic_fields(file_name, **kwargs)
         return data[..., 2]
 
+    @smooth
     def magnetic_energy(self, file_name, **kwargs):
         """
         Magnetic energy density. Total, poloidal and toroidal.
@@ -437,10 +468,12 @@ class Simulation:
                 0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
                 0.5 * data[..., 2] ** 2
 
+    @smooth
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                         self.ghost, plane)
     
+    @smooth
     @derive
     def alfven_velocity(self, file_name, **kwargs):
         """
@@ -457,6 +490,8 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     ## ENERGY DEPENDENT
+    
+    @smooth
     @hdf_isopen
     def neutrino_energy_density(self, file_name, **kwargs):
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
@@ -464,6 +499,7 @@ class Simulation:
         nu_ene[..., 2] /= 4
         return nu_ene
     
+    @smooth
     @hdf_isopen
     def neutrino_momenta(self, file_name, **kwargs):
         """
@@ -479,6 +515,7 @@ class Simulation:
         nu_flux[..., 2, :] /= 4
         return nu_flux
     
+    @smooth
     @hdf_isopen
     def neutrino_momenta_opacities(self, file_name, **kwargs):
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
@@ -487,10 +524,12 @@ class Simulation:
             nu_opac = nu_opac[..., None]
         return nu_opac
     
+    @smooth
     def neutrino_number_density(self, file_name, **kwargs):
         return self.neutrino_energy_density(file_name, **kwargs) / \
             u.convert_to_erg(self.cell.E_nu()[:, None])
     
+    @smooth
     def neutrino_mean_energy(self, file_name, **kwargs):
         """
         Average neutrino energy per cell so 
@@ -502,6 +541,8 @@ class Simulation:
                         / self.neutrino_number_density(file_name,
                                                        **kwargs).sum(axis=-2))
     ## GREY
+    
+    @smooth
     @hdf_isopen
     def neutrino_energy_density_grey(self, file_name, **kwargs):
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
@@ -509,6 +550,7 @@ class Simulation:
         nu_ene[..., 2] /= 4
         return nu_ene
     
+    @smooth
     @hdf_isopen
     def neutrino_momenta_grey(self, file_name, **kwargs):
         """
@@ -525,6 +567,8 @@ class Simulation:
     ## -----------------------------------------------------------------
     ## GRAVIATIONAL WAVES DATA
     ## -----------------------------------------------------------------
+    
+    @smooth
     @derive
     def GW_Amplitudes(self, distance=1, tob_corrected=True, 
                       zero_correction=True, lower_refinement=False,
@@ -576,6 +620,7 @@ class Simulation:
         GWs[:, 1:] /= distance
         return GWs
     
+    @smooth
     def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True):
         """
         Parameters:
@@ -601,6 +646,7 @@ class Simulation:
             time -= self.tob
         return time, frequency, Zxx
     
+    @smooth
     def Deltah(self, peak:Literal['bounce', 'highest']='bounce',
                interval=[None, None], min_time=1.75, max_time=2, distance=1, 
                coordinates=False, tob_corrected=True):
@@ -627,6 +673,7 @@ class Simulation:
             return Deltah, np.array(x), np.array(y)
         return Deltah
     
+    @smooth
     def GWs_peak_frequencies(self, peak:Literal['bounce', 'highest']='bounce',
                               min_time=1.75, max_time=2, interval=[None, None],
                               return_intensities=False, return_fourier=False):
@@ -653,6 +700,7 @@ class Simulation:
             return return_list[0]
         return return_list
     
+    @smooth
     def GWs_dE_dt(self, tob_corrected=True):
         """
         Returns the energy carried away by the GWs in erg/s
@@ -660,6 +708,7 @@ class Simulation:
         GWs = self.GW_Amplitudes(tob_corrected)
         return GWs_energy(GWs, self.dim)
 
+    @smooth
     def AE220(self, tob_corrected=True, save_checkpoints=True):
         """
         Calculates the AE220 from density and velocities for a
@@ -685,6 +734,8 @@ class Simulation:
     ## -----------------------------------------------------------------
     ## GLOBAL DATA
     ## -----------------------------------------------------------------
+    
+    @smooth
     @derive
     def global_neutrino_luminosity(self, tob_corrected=True, **kwargs):
         """
@@ -701,6 +752,7 @@ class Simulation:
                          0.25 * nu_tmp[:, 40], nu_tmp[:, 35],
                          nu_tmp[:, 36], 0.25 * nu_tmp[:, 37]), axis=1)
     
+    @smooth
     @derive
     def global_neutrino_mean_energies(self, tob_corrected=True, **kwargs):
         """
@@ -720,6 +772,7 @@ class Simulation:
                          u.convert_to_MeV(nu[:, 2]/nu[:, 5]),
                          u.convert_to_MeV(nu[:, 3]/nu[:, 6])), axis=1)
     
+    @smooth
     @derive
     def total_mass(self, tob_corrected=True, **kwargs):
         """
@@ -733,6 +786,7 @@ class Simulation:
             M[:,2] -= self.tob
         return np.stack((M[:, 2], u.convert_to_solar_masses(M[:, 4])), axis=1)
     
+    @smooth
     @derive
     def rho_max(self, correct_for_tob=True, **kwargs):
         """
@@ -745,6 +799,7 @@ class Simulation:
             rho[:,2] -= self.tob
         return np.stack((rho[:, 2], rho[:, 3]), axis = 1)
 
+    @smooth
     @derive
     def global_Ye(self, tob_corrected=True, **kwargs):
         """
@@ -759,6 +814,7 @@ class Simulation:
             Ye[:,2] -= self.tob
         return np.stack((Ye[:,2], Ye[:,6], Ye[:,7], Ye[:,8]), axis=1)
 
+    @smooth
     @derive
     def global_rotational_energy(self, tob_corrected=True, **kwargs):
         """
@@ -774,6 +830,7 @@ class Simulation:
     ## RADII DATA
     ## -----------------------------------------------------------------
     
+    @smooth
     @derive
     def PNS_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -789,6 +846,7 @@ class Simulation:
             data[0] += self.tob
         return data
     
+    @smooth
     @derive
     def shock_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -804,6 +862,7 @@ class Simulation:
             data[0] += self.tob
         return data
     
+    @smooth
     @derive
     def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -820,6 +879,7 @@ class Simulation:
             data[0] += self.tob
         return data
     
+    @smooth
     @derive
     def gain_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -835,6 +895,7 @@ class Simulation:
             data[0] += self.tob
         return data
 
+    @smooth
     @derive
     def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -850,6 +911,7 @@ class Simulation:
             data[0] += self.tob
         return data
     
+    @smooth
     @derive
     def innercore_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -869,6 +931,7 @@ class Simulation:
     ## MASS AND ENERGY DATA
     ## -----------------------------------------------------------------
 
+    @smooth
     @derive
     def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -888,6 +951,7 @@ class Simulation:
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
                 data['convective_ene']]
     
+    @smooth
     @derive
     def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -904,6 +968,7 @@ class Simulation:
         return [time, data['L']['Lx'], data['L']['Ly'],
                 data['L']['Lz'], data['L']['L_tot']]
     
+    @smooth
     @derive
     def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -921,6 +986,7 @@ class Simulation:
         return [time, data['mass'], data['energy'], data['kinetic_ene'],
                 data['magnetic_ene']]
     
+    @smooth
     @derive
     def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -936,6 +1002,7 @@ class Simulation:
             time += self.tob
         return [time, data['mass'], data['heating_ene']]
 
+    @smooth
     @derive
     def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
@@ -955,6 +1022,7 @@ class Simulation:
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
                 data['T_W']]
     
+    @smooth
     @derive
     def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
                              **kwargs):
@@ -975,6 +1043,7 @@ class Simulation:
     ## VELOCITIES DATA
     ## -----------------------------------------------------------------
 
+    @smooth
     @derive
     def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True,
                           **kwargs):
@@ -1009,6 +1078,7 @@ class Simulation:
                             sum_components([vnue[2], vnua[2], vnux[2]])])
         return time, vkick, vkick_hydro, vkick_nue
 
+    @smooth
     @derive
     def PNS_kick_velocity_components(self, tob_corrected=True,
                                      save_checkpoints=True, **kwargs):
@@ -1045,6 +1115,7 @@ class Simulation:
     ## CONVECTION AND TURBULENCE DATA
     ## -----------------------------------------------------------------
 
+    @smooth
     def BV_frequency(self, file_name, **kwargs):
         """
         Returns the Brunt-Vaisala frequency at specific timestep.
@@ -1056,6 +1127,7 @@ class Simulation:
                  IDL_derivative(radius, rho)) * IDL_derivative(radius, 
                                 self.gravitational_potential(file_name, **kwargs)) / rho
 
+    @smooth
     def convective_velocity(self, file_name, **kwargs):
         """
         Returns the convective velocity at specific timestep. Defined as
@@ -1069,6 +1141,7 @@ class Simulation:
             function_average(rho, self.dim, 'Omega', dOmega)
         return function_average((vr - vrave), self.dim, 'Omega', dOmega)
     
+    @smooth
     def turbulent_velocity(self, file_name, **kwargs):
         """
         Returns the turbulent velocity at specific timestep. Defined as
@@ -1086,6 +1159,7 @@ class Simulation:
         return function_average((vr - vrave) ** 2 + (vtheta - vthetaave) ** \
             2 + (vphi - vphiave) ** 2, self.dim, 'Omega', dOmega) ** 0.5
     
+    @smooth
     def convective_flux(self, file_name, **kwargs):
         """
         Returns the convective flux at specific timestep. Defined as
@@ -1098,6 +1172,7 @@ class Simulation:
             self.convective_velocity(file_name, **kwargs), self.dim, 'Omega', 
             self.cell.dOmega(self.ghost))
     
+    @smooth
     def Rossby_number(self, file_name, lenghtscale=True):
         """
         Returns the Rossby number at specific timestep. Defined as
