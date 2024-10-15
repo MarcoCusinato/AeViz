@@ -188,14 +188,27 @@ def show_figure():
     if TERMINAL:
         plt.ion()
         plt.show()
-        
+
+def get_qt_for_label(qt, **kwargs):
+    if 'der' not in kwargs:
+        return qt
+    if kwargs['der'] in ['r', 'radius']:
+        return 'dr_' + qt
+    elif kwargs['der'] in ['theta', 'th']:
+        return 'dtheta_' + qt
+    elif kwargs['der'] in ['phi', 'ph']:
+        return 'dphi_' + qt
+    elif kwargs['der'] in ['t', 'time']:
+        return 'dt_' + qt
+    else:
+        return qt
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
         PlottingUtils.__init__(self)
         Data.__init__(self)
     
-    def plot1D(self, file, qt, xaxis, index1, index2):
+    def plot1D(self, file, qt, xaxis, index1, index2, **kwargs):
 
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
@@ -203,9 +216,9 @@ class Plotting(PlottingUtils, Data):
         if 'radius' not in qt and 'spheres' not in qt:
             if 'GW' in qt:
                 post_data = self._Data__get_data_from_name(
-                    "_".join(qt.split('_')[:-1]), file)
+                    "_".join(qt.split('_')[:-1]), file, **kwargs)
             else:
-                post_data = self._Data__get_data_from_name(qt, file)
+                post_data = self._Data__get_data_from_name(qt, file, **kwargs)
             if 'nu_integrated'in qt and 'all' in qt:
                 legend = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
             if 'nu_integrated_lum' in qt:
@@ -215,31 +228,29 @@ class Plotting(PlottingUtils, Data):
             if 'kick_velocity' in qt and 'all' in qt:
                 legend = ['tot',  'hydro', r'$\nu$']
         else:
-            post_data = list(self._Data__get_1D_radii_data(qt))
+            post_data = list(self._Data__get_1D_radii_data(qt, **kwargs))
             if 'all' in qt:
                 legend = ['max', 'min', 'avg']
             qt = "_".join(qt.split('_')[:-1])
             for i in range(1, len(post_data)):
                 post_data[i] = u.convert_to_km(post_data[i])
-        number = self.__check_axd_1D(qt, xaxis)
+        ylabel_qt = get_qt_for_label(qt, **kwargs)
+        number = self.__check_axd_1D(ylabel_qt, xaxis)
         if xaxis == 'radius':
             grid = u.convert_to_km(self.cell.radius(self.ghost))
-            self.labels('R [km]', plot_labels[qt]['label'],
-                        axd_letters[number])
+            xlabel = 'R [km]'
             self.Xscale('log', axd_letters[number])
         elif xaxis == 'theta':
             if self.sim_dim == 1:
                 raise ValueError('Cannot plot theta in 1D.')
             grid = self.cell.theta(self.ghost)
-            self.labels(r'$\theta$ [rad]', plot_labels[qt]['label'],
-                        axd_letters[number])
+            xlabel = r'$\theta$ [rad]'
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'phi':
             if self.sim_dim == 1 or self.sim_dim == 2:
                 raise ValueError('Cannot plot phi in 1D or 2D.')
             grid = self.cell.phi(self.ghost)
-            self.labels('$\phi$ [rad]', plot_labels[qt]['label'],
-                        axd_letters[number])
+            xlabel = '$\phi$ [rad]'
             self.Xscale('linear', axd_letters[number])
         elif xaxis == 'time':
             if 'radius' in qt or 'spheres' in qt :
@@ -248,12 +259,15 @@ class Plotting(PlottingUtils, Data):
                 grid = post_data[0]
             else:
                 grid = post_data[:, 0]
-            
-            self.labels('t [s]', plot_labels[qt]['label'], axd_letters[number])
+            xlabel = 't [s]'
             self.Xscale('linear', axd_letters[number])
         else:
             raise ValueError('xaxis must be radius, theta, phi or time.')
-
+        
+        
+        self.labels(xlabel, plot_labels[ylabel_qt]['label'],
+                    axd_letters[number])
+        
         if xaxis != 'time':
             index1, index2 = normalize_indices(index1, index2)
             data = get_data_to_plot(index1, index2, post_data, xaxis,
@@ -284,17 +298,17 @@ class Plotting(PlottingUtils, Data):
             data = post_data[:, 1:]
         
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
-                                           None, plot_labels[qt]['log'], None,
-                                           1, None, None, self.sim_dim)
-        if 'GW' not in qt:
-            self.ylim(plot_labels[qt]['lim'], axd_letters[number])
-        else:
-            self.ylim(plot_labels[qt]['lim'](data), axd_letters[number])
+                                           None, plot_labels[ylabel_qt]['log'],
+                                           None, 1, None, None, self.sim_dim)
         self._PlottingUtils__plot1D(axd_letters[number])
+        if 'GW' not in qt:
+            self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
+        else:
+            self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
         self.update_legend(legend, axd_letters[number])
         
         self.xlim((-0.005, grid.max()), axd_letters[number])
-        self.Yscale(plot_labels[qt]['log'], axd_letters[number])
+        self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
     
     def __check_axd_1D(self, qt, xaxis):
         number = 1 
@@ -355,7 +369,8 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         return number - 1
 
-    def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None):
+    def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
+               **kwargs):
         ## Set the ghost cells
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         ## Set the grid
@@ -423,82 +438,94 @@ class Plotting(PlottingUtils, Data):
         
         if qt1 is not None:
             ## get the data
-            data = self._Data__get_data_from_name(qt1, file)
+            data = self._Data__get_data_from_name(qt1, file, **kwargs)
             ## get the plane cut
             data = self._Data__plane_cut(data, index_theta, index_phi)
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('A', (X, Y), 
                                             data,
-                                            cbars['A'], plot_labels[qt1]['log'],
-                                            plot_labels[qt1]['lim'], 2, 
-                                            plot_labels[qt1]['cmap'], 
-                                            plot_labels[qt1]['label'],
+                                            cbars['A'],
+                                            plot_labels[qt_label]['log'],
+                                            plot_labels[qt_label]['lim'], 2, 
+                                            plot_labels[qt_label]['cmap'], 
+                                            plot_labels[qt_label]['label'],
                                             self.sim_dim)  
             self.labels('X [km]', 'Z [km]', 'A')
             self._PlottingUtils__plot2D('A')
             self.Xscale('linear', 'A')
             self.Yscale('linear', 'A')
         if qt2 is not None:
-            data = self._Data__get_data_from_name(qt2, file)
+            data = self._Data__get_data_from_name(qt2, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('B', (X, Y),
                                         data,
-                                        cbars['B'], plot_labels[qt2]['log'],
-                                        plot_labels[qt2]['lim'], 2,
-                                        plot_labels[qt2]['cmap'],
-                                        plot_labels[qt2]['label'],
+                                        cbars['B'],
+                                        plot_labels[qt_label]['log'],
+                                        plot_labels[qt_label]['lim'], 2,
+                                        plot_labels[qt_label]['cmap'],
+                                        plot_labels[qt_label]['label'],
                                         self.sim_dim)
             self.labels('X [km]', 'Z [km]', 'B')
             self._PlottingUtils__plot2D('B')
             self.Xscale('linear', 'B')
             self.Yscale('linear', 'B')
         if qt3 is not None and qt4 is None:
-            data = self._Data__get_data_from_name(qt3, file)
+            data = self._Data__get_data_from_name(qt3, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('C', (X, Y),
                                         data,
-                                        cbars['C'], plot_labels[qt3]['log'],
-                                        plot_labels[qt3]['lim'], 2, 
-                                        plot_labels[qt3]['cmap'],
-                                        plot_labels[qt3]['label'],
+                                        cbars['C'],
+                                        plot_labels[qt_label]['log'],
+                                        plot_labels[qt_label]['lim'], 2, 
+                                        plot_labels[qt_label]['cmap'],
+                                        plot_labels[qt_label]['label'],
                                         self.sim_dim)
             self.labels('X [km]', 'Z [km]', 'C')
             self._PlottingUtils__plot2D('C')
             self.Xscale('linear', 'C')
             self.Yscale('linear', 'C')
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('D', (X, Y),
                                         data,
-                                        cbars['D'], plot_labels[qt3]['log'],
-                                        plot_labels[qt3]['lim'], 2,
-                                        plot_labels[qt3]['cmap'],
-                                        plot_labels[qt3]['label'],
+                                        cbars['D'],
+                                        plot_labels[qt_label]['log'],
+                                        plot_labels[qt_label]['lim'], 2,
+                                        plot_labels[qt_label]['cmap'],
+                                        plot_labels[qt_label]['label'],
                                         self.sim_dim)
             self.labels('X [km]', 'Z [km]', 'D')
             self._PlottingUtils__plot2D('D')
             self.Xscale('linear', 'D')
             self.Yscale('linear', 'D')
         elif qt3 is not None:
-            data = self._Data__get_data_from_name(qt3, file)
+            data = self._Data__get_data_from_name(qt3, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('C', (X, Y),
                                         data,
-                                        cbars['C'], plot_labels[qt3]['log'],
-                                        plot_labels[qt3]['lim'], 2, 
-                                        plot_labels[qt3]['cmap'],
-                                        plot_labels[qt3]['label'],
+                                        cbars['C'],
+                                        plot_labels[qt_label]['log'],
+                                        plot_labels[qt_label]['lim'], 2, 
+                                        plot_labels[qt_label]['cmap'],
+                                        plot_labels[qt_label]['label'],
                                         self.sim_dim)
             self.labels('X [km]', 'Z [km]', 'C')
             self._PlottingUtils__plot2D('C')
             self.Xscale('linear', 'C')
             self.Yscale('linear', 'C')
         if qt4 is not None:
-            data = self._Data__get_data_from_name(qt4, file)
+            data = self._Data__get_data_from_name(qt4, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
+            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('D', (X, Y),
                                         data,
-                                        cbars['D'], plot_labels[qt4]['log'],
-                                        plot_labels[qt4]['lim'], 2,
-                                        plot_labels[qt4]['cmap'],
-                                        plot_labels[qt4]['label'],
+                                        cbars['D'],
+                                        plot_labels[qt_label]['log'],
+                                        plot_labels[qt_label]['lim'], 2,
+                                        plot_labels[qt_label]['cmap'],
+                                        plot_labels[qt_label]['label'],
                                         self.sim_dim)    
             self.labels('X [km]', 'Z [km]', 'D')
             self._PlottingUtils__plot2D('D')

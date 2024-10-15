@@ -6,7 +6,7 @@ from AeViz.utils.parfiles import (get_indices_from_parfile,
 from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
 from AeViz.utils.file_utils import load_file
-from AeViz.utils.decorators import hdf_isopen
+from AeViz.utils.decorators import hdf_isopen, derive
 from AeViz.utils.math_utils import strfct2D, IDL_derivative
 from AeViz.utils.file_utils import load_file, find_column_changing_line
 from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
@@ -159,51 +159,58 @@ class Simulation:
     ## HYDRODYNAMICAL DATA
     ## -----------------------------------------------------------------
     
+    @derive
     @hdf_isopen
-    def rho(self, file_name):
+    def rho(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_RH']]), self.dim)
     
     ## ENERGY
-    def MHD_energy(self, file_name):
+    @hdf_isopen
+    def MHD_energy(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
                                           ['I_EN']]), self.dim)
     
     ## VELOCITY
+    @derive
     @hdf_isopen
-    def radial_velocity(self, file_name):
+    def radial_velocity(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELX']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def theta_velocity(self, file_name):
+    def theta_velocity(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELY']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def phi_velocity(self, file_name):
+    def phi_velocity(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_VELZ']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def soundspeed(self, file_name):
+    def soundspeed(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CSND']]), self.dim)
     
-    def omega(self, file_name):
+    @derive
+    def omega(self, file_name, **kwargs):
         if self.dim == 1:
             warnings.warn("No omega in 1D simulations.")
         elif self.dim == 2:
-            return self.phi_velocity(file_name) / (np.sin(self.cell.theta(
+            return self.phi_velocity(file_name, **kwargs) / (np.sin(self.cell.theta(
                 self.ghost))[:, None] * self.cell.radius(self.ghost)[None, :])
         elif self.dim == 3:
-            return self.phi_velocity(file_name) / (np.cos(self.cell.phi(
+            return self.phi_velocity(file_name, **kwargs) / (np.cos(self.cell.phi(
                 self.ghost))[:, None, None] * np.sin(self.cell.theta(
                 self.ghost))[None, :, None] * \
                 self.cell.radius(self.ghost)[None, None, :])
@@ -213,45 +220,52 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     ## THERMODYNAMICAL
+    @derive
     @hdf_isopen
-    def gas_pressure(self, file_name):
+    def gas_pressure(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_PGAS']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def temperature(self, file_name):
+    def temperature(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_TMPR']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def enthalpy(self, file_name):
+    def enthalpy(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTH']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def entropy(self, file_name):
+    def entropy(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_ENTR']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def adiabatic_index(self, file_name):
+    def adiabatic_index(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_GAMM']]), self.dim)
     
     ## RELATIVITY AND GRAVITY
+    @derive
     @hdf_isopen
-    def lorentz(self, file_name):
+    def lorentz(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_LRTZ']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def gravitational_potential(self, file_name):
+    def gravitational_potential(self, file_name, **kwargs):
         data = np.squeeze(
             self.__data_h5['gravpot/data'][...])
         ## The following IF is here to address problem in saving 3D
@@ -260,87 +274,101 @@ class Simulation:
             data = data[..., 0]
         return self.ghost.remove_ghost_cells(data, self.dim)
     
-    def gravitational_energy(self, file_name):
-        return 0.5 * self.rho(file_name) * \
-            self.gravitational_potential(file_name)
+    @derive
+    def gravitational_energy(self, file_name, **kwargs):
+        return 0.5 * self.rho(file_name, **kwargs) * \
+            self.gravitational_potential(file_name, **kwargs)
     
     ## ENERGY
+    @derive
     @hdf_isopen
-    def internal_energy(self, file_name):
+    def internal_energy(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_EINT']]), self.dim)
     
+    @derive
     @hdf_isopen
-    def nu_heat(self, file_name):
+    def nu_heat(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_HEAT']]), self.dim)
     
     ## COMPOSITION
+    @derive
     @hdf_isopen
-    def Ye(self, file_name):
+    def Ye(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
-            ['I_YE']]), self.dim) / self.rho(file_name)
+            ['I_YE']]), self.dim) / self.rho(file_name, **kwargs)
     
+    @derive
     @hdf_isopen
-    def neutron_fraction(self, file_name):
+    def neutron_fraction(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][0]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def proton_fraction(self, file_name):
+    def proton_fraction(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][1]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def alpha_fraction(self, file_name):
+    def alpha_fraction(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][2]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def heavy_fraction(self, file_name):
+    def heavy_fraction(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][3]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def Abar(self, file_name):
+    def Abar(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][4]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def Zbar(self, file_name):
+    def Zbar(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_COMP'][5]]), self.dim)
     
     ## CHEMICAL POTENTIAL
+    @derive
     @hdf_isopen
-    def electron_chemical_potential(self, file_name):
+    def electron_chemical_potential(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][0]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def neutron_chemical_potential(self, file_name):
+    def neutron_chemical_potential(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][1]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def proton_chemical_potential(self, file_name):
+    def proton_chemical_potential(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][2]]), self.dim)
     
+    @derive
     @hdf_isopen
-    def neutrino_chemical_potential(self, file_name):
+    def neutrino_chemical_potential(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_CPOT'][3]]), self.dim)
@@ -351,7 +379,7 @@ class Simulation:
 
     ## ERROR
     @hdf_isopen
-    def error(self, file_name):
+    def error(self, file_name, **kwargs):
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
@@ -372,7 +400,7 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     @hdf_isopen
-    def __CT_magnetic_fields(self, file_name):
+    def __CT_magnetic_fields(self, file_name, **kwargs):
         """
         Magnetic field at the cells border, use this ONLY to calculate
         streamlines. If you want to plot the actual magnetic fields use
@@ -382,26 +410,28 @@ class Simulation:
             self.__data_h5['mag_CT/data'][...]), self.dim)
     
     @hdf_isopen
-    def magnetic_fields(self, file_name):
+    def magnetic_fields(self, file_name, **kwargs):
         """
         Magnetic field at the cells center.
         """
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['mag_vol/data'][...]), self.dim)
     
-    def poloidal_magnetic_fields(self, file_name):
-        data = self.magnetic_fields(file_name)
+    @derive
+    def poloidal_magnetic_fields(self, file_name, **kwargs):
+        data = self.magnetic_fields(file_name, **kwargs)
         return np.sqrt(data[..., 0] ** 2 + data[..., 1] ** 2)
     
-    def toroidal_magnetic_fields(self, file_name):
-        data = self.magnetic_fields(file_name)
+    @derive
+    def toroidal_magnetic_fields(self, file_name, **kwargs):
+        data = self.magnetic_fields(file_name, **kwargs)
         return data[..., 2]
-    
-    def magnetic_energy(self, file_name):
+
+    def magnetic_energy(self, file_name, **kwargs):
         """
         Magnetic energy density. Total, poloidal and toroidal.
         """
-        data = self.magnetic_fields(file_name)
+        data = self.magnetic_fields(file_name, **kwargs)
         return  0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2 \
                     + data[..., 2] ** 2), \
                 0.5 * (data[..., 0] ** 2 + data[..., 1] ** 2), \
@@ -410,16 +440,17 @@ class Simulation:
     def stream_function(self, file_name, plane):
         return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                         self.ghost, plane)
-        
-    def alfven_velocity(self, file_name):
+    
+    @derive
+    def alfven_velocity(self, file_name, **kwargs):
         """
         Alfven velocity
         """
         if self.dim == 1:
             return None
-        B = self.magnetic_fields(file_name)
+        B = self.magnetic_fields(file_name, **kwargs)
         return np.sqrt(B[..., 0] ** 2 + B[..., 1] ** 2 + B[..., 2] ** 2) / \
-            np.sqrt(self.rho(file_name))
+            np.sqrt(self.rho(file_name, **kwargs))
     
     ## -----------------------------------------------------------------
     ## NEUTRINO DATA
@@ -427,14 +458,14 @@ class Simulation:
     
     ## ENERGY DEPENDENT
     @hdf_isopen
-    def neutrino_energy_density(self, file_name):
+    def neutrino_energy_density(self, file_name, **kwargs):
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['neutrino/e'][..., 0]), self.dim)
         nu_ene[..., 2] /= 4
         return nu_ene
     
     @hdf_isopen
-    def neutrino_momenta(self, file_name):
+    def neutrino_momenta(self, file_name, **kwargs):
         """
         In the comoving rest frame of the fluid are equal to the
         neutrino energy fluxes
@@ -449,36 +480,37 @@ class Simulation:
         return nu_flux
     
     @hdf_isopen
-    def neutrino_momenta_opacities(self, file_name):
+    def neutrino_momenta_opacities(self, file_name, **kwargs):
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['neutrino/oe'][..., 1:]), self.dim)
         if self.dim == 1:
             nu_opac = nu_opac[..., None]
         return nu_opac
     
-    def neutrino_number_density(self, file_name):
-        return self.neutrino_energy_density(file_name) / \
+    def neutrino_number_density(self, file_name, **kwargs):
+        return self.neutrino_energy_density(file_name, **kwargs) / \
             u.convert_to_erg(self.cell.E_nu()[:, None])
     
-    def neutrino_mean_energy(self, file_name):
+    def neutrino_mean_energy(self, file_name, **kwargs):
         """
         Average neutrino energy per cell so 
         <e> = sum_w E_nu(w) / sum_w N_nu(w),
           with w the center of the neutrino bin
         """
         return u.convert_to_MeV(
-            self.neutrino_energy_density(file_name).sum(axis=-2) 
-                        / self.neutrino_number_density(file_name).sum(axis=-2))
+            self.neutrino_energy_density(file_name, **kwargs).sum(axis=-2) 
+                        / self.neutrino_number_density(file_name,
+                                                       **kwargs).sum(axis=-2))
     ## GREY
     @hdf_isopen
-    def neutrino_energy_density_grey(self, file_name):
+    def neutrino_energy_density_grey(self, file_name, **kwargs):
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
         nu_ene[..., 2] /= 4
         return nu_ene
     
     @hdf_isopen
-    def neutrino_momenta_grey(self, file_name):
+    def neutrino_momenta_grey(self, file_name, **kwargs):
         """
         In the comoving rest frame of the fluid are equal to the 
         neutrino energy fluxes
@@ -493,9 +525,10 @@ class Simulation:
     ## -----------------------------------------------------------------
     ## GRAVIATIONAL WAVES DATA
     ## -----------------------------------------------------------------
-
+    @derive
     def GW_Amplitudes(self, distance=1, tob_corrected=True, 
-                      zero_correction=True, lower_refinement=False):
+                      zero_correction=True, lower_refinement=False,
+                      **kwargs):
         """
         Params:
             distance: distance of the observer from the GW source
@@ -652,7 +685,8 @@ class Simulation:
     ## -----------------------------------------------------------------
     ## GLOBAL DATA
     ## -----------------------------------------------------------------
-    def global_neutrino_luminosity(self, tob_corrected=True):
+    @derive
+    def global_neutrino_luminosity(self, tob_corrected=True, **kwargs):
         """
         indices
         1: time
@@ -667,7 +701,8 @@ class Simulation:
                          0.25 * nu_tmp[:, 40], nu_tmp[:, 35],
                          nu_tmp[:, 36], 0.25 * nu_tmp[:, 37]), axis=1)
     
-    def global_neutrino_mean_energies(self, tob_corrected=True):
+    @derive
+    def global_neutrino_mean_energies(self, tob_corrected=True, **kwargs):
         """
         indices
         1: time
@@ -685,7 +720,8 @@ class Simulation:
                          u.convert_to_MeV(nu[:, 2]/nu[:, 5]),
                          u.convert_to_MeV(nu[:, 3]/nu[:, 6])), axis=1)
     
-    def total_mass(self, tob_corrected=True):
+    @derive
+    def total_mass(self, tob_corrected=True, **kwargs):
         """
         Returns the total mass of the star at every timestep
         indices
@@ -697,7 +733,8 @@ class Simulation:
             M[:,2] -= self.tob
         return np.stack((M[:, 2], u.convert_to_solar_masses(M[:, 4])), axis=1)
     
-    def rho_max(self, correct_for_tob=True):
+    @derive
+    def rho_max(self, correct_for_tob=True, **kwargs):
         """
         indices
         1: time
@@ -708,7 +745,8 @@ class Simulation:
             rho[:,2] -= self.tob
         return np.stack((rho[:, 2], rho[:, 3]), axis = 1)
 
-    def global_Ye(self, tob_corrected=True):
+    @derive
+    def global_Ye(self, tob_corrected=True, **kwargs):
         """
         indices
         1: time
@@ -721,7 +759,8 @@ class Simulation:
             Ye[:,2] -= self.tob
         return np.stack((Ye[:,2], Ye[:,6], Ye[:,7], Ye[:,8]), axis=1)
 
-    def global_rotational_energy(self, tob_corrected=True):
+    @derive
+    def global_rotational_energy(self, tob_corrected=True, **kwargs):
         """
         1: time
         2: total rotational energy
@@ -735,7 +774,8 @@ class Simulation:
     ## RADII DATA
     ## -----------------------------------------------------------------
     
-    def PNS_radius(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def PNS_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the radius of the PNS at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -749,7 +789,8 @@ class Simulation:
             data[0] += self.tob
         return data
     
-    def shock_radius(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def shock_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the shock radius at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -763,7 +804,8 @@ class Simulation:
             data[0] += self.tob
         return data
     
-    def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the neutrino spheres at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -778,7 +820,8 @@ class Simulation:
             data[0] += self.tob
         return data
     
-    def gain_radius(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def gain_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the gain radius at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -792,7 +835,8 @@ class Simulation:
             data[0] += self.tob
         return data
 
-    def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the PNS nucleus at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -806,7 +850,8 @@ class Simulation:
             data[0] += self.tob
         return data
     
-    def innercore_radius(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def innercore_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the inner core radius at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -824,7 +869,8 @@ class Simulation:
     ## MASS AND ENERGY DATA
     ## -----------------------------------------------------------------
 
-    def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the PNS mass and energy at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -841,8 +887,9 @@ class Simulation:
         return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
                 data['convective_ene']]
-        
-    def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True):
+    
+    @derive
+    def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the PNS angular momentum at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -857,7 +904,8 @@ class Simulation:
         return [time, data['L']['Lx'], data['L']['Ly'],
                 data['L']['Lz'], data['L']['L_tot']]
     
-    def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the explosion mass and energy at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -873,7 +921,8 @@ class Simulation:
         return [time, data['mass'], data['energy'], data['kinetic_ene'],
                 data['magnetic_ene']]
     
-    def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the gain mass and neutrino heating at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -887,7 +936,8 @@ class Simulation:
             time += self.tob
         return [time, data['mass'], data['heating_ene']]
 
-    def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
         """
         Returns the inner core mass and energy at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -905,7 +955,9 @@ class Simulation:
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
                 data['T_W']]
     
-    def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
+                             **kwargs):
         """
         Returns the mass accretion rate at 500 km from the center of the
         star at every timestep.
@@ -923,7 +975,9 @@ class Simulation:
     ## VELOCITIES DATA
     ## -----------------------------------------------------------------
 
-    def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True):
+    @derive
+    def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True,
+                          **kwargs):
         """
         Returns the modeule of the PNS kick velocity at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -955,8 +1009,9 @@ class Simulation:
                             sum_components([vnue[2], vnua[2], vnux[2]])])
         return time, vkick, vkick_hydro, vkick_nue
 
+    @derive
     def PNS_kick_velocity_components(self, tob_corrected=True,
-                                     save_checkpoints=True):
+                                     save_checkpoints=True, **kwargs):
         """
         Returns the components of the PNS kick velocity at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -990,57 +1045,57 @@ class Simulation:
     ## CONVECTION AND TURBULENCE DATA
     ## -----------------------------------------------------------------
 
-    def BV_frequency(self, file_name):
+    def BV_frequency(self, file_name, **kwargs):
         """
         Returns the Brunt-Vaisala frequency at specific timestep.
         """
-        rho = self.rho(file_name)
+        rho = self.rho(file_name, **kwargs)
         radius = self.cell.radius(self.ghost)
-        return (1 / self.soundspeed(file_name) ** 2 * \
-                 IDL_derivative(radius, self.gas_pressure(file_name)) - \
+        return (1 / self.soundspeed(file_name, **kwargs) ** 2 * \
+                 IDL_derivative(radius, self.gas_pressure(file_name, **kwargs)) - \
                  IDL_derivative(radius, rho)) * IDL_derivative(radius, 
-                                self.gravitational_potential(file_name)) / rho
+                                self.gravitational_potential(file_name, **kwargs)) / rho
 
-    def convective_velocity(self, file_name):
+    def convective_velocity(self, file_name, **kwargs):
         """
         Returns the convective velocity at specific timestep. Defined as
         in `https://doi.org/10.3847/1538-4357/ac4507`:
         v_conv = <vr-vr_ave>_omega
         """
         dOmega = self.cell.dOmega(self.ghost)
-        rho = self.rho(file_name)
-        vr = self.radial_velocity(file_name)
+        rho = self.rho(file_name, **kwargs)
+        vr = self.radial_velocity(file_name, **kwargs)
         vrave = function_average(vr * rho, self.dim, 'Omega', dOmega) / \
             function_average(rho, self.dim, 'Omega', dOmega)
         return function_average((vr - vrave), self.dim, 'Omega', dOmega)
     
-    def turbulent_velocity(self, file_name):
+    def turbulent_velocity(self, file_name, **kwargs):
         """
         Returns the turbulent velocity at specific timestep. Defined as
         in `https://doi.org/10.3847/1538-4357/ac4507`:
         v_conv = <(v-v_ave)²>^0.5_omega
         """
         dOmega = self.cell.dOmega(self.ghost)
-        rho = self.rho(file_name)
+        rho = self.rho(file_name, **kwargs)
         rho_ave = function_average(rho, self.dim, 'Omega', dOmega)
-        vr, vtheta, vphi = self.radial_velocity(file_name), \
-            self.theta_velocity(file_name), self.phi_velocity(file_name)
+        vr, vtheta, vphi = self.radial_velocity(file_name, **kwargs), \
+            self.theta_velocity(file_name, **kwargs), self.phi_velocity(file_name, **kwargs)
         vrave, vthetaave, vphiave = \
             function_average(vr * rho, self.dim, 'Omega', dOmega) / rho_ave, \
                 0, function_average(vphi, self.dim, 'Omega', dOmega) / rho_ave
         return function_average((vr - vrave) ** 2 + (vtheta - vthetaave) ** \
             2 + (vphi - vphiave) ** 2, self.dim, 'Omega', dOmega) ** 0.5
     
-    def convective_flux(self, file_name):
+    def convective_flux(self, file_name, **kwargs):
         """
         Returns the convective flux at specific timestep. Defined as
         in `https://doi.org/10.3847/1538-4357/ac4507`:
         F_conv = <(0.5 rho v_turb² + e + P)v_conv>_omega
         """
-        return function_average((0.5 * self.rho(file_name) * \
-            self.turbulent_velocity(file_name) ** 2 + self.internal_energy(
-                file_name) + self.gas_pressure(file_name)) * \
-            self.convective_velocity(file_name), self.dim, 'Omega', 
+        return function_average((0.5 * self.rho(file_name, **kwargs) * \
+            self.turbulent_velocity(file_name, **kwargs) ** 2 + self.internal_energy(
+                file_name, **kwargs) + self.gas_pressure(file_name, **kwargs)) * \
+            self.convective_velocity(file_name, **kwargs), self.dim, 'Omega', 
             self.cell.dOmega(self.ghost))
     
     def Rossby_number(self, file_name, lenghtscale=True):

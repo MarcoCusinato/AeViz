@@ -43,15 +43,19 @@ def function_average_radii(qt, dim, dOmega):
         mask = np.isnan(qt)
         return np.nansum(qt * dOmega) / (dOmega[~mask]).sum()
 
-def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius'):
+def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius',
+                   axis=None):
     """
     Derivatie performed using three point Lagrangian interpolation, as in:
     `https://www.l3harrisgeospatial.com/docs/deriv.html` 
     """
-    if xvariable == 'theta':
-        y = np.moveaxis(y, -2, -1)
-    elif xvariable == 'phi':
-        y = np.moveaxis(y, -3, -1)
+    if axis is None:
+        if xvariable == 'theta':
+            y = np.moveaxis(y, -2, -1)
+        elif xvariable == 'phi':
+            y = np.moveaxis(y, -3, -1)
+    else:
+        y = np.moveaxis(y, axis, -1)
     
     assert x.shape == y.shape or x.shape[0] == y[..., :].shape[-1], \
                       "Arrays must have equal last dimension"
@@ -84,13 +88,15 @@ def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius'):
                                         y[..., -1] * (x02 + x12) / \
                                             (x02 * x12))[..., None]), 
                             axis = -1)
-    
-    if xvariable == 'radius':
-        return derivative
-    elif xvariable == 'theta':
-        return np.moveaxis(derivative, -1, -2)
-    elif xvariable == 'phi':
-        return np.moveaxis(derivative, -1, -3)
+    if axis is None:
+        if xvariable == 'radius':
+            return derivative
+        elif xvariable == 'theta':
+            return np.moveaxis(derivative, -1, -2)
+        elif xvariable == 'phi':
+            return np.moveaxis(derivative, -1, -3)
+    else:
+        return np.moveaxis(derivative, -1, axis)
 
 def get_stream_quantities(b1, b2, ax, ay, az, lx, ly, lz, plane):
     if plane != 'xz' and len(b1.shape) < 3:

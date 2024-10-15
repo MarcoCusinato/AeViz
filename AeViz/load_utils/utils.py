@@ -4,7 +4,7 @@ from AeViz.units.units import units
 
 u = units()
 
-def return_neutrino_flux(sim, name, file):
+def return_neutrino_flux(sim, name, file, **kwargs):
     comp = name.split('_')[-1]
     if comp == 'e':
         out = sim.neutrino_energy_density_grey(file)
@@ -39,7 +39,7 @@ def return_neutrino_flux(sim, name, file):
             out = out[..., 2, 2]
     return out
 
-def return_neutrino_mean_ene(sim, name, file):
+def return_neutrino_mean_ene(sim, name, file, **kwargs):
     if 'nue' in name:
         out = sim.neutrino_mean_energy(file)[..., 0]
     elif 'nua' in name:
@@ -48,11 +48,11 @@ def return_neutrino_mean_ene(sim, name, file):
         out = sim.neutrino_mean_energy(file)[..., 2]
     return out
 
-def return_integrated_neutrinos(sim, name):
+def return_integrated_neutrinos(sim, name, **kwargs):
     if 'ene' in name:
-        out = sim.global_neutrino_mean_energies()
+        out = sim.global_neutrino_mean_energies(**kwargs)
     elif 'lum' in name:
-        out = sim.global_neutrino_luminosity()[:, :4]
+        out = sim.global_neutrino_luminosity(**kwargs)[:, :4]
     if 'all' in name:
         return out
     elif 'nue' in name:
@@ -62,8 +62,8 @@ def return_integrated_neutrinos(sim, name):
     elif 'nux' in name:
         return np.stack((out[:, 0], out[:, 3]), axis=1)
 
-def return_angular_momentum(sim, name):
-    data = sim.PNS_angular_mom()
+def return_angular_momentum(sim, name, **kwargs):
+    data = sim.PNS_angular_mom(**kwargs)
     if 'all' in name:
         return data
     elif 'Lx' in name:
@@ -75,8 +75,8 @@ def return_angular_momentum(sim, name):
     elif 'Ltot' in name:
         return [data[0], data[4]]
     
-def return_PNS_kick(sim, name):
-    data = list(sim.PNS_kick_velocity())
+def return_PNS_kick(sim, name, **kwargs):
+    data = list(sim.PNS_kick_velocity(**kwargs))
     data[1] = u.convert_to_km(data[1])
     data[2] = u.convert_to_km(data[2])
     data[3] = u.convert_to_km(data[3])

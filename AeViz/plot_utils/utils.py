@@ -520,9 +520,59 @@ plot_labels = {
                                'lim': (0, 750),
                                'label': r'v$_\mathrm{kick}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
-         
-         
 }
+
+keys = list(plot_labels.keys())
+for key in keys:
+       if 'cmap' in plot_labels[key]:
+              plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
+                                           'lim': (None, None),
+                                           'cmap': plot_labels[key]['cmap'],
+                                           'label':r'$\partial_r$ ' + \
+                                            plot_labels[key]['label'].split(']')[0] + '/cm]',
+                                            }
+              plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
+                                              'lim': (None, None),
+                                              'cmap': plot_labels[key]['cmap'],
+                                              'label': r'$\partial_\theta$ ' + \
+                                              plot_labels[key]['label'],
+                                              }
+              plot_labels['dphi_' + key] = {'log': plot_labels[key]['log'],
+                                            'lim': (None, None),
+                                            'cmap': plot_labels[key]['cmap'],
+                                            'label': r'$\partial_\phi$ ' + \
+                                            plot_labels[key]['label'],
+                                            }
+              plot_labels['dt_' + key] = {'log': plot_labels[key]['log'],
+                                          'lim': (None, None),
+                                          'cmap': plot_labels[key]['cmap'],
+                                          'label': r'$\partial_t$ ' + \
+                                          plot_labels[key]['label'].split(']')[0] + '/s]',
+                                          }
+       else:
+              plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
+                                          'lim': (None, None),
+                                          'label':r'$\partial_r$ ' + \
+                                          plot_labels[key]['label'].split(']')[0] + '/cm]',
+                                          }
+              plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
+                                              'lim': (None, None),
+                                              'label': r'$\partial_\theta$ ' + \
+                                              plot_labels[key]['label'],
+                                             }
+              plot_labels['dphi_' + key] = {'log': plot_labels[key]['log'],
+                                            'lim': (None, None),
+                                            'label': r'$\partial_\phi$ ' + \
+                                                   plot_labels[key]['label'],
+                                           }
+              plot_labels['dt_' + key] = {'log': plot_labels[key]['log'],
+                                          'lim': (None, None),
+                                          'label': r'$\partial_t$ ' + \
+                                                  plot_labels[key]['label'].split(']')[0] + '/s]',
+                                          }
+                                                         
+
+
 
 ## PLOT LABELS FOR X-AXIS
 xaxis_labels = {'radius': 'R [km]',
