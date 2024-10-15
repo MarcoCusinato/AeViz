@@ -1,6 +1,8 @@
 import h5py, os
 import matplotlib.pyplot as plt
+import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
+from scipy.ndimage import convolve
 
 def hdf_isopen(func):
     """
@@ -85,5 +87,62 @@ def derive(func):
                 return data
         else:
             return data
+
+    return wrapper
+
+def smooth(func):
+    """
+    Decorator that add a smothing of the data.
+    """
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        if 'smooth' not in kwargs:
+            return data
+        if 'smooth_window' in kwargs:
+            window_points = kwargs['smooth_window']
+        else:
+            window_points = 5
+        if kwargs['smooth'] == 'gauss':
+            x = np.linspace(-window_points // 2, window_points // 2,
+                            window_points)
+            window = np.exp(-(x**2) / (2 * 2 ** 2))
+        else:
+            window = np.ones(window_points) / window_points   
+        if type(data) == tuple:
+            data = list(data)
+        if type(data) == list:
+            for i in range(1, len(data)):
+                if type(data[i]) != dict:
+                    data[i] = np.convolve(data[i], window, mode='same')
+            return data
+        elif len(data.shape) == 1:
+            return np.convolve(data, window, mode='same')
+        elif data.shape[0] not in [len(args[0].cell.radius(args[0].ghost)),
+                                   len(args[0].cell.theta(args[0].ghost)),
+                                   len(args[0].cell.phi(args[0].ghost)),
+                                   len(args[0].hdf_file_list)]:
+            for i in range(data.shape[1]):
+                data[:, i] = np.convolve(data[:, i], window, mode='same')
+            return data
+        elif len(args[0].hdf_file_list) == data.shape[0]:
+            for i in range(data.shape[1]):
+                data[:, i] = np.convolve(data[:, i], window, mode='same')
+            return data
+        else:
+            if kwargs['smooth'] == 'gauss':
+                grid = np.meshgrid(*[np.linspace(-window_points // 2,
+                                                 window_points // 2,
+                                                 window_points)
+                                     for _ in range(data.ndim)],
+                                   indexing='ij')
+                coords = np.stack(grid, axis=-1)
+                exponent = -np.sum((coords) ** 2, axis=-1) / \
+                            (2 * 2 ** 2)
+                window = np.exp(exponent)
+                window /= np.sum(window)
+            else:
+                window = np.ones([window_points] * data.ndim)
+                window /= np.sum(window)
+            return convolve(data, window, mode='constant')
 
     return wrapper
