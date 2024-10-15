@@ -457,7 +457,7 @@ class Plotting(PlottingUtils, Data):
         if qt2 is not None:
             data = self._Data__get_data_from_name(qt2, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt1, **kwargs)
+            qt_label = get_qt_for_label(qt2, **kwargs)
             self._PlottingUtils__update_params('B', (X, Y),
                                         data,
                                         cbars['B'],
@@ -473,7 +473,7 @@ class Plotting(PlottingUtils, Data):
         if qt3 is not None and qt4 is None:
             data = self._Data__get_data_from_name(qt3, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt1, **kwargs)
+            qt_label = get_qt_for_label(qt3, **kwargs)
             self._PlottingUtils__update_params('C', (X, Y),
                                         data,
                                         cbars['C'],
@@ -486,7 +486,6 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot2D('C')
             self.Xscale('linear', 'C')
             self.Yscale('linear', 'C')
-            qt_label = get_qt_for_label(qt1, **kwargs)
             self._PlottingUtils__update_params('D', (X, Y),
                                         data,
                                         cbars['D'],
@@ -502,7 +501,7 @@ class Plotting(PlottingUtils, Data):
         elif qt3 is not None:
             data = self._Data__get_data_from_name(qt3, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt1, **kwargs)
+            qt_label = get_qt_for_label(qt3, **kwargs)
             self._PlottingUtils__update_params('C', (X, Y),
                                         data,
                                         cbars['C'],
@@ -518,7 +517,7 @@ class Plotting(PlottingUtils, Data):
         if qt4 is not None:
             data = self._Data__get_data_from_name(qt4, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt1, **kwargs)
+            qt_label = get_qt_for_label(qt4, **kwargs)
             self._PlottingUtils__update_params('D', (X, Y),
                                         data,
                                         cbars['D'],
