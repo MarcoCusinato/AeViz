@@ -94,7 +94,7 @@ class Data(object):
         elif self.data_type == 'sim':
             return self.loaded_data.radial_profile(name)
 
-    def __get_data_from_name(self, name, file=None):
+    def __get_data_from_name(self, name, file=None, **kwargs):
         if self.data_type == 'hdf5':
             if return_index(self.hydroTHD_index, name)['index'] is None:
                 raise ValueError('The selected quantity is not present in the'\
@@ -114,41 +114,46 @@ class Data(object):
         elif self.data_type == 'sim':
             if file is not None:
                 if name == 'BX':
-                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
-                        [..., 0]
+                    out = getattr(self.loaded_data,
+                                  'magnetic_fields')(file, **kwargs)[..., 0]
                 elif name == 'BY':
                     out = getattr(self.loaded_data, 'magnetic_fields')(file)\
                         [..., 1]
                 elif name == 'BZ':
-                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
-                        [..., 2]
+                    out = getattr(self.loaded_data,
+                                  'magnetic_fields')(file, **kwargs)[..., 2]
                 elif name == 'total_magnetic_energy':
-                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[0]
+                    out = getattr(self.loaded_data,
+                                  'magnetic_energy')(file, **kwargs)[0]
                 elif name == 'poloidal_magnetic_energy':
-                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[1]
+                    out = getattr(self.loaded_data,
+                                  'magnetic_energy')(file, **kwargs)[1]
                 elif name == 'toroidal_magnetic_energy':
-                    out = getattr(self.loaded_data, 'magnetic_energy')(file)[2]
+                    out = getattr(self.loaded_data,
+                                  'magnetic_energy')(file, **kwargs)[2]
                 elif 'nu' in name and 'moment' in name:
-                    out = return_neutrino_flux(self.loaded_data, name, file)
+                    out = return_neutrino_flux(self.loaded_data, name, file,
+                                               **kwargs)
                 elif 'nue_mean_ene' == name or 'nua_mean_ene' == name or \
                     'nux_mean_ene' == name:
                     out = return_neutrino_mean_ene(self.loaded_data,
-                                                   name, file)
+                                                   name, file, **kwargs)
                 else:
-                    out = getattr(self.loaded_data, name)(file)
+                    out = getattr(self.loaded_data, name)(file, **kwargs)
                 return out
             else:
                 if ('explosion' in name) or ('gain' in name) or \
                     ('innercore' in name) or \
                     ('PNS' in name and 'radius' not in name):
-                    return self.__get_energy_data(name)
+                    return self.__get_energy_data(name, **kwargs)
                 elif 'nu_integrated_' in name:
-                    return  return_integrated_neutrinos(self.loaded_data, name)
+                    return  return_integrated_neutrinos(self.loaded_data, name,
+                                                        **kwargs)
                 elif 'kick_velocity_' in name:
                     return return_PNS_kick(self.loaded_data, name)
                     
                     
-                return getattr(self.loaded_data, name)()
+                return getattr(self.loaded_data, name)(**kwargs)
     
     def __plane_cut(self, data, indextheta = None, indexphi = None):
         if (indexphi == None and indextheta == None) or \
@@ -171,10 +176,10 @@ class Data(object):
         else:
             raise TypeError('Not implemented for 3D simulations.')
     
-    def __get_energy_data(self, name):
+    def __get_energy_data(self, name, **kwargs):
         qt = name.split('_')[-1]
         if 'explosion' in name:
-            data = getattr(self.loaded_data, 'explosion_mass_ene')()
+            data = getattr(self.loaded_data, 'explosion_mass_ene')(**kwargs)
             if qt == 'mass':
                 return data[0], data[1]
             elif qt == 'ene':
@@ -184,13 +189,13 @@ class Data(object):
             elif qt == 'mag':
                 return data[0], data[4]
         elif 'gain' in name:
-            data = getattr(self.loaded_data, 'gain_mass_nu_heat')()
+            data = getattr(self.loaded_data, 'gain_mass_nu_heat')(**kwargs)
             if qt == 'mass':
                 return data[0], data[1]
             elif qt == 'ene':
                 return data[0], data[2]
         elif 'innercore' in name:
-            data = getattr(self.loaded_data, 'innercore_mass_ene')()
+            data = getattr(self.loaded_data, 'innercore_mass_ene')(**kwargs)
             if qt == 'mass':
                 return data[0], data[1]
             elif qt == 'ene':
@@ -207,8 +212,9 @@ class Data(object):
                 return data[0], data[7]
         elif 'PNS' in name:
             if 'PNS_angular_mom' in name:
-                return return_angular_momentum(self.loaded_data, name)
-            data = getattr(self.loaded_data, 'PNS_mass_ene')()
+                return return_angular_momentum(self.loaded_data, name,
+                                               **kwargs)
+            data = getattr(self.loaded_data, 'PNS_mass_ene')(**kwargs)
             if qt == 'mass':
                 return data[0], data[1]
             elif qt == 'ene':
@@ -224,7 +230,7 @@ class Data(object):
             elif qt == 'conv':
                 return data[0], data[7]
 
-    def __get_1D_radii_data(self, name):
+    def __get_1D_radii_data(self, name, **kwargs):
         name = name.split('_')
         rad_type = name[-1]
         if not 'neutrino' in name:
@@ -233,7 +239,8 @@ class Data(object):
         else:
             flavour = name[-2]
             name = '_'.join(name[:-2])
-        time, _, max_r, min_r, avg_r, _ = getattr(self.loaded_data, name)()
+        time, _, max_r, min_r, avg_r, _ = getattr(self.loaded_data,
+                                                  name)(**kwargs)
         if flavour:
             max_r = max_r[flavour]
             min_r = min_r[flavour]
