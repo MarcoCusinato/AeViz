@@ -160,6 +160,10 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
         check_index += 1
         progress_index += 1
         findex += 1
+    save_hdf(os.path.join(simulation.storage_path, 
+                        'PNS_angular_momentum_nu.h5'),
+            ['time', 'Lx', 'Ly', 'Lz', 'processed'],
+            [time, Lx, Ly, Lz, processed_hdf])
     Lx, Ly, Lz = integrate_momenta(time, Lx, Ly, Lz)
     Ltotx = Lx['nue'] + Lx['nua'] + Lx['nux']
     Ltoty = Ly['nue'] + Ly['nua'] + Ly['nux']
