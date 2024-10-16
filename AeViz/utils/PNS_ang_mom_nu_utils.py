@@ -129,15 +129,15 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
                                                     r, g_cells)
         try:
             time = np.append(time, simulation.time(file))
-            Lx = {'nue': np.append(Lx['nue'], Lx[..., 0]),
-                  'nua': np.append(Lx['nua'], Lx[..., 1]),
-                  'nux': np.append(Lx['nux'], Lx[..., 2])}
-            Ly = {'nue': np.append(Ly['nue'], Ly[..., 0]),
-                  'nua': np.append(Ly['nua'], Ly[..., 1]),
-                  'nux': np.append(Ly['nux'], Ly[..., 2])}
-            Lz = {'nue': np.append(Lz['nue'], Lz[..., 0]),
-                  'nua': np.append(Lz['nua'], Lz[..., 1]),
-                  'nux': np.append(Lz['nux'], Lz[..., 2])}
+            Lx = {'nue': np.append(Lx['nue'], Lx_comp[..., 0]),
+                  'nua': np.append(Lx['nua'], Lx_comp[..., 1]),
+                  'nux': np.append(Lx['nux'], Lx_comp[..., 2])}
+            Ly = {'nue': np.append(Ly['nue'], Lx_comp[..., 0]),
+                  'nua': np.append(Ly['nua'], Ly_comp[..., 1]),
+                  'nux': np.append(Ly['nux'], Ly_comp[..., 2])}
+            Lz = {'nue': np.append(Lz['nue'], Lz_comp[..., 0]),
+                  'nua': np.append(Lz['nua'], Lz_comp[..., 1]),
+                  'nux': np.append(Lz['nux'], Lz_comp[..., 2])}
         except:
             time = np.array([simulation.time(file)])
             Lx = {'nue': np.array([Lx_comp[..., 0]]),
