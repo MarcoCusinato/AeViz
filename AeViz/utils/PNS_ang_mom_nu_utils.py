@@ -61,13 +61,13 @@ def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
     else:
         Omega = np.nansum(Omega[indices[0], indices[1], surface_indices])
         Lx = -np.sum(Fx[indices[0], indices[1], surface_indices,:] * \
-                    PNS_surface[..., None, None] ** 2, axis=(0, 1)) * \
+                    PNS_surface[..., None] ** 2, axis=(0, 1)) * \
                         PNS_avg_radius ** 2 * Omega
         Ly = -np.sum(Fy[indices[0], indices[1], surface_indices,:] * \
-                    PNS_surface[..., None, None] ** 2, axis=(0, 1)) * \
+                    PNS_surface[..., None] ** 2, axis=(0, 1)) * \
                         PNS_avg_radius ** 2 * Omega
         Lz = -np.sum(Fz[indices[0], indices[1], surface_indices, :] * \
-                    PNS_surface[..., None, None] ** 2, axis=(0, 1)) * \
+                    PNS_surface[..., None] ** 2, axis=(0, 1)) * \
                         PNS_avg_radius ** 2 * Omega
     
     return Lx, Ly, Lz
