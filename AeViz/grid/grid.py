@@ -77,6 +77,24 @@ class grid:
         if self.dim == 2:
             return self.__2D_velocity_sph_to_cart(v_r, v_theta, v_phi)
         return self.__3D_velocity_sph_to_cart(v_r, v_theta, v_phi)
+    
+    def spherical_to_cartesian(self, r=None, th=None, ph=None,
+                               add_front=0, add_back=0):
+        """
+        Returns the cartesian components of the input array.
+        input:
+            r: (numpy array) radial component
+            th: (numpy array) polar component
+            ph: (numpy array) azimutal component
+            add_front: (int) number of axis to add in front of the array
+            add_back: (int) number of axis to add in back of the array
+        """
+        if self.dim == 1:
+            return r
+        if self.dim == 2:
+            return self.__2D_spherical_to_cartesian(r, th, ph, add_front,
+                                                     add_back)
+        return self.__3D_spherical_to_cartesian(r, th, ph, add_front, add_back)
 
     def new_cartesian_grid(self, **kwargs):
         """
@@ -196,3 +214,46 @@ class grid:
         Vz = v_r * np.cos(self.theta)[None, :, None] - \
             v_theta * np.sin(self.theta)[None, :, None]
         return Vx, Vy, Vz
+    
+    def __2D_spherical_to_cartesian(self, r, th, ph, add_front, add_back):
+        sint = np.sin(self.theta)[:, None]
+        cost = np.cos(self.theta)[:, None]
+        for i in range(add_front):
+            cost = cost[None, :]
+            sint = sint[None, :]
+        for i in range(add_back):
+            cost = cost[:, None]
+            sint = sint[:, None]
+        X = r * sint + th * cost
+        Z = r * cost - th * sint
+        if ph is None:
+            return X, Z
+        Y = ph * sint
+        return X, Y, Z
+    
+    def __3D_spherical_to_cartesian(self, r, th, ph, add_front, add_back):
+        sint = np.sin(self.theta)[None, :, None]
+        cost = np.cos(self.theta)[None, :, None]
+        sinp = np.sin(self.phi)[:, None, None]
+        cosp = np.cos(self.phi)[:, None, None]
+        
+        for i in range(add_front):
+            cost = cost[None, :]
+            sint = sint[None, :]
+            cosp = cosp[None, :]
+            sinp = sinp[None, :]
+        for i in range(add_back):
+            cost = cost[:, None]
+            sint = sint[:, None]
+            cosp = cosp[:, None]
+            sinp = sinp[:, None]
+        
+        X = r * sint * cosp + \
+            th * cost * cosp - \
+            ph * sinp
+        Y = r * sint * sinp + \
+            th * cost * sinp + \
+            ph * sinp
+        Z = r * cost - \
+            th * sint
+        return X, Y, Z
