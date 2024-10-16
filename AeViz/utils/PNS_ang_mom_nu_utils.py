@@ -11,9 +11,9 @@ def integrate_momenta(time, Lx, Ly, Lz):
     dt = np.zeros(time.shape[0])
     dt[1:] = time[1:] - time[:-1]
     dt[0] = dt[1]
-    Lx = {key: np.cumsum(Lx[key] * dt) for key in Lx.keys()}
-    Ly = {key: np.cumsum(Ly[key] * dt) for key in Ly.keys()}
-    Lz = {key: np.cumsum(Lz[key] * dt) for key in Lz.keys()}
+    Lx = {key: np.cumsum(Lx[key] * dt) / u.speed_light for key in Lx.keys()}
+    Ly = {key: np.cumsum(Ly[key] * dt) / u.speed_light for key in Ly.keys()}
+    Lz = {key: np.cumsum(Lz[key] * dt) / u.speed_light for key in Lz.keys()}
     return Lx, Ly, Lz
 
 def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
