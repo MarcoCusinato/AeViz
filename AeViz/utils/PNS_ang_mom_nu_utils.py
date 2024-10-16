@@ -123,7 +123,8 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
         progressBar(progress_index, total_points, suffix='Computing...')
         Lx_comp, Ly_comp, Lz_comp = PNS_angular_momentum_neutrinos(
                                                     simulation, file,
-                                                    PNS_r[..., findex], av_r,
+                                                    PNS_r[..., findex],
+                                                    av_r[findex],
                                                     indices, dOmega, gr,
                                                     r, g_cells)
         try:
