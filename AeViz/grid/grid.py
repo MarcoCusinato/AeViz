@@ -219,11 +219,11 @@ class grid:
         sint = np.sin(self.theta)[:, None]
         cost = np.cos(self.theta)[:, None]
         for i in range(add_front):
-            cost = cost[None, :]
-            sint = sint[None, :]
+            cost = cost[None, ...]
+            sint = sint[None, ...]
         for i in range(add_back):
-            cost = cost[:, None]
-            sint = sint[:, None]
+            cost = cost[..., None]
+            sint = sint[..., None]
         X = r * sint + th * cost
         Z = r * cost - th * sint
         if ph is None:
@@ -238,15 +238,15 @@ class grid:
         cosp = np.cos(self.phi)[:, None, None]
         
         for i in range(add_front):
-            cost = cost[None, :]
-            sint = sint[None, :]
-            cosp = cosp[None, :]
-            sinp = sinp[None, :]
+            cost = cost[None, ...]
+            sint = sint[None, ...]
+            cosp = cosp[None, ...]
+            sinp = sinp[None, ...]
         for i in range(add_back):
-            cost = cost[:, None]
-            sint = sint[:, None]
-            cosp = cosp[:, None]
-            sinp = sinp[:, None]
+            cost = cost[..., None]
+            sint = sint[..., None]
+            cosp = cosp[..., None]
+            sinp = sinp[..., None]
         
         X = r * sint * cosp + \
             th * cost * cosp - \
