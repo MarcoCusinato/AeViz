@@ -122,8 +122,9 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
         Lx_comp, Ly_comp, Lz_comp = PNS_angular_momentum_neutrinos(
-                                                    simulation, file, PNS_r,
-                                                    av_r, indices, dOmega, gr,
+                                                    simulation, file,
+                                                    PNS_r[..., findex], av_r,
+                                                    indices, dOmega, gr,
                                                     r, g_cells)
         try:
             time = np.append(time, simulation.time(file))
