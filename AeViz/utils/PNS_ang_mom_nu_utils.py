@@ -45,7 +45,7 @@ def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
     PNS_surface = simulation.ghost.remove_ghost_cells_radii(PNS_radius,
                                                             simulation.dim,
                                                             **gcells)
-    Omega = simulation.omega(file_name) * dOmega[..., :] / dOmega.sum()
+    Omega = simulation.omega(file_name) * dOmega[..., None] / dOmega.sum()
     surface_indices = np.argmax(radius >= PNS_surface[..., None], axis=-1)
     if simulation.dim == 2:
         Omega = np.nansum(Omega[indices[0], surface_indices])
