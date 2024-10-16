@@ -33,8 +33,12 @@ def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
     output:
         Lx, Ly, Lz: array of floats        
     """
-    Flux = simulation.neutrino_momenta_grey(file_name) * \
-              dOmega[..., None, None]
+    if simulation.dim == 2:
+        Flux = simulation.neutrino_momenta_grey(file_name) * \
+               dOmega[..., None, None]
+    else:
+        Flux = simulation.neutrino_momenta_grey(file_name) * \
+               dOmega[..., None, None, None]
     Fx, Fy, Fz = grid.spherical_to_cartesian(Flux[..., 0], Flux[..., 1],
                                            Flux[..., 2], add_back=1)
     del Flux
