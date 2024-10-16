@@ -109,7 +109,7 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
     else:
         indices = np.meshgrid(
             np.arange(len(simulation.cell.phi(simulation.ghost))),
-            np.arange(len(simulation.cell.theta(simulation.ghost).shape[0])),
+            np.arange(len(simulation.cell.theta(simulation.ghost))),
             indexing='ij')
     findex = start_point
     check_index = 0
