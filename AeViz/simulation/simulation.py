@@ -13,7 +13,8 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GW_spectrogram, GWs_peak_indices,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
-from AeViz.utils.kick_vel_utils import calculate_kick, velocity_kick
+from AeViz.utils.kick_vel_utils import calculate_kick
+from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
@@ -953,7 +954,8 @@ class Simulation:
     
     @smooth
     @derive
-    def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+    def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True,
+                        **kwargs):
         """
         Returns the PNS angular momentum at every timestep.
         If tob_corrected is True, the time is corrected for the time of
@@ -967,6 +969,26 @@ class Simulation:
             time += self.tob
         return [time, data['L']['Lx'], data['L']['Ly'],
                 data['L']['Lz'], data['L']['L_tot']]
+    
+    @smooth
+    @derive
+    def PNS_angular_momentum_neutrinos(self, tob_corrected=True,
+                                       save_checkpoints=True, 
+                                       **kwargs):
+        """
+        Returns the PNS angular momentum carried away by neutrinos at every
+        timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot
+            The momentum Lx, Ly and Lz are dictionaries
+        """
+        time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot = \
+            calculate_angular_mom_PNS_nu(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot]
     
     @smooth
     @derive
