@@ -160,12 +160,12 @@ def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
         check_index += 1
         progress_index += 1
         findex += 1
-        Lx, Ly, Lz = integrate_momenta(time, Lx, Ly, Lz)
-        Ltotx = Lx['nue'] + Lx['nua'] + Lx['nux']
-        Ltoty = Ly['nue'] + Ly['nua'] + Ly['nux']
-        Ltotz = Lz['nue'] + Lz['nua'] + Lz['nux']
-        Ltot = np.sqrt(Ltotx ** 2 + Ltoty ** 2 + Ltotz ** 2)
-        return time, Lx, Ly, Lz, Ltotx, Ltoty, Ltotz, Ltot
+    Lx, Ly, Lz = integrate_momenta(time, Lx, Ly, Lz)
+    Ltotx = Lx['nue'] + Lx['nua'] + Lx['nux']
+    Ltoty = Ly['nue'] + Ly['nua'] + Ly['nux']
+    Ltotz = Lz['nue'] + Lz['nua'] + Lz['nux']
+    Ltot = np.sqrt(Ltotx ** 2 + Ltoty ** 2 + Ltotz ** 2)
+    return time, Lx, Ly, Lz, Ltotx, Ltoty, Ltotz, Ltot
 
 def read_angular_mom_PNS_nu(simulation):
     """
