@@ -40,8 +40,12 @@ class Simulation:
         self.hydroTHD_index, \
             self.ghost_cells = get_indices_from_parfile('start.pars',
                                                os.path.join(self.path, 'pars'))
-        self.initial_parameters = get_initial_parameters(os.path.join(self.path,
+        try:
+            self.initial_parameters = get_initial_parameters(
+                                                        os.path.join(self.path,
                                                                        'pars'))
+        except:
+            self.initial_parameters = None
         self.cell = cl(self.path, dim)
         self.dim = self.cell.simulation_dimension()
         self.ghost = gh(self.ghost_cells)
