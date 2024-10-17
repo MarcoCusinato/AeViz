@@ -625,7 +625,6 @@ class Simulation:
         GWs[:, 1:] /= distance
         return GWs
     
-    @smooth
     def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True):
         """
         Parameters:
@@ -650,8 +649,7 @@ class Simulation:
         if tob_corrected:
             time -= self.tob
         return time, frequency, Zxx
-    
-    @smooth
+
     def Deltah(self, peak:Literal['bounce', 'highest']='bounce',
                interval=[None, None], min_time=1.75, max_time=2, distance=1, 
                coordinates=False, tob_corrected=True):
@@ -678,7 +676,6 @@ class Simulation:
             return Deltah, np.array(x), np.array(y)
         return Deltah
     
-    @smooth
     def GWs_peak_frequencies(self, peak:Literal['bounce', 'highest']='bounce',
                               min_time=1.75, max_time=2, interval=[None, None],
                               return_intensities=False, return_fourier=False):

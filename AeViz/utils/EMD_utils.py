@@ -3,6 +3,11 @@ import h5py, os
 from collections import defaultdict
 from numpy.fft import fft, ifft, fftfreq
 from PyEMD import EMD
+from scipy.signal import hilbert
+from scipy.signal import savgol_filter
+from sparse import COO
+from AeViz.utils.decorators import EMD_smooth
+
 
 def polish_signal(GWs, frequency_cut):
     """
@@ -91,3 +96,102 @@ def compact_IMFs(path, strain, files):
         f.create_dataset('sigma', data=sigma)
         f.create_dataset('f_cut', data=fcut)
         f.create_dataset('res_removed', data=res_removed)
+
+## METHODS for the HHT spectrum
+def HHT_hist_bins(time, scale='linear', mode='time', bins=None):
+    """
+    Compute the bins for the HHT histogram.
+    """
+    if mode == 'time':
+        min_value = time.min()
+        max_value = time.max()
+    elif mode == 'frequency':
+        min_value = 0
+        max_value = fftfreq(time.size, time[1] - time[0]).max()
+    else:
+        raise ValueError('Mode must be either time or frequency.')
+    if bins is None:
+        bins = np.sqrt(time.size) + 1
+    if mode == 'time' and bins > 1001:
+        bins = 1001
+    elif mode == 'frequency' and bins > 100:
+        bins = 100
+    bins = int(bins)
+    if scale == 'linear':
+        bin_edge = np.linspace(min_value, max_value, bins)
+    elif scale == 'log':
+        bin_edge =  np.logspace(np.log10(min_value),
+                                np.log10(max_value), bins)
+    else:
+        raise ValueError('Scale must be either linear or log.')
+
+    bin_centre = (bin_edge[1:] + bin_edge[:-1]) / 2
+    return bin_edge, bin_centre
+
+@EMD_smooth
+def instantaneous_amplitude(IMF):
+    """
+    Compute the istantaneous amplitude of the signal.
+    """
+    if IMF.ndim == 2:
+        analytic_signal = np.zeros_like(IMF)
+        for i in range(IMF.shape[0]):
+            analytic_signal[i, :] = np.abs(hilbert(IMF[i, :]))
+    else:
+        analytic_signal = np.abs(hilbert(IMF))
+    return analytic_signal
+
+@EMD_smooth
+def instantaneous_frequency(IMF, time, **kwargs):
+    """
+    Compute the istantaneous frequency of the signal.
+    """
+    dt = time[1] - time[0]
+    sample_frequency = 1 / dt
+    analytic_signal = hilbert(IMF)
+    if IMF.ndim == 2:
+        for i in range(IMF.shape[0]):
+            phase = np.unwrap(np.angle(analytic_signal[i, :]))
+            phase = savgol_filter(phase, 3, 1, deriv=1)
+            analytic_signal[i, :] = phase
+    else:
+        phase = np.unwrap(np.angle(analytic_signal), axis=0)
+        phase = savgol_filter(phase, 3, 1, deriv=1, axis=0)
+    return phase / (2.0 * np.pi) * sample_frequency
+
+
+def HHT_spectra_single_if(IF, IA, frequency_edges):
+    mask = ((IF >= frequency_edges[0]) & (IF < frequency_edges[-1]))
+    print(frequency_edges.shape)
+    f_inds = np.digitize(IF, frequency_edges) - 1
+    print(f_inds.shape)
+    t_ind = np.arange(f_inds.shape[0])
+    coordinates = np.c_[f_inds.flatten(), t_ind.flatten()].T
+    IA = IA.flatten()[mask]
+    coordinates = coordinates[:, mask]
+    spectra = COO(coordinates, IA, shape=(f_inds.shape[0], IF.size))
+    spectra = spectra.todense()
+    return spectra
+ 
+
+def HHT_spectra(IMF, time, tbins=None, fbins=None, **kwargs):
+    
+    IF = instantaneous_frequency(IMF, time, **kwargs)
+    IA = instantaneous_amplitude(IMF, **kwargs)
+    _, time_centre = HHT_hist_bins(time, mode='time',
+                                            bins=tbins)
+    freq_edges, freq_centre = HHT_hist_bins(time, mode='frequency',
+                                            bins=fbins)
+    if IMF.ndim == 2:
+        for i in range(IMF.shape[0]):
+            sp = HHT_spectra_single_if(IF[i, :], IA[i, :], freq_edges)
+            if i == 0:
+                spectra = sp
+            else:
+                spectra += sp
+    else:
+        spectra = HHT_spectra_single_if(IF, IA, freq_edges)
+    tinx = np.ones(time_centre.size, dtype=bool)
+    finx = np.ones(freq_centre.size, dtype=bool)
+    return spectra[np.ix_(finx, tinx)], freq_centre[finx], \
+        time_centre[tinx]

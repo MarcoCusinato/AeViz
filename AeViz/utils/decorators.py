@@ -146,3 +146,31 @@ def smooth(func):
             return convolve(data, window, mode='wrap')
 
     return wrapper
+
+def EMD_smooth(func):
+    """
+    Decorator that add a smothing of the data for EMDs.
+    """
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        if 'smooth' not in kwargs:
+            return data
+        if 'smooth_window' in kwargs:
+            window_points = kwargs['smooth_window']
+        else:
+            window_points = 5
+        if kwargs['smooth'] == 'gauss':
+            x = np.linspace(-window_points // 2, window_points // 2,
+                            window_points)
+            window = np.exp(-(x**2) / (2 * 2 ** 2))
+        else:
+            window = np.ones(window_points) / window_points   
+        if data.ndim == 2:
+            for i in range(0, data.shape[0]):
+                data[i, :] = np.convolve(data[i, :], window, mode='same')
+        else:
+            data = np.convolve(data, window, mode='same')
+        
+        return data
+
+    return wrapper
