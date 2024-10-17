@@ -16,7 +16,7 @@ def polish_signal(GWs, frequency_cut):
     
     
     mask = (np.abs(frequency_spectrum) > frequency_cut)
-    for i in range(GWs.shape[1]):
+    for i in range(1, GWs.shape[1]):
         fourier_transform = fft(GWs[:, i])
         fourier_transform[mask] = 0
         GWs[:, i] = np.real(ifft(fourier_transform))
@@ -27,7 +27,7 @@ def remove_residuals(GWs):
     Remove residuals from the signal.
     """
     emd = EMD()
-    for i in range(GWs.shape[1]):
+    for i in range(1, GWs.shape[1]):
         emd.emd(GWs[:, i], GWs[:, 0])
         _, residual = emd.get_imfs_and_residue()
         GWs[:, i] -= residual
