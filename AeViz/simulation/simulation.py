@@ -222,10 +222,10 @@ class Simulation:
             return self.phi_velocity(file_name, **kwargs) / (np.sin(self.cell.theta(
                 self.ghost))[:, None] * self.cell.radius(self.ghost)[None, :])
         elif self.dim == 3:
-            return self.phi_velocity(file_name, **kwargs) / (np.cos(self.cell.phi(
-                self.ghost))[:, None, None] * np.sin(self.cell.theta(
-                self.ghost))[None, :, None] * \
-                self.cell.radius(self.ghost)[None, None, :])
+            return self.phi_velocity(file_name, **kwargs) / \
+                (np.cos(self.cell.phi(self.ghost))[:, None, None] *
+                 np.sin(self.cell.theta(self.ghost))[None, :, None] * \
+                 self.cell.radius(self.ghost)[None, None, :])
 
     ## -----------------------------------------------------------------
     ## THERMODYNAMICAL DATA
