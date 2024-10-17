@@ -159,7 +159,6 @@ def instantaneous_frequency(IMF, time, **kwargs):
         phase = savgol_filter(phase, 3, 1, deriv=1, axis=0)
     return phase / (2.0 * np.pi) * sample_frequency
 
-
 def HHT_spectra_single_if(IF, IA, frequency_edges):
     mask = ((IF >= frequency_edges[0]) & (IF < frequency_edges[-1]))
     print(frequency_edges.shape)
@@ -172,7 +171,6 @@ def HHT_spectra_single_if(IF, IA, frequency_edges):
     spectra = COO(coordinates, IA, shape=(f_inds.shape[0], IF.size))
     spectra = spectra.todense()
     return spectra
- 
 
 def HHT_spectra(IMF, time, tbins=None, fbins=None, **kwargs):
     
@@ -195,3 +193,16 @@ def HHT_spectra(IMF, time, tbins=None, fbins=None, **kwargs):
     finx = np.ones(freq_centre.size, dtype=bool)
     return spectra[np.ix_(finx, tinx)], freq_centre[finx], \
         time_centre[tinx]
+
+def get_IMFs(storage_path, strain):
+    """
+    Loads the IMFs and the residue from the storage path.
+    """
+    save_path = os.path.join(storage_path, 'IMFs_' + strain + '.h5')
+    if not os.path.exists(save_path):
+        raise FileNotFoundError('File not found. Please compute the IMFs first.')
+    with h5py.File(save_path, 'r') as f:
+        IMFs = f['IMFs'][...]
+        time = f['time'][...]
+        res = f['Residue'][...]
+    return time, IMFs, res

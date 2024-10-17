@@ -23,6 +23,14 @@ from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
 from AeViz.utils.utils import time_array
+try:
+    from PyEMD import EMD
+    from AeViz.utils.EMD_utils import (get_IMFs, HHT_spectra,
+                                       instantaneous_amplitude,
+                                       instantaneous_frequency)
+    PYEMD = True
+except:
+    PYEMD = False
 
 u = units()
 
@@ -733,6 +741,107 @@ class Simulation:
         return self.cell.radius(self.ghost), GW_data[0], GW_data[1], \
                 GW_data[2], GW_data[3], GW_data[4], GW_data[5]
     
+    ## -----------------------------------------------------------------
+    ## IMFs
+    ## -----------------------------------------------------------------
+
+    def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
+             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
+             tob_corrected=True, **kwargs):
+        """
+        Returns the Intrinsic Mode Functions of the GWs strain.
+        If mode is 'EEMD' the IMFs are calculated with the Ensemble
+        Empirical Mode Decomposition, otherwise with the Hilbert-Huang
+        Transform.
+        If tob_corrected is False the IMFs are not corrected for the
+        time of bounce.
+        Returns: time, IMFs, residue
+        """
+        if not PYEMD:
+            warnings.warn("PyEMD not installed, IMFs not available.")
+            return None, None, None
+        if self.dim == 1:
+            warnings.warn("No GWs in spherical symmetry.")
+            return None, None, None
+        elif self.dim == 2:
+            strain = 'h+eq'
+        if mode == 'EEMD':
+            time, IMFs, residue = get_IMFs(self.storage_path, strain)
+            if not tob_corrected:
+                time += self.tob
+        else:
+            GWs = self.GW_Amplitudes(tob_corrected)
+            time = GWs[:, 0]
+            if strain == 'h+eq':
+                h = GWs[:, 1]
+            elif strain == 'h+pol':
+                h = GWs[:, 2]
+            elif strain == 'hxeq':
+                h = GWs[:, 3]
+            elif strain == 'hxpol':
+                h = GWs[:, 4]
+            
+            emd = EMD(extrema_detection='parabol', spline_kind='akima')
+            emd.emd(S=h, T=time, max_imfs=max_imfs)
+            IMFs, residue = emd.get_imfs_and_residue()
+        return time, IMFs, residue
+
+    def instantaneous_frequency(self, strain:Literal['h+eq', 'hxeq',
+                                                      'h+pol', 'hxpol']='h+eq',
+                                mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
+                                tob_corrected=True, **kwargs):
+        """
+        Returns the instantaneous frequency of the GWs strain.
+        If mode is 'EEMD' the IMFs are calculated with the Ensemble
+        Empirical Mode Decomposition, otherwise with the Hilbert-Huang
+        Transform.
+        If tob_corrected is False the IMFs are not corrected for the
+        time of bounce.
+        Returns: time, instantaneous frequency
+        """
+        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        if IMFs is None:
+            return None
+        return time, instantaneous_frequency(time, IMFs, **kwargs)
+    
+    def instantaneous_amplitude(self, strain:Literal['h+eq', 'hxeq',
+                                                     'h+pol', 'hxpol']='h+eq',
+                                mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
+                                tob_corrected=True, **kwargs):
+        """
+        Returns the instantaneous amplitude of the GWs strain.
+        If mode is 'EEMD' the IMFs are calculated with the Ensemble
+        Empirical Mode Decomposition, otherwise with the Hilbert-Huang
+        Transform.
+        If tob_corrected is False the IMFs are not corrected for the
+        time of bounce.
+        Returns: time, instantaneous amplitude
+        """
+        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        if IMFs is None:
+            return None
+        return time, instantaneous_amplitude(IMFs, **kwargs)
+    
+    def HH_spectrum(self, strain:Literal['h+eq', 'hxeq', 'h+pol',
+                                         'hxpol']='h+eq',
+                    mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
+                    time_bins=None, freq_bins=30, tob_corrected=True,
+                    **kwargs):
+        """
+        Returns the Hilbert-Huang spectrum of the GWs strain.
+        If mode is 'EEMD' the IMFs are calculated with the Ensemble
+        Empirical Mode Decomposition, otherwise with the Hilbert-Huang
+        Transform.
+        If tob_corrected is False the IMFs are not corrected for the
+        time of bounce.
+        Returns: spectrogram, frequencies, time
+        """
+        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        if IMFs is None:
+            return None
+        return HHT_spectra(time, IMFs, time_bins, freq_bins, **kwargs)
+
+
     ## -----------------------------------------------------------------
     ## GLOBAL DATA
     ## -----------------------------------------------------------------
