@@ -152,7 +152,6 @@ class Data(object):
                 elif 'kick_velocity_' in name:
                     return return_PNS_kick(self.loaded_data, name)
                     
-                    
                 return getattr(self.loaded_data, name)(**kwargs)
     
     def __plane_cut(self, data, indextheta = None, indexphi = None):

@@ -271,7 +271,7 @@ class PlottingUtils(PlotCreation):
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
-            elif self.plot_dim[ax_letter] == -2:
+            elif self.plot_dim[ax_letter] in [-2, -3]:
                 self.__plot2Dmesh(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.ylim(self.ylims[ax_letter], ax_letter)
