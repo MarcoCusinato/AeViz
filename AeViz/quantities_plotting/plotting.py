@@ -9,6 +9,7 @@ from AeViz.units.units import units
 from AeViz.utils.math_utils import function_average
 from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
 import cv2
+import setuptools
 
 u = units()
 
@@ -77,6 +78,22 @@ def setup_cbars_spectrogram(number):
         cbars = {'B': 'L', 'D': 'R', 'F': 'L', 'H': 'R'}
         plots = ["G", "H"]
     return cbars, plots
+
+def setup_cbars__HHT(number):
+    if number == 1:
+        plot = "A"
+        cbars = {'A': 'R'}
+    elif number == 2:
+        plots = "B"
+        cbars = {'A': 'L', 'B': 'R'}
+    elif number == 3:
+        plots = "C"
+        cbars = {'A': 'L', 'B': 'R', 'C': 'L'}
+    elif number == 4:
+        plot = "D"
+        cbars = {'A': 'L', 'B': 'R', 'C': 'L', 'D': 'R'}
+    return plot, cbars
+
 
 def normalize_indices(index1, index2):
     if type(index1) == range:
@@ -807,6 +824,57 @@ class Plotting(PlottingUtils, Data):
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower() or self.plot_dim[ax_letter] == 1:
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        show_figure()
+    
+    def plotHHT(self, **kwargs):
+        redo = False
+        number_spect = 0
+        number = 0
+        if self.axd is not None:
+            number_spect = sum([self.plot_dim[ax_letter] == -3 
+                                 for ax_letter in self.axd if ax_letter 
+                                 in self.plot_dim])
+            print(number_spect, len(self.plot_dim))
+            if len(self.plot_dim) != number_spect:
+                self.Close()
+                number = 0
+            else:
+                number = number_spect
+                redo = True
+        
+        if number == 4:
+            self.Close()
+            number = 1
+        else:
+            number += 1
+            redo = True
+        plot, cbars = setup_cbars__HHT(number)
+        self._PlotCreation__setup_axd(number, 6)
+        Zxx, f, t = self._Data__get_data_from_name('HH_spectrum', **kwargs)
+        f /= 1e3
+        ## 2D plot of spectrogram
+        strain = kwargs['strain'][1] + ',' + kwargs['strain'][2:]
+        label = r'$\frac{\mathrm{dE_{GW_{' + strain +  r'}}}}{\mathrm{df}}$ [B$\cdot$HZ$^{-1}$]'
+        self._PlottingUtils__update_params(plot, (t, f),
+                                           Zxx, cbars[plot], False, 
+                                           (0, Zxx.max() * 0.45),
+                                           -3, 'magma',
+                                            label,
+                                           self.sim_dim)
+        
+        self.labels('t-t$_b$ [s]', '$f$ [kHz]', plot)
+        self._PlottingUtils__plot2Dmesh(plot)
+        self.ylim((0, 2), plot)
+        self.Xscale('linear', plot)
+        self.Yscale('linear', plot)
+        self.xlim((-0.005, t.max()), plot)
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter.islower():
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
                                                           cbars[ax_letter]) 

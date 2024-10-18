@@ -129,7 +129,7 @@ def HHT_hist_bins(time, scale='linear', mode='time', bins=None):
     return bin_edge, bin_centre
 
 @EMD_smooth
-def instantaneous_amplitude(IMF):
+def instantaneous_amplitude(IMF, **kwargs):
     """
     Compute the istantaneous amplitude of the signal.
     """

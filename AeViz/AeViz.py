@@ -461,6 +461,19 @@ class AeViz(Plotting):
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None,
                                 **kwargs)
     
+    def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
+             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10, spectro=False,
+             **kwargs):
+        loc = locals()
+        for q in loc.keys():
+            if q not in ['self', 'kwargs']:
+                kwargs[q] = loc[q]
+        if spectro:
+            self.plotHHT(**kwargs)
+        else:
+            raise NotImplementedError('IMFs plotting is not implemented yet.')
+            self.plotIMFs(**kwargs)
+    
     @fig_window_open
     def add_field(self, file, plot, comp: Literal['velocity', 'Bfield'],
                   plane: Literal['xy', 'yz', 'xz']='xz', **kwargs):
