@@ -84,10 +84,10 @@ def setup_cbars__HHT(number):
         plot = "A"
         cbars = {'A': 'R'}
     elif number == 2:
-        plots = "B"
+        plot = "B"
         cbars = {'A': 'L', 'B': 'R'}
     elif number == 3:
-        plots = "C"
+        plot = "C"
         cbars = {'A': 'L', 'B': 'R', 'C': 'L'}
     elif number == 4:
         plot = "D"
@@ -838,7 +838,6 @@ class Plotting(PlottingUtils, Data):
             number_spect = sum([self.plot_dim[ax_letter] == -3 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
-            print(number_spect, len(self.plot_dim))
             if len(self.plot_dim) != number_spect:
                 self.Close()
                 number = 0

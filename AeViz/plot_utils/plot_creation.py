@@ -16,7 +16,7 @@ def return_positioning(number, form_factor):
                              B.b""",
                        5: """..A.C..
                              b.B.D.d""",
-                       6: """a.A.b.b"""
+                       6: """a.A.B.b"""
                        },
                     3: {1:"""A
                              B
