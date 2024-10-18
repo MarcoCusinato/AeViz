@@ -746,8 +746,8 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
-             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
-             tob_corrected=True, **kwargs):
+             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10, start_time=-0.05,
+             end_time=None, tob_corrected=True, **kwargs):
         """
         Returns the Intrinsic Mode Functions of the GWs strain.
         If mode is 'EEMD' the IMFs are calculated with the Ensemble
@@ -780,9 +780,18 @@ class Simulation:
                 h = GWs[:, 3]
             elif strain == 'hxpol':
                 h = GWs[:, 4]
-            
-            emd = EMD(extrema_detection='parabol', spline_kind='akima')
-            emd.emd(S=h, T=time, max_imfs=max_imfs)
+            if end_time is not None:
+                index_end = np.argmax(time >= end_time)
+            else:
+                index_end = -20
+            if start_time is not None:
+                index_start = np.argmax(time >= start_time)
+            else:
+                index_start = 0
+            time = time[index_start:index_end]
+            h = h[index_start:index_end]
+            emd = EMD()
+            emd.emd(S=h, T=time, max_imf=max_imfs)
             IMFs, residue = emd.get_imfs_and_residue()
         return time, IMFs, residue
 
@@ -802,7 +811,7 @@ class Simulation:
         time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
         if IMFs is None:
             return None
-        return time, instantaneous_frequency(time, IMFs, **kwargs)
+        return time, instantaneous_frequency(IMFs, time, **kwargs)
     
     def instantaneous_amplitude(self, strain:Literal['h+eq', 'hxeq',
                                                      'h+pol', 'hxpol']='h+eq',
@@ -825,7 +834,7 @@ class Simulation:
     def HH_spectrum(self, strain:Literal['h+eq', 'hxeq', 'h+pol',
                                          'hxpol']='h+eq',
                     mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
-                    time_bins=None, freq_bins=30, tob_corrected=True,
+                    time_bins=None, freq_bins=100, tob_corrected=True,
                     **kwargs):
         """
         Returns the Hilbert-Huang spectrum of the GWs strain.
@@ -839,7 +848,7 @@ class Simulation:
         time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
         if IMFs is None:
             return None
-        return HHT_spectra(time, IMFs, time_bins, freq_bins, **kwargs)
+        return HHT_spectra(IMFs, time, time_bins, freq_bins, **kwargs)
 
 
     ## -----------------------------------------------------------------

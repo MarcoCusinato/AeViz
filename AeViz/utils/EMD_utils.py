@@ -148,22 +148,21 @@ def instantaneous_frequency(IMF, time, **kwargs):
     """
     dt = time[1] - time[0]
     sample_frequency = 1 / dt
-    analytic_signal = hilbert(IMF)
     if IMF.ndim == 2:
+        phase = np.zeros_like(IMF)
         for i in range(IMF.shape[0]):
-            phase = np.unwrap(np.angle(analytic_signal[i, :]))
-            phase = savgol_filter(phase, 3, 1, deriv=1)
-            analytic_signal[i, :] = phase
+            analytic_signal = hilbert(IMF[i, :])
+            iphase = np.unwrap(np.angle(analytic_signal), axis=0)
+            phase[i, :] = savgol_filter(iphase, 3, 1, deriv=1, axis=0)
     else:
+        analytic_signal = hilbert(IMF)
         phase = np.unwrap(np.angle(analytic_signal), axis=0)
         phase = savgol_filter(phase, 3, 1, deriv=1, axis=0)
     return phase / (2.0 * np.pi) * sample_frequency
 
 def HHT_spectra_single_if(IF, IA, frequency_edges):
     mask = ((IF >= frequency_edges[0]) & (IF < frequency_edges[-1]))
-    print(frequency_edges.shape)
     f_inds = np.digitize(IF, frequency_edges) - 1
-    print(f_inds.shape)
     t_ind = np.arange(f_inds.shape[0])
     coordinates = np.c_[f_inds.flatten(), t_ind.flatten()].T
     IA = IA.flatten()[mask]
