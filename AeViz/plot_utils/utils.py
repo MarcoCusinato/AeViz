@@ -1,13 +1,5 @@
-import numpy as np
+from AeViz.plot_utils.limits_utils import GW_limit
 ## PLOTTING UTILS DICTIONARIES
-
-## GW limits
-def GW_limit(GW_data):
-       lim = np.max(np.abs(GW_data))
-       lim *= 1.1
-       if lim > 150:
-              lim = 150
-       return (-lim, lim)
 
 ## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
 ## SCALES (LOG, LINEAR, or SYMLOG)
@@ -570,9 +562,6 @@ for key in keys:
                                           'label': r'$\partial_t$ ' + \
                                                   plot_labels[key]['label'].split(']')[0] + '/s]',
                                           }
-                                                         
-
-
 
 ## PLOT LABELS FOR X-AXIS
 xaxis_labels = {'radius': 'R [km]',

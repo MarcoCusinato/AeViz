@@ -2,91 +2,89 @@ from AeViz.plot_utils.plot_creation import PlotCreation
 from matplotlib import ticker
 import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
+from AeViz.plot_utils.limits_utils import set2Dlims
+from AeViz.plot_utils.figure_utils import cbar_loaction
 
-
-def cbar_loaction(loc):
-    location = {'T': 'top', 'B': 'bottom', 'L': 'left', 'R': 'right'}
-    return location[loc]
-
-def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim):
-    
-    if number == 5 and form_factor == 1:
-        if xlim == None:
-            ax["E"].set_ylim(ylim)
-        if ylim == None:
-            ax["E"].set_xlim(xlim)
-    else:
-        if sim_dim == 2:
-            set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
-        else:
-            set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
-                
-def set2dlims2Dsim(ax, xlim, ylim, number, form_factor):
-    if xlim == None:
-        ylim = list(ylim)
-        ylim.sort()
-        xlim = [0]
-        if number == 4 and form_factor == 2:
-            ylim[0] = 0
-        else:
-            ylim[0] = -ylim[1]
-        xlim.append(ylim[1])
-        
-    if ylim == None:
-        xlim = list(xlim)
-        xlim.sort()
-        xlim[0] = 0
-        if number == 4 and form_factor == 2:
-            ylim = xlim
-        else:
-            ylim = [-xlim[1], xlim[1]]
-
-    if number == 1 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 2 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 3 and form_factor == 2:
-        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 4 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]),
-                    aspect=1)
-        ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
-                    aspect=1)
-
-def set2Dlims3Dsim(ax, xlim, ylim, number, form_factor):
-    if xlim == None:
-        ylim = list(ylim)
-        ylim.sort()
-        ylim[0] = -ylim[1]
-        xlim = ylim
-    if ylim == None:
-        xlim = list(xlim)
-        xlim.sort()
-        xlim[0] = -xlim[1]
-        ylim = xlim
-            
-    if number == 1 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 2 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 3 and form_factor == 2:
-        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["C"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-    elif number == 4 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], 0), ylim=(0, ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], 0), aspect=1)
-        ax["C"].set(xlim=(0, xlim[1]), ylim=(0, ylim[1]), aspect=1)
-        ax["D"].set(xlim=(0, xlim[1]), ylim=(ylim[0], 0), aspect=1)
 
 class PlottingUtils(PlotCreation):
     def __init__(self):
         self.__reset_params()
         PlotCreation.__init__(self)     
+
+    def xlim(self, xlim, axd_letter="A"):
+        if self.plot_dim[axd_letter] == 2:
+            set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
+                      self.sim_dimension[axd_letter])
+            self.__save_lims()
+        else:
+            self.axd[axd_letter].set_xlim(xlim)
+        self.__save_xlims(axd_letter)
+        self._PlotCreation__setup_aspect()
+    
+    def ylim(self, ylim, axd_letter="A"):
+        if self.plot_dim[axd_letter] == 2:
+            set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
+                      self.sim_dimension[axd_letter])
+            self.__save_lims()
+        else:
+            self.axd[axd_letter].set_ylim(ylim)
+        self.__save_ylims(axd_letter)
+        self._PlotCreation__setup_aspect()
+    
+    def Xscale(self, scale, ax_letter="A"):
+        self.__save_lims(ax_letter)
+        if scale == 'log':
+            if self.xlims[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.ylims[ax_letter][0]),
+                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                self.axd[ax_letter].set_xscale('symlog', linthresh=lntresh)
+            else:
+                self.axd[ax_letter].set_xscale('log')
+        else:
+            self.axd[ax_letter].set_xscale('linear')
+        self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
+    
+    def Yscale(self, scale, ax_letter="A"):
+        self.__save_lims(ax_letter)
+        if scale in ['log', 'symlog'] or scale == True:
+            if self.ylims[ax_letter][0] < 0:
+                lntresh = 10 ** (np.round(
+                    min(np.log10(-self.ylims[ax_letter][0]),
+                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
+            else:
+                self.axd[ax_letter].set_yscale('log')
+        else:
+            self.axd[ax_letter].set_yscale('linear')
+        self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
+ 
+    def cmap(self, cmap, axd_letter="A"):
+        self.cmap_color[axd_letter] = cmap
+        self.__redo_plot()
+
+    def cbar_levels(self, cbar_levels, axd_letter="A"):
+        self.cbar_lv[axd_letter] = cbar_levels
+        self.__redo_plot()
+    
+    def labels(self, xlabel, ylabel, axd_letter="A"):
+        if xlabel is not None:
+            self.axd[axd_letter].set_xlabel(xlabel)
+        if ylabel is not None:
+            self.axd[axd_letter].set_ylabel(ylabel)
+        self.__save_labels(axd_letter)
+    
+    def update_legend(self, legend, axd_letter="A"):
+        if legend is None:
+            pass
+        elif len(self.axd[axd_letter].lines) != len(legend):
+            pass
+        else:
+            self.legend[axd_letter] = legend
+            for ll in range(len(self.legend[axd_letter])):
+                self.axd[axd_letter].lines[ll].set_label(
+                    self.legend[axd_letter][ll])
+            self.axd[axd_letter].legend(loc='upper right')
 
     def __update_params(self, ax_letter, grid, data, cbar_position, 
                         cbar_log, cbar_levels, dim, cmap, cbar_label,
@@ -291,69 +289,6 @@ class PlottingUtils(PlotCreation):
                         ax_letter)
         self._PlotCreation__setup_aspect()
 
-    def xlim(self, xlim, axd_letter="A"):
-        if self.plot_dim[axd_letter] == 2:
-            set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
-                      self.sim_dimension[axd_letter])
-            self.__save_lims()
-        else:
-            self.axd[axd_letter].set_xlim(xlim)
-        self.__save_xlims(axd_letter)
-        self._PlotCreation__setup_aspect()
-    
-    def ylim(self, ylim, axd_letter="A"):
-        if self.plot_dim[axd_letter] == 2:
-            set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
-                      self.sim_dimension[axd_letter])
-            self.__save_lims()
-        else:
-            self.axd[axd_letter].set_ylim(ylim)
-        self.__save_ylims(axd_letter)
-        self._PlotCreation__setup_aspect()
-    
-    def Xscale(self, scale, ax_letter="A"):
-        self.__save_lims(ax_letter)
-        if scale == 'log':
-            if self.xlims[ax_letter][0] < 0:
-                lntresh = 10 ** (np.round(
-                    min(np.log10(-self.ylims[ax_letter][0]),
-                    np.log10(self.ylims[ax_letter][1]))) - 6)
-                self.axd[ax_letter].set_xscale('symlog', linthresh=lntresh)
-            else:
-                self.axd[ax_letter].set_xscale('log')
-        else:
-            self.axd[ax_letter].set_xscale('linear')
-        self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
-    
-    def Yscale(self, scale, ax_letter="A"):
-        self.__save_lims(ax_letter)
-        if scale in ['log', 'symlog'] or scale == True:
-            if self.ylims[ax_letter][0] < 0:
-                lntresh = 10 ** (np.round(
-                    min(np.log10(-self.ylims[ax_letter][0]),
-                    np.log10(self.ylims[ax_letter][1]))) - 6)
-                self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
-            else:
-                self.axd[ax_letter].set_yscale('log')
-        else:
-            self.axd[ax_letter].set_yscale('linear')
-        self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
- 
-    def cmap(self, cmap, axd_letter="A"):
-        self.cmap_color[axd_letter] = cmap
-        self.__redo_plot()
-
-    def cbar_levels(self, cbar_levels, axd_letter="A"):
-        self.cbar_lv[axd_letter] = cbar_levels
-        self.__redo_plot()
-    
-    def labels(self, xlabel, ylabel, axd_letter="A"):
-        if xlabel is not None:
-            self.axd[axd_letter].set_xlabel(xlabel)
-        if ylabel is not None:
-            self.axd[axd_letter].set_ylabel(ylabel)
-        self.__save_labels(axd_letter)
-
     def __save_xlims(self, ax_letter=None):
         if ax_letter is None:
             for ax_letter in self.axd:
@@ -394,18 +329,6 @@ class PlottingUtils(PlotCreation):
         else:
             self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
             self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
-    
-    def update_legend(self, legend, axd_letter="A"):
-        if legend is None:
-            pass
-        elif len(self.axd[axd_letter].lines) != len(legend):
-            pass
-        else:
-            self.legend[axd_letter] = legend
-            for ll in range(len(self.legend[axd_letter])):
-                self.axd[axd_letter].lines[ll].set_label(
-                    self.legend[axd_letter][ll])
-            self.axd[axd_letter].legend(loc='upper right')
     
     def __save_params(self):
         self.__save_lims()
