@@ -94,7 +94,6 @@ def setup_cbars__HHT(number):
         cbars = {'A': 'L', 'B': 'R', 'C': 'L', 'D': 'R'}
     return plot, cbars
 
-
 def normalize_indices(index1, index2):
     if type(index1) == range:
         index1 = list(index1)
