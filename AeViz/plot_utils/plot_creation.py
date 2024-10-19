@@ -1,200 +1,70 @@
 import matplotlib.pyplot as plt
-
-def return_positioning(number, form_factor):
-    positioning = {1: {1: """A""",
-                       2: """A.a""",
-                       4: """A.a""",
-                       5:"""A..
-                            B.b""",
-                       6: """A.a"""
-                                },
-                   2: {1: """AB""",
-                       2: """a.AB.b""",
-                       3: """A
-                             B""",
-                       4: """A.a
-                             B.b""",
-                       5: """..A.C..
-                             b.B.D.d""",
-                       6: """a.A.B.b"""
-                       },
-                    3: {1:"""A
-                             B
-                             C""",
-                        2:"""..AA..
-                             b.BC.c""",
-                        4: """..AAA.a
-                              b.B.C.c""",
-                        5: """..A.C..
-                              b.B.D.d
-                              .......
-                              ..E....
-                              f.F....""",
-                        6: """a.A.B.b
-                              .......
-                              c.C...."""},
-                    4: {1:"""AB
-                             CD""",
-                        2:"""ac
-                             ..
-                             AC
-                             BD
-                             ..
-                             bd""",
-                        4: """a.A.B.b
-                              c.C.D.d""",
-                        5: """..A.C..
-                              b.B.D.d
-                              .......
-                              ..E.G..
-                              f.F.H.h""",
-                        6: """a.A.B.b
-                              .......
-                              c.C.D.d"""},
-                    5: {1:"""A..
-                             B..
-                             C..
-                             D..
-                             E.e"""}}
-    
-    width_ratio = {1: {1: [1],
-                       2: [1.1, 0.4, 0.08],
-                       4: [1.1, 0.1, 0.08],
-                       5: [1.1, 0.1, 0.08],
-                       6: [1.1, 0.4, 0.08]},
-                   2: {1: [1, 1],
-                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                       3: [1],
-                       4: [1.1, 0.1, 0.08],
-                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08],
-                       6: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]
-                       },
-                   3: {1: [1],
-                       2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                       4:[0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
-                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08],
-                       6: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
-                   4: {1: [1, 1],
-                       2: [1, 1],
-                       4: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
-                       5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08],
-                       6: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08]},
-                    5: {1: [1, 0.03, 0.04]}}
-    
-    height_ratio = {1: {1: [1],
-                        2: [1],
-                        4: [1],
-                        5: [0.25, 0.75],
-                        6: [1]},
-                    2: {1: [1],
-                        2: [1],
-                        3: [1, 1],
-                        4: [1, 1],
-                        5: [0.25, 0.75],
-                        6: [1]},
-                    3: {1: [1, 1, 1],
-                        2: [0.25, 0.75],
-                        4: [1, 1],
-                        5: [0.25, 0.75, 0.2, 0.25, 0.75],
-                        6: [1, 0.2, 1]},
-                    4: {1: [1, 1],
-                        2: [0.08, 0.4, 1.1, 1.1, 0.4, 0.08],
-                        4: [1, 1],
-                        5: [0.25, 0.75, 0.2, 0.25, 0.75],
-                        6: [1, 0.2, 1]},
-                    5: {1: [0.5, 0.5, 0.5, 0.5, 2]}}
-    if form_factor == 4:
-        gs_kw = {"wspace": 0,
-                 "hspace": 0.2}
-    elif '.' in positioning[number][form_factor]:
-        gs_kw = {"wspace": 0,
-                 "hspace": 0}
-    else:
-        gs_kw = {"wspace": 0.2,
-                 "hspace": 0.2}
-    return positioning[number][form_factor], width_ratio[number][form_factor],\
-            height_ratio[number][form_factor], gs_kw
-
-
-def return_fig_size(number, form_factor):
-    fig_size = {1: {1: (8, 8),
-                    2: (8, 8),
-                    4: (6, 4),
-                    5: (6, 6),
-                    6: (8, 8)},
-                2: {1: (16, 8),
-                    2: (8, 8),
-                    3: (8, 8),
-                    4: (6, 8),
-                    5: (12, 6),
-                    6: (8, 8)},
-                3: {1: (9, 8.42),
-                    2: (9, 8.42),
-                    4: (12, 8),
-                    5: (12, 12),
-                    6: (9, 8.42)},
-                4: {1: (16, 16),
-                    2: (8, 11.6),
-                    4: (12, 8),
-                    5: (12, 12),
-                    6: (8, 11.6)},
-                5: {1: (9, 16)}}
-    return fig_size[number][form_factor]
-
-def change_y_cbar_aspect(axd, axd_bar):
-    axd_position = axd.get_position()
-    y0, y1 = axd_position.y0, axd_position.y1
-    bar_position = axd_bar.get_position()
-    bar_position.y0, bar_position.y1 = y0, y1
-    axd_bar.set_position(bar_position)
-
-def change_x_cbar_aspect(axd, axd_bar):
-    axd_position = axd.get_position()
-    x0, x1 = axd_position.x0, axd_position.x1
-    bar_position = axd_bar.get_position()
-    bar_position.x0, bar_position.x1 = x0, x1
-    axd_bar.set_position(bar_position)
-
-def change_x_aspect(axd, axd_left, axd_right):
-    axd_position = axd.get_position()
-    axd_left_position = axd_left.get_position()
-    axd_right_position = axd_right.get_position()
-    axd_position.x0, axd_position.x1 = axd_left_position.x0, \
-        axd_right_position.x1
-    axd.set_position(axd_position)
-
-def change_y_aspect(axd, axd_bottom, axd_top):
-    axd_position = axd.get_position()
-    axd_bottom_position = axd_bottom.get_position()
-    axd_top_position = axd_top.get_position()
-    axd_position.y0, axd_position.y1 = axd_bottom_position.y0,\
-        axd_top_position.y1
-    axd.set_position(axd_position)
+from AeViz.plot_utils.figure_utils import (return_positioning, return_fig_size,
+                                           change_x_cbar_aspect,
+                                           change_y_cbar_aspect,
+                                           change_x_aspect,
+                                           change_y_aspect)
 
 class PlotCreation(object):
+    """
+    Parent class for creating plots. Most of its methods are internal
+    subroutines, meant just to make ''easier'' the plotting of the data.
+
+    """
     def __init__(self):
+        """
+        We do not need any parameters to initialize the class.
+        When called it initializes empty figure, axes dictionary and
+        plot number and form factor.
+        """
         self.fig = None
         self.axd = None
         self.number = None
         self.form_factor = None
 
-    def __setup_figure(self):
-        if not self.fig_is_open():
-            self.fig = plt.figure()
-    
     def fig_is_open(self):
+        """
+        Check if the figure has been created
+        """
         if self.fig is None:
             return False
         else:
             return True
     
     def axd_is_open(self):
+        """
+        Check if the axes dictionary has been created
+        """
         if self.axd is None:
             return False
         else:
             return True
+        
+    def change_figsize(self, multiplies=1):
+        """
+        This is a reskin of the matplotlib function set_size_inches.
+        However, it preserves the aspect ratio of the figure.
+        """
+        if self.fig_is_open():
+            self.fig.set_size_inches(self.fig.get_size_inches() * multiplies)
+    
+    def __setup_figure(self):
+        """
+        If the figure is not open, we create it.
+        """
+        if not self.fig_is_open():
+            self.fig = plt.figure()
     
     def __setup_axd(self, number=1, form_factor=1):
+        """
+        Most important method of the class.
+        What it does:
+        - sets up the number of sybplot and their positioning
+        - shares the axis if necessary
+        - sets up the label position
+        - sets up the aspect ratio
+        - sets up the figure size
+        """
         self.number = number
         self.form_factor = form_factor
         if self.fig_is_open():
@@ -262,12 +132,12 @@ class PlotCreation(object):
             self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
-        
-    def change_figsize(self, multiplies=1):
-        if self.fig_is_open():
-            self.fig.set_size_inches(self.fig.get_size_inches()*multiplies)
-            
+    
     def __close_figure(self):
+        """
+        Closes the figure if it is open, and restores the figure and axes
+        dictionary to empty values.
+        """
         if self.fig_is_open():
             plt.close(self.fig)
             self.fig = None
@@ -290,6 +160,9 @@ class PlotCreation(object):
             change_x_cbar_aspect(self.axd["D"], self.axd["d"])
     
     def __share_axis(self, axd, list_axs_share, x, y):
+        """
+        Given an axes and a list of axes, we share the x and/or y axis.
+        """
         if x:
             for ax in list_axs_share:
                 ax.sharex(axd)
@@ -298,6 +171,10 @@ class PlotCreation(object):
                 ax.sharey(axd)
     
     def __setup_label_position(self):
+        """
+        Given the number of plots and form factor of the plot,
+        we set the label position, and remove the ticks if necessary.
+        """
         if self.number == 2:
             if self.form_factor == 2:
                 self.axd["A"].tick_params(top=False, labeltop=False,
