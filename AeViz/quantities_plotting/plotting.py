@@ -1,223 +1,22 @@
-from AeViz.quantities_plotting import TERMINAL
 import os
 import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
 from AeViz.grid.grid import grid
-from AeViz.units.units import units
-from AeViz.utils.math_utils import function_average
+from AeViz.units import u
+from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
+                                                        setup_cbars,
+                                                        setup_cbars_profile,
+                                                        setup_cbars_spectrogram,
+                                                        setup_cbars_HHT,
+                                                        normalize_indices,
+                                                        get_data_to_plot,
+                                                        get_plane_indices,
+                                                        show_figure,
+                                                        get_qt_for_label)
 from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
 import cv2
-import setuptools
-
-u = units()
-
-def recognize_quantity(qt1, qt2, qt3, qt4, pars):
-    if qt1 == 'NUE':
-        qt1, qt2, qt3, qt4 = 'NUEX', 'NUEY', 'NUEZ', 'NUEE'
-    if qt1 == 'NUA':
-        qt1, qt2, qt3, qt4 = 'NUAX', 'NUAY', 'NUAZ', 'NUAE'
-    if qt1 == 'NUX':
-        qt1, qt2, qt3, qt4 = 'NUXX', 'NUXY', 'NUXZ', 'NUXE'
-    if qt1 == 'B':
-        qt1, qt2, qt3, qt4 = 'BX', 'BY', 'BZ', None
-    if pars:
-        if qt1 == 'VEL':
-            qt1, qt2, qt3, qt4 = 'VELX', 'VELY', 'VELZ', None
-        if qt1 == 'V':
-            qt1, qt2, qt3, qt4 = 'VX', 'VY', 'VZ', None
-        if qt1 == 'X':
-            qt1, qt2, qt3, qt4 = 'X_n', 'X_p', 'X_alpha', 'X_h'
-        if qt1 == 'CPOT':
-            qt1, qt2, qt3, qt4 = 'CPOT_e', 'CPOT_n', 'CPOT_p', 'CPOT_nu'
-    return qt1, qt2, qt3, qt4
-
-def setup_cbars(qt1, qt2, qt3, qt4):
-    if qt4 is not None or qt3 is not None:
-        number, form_factor = 4, 2
-        cbars = {'A': 'T', 'B': 'B', 'C': 'T', 'D': 'B'}
-    elif qt2 is not None:
-        number, form_factor = 2, 2
-        cbars = {'A': 'L', 'B': 'R'}
-    elif qt1 is not None:
-        number, form_factor = 1, 2
-        cbars = {'A': 'R'}
-    else:
-        raise ValueError('No quantity given.')
-    return number, form_factor, cbars
-
-def setup_cbars_profile(qt1, qt2, qt3, qt4):
-    if qt4 is not None:
-        number, form_factor = 4, 4
-        cbars = {'A': 'L', 'B': 'R', 'C': 'L', 'D': 'R'}
-    elif qt3 is not None:
-        number, form_factor = 3, 4
-        cbars = {'A': 'R', 'B': 'L', 'C': 'R'}
-    elif qt2 is not None:
-        number, form_factor = 2, 4
-        cbars = {'A': 'R', 'B': 'R'}
-    elif qt1 is not None:
-        number, form_factor = 1, 4
-        cbars = {'A': 'R'}
-    else:
-        raise ValueError('No quantity given.')
-    return number, form_factor, cbars
-
-def setup_cbars_spectrogram(number):
-    if number == 1:
-        cbars = {'B': 'R'}
-        plots = ["A", "B"]
-    elif number == 2:
-        cbars = {'B': 'L', 'D': 'R'}
-        plots = ["C", "D"]
-    elif number == 3:
-        cbars = {'B': 'L', 'D': 'R', 'F': 'L'}
-        plots = ["E", "F"]
-    elif number == 4:
-        cbars = {'B': 'L', 'D': 'R', 'F': 'L', 'H': 'R'}
-        plots = ["G", "H"]
-    return cbars, plots
-
-def setup_cbars__HHT(number):
-    if number == 1:
-        plot = "A"
-        cbars = {'A': 'R'}
-    elif number == 2:
-        plot = "B"
-        cbars = {'A': 'L', 'B': 'R'}
-    elif number == 3:
-        plot = "C"
-        cbars = {'A': 'L', 'B': 'R', 'C': 'L'}
-    elif number == 4:
-        plot = "D"
-        cbars = {'A': 'L', 'B': 'R', 'C': 'L', 'D': 'R'}
-    return plot, cbars
-
-def normalize_indices(index1, index2):
-    if type(index1) == range:
-        index1 = list(index1)
-    if type(index2) == range:
-        index2 = list(index2)
-    if type(index1) == list and type(index2) == list:
-        index2 = index2[0]
-    return index1, index2
-
-def get_data_to_plot(index1, index2, post_data, xaxis, dV):
-    if post_data.ndim == 1:
-        data = post_data
-    elif post_data.ndim == 2:
-        if xaxis == 'radius':
-            if type(index1) == list:
-                data = []
-                for i in index1:
-                    data.append(post_data[i, :])
-            elif index1 is None:
-                data = function_average(post_data, 2, 'Omega', dV[1][:, None] \
-                    * dV[2])
-            else:
-                data = post_data[index1, :]
-        elif xaxis == 'theta':
-            
-            if type(index1) == list:
-                data = []
-                for i in index1:
-                    data.append(post_data[:, i])
-            elif index1 is None:
-                data = function_average(post_data, 2, 'theta', dV[0][None, :] \
-                    * dV[2])
-            else:
-                data = post_data[:, index1]
-    elif post_data.ndim == 3:
-        if xaxis == 'radius':
-            if type(index1) == list:
-                data = []
-                for i in index1:
-                    data.append(post_data[i, index2, :])
-            elif type(index2) == list:
-                data = []
-                for i in index2:
-                    data.append(post_data[index1, i, :])
-            elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'Omega', 
-                                        dV[0][:, None, None] * \
-                                            dV[1][None, :, None])
-            else:
-                data = post_data[index1, index2, :]
-        elif xaxis == 'theta':
-            if type(index1) == list:
-                data = []
-                for i in index1:
-                    data.append(post_data[i, :, index2])
-            elif type(index2) == list:
-                data = []
-                for i in index2:
-                    data.append(post_data[index1, :, i])
-            elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'theta',
-                                        dV[0][:, None, None] \
-                                            * dV[2][None, None, :])
-            else:
-                data = post_data[index1, :, index2]
-        elif xaxis == 'phi':
-            if type(index1) == list:
-                data = []
-                for i in index1:
-                    data.append(post_data[:, i, index2])
-            elif type(index2) == list:
-                data = []
-                for i in index2:
-                    data.append(post_data[:, index1, i])
-            elif index1 is None and index2 is None:
-                data = function_average(post_data, 3, 'phi',
-                                        dV[1][None, :, None] \
-                                            * dV[2][None, None, None])
-            else:
-                data = post_data[:, index1, index2]
-    return data
-
-def get_plane_indices(sim, plane):
-    ## Get the indices associated to the plane
-    if plane not in ['xy', 'xz', 'yz']:
-        plane = 'xz'
-    if sim.sim_dim == 2:
-        plane = 'xz'
-        index_phi = None
-        index_theta = None
-    elif plane == 'xy':
-        index_phi = None
-        index_theta = len(sim.cell.theta(sim.ghost)) // 2
-    elif plane == 'xz':
-        index_phi = len(sim.cell.phi(sim.ghost)) // 2
-        index_theta = None
-    elif plane == 'yz':
-        index_theta = None
-        index_phi = (len(sim.cell.phi(sim.ghost)) - (2 * \
-            sim.ghost.ghost - sim.ghost.p_l - sim.ghost.p_r)) // 4 + \
-                sim.ghost.ghost - sim.ghost.p_l
-    return plane, index_theta, index_phi
-
-def show_figure():
-    """
-    Show the figure if the module is imported from the terminal.
-    """
-    if TERMINAL:
-        plt.ion()
-        plt.show()
-
-def get_qt_for_label(qt, **kwargs):
-    if 'der' not in kwargs:
-        return qt
-    if kwargs['der'] in ['r', 'radius']:
-        return 'dr_' + qt
-    elif kwargs['der'] in ['theta', 'th']:
-        return 'dtheta_' + qt
-    elif kwargs['der'] in ['phi', 'ph']:
-        return 'dphi_' + qt
-    elif kwargs['der'] in ['t', 'time']:
-        return 'dt_' + qt
-    else:
-        return qt
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
@@ -225,7 +24,10 @@ class Plotting(PlottingUtils, Data):
         Data.__init__(self)
     
     def plot1D(self, file, qt, xaxis, index1, index2, **kwargs):
-
+        """
+        Plots a line for the quantity in the xaxis. This can be either a
+        radial average, angular or a single radius.
+        """
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
         
@@ -326,67 +128,11 @@ class Plotting(PlottingUtils, Data):
         self.xlim((-0.005, grid.max()), axd_letters[number])
         self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
     
-    def __check_axd_1D(self, qt, xaxis):
-        number = 1 
-        if not self.fig_is_open():
-            show_figure()
-            self._PlotCreation__setup_axd(number, 1)
-        elif self.number == 2 and self.form_factor == 2:
-            self.number = 3
-            self.plot_dim['C'], self.grid['C'], self.data['C'] = self.plot_dim['B'], \
-                self.grid['B'], self.data['B']
-            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = \
-                self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
-            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], \
-                self.cbar_label['B']
-            self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
-            self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
-            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], \
-                self.ylabels['B']
-            
-            self.plot_dim['B'], self.grid['B'], self.data['B'] = self.plot_dim['A'], \
-                self.grid['A'], self.data['A']
-            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = \
-                self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
-            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'],\
-                self.cbar_label['A']
-            self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
-            self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
-            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'],\
-                self.ylabels['A']
-
-            self.plot_dim['A'], self.grid['A'], self.data['A'] = None, None, None
-            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = \
-                None, None, None
-            self.cmap_color['A'], self.cbar_label['A'] = None, None
-            self.xlims['A'], self.ylims['A'] = None, None
-            self.logX['A'], self.logY['A'] = None, None
-            self.xlabels['A'], self.ylabels['A'] = None, None
-            self._PlottingUtils__redo_plot()
-            return number - 1
-        elif self.number == 3 and self.form_factor == 2:
-            if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
-                        (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
-                self.Close()
-                show_figure()
-                self._PlotCreation__setup_axd(number, 1)
-        else:
-            number = 1
-            for axd_letter in self.axd:
-                if (plot_labels[qt]['label'] == \
-                    self.axd[axd_letter].get_ylabel()) and \
-                        (xaxis_labels[xaxis] == \
-                            self.axd[axd_letter].get_xlabel()):
-                    return number - 1
-                number += 1
-            if number > 4:
-                raise ValueError('No more axes available.')
-            self.number = number
-            self._PlottingUtils__redo_plot()
-        return number - 1
-
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
                **kwargs):
+        """
+        Plot a contourf plot of the quantity in the plane.
+        """
         ## Set the ghost cells
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         ## Set the grid
@@ -559,6 +305,9 @@ class Plotting(PlottingUtils, Data):
         show_figure()
     
     def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None):
+        """
+        Plot the time profile of the quantity.
+        """
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
         redo = False
         
@@ -687,6 +436,9 @@ class Plotting(PlottingUtils, Data):
         show_figure()
 
     def plotGWDecomposition(self, qt):
+        """
+        Plot the GW decomposition. ONLY in 2D.
+        """
         self.Close()
         self._PlotCreation__setup_axd(5, 1)
         self.Xscale('linear', 'A')
@@ -751,6 +503,9 @@ class Plotting(PlottingUtils, Data):
         show_figure()
 
     def plotGWspectrogram(self, qt):
+        """
+        Plots the GW spectrogram and the GW signal.
+        """
         redo = False
         if self.axd is not None:
             number_spect = sum([self.plot_dim[ax_letter] == -2 
@@ -830,6 +585,9 @@ class Plotting(PlottingUtils, Data):
         show_figure()
     
     def plotHHT(self, **kwargs):
+        """
+        Plots the Hilbert-Huang spectrum of the GW signal.
+        """
         redo = False
         number_spect = 0
         number = 0
@@ -850,7 +608,7 @@ class Plotting(PlottingUtils, Data):
         else:
             number += 1
             redo = True
-        plot, cbars = setup_cbars__HHT(number)
+        plot, cbars = setup_cbars_HHT(number)
         self._PlotCreation__setup_axd(number, 6)
         Zxx, f, t = self._Data__get_data_from_name('HH_spectrum', **kwargs)
         f /= 1e3
@@ -880,6 +638,9 @@ class Plotting(PlottingUtils, Data):
         show_figure()
         
     def add_2Dfield(self, file, axd_letter, comp, plane):
+        """
+        Adds a 2D field to the figure.
+        """
         if axd_letter not in self.axd:
             raise ValueError('The axis letter is not in the figure.')
         if self.plot_dim[axd_letter] != 2:
@@ -890,68 +651,12 @@ class Plotting(PlottingUtils, Data):
         elif comp == 'Bfield':
             self.__addBfield(file, axd_letter, plane)
     
-    def __addVelocity_field(self, file, axd_letter, plane):
-        ## Get the plane indices
-        plane, index_theta, index_phi = get_plane_indices(self, plane)
-        vr = self._Data__get_data_from_name('radial_velocity', file)
-        vr = self._Data__plane_cut(vr, index_theta, index_phi)
-        if self.sim_dim == 2:
-            va = self._Data__get_data_from_name('theta_velocity', file)
-            va = self._Data__plane_cut(va, index_theta, index_phi)
-            angle = self.cell.theta(self.ghost)
-            vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
-            vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
-        else:
-            theta = self.cell.theta(self.ghost)
-            phi = self.cell.phi(self.ghost)
-            vtheta = self._Data__get_data_from_name('theta_velocity', file)
-            vtheta = self._Data__plane_cut(vtheta, index_theta, index_phi)
-            vphi = self._Data__get_data_from_name('phi_velocity', file)
-            vphi = self._Data__plane_cut(vphi, index_theta, index_phi)
-            
-            if plane == 'xy':
-                theta = theta[index_theta]
-                vx = vr * np.sin(theta) * np.cos(phi)[:, None] + \
-                     vtheta * np.cos(theta) * np.cos(phi)[:, None] - \
-                     vphi * np.sin(phi)[:, None]
-                vy = vr * np.sin(theta) * np.sin(phi)[:, None] + \
-                    vtheta * np.cos(theta) * np.sin(phi)[:, None] + \
-                    vphi * np.cos(phi)[:, None]
-            elif plane == 'xz':
-                ## We drop vphi because it is moduled by sin(phi)
-                ## that is zero in the xz plane
-                phi = phi[index_phi]
-                ## Theta angle is wrong, but gives the correct
-                ## modulation of phi
-                theta = np.concatenate((theta, theta + np.pi))
-                vx = vr * np.sin(theta)[:, None] * np.cos(phi) + \
-                     vtheta * np.cos(theta)[:, None] * np.cos(phi)
-                vy = vr * np.cos(theta)[:, None] - \
-                      vtheta * np.sin(theta)[:, None]
-            elif plane == 'yz':
-                ## We drop vphi because it is moduled by cos(phi)
-                ## that is zero in the yz plane
-                phi = phi[index_phi]
-                ## Theta angle is wrong, but gives the correct
-                ## modulation of phi
-                theta = np.concatenate((theta, theta + np.pi))
-                ## Minus are necessary to get the correct result
-                vx = -vr * np.sin(theta)[:, None] * np.sin(phi) + \
-                     -vtheta * np.cos(theta)[:, None] * np.sin(phi)
-                vy = vr * np.cos(theta)[:, None] - \
-                      vtheta * np.sin(theta)[:, None]
-        self._PlottingUtils__update_fields_params(axd_letter, (vx, vy), 'v')
-        self._PlottingUtils__plot2Dfield(axd_letter)
-
-    def __addBfield(self, file, axd_letter, plane):
-        streamlines = self.loaded_data.stream_function(file, plane)
-        self._PlottingUtils__update_fields_params(axd_letter,
-                                                  streamlines, 'B')
-        self._PlottingUtils__plot2Dfield(axd_letter)
-        
     def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
               plane='xz', start_time=None, end_time=None,
               vfield=False, Bfield=False, top_time=False, lims=None):
+        """
+        Makes a movie with the quantities specified by the user.
+        """
         TMN = globals()["TERMINAL"]
         globals()["TERMINAL"] = False
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
@@ -1034,7 +739,139 @@ class Plotting(PlottingUtils, Data):
         video_writer.release()
 
     def Close(self):
+        """
+        Close the figure, and deletes the dictionaries.
+        """
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()
 
-        
+    def __addVelocity_field(self, file, axd_letter, plane):
+        """
+        Plots the 2D velocity field in the plane specified by the user.
+        """
+        ## Get the plane indices
+        plane, index_theta, index_phi = get_plane_indices(self, plane)
+        vr = self._Data__get_data_from_name('radial_velocity', file)
+        vr = self._Data__plane_cut(vr, index_theta, index_phi)
+        if self.sim_dim == 2:
+            va = self._Data__get_data_from_name('theta_velocity', file)
+            va = self._Data__plane_cut(va, index_theta, index_phi)
+            angle = self.cell.theta(self.ghost)
+            vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
+            vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
+        else:
+            theta = self.cell.theta(self.ghost)
+            phi = self.cell.phi(self.ghost)
+            vtheta = self._Data__get_data_from_name('theta_velocity', file)
+            vtheta = self._Data__plane_cut(vtheta, index_theta, index_phi)
+            vphi = self._Data__get_data_from_name('phi_velocity', file)
+            vphi = self._Data__plane_cut(vphi, index_theta, index_phi)
+            
+            if plane == 'xy':
+                theta = theta[index_theta]
+                vx = vr * np.sin(theta) * np.cos(phi)[:, None] + \
+                     vtheta * np.cos(theta) * np.cos(phi)[:, None] - \
+                     vphi * np.sin(phi)[:, None]
+                vy = vr * np.sin(theta) * np.sin(phi)[:, None] + \
+                    vtheta * np.cos(theta) * np.sin(phi)[:, None] + \
+                    vphi * np.cos(phi)[:, None]
+            elif plane == 'xz':
+                ## We drop vphi because it is moduled by sin(phi)
+                ## that is zero in the xz plane
+                phi = phi[index_phi]
+                ## Theta angle is wrong, but gives the correct
+                ## modulation of phi
+                theta = np.concatenate((theta, theta + np.pi))
+                vx = vr * np.sin(theta)[:, None] * np.cos(phi) + \
+                     vtheta * np.cos(theta)[:, None] * np.cos(phi)
+                vy = vr * np.cos(theta)[:, None] - \
+                      vtheta * np.sin(theta)[:, None]
+            elif plane == 'yz':
+                ## We drop vphi because it is moduled by cos(phi)
+                ## that is zero in the yz plane
+                phi = phi[index_phi]
+                ## Theta angle is wrong, but gives the correct
+                ## modulation of phi
+                theta = np.concatenate((theta, theta + np.pi))
+                ## Minus are necessary to get the correct result
+                vx = -vr * np.sin(theta)[:, None] * np.sin(phi) + \
+                     -vtheta * np.cos(theta)[:, None] * np.sin(phi)
+                vy = vr * np.cos(theta)[:, None] - \
+                      vtheta * np.sin(theta)[:, None]
+        self._PlottingUtils__update_fields_params(axd_letter, (vx, vy), 'v')
+        self._PlottingUtils__plot2Dfield(axd_letter)
+
+    def __addBfield(self, file, axd_letter, plane):
+        """
+        Plots the 2D magnetic field in the plane specified by the user.
+        """
+        streamlines = self.loaded_data.stream_function(file, plane)
+        self._PlottingUtils__update_fields_params(axd_letter,
+                                                  streamlines, 'B')
+        self._PlottingUtils__plot2Dfield(axd_letter)
+             
+    def __check_axd_1D(self, qt, xaxis):
+        """
+        Helper method to check if the quantity that we want to plot is
+        already in the figure. If it is, it returns the number of the
+        axis where the quantity is plotted. If it is not, it resets the
+        figure and returns the number of the axis where the quantity
+        will be plotted.
+        """
+        number = 1 
+        if not self.fig_is_open():
+            show_figure()
+            self._PlotCreation__setup_axd(number, 1)
+        elif self.number == 2 and self.form_factor == 2:
+            self.number = 3
+            self.plot_dim['C'], self.grid['C'], self.data['C'] = self.plot_dim['B'], \
+                self.grid['B'], self.data['B']
+            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = \
+                self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
+            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], \
+                self.cbar_label['B']
+            self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
+            self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
+            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], \
+                self.ylabels['B']
+            
+            self.plot_dim['B'], self.grid['B'], self.data['B'] = self.plot_dim['A'], \
+                self.grid['A'], self.data['A']
+            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = \
+                self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
+            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'],\
+                self.cbar_label['A']
+            self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
+            self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
+            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'],\
+                self.ylabels['A']
+
+            self.plot_dim['A'], self.grid['A'], self.data['A'] = None, None, None
+            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = \
+                None, None, None
+            self.cmap_color['A'], self.cbar_label['A'] = None, None
+            self.xlims['A'], self.ylims['A'] = None, None
+            self.logX['A'], self.logY['A'] = None, None
+            self.xlabels['A'], self.ylabels['A'] = None, None
+            self._PlottingUtils__redo_plot()
+            return number - 1
+        elif self.number == 3 and self.form_factor == 2:
+            if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
+                        (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
+                self.Close()
+                show_figure()
+                self._PlotCreation__setup_axd(number, 1)
+        else:
+            number = 1
+            for axd_letter in self.axd:
+                if (plot_labels[qt]['label'] == \
+                    self.axd[axd_letter].get_ylabel()) and \
+                        (xaxis_labels[xaxis] == \
+                            self.axd[axd_letter].get_xlabel()):
+                    return number - 1
+                number += 1
+            if number > 4:
+                raise ValueError('No more axes available.')
+            self.number = number
+            self._PlottingUtils__redo_plot()
+        return number - 1
