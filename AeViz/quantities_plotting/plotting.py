@@ -216,6 +216,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot2D('A')
             self.Xscale('linear', 'A')
             self.Yscale('linear', 'A')
+            self.xlim((0, 100), "A")
         if qt2 is not None:
             data = self._Data__get_data_from_name(qt2, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
@@ -293,7 +294,7 @@ class Plotting(PlottingUtils, Data):
             self.Xscale('linear', 'D')
             self.Yscale('linear', 'D')
         self.ghost.restore_default()
-        self.xlim((0, 100), "A")
+        self.xlim(self.xlims["A"], "A")
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
