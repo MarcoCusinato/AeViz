@@ -15,7 +15,7 @@ def GW_limit(GW_data):
     """   
     lim = np.max(np.abs(GW_data))
     lim *= 1.1
-    if lim > 150:
+    if lim > 150 or np.isnan(lim):
             lim = 150
     return (-lim, lim)
 
