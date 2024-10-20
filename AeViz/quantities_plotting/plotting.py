@@ -149,16 +149,17 @@ class Plotting(PlottingUtils, Data):
         if self.axd is not None:
             redo = True
             if 'C' in self.axd and 'D' in self.axd:
-                if np.all(self.data['C'] == self.data['D']):
+                idxc = self.plot_dim['C'].index(2)
+                idxd = self.plot_dim['D'].index(2)
+                if np.all(self.data['C'][idxc] == self.data['D'][idxd]):
                     del self.axd['D']
+                    self._PlottingUtils__clear_param_key('D')
             
             if (number_of_quantities == 4) or \
                 (number_of_quantities == 3 and 'B' in self.axd) or \
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
-                (np.any([self.plot_dim[axd_letter] != 2 for axd_letter 
-                        in [ax_l for ax_l in self.axd if 
-                            not ax_l.islower()]])):
+                (self.form_factor not in [None, 2]):
                 self.Close()
                 number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
             elif number_of_quantities == 1:
@@ -197,7 +198,6 @@ class Plotting(PlottingUtils, Data):
         else:
             number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
-        
         if qt1 is not None:
             ## get the data
             data = self._Data__get_data_from_name(qt1, file, **kwargs)
@@ -318,9 +318,7 @@ class Plotting(PlottingUtils, Data):
                 (number_of_quantities == 3 and 'B' in self.axd) or \
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
-                (np.any([self.plot_dim[axd_letter] != -1 for axd_letter 
-                        in [ax_l for ax_l in self.axd if ax_l not in 
-                            ['a', 'b', 'c', 'd']]])):
+                (self.form_factor not in [None, 4]):
                 self.Close()
                 number, form_factor, cbars = setup_cbars_profile(qt1, qt2,
                                                                  qt3, qt4)
@@ -509,10 +507,11 @@ class Plotting(PlottingUtils, Data):
         """
         redo = False
         if self.axd is not None:
-            number_spect = sum([self.plot_dim[ax_letter] == -2 
+            number_spect = sum([-2 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
-            number_GW = sum([self.plot_dim[ax_letter] == 1
+            number_GW = sum([((1 in self.plot_dim[ax_letter]) and 
+                             (-2 not in self.plot_dim[ax_letter]))
                              for ax_letter in self.axd if ax_letter in 
                              self.plot_dim])
             if number_spect != number_GW:
@@ -578,7 +577,7 @@ class Plotting(PlottingUtils, Data):
         self.xlim((-0.005, post_data_GWs[:,0].max()), plots[1])
         if redo:
             for ax_letter in self.axd:
-                if ax_letter.islower() or self.plot_dim[ax_letter] == 1:
+                if ax_letter.islower() or -2 not in self.plot_dim[ax_letter]:
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
                                                           cbars[ax_letter]) 
@@ -593,7 +592,7 @@ class Plotting(PlottingUtils, Data):
         number_spect = 0
         number = 0
         if self.axd is not None:
-            number_spect = sum([self.plot_dim[ax_letter] == -3 
+            number_spect = sum([-3 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
             if len(self.plot_dim) != number_spect:
@@ -610,7 +609,7 @@ class Plotting(PlottingUtils, Data):
             number += 1
             redo = True
         plot, cbars = setup_cbars_HHT(number)
-        self._PlotCreation__setup_axd(number, 6)
+        self._PlotCreation__setup_axd(number, 4)
         Zxx, f, t = self._Data__get_data_from_name('HH_spectrum', **kwargs)
         f /= 1e3
         ## 2D plot of spectrogram
