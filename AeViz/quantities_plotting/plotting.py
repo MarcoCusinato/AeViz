@@ -117,7 +117,8 @@ class Plotting(PlottingUtils, Data):
         
         self._PlottingUtils__update_params(axd_letters[number], grid, data,
                                            None, plot_labels[ylabel_qt]['log'],
-                                           None, 1, None, None, self.sim_dim)
+                                           None, 1, None, None, self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot1D(axd_letters[number])
         if 'GW' not in qt:
             self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])

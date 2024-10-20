@@ -383,10 +383,12 @@ class PlottingUtils(PlotCreation):
                 continue
             if type(self.data[ax_letter][indx]) == list:
                 for data in self.data[ax_letter][indx]:
-                    self.axd[ax_letter].plot(self.grid[ax_letter][indx], data)
+                    self.axd[ax_letter].plot(self.grid[ax_letter][indx], data,
+                                             alpha=self.alpha[ax_letter][indx])
             else:
                 self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                        self.data[ax_letter][indx])
+                                        self.data[ax_letter][indx],
+                                        alpha=self.alpha[ax_letter][indx])
 
     def __redo_plot(self):
         """
