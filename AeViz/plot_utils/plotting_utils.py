@@ -163,6 +163,11 @@ class PlottingUtils(PlotCreation):
                 self.alpha[ax_letter] = [kwargs['alpha']]
             else:
                 self.alpha[ax_letter] = [1]
+            if 'color' in kwargs or 'c' in kwargs:
+                self.line_color[ax_letter] = [kwargs.get('color',
+                                                         kwargs.get('c'))]
+            else:
+                self.line_color[ax_letter] = [None]
         else:
             self.grid[ax_letter].append(grid)
             self.data[ax_letter].append(data)
@@ -172,6 +177,11 @@ class PlottingUtils(PlotCreation):
                 self.alpha[ax_letter].append(kwargs['alpha'])
             else:
                 self.alpha[ax_letter].append(1)
+            if 'color' in kwargs or 'c' in kwargs:
+                self.line_color[ax_letter].append(kwargs.get('color',
+                                                         kwargs.get('c')))
+            else:
+                self.line_color[ax_letter].append(None)
          
     def __update_cbar_position(self, ax_letter, cbar_position):
         """
@@ -208,6 +218,7 @@ class PlottingUtils(PlotCreation):
                 self.ylabels,
                 self.legend,
                 self.alpha,
+                self.line_color,
                 self.field,
                 self.field_type]
         for key in keys:
@@ -235,6 +246,7 @@ class PlottingUtils(PlotCreation):
         self.ylabels = {}
         self.legend = {}
         self.alpha = {}
+        self.line_color = {}
         self.field = {}
         self.field_type = {}
         self.sim_dimension = {}
@@ -383,12 +395,23 @@ class PlottingUtils(PlotCreation):
                 continue
             if type(self.data[ax_letter][indx]) == list:
                 for data in self.data[ax_letter][indx]:
-                    self.axd[ax_letter].plot(self.grid[ax_letter][indx], data,
-                                             alpha=self.alpha[ax_letter][indx])
+                    if self.line_color[ax_letter][indx] is not None:
+                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                data,
+                                                color=self.line_color[ax_letter][indx])
+                    else:
+                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                 data,
+                                                 alpha=self.alpha[ax_letter][indx])
             else:
-                self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                        self.data[ax_letter][indx],
-                                        alpha=self.alpha[ax_letter][indx])
+                if self.line_color[ax_letter][indx] is not None:
+                    self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                            self.data[ax_letter][indx],
+                                            color=self.line_color[ax_letter][indx])
+                else:
+                    self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                            self.data[ax_letter][indx],
+                                            alpha=self.alpha[ax_letter][indx])
 
     def __redo_plot(self):
         """

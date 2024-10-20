@@ -795,8 +795,9 @@ class Simulation:
             IMFs, residue = emd.get_imfs_and_residue()
         return time, IMFs, residue
 
-    def instantaneous_frequency(self, strain:Literal['h+eq', 'hxeq',
-                                                      'h+pol', 'hxpol']='h+eq',
+    def instantaneous_frequency(self, time=None, IMFs=None, 
+                                strain:Literal['h+eq', 'hxeq', 'h+pol',
+                                               'hxpol']='h+eq',
                                 mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
                                 tob_corrected=True, **kwargs):
         """
@@ -808,7 +809,8 @@ class Simulation:
         time of bounce.
         Returns: time, instantaneous frequency
         """
-        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        if time is None or IMFs is None:
+            time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
         if IMFs is None:
             return None
         return time, instantaneous_frequency(IMFs, time, **kwargs)
