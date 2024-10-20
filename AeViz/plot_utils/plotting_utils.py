@@ -422,7 +422,7 @@ class PlottingUtils(PlotCreation):
                 self.ylim(self.ylims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
-            else:#if 1 in dm:
+            if 1 in dm:
                 self.ylim(self.ylims[ax_letter], ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
