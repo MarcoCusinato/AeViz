@@ -160,8 +160,7 @@ class Plotting(PlottingUtils, Data):
                                             None, self.sim_dim,
                                             **kwargs)
             self._PlottingUtils__plot1D(ax_letter)
-
-    
+ 
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
                **kwargs):
         """
@@ -654,7 +653,7 @@ class Plotting(PlottingUtils, Data):
                                            (0, Zxx.max() * 0.45),
                                            -3, 'magma',
                                             label,
-                                           self.sim_dim)
+                                            self.sim_dim)
         
         self.labels('t-t$_b$ [s]', '$f$ [kHz]', plot)
         self._PlottingUtils__plot2Dmesh(plot)
@@ -662,6 +661,23 @@ class Plotting(PlottingUtils, Data):
         self.Xscale('linear', plot)
         self.Yscale('linear', plot)
         self.xlim((-0.005, t.max()), plot)
+
+        ## Overplot the instantaneous frequency
+        if 'inst_freq' in kwargs:
+            if not 'alpha' in kwargs:
+                kwargs['alpha'] = 0.5
+            if not 'color' in kwargs:
+                kwargs['color'] = 'gainsboro'
+            data = self._Data__get_data_from_name('instantaneous_frequency',
+                                                  **kwargs)
+            print(len(data))
+            print(data[0].shape, data[1].shape)
+            self._PlottingUtils__update_params(plot, data[0],
+                                               list(data[1] * 1e-3),
+                                               None, None,
+                                               None, 1, None, None,
+                                               self.sim_dim, lw=.5,
+                                               **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
