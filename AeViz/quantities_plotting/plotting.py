@@ -30,7 +30,8 @@ class Plotting(PlottingUtils, Data):
         """
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
-        
+
+        ## GET THE DATA
         if 'radius' not in qt and 'spheres' not in qt:
             if 'GW' in qt:
                 post_data = self._Data__get_data_from_name(
@@ -52,40 +53,8 @@ class Plotting(PlottingUtils, Data):
             qt = "_".join(qt.split('_')[:-1])
             for i in range(1, len(post_data)):
                 post_data[i] = u.convert_to_km(post_data[i])
-        ylabel_qt = get_qt_for_label(qt, **kwargs)
-        number = self.__check_axd_1D(ylabel_qt, xaxis)
-        if xaxis == 'radius':
-            grid = u.convert_to_km(self.cell.radius(self.ghost))
-            xlabel = 'R [km]'
-            self.Xscale('log', axd_letters[number])
-        elif xaxis == 'theta':
-            if self.sim_dim == 1:
-                raise ValueError('Cannot plot theta in 1D.')
-            grid = self.cell.theta(self.ghost)
-            xlabel = r'$\theta$ [rad]'
-            self.Xscale('linear', axd_letters[number])
-        elif xaxis == 'phi':
-            if self.sim_dim == 1 or self.sim_dim == 2:
-                raise ValueError('Cannot plot phi in 1D or 2D.')
-            grid = self.cell.phi(self.ghost)
-            xlabel = '$\phi$ [rad]'
-            self.Xscale('linear', axd_letters[number])
-        elif xaxis == 'time':
-            if 'radius' in qt or 'spheres' in qt :
-                grid = post_data[0]
-            elif type(post_data) == list or type(post_data) == tuple:
-                grid = post_data[0]
-            else:
-                grid = post_data[:, 0]
-            xlabel = 't [s]'
-            self.Xscale('linear', axd_letters[number])
-        else:
-            raise ValueError('xaxis must be radius, theta, phi or time.')
         
-        
-        self.labels(xlabel, plot_labels[ylabel_qt]['label'],
-                    axd_letters[number])
-        
+        ##POSTPROCESS THE DATA
         if xaxis != 'time':
             index1, index2 = normalize_indices(index1, index2)
             data = get_data_to_plot(index1, index2, post_data, xaxis,
@@ -115,19 +84,83 @@ class Plotting(PlottingUtils, Data):
         else:
             data = post_data[:, 1:]
         
-        self._PlottingUtils__update_params(axd_letters[number], grid, data,
-                                           None, plot_labels[ylabel_qt]['log'],
-                                           None, 1, None, None, self.sim_dim)
-        self._PlottingUtils__plot1D(axd_letters[number])
-        if 'GW' not in qt:
-            self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
+        ## CHECK THE XAXIS IS CORRECT AND GET THE GRID
+        if xaxis == 'radius':
+            grid = u.convert_to_km(self.cell.radius(self.ghost))
+            xlabel = 'R [km]'
+            scale = 'log'
+        elif xaxis == 'theta':
+            if self.sim_dim == 1:
+                raise ValueError('Cannot plot theta in 1D.')
+            grid = self.cell.theta(self.ghost)
+            xlabel = r'$\theta$ [rad]'
+            scale = 'linear'
+        elif xaxis == 'phi':
+            if self.sim_dim == 1 or self.sim_dim == 2:
+                raise ValueError('Cannot plot phi in 1D or 2D.')
+            grid = self.cell.phi(self.ghost)
+            xlabel = '$\phi$ [rad]'
+            scale = 'linear'
+        elif xaxis == 'time':
+            if 'radius' in qt or 'spheres' in qt :
+                grid = post_data[0]
+            elif type(post_data) == list or type(post_data) == tuple:
+                grid = post_data[0]
+            else:
+                grid = post_data[:, 0]
+            xlabel = 't [s]'
+            scale = 'linear'
         else:
-            self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
-        self.update_legend(legend, axd_letters[number])
+            raise ValueError('xaxis must be radius, theta, phi or time.')
         
-        self.xlim((-0.005, grid.max()), axd_letters[number])
-        self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
-    
+
+        ## CHECK IF ALL THE PLOTS ARE 1D
+        overplot = False
+        if self.axd is not None:
+            for ax_letter in self.axd:
+                if ax_letter.islower():
+                    continue
+                if any([pdim != 1 for pdim in self.plot_dim[ax_letter]]):
+                    overplot = True
+                    break
+        if not overplot:
+        ##PLOT CREATION
+            ylabel_qt = get_qt_for_label(qt, **kwargs)
+            number = self.__check_axd_1D(ylabel_qt, xaxis)
+
+            self._PlottingUtils__update_params(axd_letters[number], grid, data,
+                                            None, plot_labels[ylabel_qt]['log'],
+                                            None, 1, None, None, self.sim_dim,
+                                            **kwargs)
+            self._PlottingUtils__plot1D(axd_letters[number])
+            
+            ## SET THE LIMITS
+            self.xlim((-0.005, grid.max()), axd_letters[number])
+            if 'GW' not in qt:
+                self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
+            else:
+                self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
+            ## SET THE LABELS
+            self.labels(xlabel, plot_labels[ylabel_qt]['label'],
+                        axd_letters[number])
+            ## SET THE SCALES
+            self.Xscale(scale, axd_letters[number])
+            self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
+            ## SET THE LEGEND        
+            self.update_legend(legend, axd_letters[number])
+        else:
+            if 'plot' in kwargs:
+                ax_letter = kwargs['plot']
+            else:
+                ax_letter = 'A'
+            if ax_letter not in self.axd:
+                ax_letter = 'A'
+            self._PlottingUtils__update_params(ax_letter, grid, data,
+                                            None, None, None, 1, None,
+                                            None, self.sim_dim,
+                                            **kwargs)
+            self._PlottingUtils__plot1D(ax_letter)
+ 
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
                **kwargs):
         """
@@ -149,16 +182,17 @@ class Plotting(PlottingUtils, Data):
         if self.axd is not None:
             redo = True
             if 'C' in self.axd and 'D' in self.axd:
-                if np.all(self.data['C'] == self.data['D']):
+                idxc = self.plot_dim['C'].index(2)
+                idxd = self.plot_dim['D'].index(2)
+                if np.all(self.data['C'][idxc] == self.data['D'][idxd]):
                     del self.axd['D']
+                    self._PlottingUtils__clear_param_key('D')
             
             if (number_of_quantities == 4) or \
                 (number_of_quantities == 3 and 'B' in self.axd) or \
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
-                (np.any([self.plot_dim[axd_letter] != 2 for axd_letter 
-                        in [ax_l for ax_l in self.axd if 
-                            not ax_l.islower()]])):
+                (self.form_factor not in [None, 2]):
                 self.Close()
                 number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
             elif number_of_quantities == 1:
@@ -197,7 +231,6 @@ class Plotting(PlottingUtils, Data):
         else:
             number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
         self._PlotCreation__setup_axd(number, form_factor)
-        
         if qt1 is not None:
             ## get the data
             data = self._Data__get_data_from_name(qt1, file, **kwargs)
@@ -216,6 +249,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot2D('A')
             self.Xscale('linear', 'A')
             self.Yscale('linear', 'A')
+            self.xlim((0, 100), "A")
         if qt2 is not None:
             data = self._Data__get_data_from_name(qt2, file, **kwargs)
             data = self._Data__plane_cut(data, index_theta, index_phi)
@@ -293,7 +327,7 @@ class Plotting(PlottingUtils, Data):
             self.Xscale('linear', 'D')
             self.Yscale('linear', 'D')
         self.ghost.restore_default()
-        self.xlim((0, 100), "A")
+        self.xlim(self.xlims["A"], "A")
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
@@ -317,9 +351,7 @@ class Plotting(PlottingUtils, Data):
                 (number_of_quantities == 3 and 'B' in self.axd) or \
                 (number_of_quantities == 2 and 'C' in self.axd) or \
                 (number_of_quantities == 1 and 'D' in self.axd) or \
-                (np.any([self.plot_dim[axd_letter] != -1 for axd_letter 
-                        in [ax_l for ax_l in self.axd if ax_l not in 
-                            ['a', 'b', 'c', 'd']]])):
+                (self.form_factor not in [None, 4]):
                 self.Close()
                 number, form_factor, cbars = setup_cbars_profile(qt1, qt2,
                                                                  qt3, qt4)
@@ -508,10 +540,11 @@ class Plotting(PlottingUtils, Data):
         """
         redo = False
         if self.axd is not None:
-            number_spect = sum([self.plot_dim[ax_letter] == -2 
+            number_spect = sum([-2 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
-            number_GW = sum([self.plot_dim[ax_letter] == 1
+            number_GW = sum([((1 in self.plot_dim[ax_letter]) and 
+                             (-2 not in self.plot_dim[ax_letter]))
                              for ax_letter in self.axd if ax_letter in 
                              self.plot_dim])
             if number_spect != number_GW:
@@ -577,7 +610,7 @@ class Plotting(PlottingUtils, Data):
         self.xlim((-0.005, post_data_GWs[:,0].max()), plots[1])
         if redo:
             for ax_letter in self.axd:
-                if ax_letter.islower() or self.plot_dim[ax_letter] == 1:
+                if ax_letter.islower() or -2 not in self.plot_dim[ax_letter]:
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
                                                           cbars[ax_letter]) 
@@ -592,7 +625,7 @@ class Plotting(PlottingUtils, Data):
         number_spect = 0
         number = 0
         if self.axd is not None:
-            number_spect = sum([self.plot_dim[ax_letter] == -3 
+            number_spect = sum([-3 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
             if len(self.plot_dim) != number_spect:
@@ -609,7 +642,7 @@ class Plotting(PlottingUtils, Data):
             number += 1
             redo = True
         plot, cbars = setup_cbars_HHT(number)
-        self._PlotCreation__setup_axd(number, 6)
+        self._PlotCreation__setup_axd(number, 4)
         Zxx, f, t = self._Data__get_data_from_name('HH_spectrum', **kwargs)
         f /= 1e3
         ## 2D plot of spectrogram
@@ -620,7 +653,7 @@ class Plotting(PlottingUtils, Data):
                                            (0, Zxx.max() * 0.45),
                                            -3, 'magma',
                                             label,
-                                           self.sim_dim)
+                                            self.sim_dim)
         
         self.labels('t-t$_b$ [s]', '$f$ [kHz]', plot)
         self._PlottingUtils__plot2Dmesh(plot)
@@ -628,6 +661,23 @@ class Plotting(PlottingUtils, Data):
         self.Xscale('linear', plot)
         self.Yscale('linear', plot)
         self.xlim((-0.005, t.max()), plot)
+
+        ## Overplot the instantaneous frequency
+        if 'inst_freq' in kwargs:
+            if not 'alpha' in kwargs:
+                kwargs['alpha'] = 0.5
+            if not 'color' in kwargs:
+                kwargs['color'] = 'gainsboro'
+            data = self._Data__get_data_from_name('instantaneous_frequency',
+                                                  **kwargs)
+            print(len(data))
+            print(data[0].shape, data[1].shape)
+            self._PlottingUtils__update_params(plot, data[0],
+                                               list(data[1] * 1e-3),
+                                               None, None,
+                                               None, 1, None, None,
+                                               self.sim_dim, lw=.5,
+                                               **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():

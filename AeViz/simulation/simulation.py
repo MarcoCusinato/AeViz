@@ -746,8 +746,8 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
-             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10, start_time=-0.05,
-             end_time=None, tob_corrected=True, **kwargs):
+             mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
+             start_time=-0.05, end_time=None, tob_corrected=True, **kwargs):
         """
         Returns the Intrinsic Mode Functions of the GWs strain.
         If mode is 'EEMD' the IMFs are calculated with the Ensemble
@@ -793,12 +793,15 @@ class Simulation:
             emd = EMD()
             emd.emd(S=h, T=time, max_imf=max_imfs)
             IMFs, residue = emd.get_imfs_and_residue()
-        return time, IMFs, residue
+        if len(IMFs) < max_imfs:
+            max_imfs = len(IMFs)
+        return time, IMFs[min_imfs:max_imfs, :], residue
 
-    def instantaneous_frequency(self, strain:Literal['h+eq', 'hxeq',
-                                                      'h+pol', 'hxpol']='h+eq',
-                                mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
-                                tob_corrected=True, **kwargs):
+    def instantaneous_frequency(self, time=None, IMFs=None, 
+                                strain:Literal['h+eq', 'hxeq', 'h+pol',
+                                               'hxpol']='h+eq',
+                                mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0,
+                                max_imfs=10, tob_corrected=True, **kwargs):
         """
         Returns the instantaneous frequency of the GWs strain.
         If mode is 'EEMD' the IMFs are calculated with the Ensemble
@@ -808,15 +811,21 @@ class Simulation:
         time of bounce.
         Returns: time, instantaneous frequency
         """
-        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        if time is None or IMFs is None:
+            time, IMFs, _ = self.IMFs(strain=strain, mode=mode,
+                                      min_imfs=min_imfs, max_imfs=max_imfs,
+                                      tob_corrected=tob_corrected)
         if IMFs is None:
             return None
-        return time, instantaneous_frequency(IMFs, time, **kwargs)
+        if len(IMFs) < max_imfs:
+            max_imfs = len(IMFs)
+        return time, \
+            instantaneous_frequency(IMFs, time, **kwargs)
     
     def instantaneous_amplitude(self, strain:Literal['h+eq', 'hxeq',
                                                      'h+pol', 'hxpol']='h+eq',
-                                mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
-                                tob_corrected=True, **kwargs):
+                                mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0,
+                                max_imfs=10, tob_corrected=True, **kwargs):
         """
         Returns the instantaneous amplitude of the GWs strain.
         If mode is 'EEMD' the IMFs are calculated with the Ensemble
@@ -826,14 +835,19 @@ class Simulation:
         time of bounce.
         Returns: time, instantaneous amplitude
         """
-        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        time, IMFs, _ = self.IMFs(strain=strain, mode=mode,
+                                  min_imfs=min_imfs, max_imfs=max_imfs,
+                                  tob_corrected=tob_corrected)
         if IMFs is None:
             return None
-        return time, instantaneous_amplitude(IMFs, **kwargs)
+        if len(IMFs) < max_imfs:
+            max_imfs = len(IMFs)
+        return time, \
+            instantaneous_amplitude(IMFs, **kwargs)
     
     def HH_spectrum(self, strain:Literal['h+eq', 'hxeq', 'h+pol',
                                          'hxpol']='h+eq',
-                    mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10,
+                    mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
                     time_bins=None, freq_bins=100, tob_corrected=True,
                     **kwargs):
         """
@@ -845,7 +859,9 @@ class Simulation:
         time of bounce.
         Returns: spectrogram, frequencies, time
         """
-        time, IMFs, _ = self.IMFs(strain, mode, max_imfs, tob_corrected)
+        time, IMFs, _ = self.IMFs(strain=strain, mode=mode, max_imfs=max_imfs,
+                                  min_imfs=min_imfs,
+                                  tob_corrected=tob_corrected)
         if IMFs is None:
             return None
         return HHT_spectra(IMFs, time, time_bins, freq_bins, **kwargs)

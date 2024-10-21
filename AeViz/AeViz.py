@@ -461,9 +461,10 @@ class AeViz(Plotting):
                     self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None,
                                 **kwargs)
     
+    @fig_window_open
     def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
-             mode:Literal['EMD', 'EEMD']='EMD', max_imfs=10, spectro=False,
-             **kwargs):
+             mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
+             spectro=False, **kwargs):
         loc = locals()
         for q in loc.keys():
             if q not in ['self', 'kwargs']:
