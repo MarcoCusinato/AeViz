@@ -395,27 +395,46 @@ class PlottingUtils(PlotCreation):
             for lb in cbar.ax.xaxis.get_ticklabels()[::2]:
                 lb.set_visible(False)
 
-    def __plot1D(self, ax_letter):
+    def __plot1D(self, ax_letter, redo=False):
         """
         Adds a 1D plot to the selected axes. If we pass a list of data,
         it will plot all of them.
         """
-        for indx in range(len(self.plot_dim[ax_letter])):
-            if self.plot_dim[ax_letter][indx] != 1:
-                continue
-            kw = {'alpha': self.alpha[ax_letter][indx]}
-            if self.lw[ax_letter][indx] is not None:
-                kw['lw'] = self.lw[ax_letter][indx]
-            if self.line_color[ax_letter][indx] is not None:
-                kw['color'] = self.line_color[ax_letter][indx]
-            if type(self.data[ax_letter][indx]) == list:
-                for data in self.data[ax_letter][indx]:
+        if not redo:
+            for indx in reversed(range(len(self.plot_dim[ax_letter]))):
+                if self.plot_dim[ax_letter][indx] != 1:
+                    continue
+                kw = {'alpha': self.alpha[ax_letter][indx]}
+                if self.lw[ax_letter][indx] is not None:
+                    kw['lw'] = self.lw[ax_letter][indx]
+                if self.line_color[ax_letter][indx] is not None:
+                    kw['color'] = self.line_color[ax_letter][indx]
+                if type(self.data[ax_letter][indx]) == list:
+                    for data in self.data[ax_letter][indx]:
+                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                data, **kw)
+                else:
                     self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                             data, **kw)
-            else:
-                self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                         self.data[ax_letter][indx],
-                                         **kw)
+                                            self.data[ax_letter][indx],
+                                            **kw)
+                break
+        else:
+            for indx in range(len(self.plot_dim[ax_letter])):
+                if self.plot_dim[ax_letter][indx] != 1:
+                    continue
+                kw = {'alpha': self.alpha[ax_letter][indx]}
+                if self.lw[ax_letter][indx] is not None:
+                    kw['lw'] = self.lw[ax_letter][indx]
+                if self.line_color[ax_letter][indx] is not None:
+                    kw['color'] = self.line_color[ax_letter][indx]
+                if type(self.data[ax_letter][indx]) == list:
+                    for data in self.data[ax_letter][indx]:
+                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                data, **kw)
+                else:
+                    self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                            self.data[ax_letter][indx],
+                                            **kw)
 
     def __redo_plot(self):
         """
@@ -430,6 +449,7 @@ class PlottingUtils(PlotCreation):
             if self.data[ax_letter] is None:
                 continue
             dm = self.plot_dim[ax_letter]
+            all_1D = all([d == 1 for d in dm])
             if 2 in dm:
                 self.__plot2D(ax_letter)
                 for indx in range(len(dm)):
@@ -450,11 +470,12 @@ class PlottingUtils(PlotCreation):
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
             if 1 in dm:
-                self.ylim(self.ylims[ax_letter], ax_letter)
-                self.xlim(self.xlims[ax_letter], ax_letter)
-                self.Xscale(self.logX[ax_letter], ax_letter)
-                self.Yscale(self.logY[ax_letter], ax_letter)
-                self.__plot1D(ax_letter)
+                if all_1D:
+                    self.ylim(self.ylims[ax_letter], ax_letter)
+                    self.xlim(self.xlims[ax_letter], ax_letter)
+                    self.Xscale(self.logX[ax_letter], ax_letter)
+                    self.Yscale(self.logY[ax_letter], ax_letter)
+                self.__plot1D(ax_letter, redo=True)
             if ax_letter in self.legend:
                 self.update_legend(self.legend[ax_letter], ax_letter)
             if ax_letter in self.field:

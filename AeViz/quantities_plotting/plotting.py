@@ -670,8 +670,6 @@ class Plotting(PlottingUtils, Data):
                 kwargs['color'] = 'gainsboro'
             data = self._Data__get_data_from_name('instantaneous_frequency',
                                                   **kwargs)
-            print(len(data))
-            print(data[0].shape, data[1].shape)
             self._PlottingUtils__update_params(plot, data[0],
                                                list(data[1] * 1e-3),
                                                None, None,
