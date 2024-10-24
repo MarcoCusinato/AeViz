@@ -228,6 +228,8 @@ class Data(object):
                 return data[0], data[5]
             elif qt == 'conv':
                 return data[0], data[7]
+            elif qt == 'T/W':
+                return data[0], data[8]
 
     def __get_1D_radii_data(self, name, **kwargs):
         name = name.split('_')

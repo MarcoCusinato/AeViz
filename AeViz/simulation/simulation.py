@@ -1077,7 +1077,7 @@ class Simulation:
         during the calculation.
         Returns: time, mass, kinetic energy, magnetic energy,
                  rotational energy, gravitational energy, total energy,
-                 convective energy
+                 convective energy, T/W
         """
         time, _, _, _, data, _ = \
             calculate_masses_energies(self, save_checkpoints)
@@ -1085,7 +1085,8 @@ class Simulation:
             time += self.tob
         return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
-                data['convective_ene']]
+                data['convective_ene'], data['rotational_ene'] / \
+                    np.abs(data['grav_ene'])]
     
     @smooth
     @derive
