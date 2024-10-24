@@ -14,7 +14,8 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         get_data_to_plot,
                                                         get_plane_indices,
                                                         show_figure,
-                                                        get_qt_for_label)
+                                                        get_qt_for_label,
+                                                        plot_panel)
 from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
 import cv2
 
@@ -230,102 +231,28 @@ class Plotting(PlottingUtils, Data):
                 qt1 = None
         else:
             number, form_factor, cbars = setup_cbars(qt1, qt2, qt3, qt4)
+        
         self._PlotCreation__setup_axd(number, form_factor)
+        
         if qt1 is not None:
-            ## get the data
-            data = self._Data__get_data_from_name(qt1, file, **kwargs)
-            ## get the plane cut
-            data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt1, **kwargs)
-            self._PlottingUtils__update_params('A', (X, Y), 
-                                            data,
-                                            cbars['A'],
-                                            plot_labels[qt_label]['log'],
-                                            plot_labels[qt_label]['lim'], 2, 
-                                            plot_labels[qt_label]['cmap'], 
-                                            plot_labels[qt_label]['label'],
-                                            self.sim_dim)  
-            self.labels('X [km]', 'Z [km]', 'A')
-            self._PlottingUtils__plot2D('A')
-            self.Xscale('linear', 'A')
-            self.Yscale('linear', 'A')
+            plot_panel(self, 'A', file, qt1, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
+            ## Default limits
             self.xlim((0, 100), "A")
         if qt2 is not None:
-            data = self._Data__get_data_from_name(qt2, file, **kwargs)
-            data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt2, **kwargs)
-            self._PlottingUtils__update_params('B', (X, Y),
-                                        data,
-                                        cbars['B'],
-                                        plot_labels[qt_label]['log'],
-                                        plot_labels[qt_label]['lim'], 2,
-                                        plot_labels[qt_label]['cmap'],
-                                        plot_labels[qt_label]['label'],
-                                        self.sim_dim)
-            self.labels('X [km]', 'Z [km]', 'B')
-            self._PlottingUtils__plot2D('B')
-            self.Xscale('linear', 'B')
-            self.Yscale('linear', 'B')
+            plot_panel(self, 'B', file, qt2, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
         if qt3 is not None and qt4 is None:
-            data = self._Data__get_data_from_name(qt3, file, **kwargs)
-            data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt3, **kwargs)
-            self._PlottingUtils__update_params('C', (X, Y),
-                                        data,
-                                        cbars['C'],
-                                        plot_labels[qt_label]['log'],
-                                        plot_labels[qt_label]['lim'], 2, 
-                                        plot_labels[qt_label]['cmap'],
-                                        plot_labels[qt_label]['label'],
-                                        self.sim_dim)
-            self.labels('X [km]', 'Z [km]', 'C')
-            self._PlottingUtils__plot2D('C')
-            self.Xscale('linear', 'C')
-            self.Yscale('linear', 'C')
-            self._PlottingUtils__update_params('D', (X, Y),
-                                        data,
-                                        cbars['D'],
-                                        plot_labels[qt_label]['log'],
-                                        plot_labels[qt_label]['lim'], 2,
-                                        plot_labels[qt_label]['cmap'],
-                                        plot_labels[qt_label]['label'],
-                                        self.sim_dim)
-            self.labels('X [km]', 'Z [km]', 'D')
-            self._PlottingUtils__plot2D('D')
-            self.Xscale('linear', 'D')
-            self.Yscale('linear', 'D')
+            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'D', file, qt3, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
         elif qt3 is not None:
-            data = self._Data__get_data_from_name(qt3, file, **kwargs)
-            data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt3, **kwargs)
-            self._PlottingUtils__update_params('C', (X, Y),
-                                        data,
-                                        cbars['C'],
-                                        plot_labels[qt_label]['log'],
-                                        plot_labels[qt_label]['lim'], 2, 
-                                        plot_labels[qt_label]['cmap'],
-                                        plot_labels[qt_label]['label'],
-                                        self.sim_dim)
-            self.labels('X [km]', 'Z [km]', 'C')
-            self._PlottingUtils__plot2D('C')
-            self.Xscale('linear', 'C')
-            self.Yscale('linear', 'C')
+            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
         if qt4 is not None:
-            data = self._Data__get_data_from_name(qt4, file, **kwargs)
-            data = self._Data__plane_cut(data, index_theta, index_phi)
-            qt_label = get_qt_for_label(qt4, **kwargs)
-            self._PlottingUtils__update_params('D', (X, Y),
-                                        data,
-                                        cbars['D'],
-                                        plot_labels[qt_label]['log'],
-                                        plot_labels[qt_label]['lim'], 2,
-                                        plot_labels[qt_label]['cmap'],
-                                        plot_labels[qt_label]['label'],
-                                        self.sim_dim)    
-            self.labels('X [km]', 'Z [km]', 'D')
-            self._PlottingUtils__plot2D('D')
-            self.Xscale('linear', 'D')
-            self.Yscale('linear', 'D')
+            plot_panel(self, 'D', file, qt4, (X, Y), (index_theta, index_phi),
+                       cbars, plot_labels, plane, **kwargs)
         self.ghost.restore_default()
         self.xlim(self.xlims["A"], "A")
         if redo:

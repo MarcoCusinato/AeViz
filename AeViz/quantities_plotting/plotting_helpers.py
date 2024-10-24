@@ -240,3 +240,44 @@ def get_qt_for_label(qt, **kwargs):
         return 'dt_' + qt
     else:
         return qt
+
+def plot_panel(plotting_object, letter, file, quantity, grid,
+               indices, cbars, labels, plane, **kwargs):
+    """
+    Single panel plotting for contourf plots.
+    Inputs:
+    - plotting_object: Plotting class object.
+    - letter: Panel letter.
+    - file: File to read the data from.
+    - quantity: Quantity to plot.
+    - grid: tuple X, Y grid to plot on.
+    - indices: tuple of the two indices to plot.
+    - cbars: dictionary with the colorbars configuration.
+    - labels: dictionary with the labels configuration.
+    - plane: plane to plot.
+    - **kwargs: additional arguments.
+    """
+    ## GET THE DATA
+    data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
+    ## GET THE PLANE CUT
+    data = plotting_object._Data__plane_cut(data, indices[0], indices[1])
+    qt_label = get_qt_for_label(quantity, **kwargs)
+    plotting_object._PlottingUtils__update_params(letter, grid, 
+                                            data,
+                                            cbars[letter],
+                                            labels[qt_label]['log'],
+                                            labels[qt_label]['lim'], 2, 
+                                            labels[qt_label]['cmap'], 
+                                            labels[qt_label]['label'],
+                                            plotting_object.sim_dim)
+    ## SET THE PLANE LABELS
+    if plane == 'xy':
+        plotting_object.labels('X [km]', 'Y [km]', letter)
+    elif plane == 'xz':
+        plotting_object.labels('X [km]', 'Z [km]', letter)
+    elif plane == 'yz':
+        plotting_object.labels('Y [km]', 'Z [km]', letter)
+    ## MAKE THE PLOT
+    plotting_object._PlottingUtils__plot2D(letter)
+    plotting_object.Xscale('linear', letter)
+    plotting_object.Yscale('linear', letter)
