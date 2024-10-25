@@ -24,7 +24,8 @@ def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
    
 def calculate_rho_decomposition(simulation, save_checkpoints=True):
     if check_existence(simulation, 'rho_decomposition_SpH.h5'):
-        time, decomposition, processed_hdf = read_rho_decomposition(simulation)
+        time, decomposition, processed_hdf = read_rho_decomposition(simulation, 
+                                                                    4)
         if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return True
         else:

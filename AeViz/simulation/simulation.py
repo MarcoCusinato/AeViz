@@ -1356,8 +1356,11 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     @smooth
-    def rho_sperical_harmonics(self, l, m, save_checkpoints=True, **kwargs):
+    def rho_sperical_harmonics(self, l, m, zero_norm=True,
+                               save_checkpoints=True, **kwargs):
         calculate_rho_decomposition(self, save_checkpoints)
+        if zero_norm:
+            return get_sph_profile(self, l, m) / get_sph_profile(self, 0, 0)
         return get_sph_profile(self, l, m)
         
     ## -----------------------------------------------------------------
