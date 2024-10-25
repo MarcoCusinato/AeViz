@@ -16,7 +16,7 @@ def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
             if m == 0 and l == 0:
                 Ylm = Ylm[..., None]
                 
-            out_array[harm_index, :] = np.sum( rho * Ylm * dOmega[..., None],
+            out_array[harm_index, :] = np.sum( rho * Ylm[..., None] * dOmega[..., None],
                                         axis=tuple(range(simulation.dim-1)) ) 
             harm_index += 1
     return out_array
