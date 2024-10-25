@@ -4,7 +4,6 @@ from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
 from AeViz.utils.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
-from AeViz.utils.spherical_harmonics_radial import Harmonics_decomposition_rho
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
