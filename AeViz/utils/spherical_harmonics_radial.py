@@ -8,7 +8,7 @@ import os, h5py
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
     rho = simulation.rho(file_name)
-    out_array = np.zeros((np.math.factorial(lmax) + 1, len(rho.shape[-1])))
+    out_array = np.zeros((np.math.factorial(lmax) + 1, rho.shape[-1]))
     harm_index = 0
     for l in range( lmax + 1 ):
         for m in range( -l, l + 1 ):
