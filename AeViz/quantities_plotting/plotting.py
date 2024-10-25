@@ -321,7 +321,6 @@ class Plotting(PlottingUtils, Data):
             number, form_factor, cbars = setup_cbars_profile(qt1, qt2, qt3,
                                                              qt4)
         self._PlotCreation__setup_axd(number, form_factor)
-        X, Y = None, None
         if qt1 is not None:
             plot_profile_panel(self, 'A', qt1, cbars, plot_labels, **kwargs)
         if qt2 is not None:

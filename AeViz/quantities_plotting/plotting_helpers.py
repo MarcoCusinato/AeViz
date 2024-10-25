@@ -286,10 +286,8 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     
 def plot_profile_panel(plotting_object, letter, quantity,
                        cbars, labels, **kwargs):
-    time, _, prof = plotting_object._Data__get_profile(quantity, **kwargs)
-    if X is None or Y is None:
-        X, Y = np.meshgrid(time, u.convert_to_km(plotting_object.cell.radius(
-            plotting_object.ghost)))
+    time, r, prof = plotting_object._Data__get_profile(quantity, **kwargs)
+    X, Y = np.meshgrid(time, u.convert_to_km(r))
     if hasattr(labels[quantity]['lim'], '__call__'):
         lim = labels[quantity]['lim'](prof)
     else:
