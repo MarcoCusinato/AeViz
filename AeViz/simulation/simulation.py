@@ -25,7 +25,7 @@ from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
 from AeViz.utils.utils import time_array
-from build.lib.AeViz.utils.GW_utils import spherical_harmonics_gradient
+
 try:
     from PyEMD import EMD
     from AeViz.utils.EMD_utils import (get_IMFs, HHT_spectra,
