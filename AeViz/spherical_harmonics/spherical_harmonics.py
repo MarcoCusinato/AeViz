@@ -92,6 +92,14 @@ class SphericalHarmonics(AssociatedLegendrePolynomials):
                 array
         """
         return (-1) ** m * self.Ylm(-m, l, theta, phi)
+    
+    def Ylm_norm(self, m, l, theta, phi):
+        if m < 0:
+            return np.sqrt(2) * (-1) ** m * self.Ylm(m, l, theta, phi).imag
+        elif m == 0:
+            return self.Ylm(m, l, theta, phi)
+        else:
+            return np.sqrt(2) * (-1) ** m * self.Ylm(m, l, theta, phi).real
 
     def spin_weighted_Ylm(self, s, m, l, theta, phi):
         """

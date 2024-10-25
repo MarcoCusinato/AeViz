@@ -13,6 +13,8 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GW_spectrogram, GWs_peak_indices,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
+from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
+                                                    get_sph_profile)
 from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.load_save_radii_utils import calculate_radius
@@ -23,6 +25,7 @@ from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
 from AeViz.utils.utils import time_array
+from build.lib.AeViz.utils.GW_utils import spherical_harmonics_gradient
 try:
     from PyEMD import EMD
     from AeViz.utils.EMD_utils import (get_IMFs, HHT_spectra,
@@ -1347,7 +1350,16 @@ class Simulation:
             H = 1
         return self.convective_velocity(file_name) / (self.cell.radius(
             self.ghost) * self.omega(file_name) * H)
-
+    
+    ## -----------------------------------------------------------------
+    ## Spherical Harmonics
+    ## -----------------------------------------------------------------
+    
+    @smooth
+    def rho_sperical_harmonics(self, l, m, save_checkpoints=True, **kwargs):
+        calculate_rho_decomposition(self, save_checkpoints)
+        return get_sph_profile(self, l, m)
+        
     ## -----------------------------------------------------------------
     ## Profiles
     ## -----------------------------------------------------------------
