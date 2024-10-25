@@ -88,29 +88,39 @@ def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving...\n')
             save_decomposition(simulation, decomposition, time, processed_hdf,
-                               4)
+                               lmax, msum)
             
             check_index = 0
         check_index += 1
         progress_index += 1
         findex += 1
     print('Computation completed, saving...')
-    save_decomposition(simulation, decomposition, time, processed_hdf, 4)
+    save_decomposition(simulation, decomposition, time, processed_hdf, lmax,
+                       msum)
     return True
 
 
-def save_decomposition(simulation, decomposition, time, processed_hdf, lmax):
+def save_decomposition(simulation, decomposition, time, processed_hdf, lmax, msum):
     keys = ['time']
     quantity = [time]
+    if msum:
+        file_name = 'rho_decomposition_SpH_msum.h5'
+    else:
+        file_name = 'rho_decomposition_SpH.h5'
     dec_index = 0
     for l in range(lmax + 1):
-        for m in range(-l, l + 1):
-            keys.append('rho_l' + str(l) + 'm' + str(m))
+        if msum:
+            keys.append('rho_l' + str(l))
             quantity.append(decomposition[dec_index, ...])
             dec_index += 1
+        else:
+            for m in range(-l, l + 1):
+                keys.append('rho_l' + str(l) + 'm' + str(m))
+                quantity.append(decomposition[dec_index, ...])
+                dec_index += 1
     keys.append('processed')
     quantity.append(processed_hdf)
-    save_hdf(os.path.join(simulation.storage_path, 'rho_decomposition_SpH.h5'),
+    save_hdf(os.path.join(simulation.storage_path, file_name),
                 keys, quantity)
     
 def read_rho_decomposition(simulation, lmax, msum):
@@ -183,7 +193,3 @@ def get_sph_profiles_r(simulation, l, m, zero_norm=True,
             rhomax = r00.max()
         mask = (r00 >= rhomin) & (r00 <= rhomax)
         return time, rlm[mask]
-    
-    
-        
-    
