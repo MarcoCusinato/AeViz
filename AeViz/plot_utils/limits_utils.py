@@ -19,6 +19,12 @@ def GW_limit(GW_data):
             lim = 150
     return (-lim, lim)
 
+def max_min(data):
+    """
+    Returns the maximum and minimum of the data.
+    """
+    return (np.nanmin(data), np.nanmax(data))
+
 def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim):
     """
     We set the limits given the axes and the number and positioning of

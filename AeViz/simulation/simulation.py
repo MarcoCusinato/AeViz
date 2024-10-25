@@ -1356,7 +1356,7 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     @smooth
-    def rho_sperical_harmonics(self, l, m, zero_norm=True,
+    def rho_sperical_harmonics(self, l=0, m=0, zero_norm=True,
                                save_checkpoints=True, **kwargs):
         calculate_rho_decomposition(self, save_checkpoints)
         if zero_norm:

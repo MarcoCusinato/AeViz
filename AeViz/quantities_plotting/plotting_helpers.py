@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from AeViz.utils.math_utils import function_average
 from AeViz.quantities_plotting import TERMINAL
+from AeViz.units import u
+import numpy as np
 
 def recognize_quantity(qt1, qt2, qt3, qt4, pars):
     """
@@ -281,3 +283,30 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     plotting_object._PlottingUtils__plot2D(letter)
     plotting_object.Xscale('linear', letter)
     plotting_object.Yscale('linear', letter)
+    
+def plot_profile_panel(plotting_object, letter, quantity,
+                       cbars, labels, **kwargs):
+    time, _, prof = plotting_object._Data__get_profile(quantity, **kwargs)
+    if X is None or Y is None:
+        X, Y = np.meshgrid(time, u.convert_to_km(plotting_object.cell.radius(
+            plotting_object.ghost)))
+    if hasattr(labels[quantity]['lim'], '__call__'):
+        lim = labels[quantity]['lim'](prof)
+    else:
+        lim = labels[quantity]['lim']
+    if 'rho_sperical_harmonics' in quantity:
+        lab = labels[quantity]['label'].replace('l', str(kwargs['l']))\
+            .replace('m',  str(kwargs['l']))
+    else:
+        lab = labels[quantity]['label']
+    plotting_object._PlottingUtils__update_params('A', (X, Y), prof,
+                                    cbars[letter], labels[quantity]['log'],
+                                    lim, -1, 
+                                    labels[quantity]['cmap'], 
+                                    lab,
+                                    plotting_object.sim_dim)
+    plotting_object.labels('t-t$_b$ [s]', 'R [km]', letter)
+    plotting_object._PlottingUtils__plot2D(letter)
+    plotting_object.xlim((-0.005, time.max()), letter)
+    plotting_object.Yscale('log', letter)
+    plotting_object.Xscale('linear', letter)

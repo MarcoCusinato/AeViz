@@ -1,4 +1,4 @@
-from AeViz.plot_utils.limits_utils import GW_limit
+from AeViz.plot_utils.limits_utils import GW_limit, max_min
 ## PLOTTING UTILS DICTIONARIES
 
 ## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
@@ -515,6 +515,10 @@ plot_labels = {
                                'lim': (0, 750),
                                'label': r'v$_\mathrm{kick}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
+         'rho_sperical_harmonics': {'log': False,
+                                    'lim': max_min,
+                                    'label': r'$\tilde{\rho}_{lm}$',
+                                    'cmap': 'YlGn'}
 }
 
 keys = list(plot_labels.keys())

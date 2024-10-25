@@ -484,6 +484,16 @@ class AeViz(Plotting):
         self.add_2Dfield(file, plot, comp, plane)
 
     @fig_window_open
+    def rho_decomposition(self, l, m, correct_zero=True, **kwargs):
+        loc = locals()
+        for q in loc.keys():
+            if q not in ['self', 'kwargs']:
+                kwargs[q] = loc[q]
+        qt = 'rho_sperical_harmonics'
+        self.plotProfile(qt, **kwargs)
+        
+        
+    @fig_window_open
     def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,
               fields: Literal['velocity', 'Bfield', 'all']=None,
               plane: Literal['xy', 'yz']='xz', 

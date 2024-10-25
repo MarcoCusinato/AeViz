@@ -15,7 +15,8 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         get_plane_indices,
                                                         show_figure,
                                                         get_qt_for_label,
-                                                        plot_panel)
+                                                        plot_panel,
+                                                        plot_profile_panel)
 from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
 import cv2
 
@@ -265,7 +266,7 @@ class Plotting(PlottingUtils, Data):
         
         show_figure()
     
-    def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None):
+    def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None, **kwargs):
         """
         Plot the time profile of the quantity.
         """
@@ -322,69 +323,13 @@ class Plotting(PlottingUtils, Data):
         self._PlotCreation__setup_axd(number, form_factor)
         X, Y = None, None
         if qt1 is not None:
-            time, _, prof = self._Data__get_profile(qt1)
-            if X is None or Y is None:
-                X, Y = np.meshgrid(time,
-                                u.convert_to_km(self.cell.radius(self.ghost)))
-            self._PlottingUtils__update_params('A', (X, Y), prof,
-                                            cbars['A'], plot_labels[qt1]['log'],
-                                            plot_labels[qt1]['lim'], -1, 
-                                            plot_labels[qt1]['cmap'], 
-                                            plot_labels[qt1]['label'],
-                                            self.sim_dim)
-            self.labels('t-t$_b$ [s]', 'R [km]', 'A')
-            self._PlottingUtils__plot2D('A')
-            self.xlim((-0.005, time.max()), 'A')
-            self.Yscale('log', 'A')
-            self.Xscale('linear', 'A')
+            plot_profile_panel(self, 'A', qt1, cbars, plot_labels, **kwargs)
         if qt2 is not None:
-            time, _, prof = self._Data__get_profile(qt2)
-            if X is None or Y is None:
-                X, Y = np.meshgrid(time,
-                                u.convert_to_km(self.cell.radius(self.ghost)))
-            self._PlottingUtils__update_params('B', (X, Y), prof,
-                                            cbars['B'], plot_labels[qt2]['log'],
-                                            plot_labels[qt2]['lim'], -1,
-                                            plot_labels[qt2]['cmap'],
-                                            plot_labels[qt2]['label'],
-                                            self.sim_dim)
-            self.labels('t-t$_b$ [s]', 'R [km]', 'B')
-            self._PlottingUtils__plot2D('B')
-            self.xlim((-0.005, time.max()), 'B')
-            self.Yscale('log', 'B')
-            self.Xscale('linear', 'B')
+            plot_profile_panel(self, 'B', qt2, cbars, plot_labels, **kwargs)
         if qt3 is not None:
-            time, _, prof = self._Data__get_profile(qt3)
-            if X is None or Y is None:
-                X, Y = np.meshgrid(time,
-                                u.convert_to_km(self.cell.radius(self.ghost)))
-            self._PlottingUtils__update_params('C', (X, Y), prof,
-                                            cbars['C'], plot_labels[qt3]['log'],
-                                            plot_labels[qt3]['lim'], -1,
-                                            plot_labels[qt3]['cmap'],
-                                            plot_labels[qt3]['label'],
-                                            self.sim_dim)
-            self.labels('t-t$_b$ [s]', 'R [km]', 'C')
-            self._PlottingUtils__plot2D('C')
-            self.xlim((-0.005, time.max()), 'C')
-            self.Yscale('log', 'C')
-            self.Xscale('linear', 'C')
+            plot_profile_panel(self, 'C', qt3, cbars, plot_labels, **kwargs)
         if qt4 is not None:
-            time, _, prof = self._Data__get_profile(qt4)
-            if X is None or Y is None:
-                X, Y = np.meshgrid(time,
-                                u.convert_to_km(self.cell.radius(self.ghost)))
-            self._PlottingUtils__update_params('D', (X, Y), prof,
-                                            cbars['D'], plot_labels[qt4]['log'],
-                                            plot_labels[qt4]['lim'], -1,
-                                            plot_labels[qt4]['cmap'],
-                                            plot_labels[qt4]['label'],
-                                            self.sim_dim)
-            self.labels('t-t$_b$ [s]', 'R [km]', 'D')
-            self._PlottingUtils__plot2D('D')
-            self.xlim((-0.005, time.max()), 'D')
-            self.Yscale('log', 'D')
-            self.Xscale('linear', 'D')
+            plot_profile_panel(self, 'D', qt4, cbars, plot_labels, **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():

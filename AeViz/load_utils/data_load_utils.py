@@ -87,12 +87,15 @@ class Data(object):
                 del self.loaded_data
             self.loaded_data = None
     
-    def __get_profile(self, name):
+    def __get_profile(self, name, **kwargs):
         if self.data_type == 'hdf5':
             raise ValueError('The profile method is not implemented for hdf5' \
                              ' files.')
         elif self.data_type == 'sim':
-            return self.loaded_data.radial_profile(name)
+            if name == 'rho_sperical_harmonics':
+                return self.loaded_data.rho_sperical_harmonics(**kwargs)
+            else:
+                return self.loaded_data.radial_profile(name, **kwargs)
 
     def __get_data_from_name(self, name, file=None, **kwargs):
         if self.data_type == 'hdf5':
