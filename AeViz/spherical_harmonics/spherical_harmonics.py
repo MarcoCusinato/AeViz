@@ -97,7 +97,7 @@ class SphericalHarmonics(AssociatedLegendrePolynomials):
         if m < 0:
             return np.sqrt(2) * (-1) ** m * self.Ylm(m, l, theta, phi).imag
         elif m == 0:
-            return self.Ylm(m, l, theta, phi)
+            return self.Ylm(m, l, theta, phi).real
         else:
             return np.sqrt(2) * (-1) ** m * self.Ylm(m, l, theta, phi).real
 
