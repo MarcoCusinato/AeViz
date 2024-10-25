@@ -85,6 +85,7 @@ def save_decomposition(simulation, decomposition, time, processed_hdf, lmax):
         for m in range(-l, l + 1):
             keys.append('rho_l' + str(l) + 'm' + str(m))
             quantity.append(decomposition[dec_index, ...])
+            dec_index += 1
     keys.append('processed')
     quantity.append(processed_hdf)
     save_hdf(os.path.join(simulation.storage_path, 'rho_decomposition_SpH.h5'),
