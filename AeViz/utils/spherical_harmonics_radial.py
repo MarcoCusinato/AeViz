@@ -116,5 +116,6 @@ def get_sph_profile(simulation, l, m):
                                             'rho_decomposition_SpH.h5'), 'r')
     key = 'rho_l' + str(l) + 'm' + str(m)
     data = decomposition_data[key][...]
+    time = decomposition_data['time'][...]
     decomposition_data.close()
-    return data
+    return time, data

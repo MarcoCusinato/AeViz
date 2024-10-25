@@ -1359,9 +1359,12 @@ class Simulation:
     def rho_sperical_harmonics(self, l=0, m=0, zero_norm=True,
                                save_checkpoints=True, **kwargs):
         calculate_rho_decomposition(self, save_checkpoints)
+        r = self.cell.radius(self.ghost)
+        time, rlm = get_sph_profile(self, l, m)
         if zero_norm:
-            return get_sph_profile(self, l, m) / get_sph_profile(self, 0, 0)
-        return get_sph_profile(self, l, m)
+            _, r00 = get_sph_profile(self, 0, 0)
+            rlm /= r00
+        return time, r, rlm
         
     ## -----------------------------------------------------------------
     ## Profiles
