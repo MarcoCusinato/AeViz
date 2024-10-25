@@ -517,7 +517,7 @@ plot_labels = {
                                           ' [km$\cdot$s$^{-1}$]'},
          'rho_sperical_harmonics': {'log': False,
                                     'lim': max_min,
-                                    'label': r'$\tilde{\rho}_{lm}$',
+                                    'label': r'$\tilde{\rho}_{XXYY}$',
                                     'cmap': 'YlGn'}
 }
 
