@@ -44,7 +44,7 @@ class AssociatedLegendrePolynomials:
             summ = np.zeros(x.shape)
             for k in range(m, l+1):
                 summ += factorial(k) / factorial(k-m) * \
-                    binom((l + k - 1) / 2, l) * x ** (k - m)
+                    binom((l + k - 1) / 2, l) * x ** (k - m) * binom(l, k)
             return (-1)**m * 2**l * (1 - x ** 2) ** (m / 2) * summ
     
 
