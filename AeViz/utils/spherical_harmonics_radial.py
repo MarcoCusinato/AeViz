@@ -4,6 +4,7 @@ from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
 from AeViz.utils.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
+from AeViz.utils.spherical_harmonics_radial import Harmonics_decomposition_rho
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
@@ -17,11 +18,30 @@ def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                         axis=tuple(range(simulation.dim-1)) )
             harm_index += 1
     return out_array
+
+def Harmonics_decomposition_rho_msum(simulation, file_name, theta, phi, dOmega,
+                                     SpH, lmax = 40):
+    rho = simulation.rho(file_name)
+    out_array = np.zeros((lmax+1, rho.shape[-1]))
+    harm_index = 0
+    for l in range( lmax + 1 ):
+        for m in range( -l, l + 1 ):
+            Ylm = SpH.Ylm_norm(m, l, theta, phi)
+            out_array[harm_index, :] += np.sum( rho * Ylm[..., None] * dOmega[..., None],
+                                        axis=tuple(range(simulation.dim-1)) )
+        harm_index += 1
+    return out_array
    
-def calculate_rho_decomposition(simulation, save_checkpoints=True):
-    if check_existence(simulation, 'rho_decomposition_SpH.h5'):
+def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
+    if msum:
+        lmax = 40
+        fname = 'rho_decomposition_SpH_msum.h5'
+    else:
+        lmax = 4
+        fname = 'rho_decomposition_SpH.h5'
+    if check_existence(simulation, fname):
         time, decomposition, processed_hdf = read_rho_decomposition(simulation, 
-                                                                    4)
+                                                                    lmax, msum)
         if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return True
         else:
@@ -52,9 +72,12 @@ def calculate_rho_decomposition(simulation, save_checkpoints=True):
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points,
                     suffix='Computing spherical harmonics...')
-        
-        in_data = Harmonics_decomposition_rho(simulation, file, theta, phi,
-                                              dOmega, SpH)
+        if msum:
+            in_data = Harmonics_decomposition_rho_msum(simulation, file, theta,
+                                                       phi, dOmega, SpH)
+        else:
+            in_data = Harmonics_decomposition_rho(simulation, file, theta, phi,
+                                                  dOmega, SpH)
         try:
             time = np.concatenate((time, simulation.time(file)))
             decomposition = np.concatenate((decomposition, in_data[..., None]),
@@ -91,21 +114,33 @@ def save_decomposition(simulation, decomposition, time, processed_hdf, lmax):
     save_hdf(os.path.join(simulation.storage_path, 'rho_decomposition_SpH.h5'),
                 keys, quantity)
     
-def read_rho_decomposition(simulation, lmax):
+def read_rho_decomposition(simulation, lmax, msum):
+    if msum:
+        fname = 'rho_decomposition_SpH_msum.h5'
+        data_dim = lmax + 1
+    else:
+        fname = 'rho_decomposition_SpH.h5'
+        data_dim = np.math.factorial(lmax) + 1
     decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
-                                            'rho_decomposition_SpH.h5'), 'r')
+                                            fname), 'r')
     data = [
         decomposition_data['time'][...]
     ]
-    dec_data = np.zeros((np.math.factorial(lmax) + 1,
+
+    dec_data = np.zeros((data_dim,
                          len(simulation.cell.radius(simulation.ghost)),
                          len(decomposition_data['time'][...])))
     dec_index = 0
     for l in range(lmax + 1):
-        for m in range(-l, l + 1):
-            key = 'rho_l' + str(l) + 'm' + str(m)
+        if msum:
+            key = 'rho_l' + str(l)
             dec_data[dec_index, ...] = decomposition_data[key][...]
             dec_index += 1
+        else:
+            for m in range(-l, l + 1):
+                key = 'rho_l' + str(l) + 'm' + str(m)
+                dec_data[dec_index, ...] = decomposition_data[key][...]
+                dec_index += 1
     data.append(dec_data)
     data.append(decomposition_data['processed'][...])
     decomposition_data.close()
@@ -119,3 +154,37 @@ def get_sph_profile(simulation, l, m):
     time = decomposition_data['time'][...]
     decomposition_data.close()
     return time, data
+
+def get_sph_msum_profile(simulation, l):
+    decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
+                                            'rho_decomposition_SpH_msum.h5'), 'r')
+    key = 'rho_l' + str(l)
+    data = decomposition_data[key][...]
+    time = decomposition_data['time'][...]
+    decomposition_data.close()
+    return time, data
+
+def get_sph_profiles_r(simulation, l, m, zero_norm=True,
+                       rhomin=None, rhomax=None, r=None):
+    rr = [rhomin, rhomax, r]
+    assert rr.count(None) < 3, "Please provide at least one of the three " \
+        "arguments: rmin, rmax, r"
+    time, r00 = get_sph_profile(simulation, 0, 0)
+    _, rlm = get_sph_profile(simulation, l, m)
+    if zero_norm:
+        rml /= r00
+    if r is not None:
+        radius = simulation.cell.radius(simulation.ghost)
+        rindex = np.argmax(radius >= r)
+        return time, rlm[..., rindex]
+    else:
+        if rhomin is None:
+            rhomin = 0
+        if rhomax is None:
+            rhomax = r00.max()
+        mask = (r00 >= rhomin) & (r00 <= rhomax)
+        return time, rlm[mask]
+    
+    
+        
+    

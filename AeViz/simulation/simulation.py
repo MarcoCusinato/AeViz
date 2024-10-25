@@ -14,6 +14,7 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
+                                                    get_sph_msum_profile,
                                                     get_sph_profile)
 from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
@@ -1356,11 +1357,17 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     @smooth
-    def rho_sperical_harmonics(self, l=0, m=0, zero_norm=True,
+    def rho_sperical_harmonics(self, l=0, m=None, zero_norm=True,
                                save_checkpoints=True, **kwargs):
-        calculate_rho_decomposition(self, save_checkpoints)
+        if m is None:
+            calculate_rho_decomposition(self, save_checkpoints, msum=True)
+        else:
+            calculate_rho_decomposition(self, save_checkpoints)
         r = self.cell.radius(self.ghost)
-        time, rlm = get_sph_profile(self, l, m)
+        if m is None:
+            time, rlm = get_sph_msum_profile(self, l)
+        else:
+            time, rlm = get_sph_profile(self, l, m)
         if zero_norm:
             _, r00 = get_sph_profile(self, 0, 0)
             rlm /= r00
