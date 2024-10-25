@@ -118,5 +118,6 @@ def get_sph_profile(simulation, l, m):
     decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
                                             'rho_decomposition_SpH.h5'), 'r')
     key = 'rho_l' + str(l) + 'm' + str(m)
+    data = decomposition_data[key][...]
     decomposition_data.close()
-    return decomposition_data[key][...]
+    return data
