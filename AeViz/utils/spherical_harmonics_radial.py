@@ -13,11 +13,10 @@ def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
     for l in range( lmax + 1 ):
         for m in range( -l, l + 1 ):
             Ylm = SpH.Ylm_norm( m, l, theta, phi )
-            try:
-                out_array[harm_index, :] = np.sum( rho * Ylm * dOmega[..., None],
-                                        axis=tuple(range(simulation.dim-1)) ) 
-            except:
-                out_array[harm_index, :] = np.sum( rho * Ylm[..., None] * dOmega[..., None],
+            if m == 0 and l == 0:
+                Ylm = Ylm[..., None]
+                
+            out_array[harm_index, :] = np.sum( rho * Ylm * dOmega[..., None],
                                         axis=tuple(range(simulation.dim-1)) ) 
             harm_index += 1
     return out_array
