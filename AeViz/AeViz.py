@@ -494,7 +494,8 @@ class AeViz(Plotting):
     
     @fig_window_open
     def rho_decomposition_barcode(self, lmin=None, lmax=None, msum=False,
-                                  r=None, rhomin=None, rhomax=None, **kwargs):
+                                  r=None, rhomin=None, rhomax=None,
+                                  zero_norm=True, **kwargs):
         loc = locals()
         for q in loc.keys():
             if q not in ['self', 'kwargs']:

@@ -174,7 +174,7 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
                        rhomin=None, rhomax=None, r=None):
     rr = [rhomin, rhomax, r]
     assert rr.count(None) < 3, "Please provide at least one of the three " \
-        "arguments: rmin, rmax, r"
+        "arguments: rhomin, rhomax, r"
     if m is None:
         time, r00 = get_sph_profile(simulation, 0)
     else:

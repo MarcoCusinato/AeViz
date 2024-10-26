@@ -1386,10 +1386,7 @@ class Simulation:
         Returns the data for the barcode plot. The data is the spherical
         harmonics decomposition of the density.
         """
-        if m is None:
-            calculate_rho_decomposition(self, save_checkpoints, msum=True)
-        else:
-            calculate_rho_decomposition(self, save_checkpoints)
+        calculate_rho_decomposition(self, save_checkpoints, msum=True)
         return get_data_for_barcode(self, lmax=lmax, lmin=lmin, msum=msum,
                                     r=r, rhomin=rhomin, rhomax=rhomax,
                                     zero_norm=zero_norm)
