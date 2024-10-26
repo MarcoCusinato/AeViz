@@ -300,7 +300,7 @@ def plot_profile_panel(plotting_object, letter, quantity,
             lab = lab.replace('YY', '')
     else:
         lab = labels[quantity]['label']
-    plotting_object._PlottingUtils__update_params('A', (X, Y), prof,
+    plotting_object._PlottingUtils__update_params(letter, (X, Y), prof,
                                     cbars[letter], labels[quantity]['log'],
                                     lim, -1, 
                                     labels[quantity]['cmap'], 
