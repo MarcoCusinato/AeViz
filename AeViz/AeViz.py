@@ -489,7 +489,7 @@ class AeViz(Plotting):
         for q in loc.keys():
             if q not in ['self', 'kwargs']:
                 kwargs[q] = loc[q]
-        qt = 'rho_sperical_harmonics'
+        qt = 'rho_spherical_harmonics'
         self.plotProfile(qt, **kwargs)
         
         
