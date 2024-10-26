@@ -515,7 +515,7 @@ plot_labels = {
                                'lim': (0, 750),
                                'label': r'v$_\mathrm{kick}$'\
                                           ' [km$\cdot$s$^{-1}$]'},
-         'rho_sperical_harmonics': {'log': False,
+         'rho_spherical_harmonics': {'log': False,
                                     'lim': max_min,
                                     'label': r'$\tilde{\rho}_{XXYY}$',
                                     'cmap': 'YlGn'}

@@ -292,7 +292,7 @@ def plot_profile_panel(plotting_object, letter, quantity,
         lim = labels[quantity]['lim'](prof)
     else:
         lim = labels[quantity]['lim']
-    if 'rho_sperical_harmonics' in quantity:
+    if 'rho_spherical_harmonics' in quantity:
         lab = labels[quantity]['label'].replace('XX', str(kwargs['l']))
         if kwargs['m'] is not None:
             lab = lab.replace('YY', str(kwargs['m']))

@@ -92,8 +92,8 @@ class Data(object):
             raise ValueError('The profile method is not implemented for hdf5' \
                              ' files.')
         elif self.data_type == 'sim':
-            if name == 'rho_sperical_harmonics':
-                return self.loaded_data.rho_sperical_harmonics(**kwargs)
+            if name == 'rho_spherical_harmonics':
+                return self.loaded_data.rho_spherical_harmonics(**kwargs)
             else:
                 return self.loaded_data.radial_profile(name, **kwargs)
 
