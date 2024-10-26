@@ -185,11 +185,11 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
     if r is not None:
         radius = simulation.cell.radius(simulation.ghost)
         rindex = np.argmax(radius >= r)
-        return time, rlm[..., rindex]
+        return time, rlm[rindex, ...]
     else:
         if rhomin is None:
             rhomin = 0
         if rhomax is None:
             rhomax = r00.max()
         mask = (r00 >= rhomin) & (r00 <= rhomax)
-        return time, rlm[mask].sum(axis=-1)
+        return time, rlm[mask].sum(axis=0)

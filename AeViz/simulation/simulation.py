@@ -1357,7 +1357,7 @@ class Simulation:
     ## -----------------------------------------------------------------
     
     @smooth
-    def rho_sperical_harmonics(self, l=0, m=None, zero_norm=True,
+    def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
                                rhomin=None, rhomax=None, r=None,
                                save_checkpoints=True, **kwargs):
         if m is None:
