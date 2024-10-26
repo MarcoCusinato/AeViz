@@ -484,7 +484,7 @@ class AeViz(Plotting):
         self.add_2Dfield(file, plot, comp, plane)
 
     @fig_window_open
-    def rho_decomposition(self, l=0, m=0, correct_zero=True, **kwargs):
+    def rho_decomposition(self, l=0, m=None, correct_zero=True, **kwargs):
         loc = locals()
         for q in loc.keys():
             if q not in ['self', 'kwargs']:
