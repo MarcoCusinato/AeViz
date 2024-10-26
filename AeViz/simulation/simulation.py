@@ -15,7 +15,8 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
                                                     get_sph_profile,
-                                                    get_sph_profiles_r)
+                                                    get_sph_profiles_r,
+                                                    get_data_for_barcode)
 from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.load_save_radii_utils import calculate_radius
@@ -1376,8 +1377,20 @@ class Simulation:
             return time, radius, rlm
         else:
             return get_sph_profiles_r(self, l=l, m=m, rhomin=rhomin,
-                                    rhomax=rhomax, r=r, zero_norm=zero_norm)
-        
+                                      rhomax=rhomax, r=r, zero_norm=zero_norm)
+    
+    def data_for_barcode(self, lmin=None, lmax=None, msum=False,
+                         r=None, rhomin=None, rhomax=None, save_checpoints=True,
+                         zero_norm=True, **kwargs):
+        """
+        Returns the data for the barcode plot. The data is the spherical
+        harmonics decomposition of the density.
+        """
+        return get_data_for_barcode(self, lmax=lmax, lmin=lmin, msum=msum,
+                                    r=r, rhomin=rhomin, rhomax=rhomax,
+                                    save_checkpoints=save_checpoints,
+                                    zero_norm=zero_norm)
+
     ## -----------------------------------------------------------------
     ## Profiles
     ## -----------------------------------------------------------------

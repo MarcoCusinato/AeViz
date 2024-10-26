@@ -311,7 +311,7 @@ class PlottingUtils(PlotCreation):
                 fmt = lambda x, pos: '{:.1f}'.format(x)
         return norm, fmt, cbar_levels
 
-    def __plot2Dmesh(self, ax_letter):
+    def __plot2Dmesh(self, ax_letter, **kwargs):
         """
         Fills up the selected axes with a 2D mesh plot.
         """
@@ -324,11 +324,15 @@ class PlottingUtils(PlotCreation):
         except:
             indx = self.plot_dim[ax_letter].index(-3)
         norm, fmt, _ = self.__normalize_format_cbar(ax_letter)
+        if 'lmin' in kwargs:
+            sh = 'auto'
+        else:
+            sh = 'gouraud'
         pcm = self.axd[ax_letter].pcolormesh(self.grid[ax_letter][indx][0],
                                             self.grid[ax_letter][indx][1],
                                             self.data[ax_letter][indx], norm=norm,
                                             cmap=self.cmap_color[ax_letter],
-                                            shading='gouraud')
+                                            shading=sh)
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
                                  format=ticker.FuncFormatter(fmt),
                                  location=cbar_loaction(

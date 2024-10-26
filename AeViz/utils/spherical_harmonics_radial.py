@@ -194,3 +194,35 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
         mask = (r00 >= rhomin) & (r00 <= rhomax)
         rlm[~mask] = 0
         return time, rlm.mean(axis=0)
+    
+def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
+                         msum=False, rhomax=None, r=None, zero_norm=True):
+    if lmax is None and msum:
+        lmax = 40
+    elif lmax is None:
+        lmax = 4
+    if lmin is None:
+        lmin = 0
+    if not msum:
+        Yscale = np.arange(lmin, np.math.factorial(lmax) + 1)
+    else:
+        Yscale = np.arange(lmin, lmax + 1)
+    if msum:
+        for l in range(lmin, lmax + 1):
+            time, rlm = get_sph_profiles_r(simulation, l=l, m=None, zero_norm=zero_norm,
+                                           rhomin=rhomin, rhomax=rhomax, r=r)
+            if l == lmin:
+                data = rlm[None, ...]
+            else:
+                data = np.concatenate((data, rlm[None, ...]), axis=0)
+    else:
+        for l in range(lmin, lmax + 1):
+            for m in range(-l, l + 1):
+                time, rlm = get_sph_profiles_r(simulation, l=l, m=m, zero_norm=zero_norm,
+                                               rhomin=rhomin, rhomax=rhomax, r=r)
+                if l == lmin and m == -l:
+                    data = rlm[None, ...]
+                else:
+                    data = np.concatenate((data, rlm[None, ...]), axis=0)
+    return time, Yscale, data
+    
