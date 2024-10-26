@@ -193,4 +193,4 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
             rhomax = r00.max()
         mask = (r00 >= rhomin) & (r00 <= rhomax)
         rlm[~mask] = 0
-        return time, rlm[mask].sum(axis=0)
+        return time, rlm.sum(axis=0)
