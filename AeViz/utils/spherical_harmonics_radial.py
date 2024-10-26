@@ -155,33 +155,33 @@ def read_rho_decomposition(simulation, lmax, msum):
     decomposition_data.close()
     return data
     
-def get_sph_profile(simulation, l, m):
+def get_sph_profile(simulation, l, m=None):
+    if m is None:
+        fname = 'rho_decomposition_SpH_msum.h5'
+        key = 'rho_l' + str(l)
+    else:
+        fname = 'rho_decomposition_SpH.h5'
+        key = 'rho_l' + str(l) + 'm' + str(m)
     decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
-                                            'rho_decomposition_SpH.h5'), 'r')
-    key = 'rho_l' + str(l) + 'm' + str(m)
+                                            fname), 'r')
     data = decomposition_data[key][...]
     time = decomposition_data['time'][...]
     decomposition_data.close()
     return time, data
 
-def get_sph_msum_profile(simulation, l):
-    decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
-                                            'rho_decomposition_SpH_msum.h5'), 'r')
-    key = 'rho_l' + str(l)
-    data = decomposition_data[key][...]
-    time = decomposition_data['time'][...]
-    decomposition_data.close()
-    return time, data
 
-def get_sph_profiles_r(simulation, l, m, zero_norm=True,
+def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
                        rhomin=None, rhomax=None, r=None):
     rr = [rhomin, rhomax, r]
     assert rr.count(None) < 3, "Please provide at least one of the three " \
         "arguments: rmin, rmax, r"
-    time, r00 = get_sph_profile(simulation, 0, 0)
+    if m is None:
+        time, r00 = get_sph_profile(simulation, 0)
+    else:
+        time, r00 = get_sph_profile(simulation, 0, 0)
     _, rlm = get_sph_profile(simulation, l, m)
     if zero_norm:
-        rml /= r00
+        rlm /= r00
     if r is not None:
         radius = simulation.cell.radius(simulation.ghost)
         rindex = np.argmax(radius >= r)
@@ -192,4 +192,4 @@ def get_sph_profiles_r(simulation, l, m, zero_norm=True,
         if rhomax is None:
             rhomax = r00.max()
         mask = (r00 >= rhomin) & (r00 <= rhomax)
-        return time, rlm[mask]
+        return time, rlm[mask].sum(axis=-1)

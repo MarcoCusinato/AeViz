@@ -14,8 +14,8 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
-                                                    get_sph_msum_profile,
-                                                    get_sph_profile)
+                                                    get_sph_profile,
+                                                    get_sph_profiles_r)
 from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.load_save_radii_utils import calculate_radius
@@ -1358,20 +1358,25 @@ class Simulation:
     
     @smooth
     def rho_sperical_harmonics(self, l=0, m=None, zero_norm=True,
+                               rhomin=None, rhomax=None, r=None,
                                save_checkpoints=True, **kwargs):
         if m is None:
             calculate_rho_decomposition(self, save_checkpoints, msum=True)
         else:
             calculate_rho_decomposition(self, save_checkpoints)
-        r = self.cell.radius(self.ghost)
-        if m is None:
-            time, rlm = get_sph_msum_profile(self, l)
-        else:
+        if [rhomin, rhomax, r] == [None, None, None]:
+            radius = self.cell.radius(self.ghost)
             time, rlm = get_sph_profile(self, l, m)
-        if zero_norm:
-            _, r00 = get_sph_profile(self, 0, 0)
-            rlm /= r00
-        return time, r, rlm
+            if zero_norm:
+                if m is None:
+                    _, r00 = get_sph_profile(self, 0)
+                else:
+                    _, r00 = get_sph_profile(self, 0, 0)
+                rlm /= r00
+            return time, radius, rlm
+        else:
+            return get_sph_profiles_r(self, l=l, m=m, rhomin=rhomin,
+                                    rhomax=rhomax, r=r, zero_norm=zero_norm)
         
     ## -----------------------------------------------------------------
     ## Profiles
