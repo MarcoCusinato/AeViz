@@ -1260,7 +1260,7 @@ class Simulation:
         dt = np.zeros(time.shape[0])
         dt[1:] = time[1:] - time[:-1]
         dt[0] = dt[1]
-        _, PNSmass, _, _, _, _, _, _ = self.PNS_mass_ene()
+        _, PNSmass, _, _, _, _, _, _, _ = self.PNS_mass_ene()
         vnue = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nue']['x'],
                                                         nu_flux['nue']['y'],
                                                         nu_flux['nue']['z']]]
