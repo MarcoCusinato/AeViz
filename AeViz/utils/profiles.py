@@ -5,16 +5,22 @@ from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from AeViz.utils.file_utils import save_hdf
 
 
-def calculate_profile(simulation, profile, save_checkpoints):
+def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
     """
     Returns the radial profile of the desired quantity. Quantity names
     must be the same as the ones in the simulation class.
     """
-    if profile in ['BV_frequency', 'Rossby_number', 'Ye', 'temperature', 'rho',
+    if profile in ['Rossby_number', 'Ye', 'temperature', 'rho',
                    'entropy', 'convective_flux', 'gas_pressure']:
         return read_profile(simulation, profile, save_checkpoints)
+    elif profile == 'BV_frequency':
+        if kwargs['mode'] == 1:
+            return read_profile(simulation, 'BV_frequency', save_checkpoints)
+        elif kwargs['mode'] == 2:
+            return derive_profile(simulation, 'BV_frequency',
+                                  **kwargs)
     else:
-        return derive_profile(simulation, profile)
+        return derive_profile(simulation, profile, **kwargs)
 
 def read_profile(simulation, profile, save_checkpoints):
     """
@@ -33,7 +39,7 @@ def read_profile(simulation, profile, save_checkpoints):
         derive_profiles(simulation, None, save_checkpoints)
         return read_profile(simulation, profile, save_checkpoints)
 
-def derive_profile(simulation, profile):
+def derive_profile(simulation, profile, **kwargs):
     """
     Calculates a single profile and returns it.
     """
@@ -45,7 +51,7 @@ def derive_profile(simulation, profile):
                          range(len(simulation.hdf_file_list))):
         try:
             time = np.concatenate((time, simulation.time(file)))
-            qt_local = qt(file)
+            qt_local = qt(file, **kwargs)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):
@@ -58,7 +64,7 @@ def derive_profile(simulation, profile):
             profiles = np.concatenate((profiles, qt_av[..., None]), axis=-1)
         except:
             time = simulation.time(file)
-            qt_local = qt(file)
+            qt_local = qt(file, **kwargs)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):

@@ -1279,16 +1279,35 @@ class Simulation:
     ## -----------------------------------------------------------------
 
     @smooth
-    def BV_frequency(self, file_name, **kwargs):
+    def BV_frequency(self, file_name, mode=1, **kwargs):
         """
         Returns the Brunt-Vaisala frequency at specific timestep.
         """
         rho = self.rho(file_name, **kwargs)
         radius = self.cell.radius(self.ghost)
-        return (1 / self.soundspeed(file_name, **kwargs) ** 2 * \
-                 IDL_derivative(radius, self.gas_pressure(file_name, **kwargs)) - \
-                 IDL_derivative(radius, rho)) * IDL_derivative(radius, 
-                                self.gravitational_potential(file_name, **kwargs)) / rho
+        BV = (1 / self.soundspeed(file_name, **kwargs) ** 2 * \
+              IDL_derivative(radius, self.gas_pressure(file_name, **kwargs)) - \
+              IDL_derivative(radius, rho)) / rho
+        if mode == 1:
+            """
+            check e.g. Gossan+20 `10.1093/mnras/stz3243`
+            """
+            geff = IDL_derivative(radius,
+                                  self.gravitational_potential(file_name,
+                                                               **kwargs))
+        elif mode == 2:
+            """
+            Check Fryer+21 ` 10.1134/S1063772921100103`
+            """
+            
+            vr = self.radial_velocity(file_name, **kwargs)
+            geff = IDL_derivative(radius,
+                                  self.gravitational_potential(file_name,
+                                                               **kwargs)) - \
+                   vr * IDL_derivative(radius, vr) 
+        else:
+            raise ValueError("Mode not recognized.")
+        return geff * BV
 
     @smooth
     def convective_velocity(self, file_name, **kwargs):
@@ -1395,7 +1414,7 @@ class Simulation:
     ## Profiles
     ## -----------------------------------------------------------------
     
-    def radial_profile(self, quantity, save_checkpoints=True):
+    def radial_profile(self, quantity, save_checkpoints=True, **kwargs):
         """
         Calucaltes the radial profile of the selected quantity. Name of
         the quantity must be the same as the one of the simulation
@@ -1405,5 +1424,5 @@ class Simulation:
         besides the regular angular and radial dependence, this will be
         returned as the last axis.
         """
-        return calculate_profile(self, quantity, save_checkpoints)
+        return calculate_profile(self, quantity, save_checkpoints, **kwargs)
         
