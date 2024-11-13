@@ -114,7 +114,7 @@ class Plotting(PlottingUtils, Data):
             scale = 'linear'
         else:
             raise ValueError('xaxis must be radius, theta, phi or time.')
-        
+        xlim = (np.nanmin(grid), np.nanmax(grid))
 
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
@@ -142,6 +142,7 @@ class Plotting(PlottingUtils, Data):
                 self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
             else:
                 self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
+            self.xlim(xlim, axd_letters[number])
             ## SET THE LABELS
             self.labels(xlabel, plot_labels[ylabel_qt]['label'],
                         axd_letters[number])
