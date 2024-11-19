@@ -716,11 +716,12 @@ class Simulation:
         return return_list
     
     @smooth
-    def GWs_dE_dt(self, tob_corrected=True):
+    def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True):
         """
         Returns the energy carried away by the GWs in erg/s
         """
-        GWs = self.GW_Amplitudes(tob_corrected)
+        GWs = self.GW_Amplitudes(tob_corrected=tob_corrected,
+                                 lower_refinement=lower_refinement)
         return GWs_energy(GWs, self.dim)
 
     @smooth

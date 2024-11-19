@@ -137,11 +137,15 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot1D(axd_letters[number])
             
             ## SET THE LIMITS
-            self.xlim((-0.005, grid.max()), axd_letters[number])
+            
             if 'GW' not in qt:
                 self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
             else:
                 self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
+            if xaxis == 'time':
+                xlim = (-0.005, grid.nanmax())
+            else:
+                xlim = (grid.nanmin(), grid.nanmax())
             self.xlim(xlim, axd_letters[number])
             ## SET THE LABELS
             self.labels(xlabel, plot_labels[ylabel_qt]['label'],
