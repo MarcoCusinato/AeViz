@@ -30,7 +30,7 @@ sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
 if not args.noprofiles:
     sim.radial_profile('Ye')
-if not args.noGWs:
+if not args.noGWs and sim.dim ==2:
     sim.AE220()
 if args.plot:
     from AeViz import ae
@@ -114,16 +114,17 @@ if args.plot:
         ae.save_plot('rho')
         ae.Close()
     ## GWs
-    ae.GWs('all')
-    ae.save_plot('GWs')
-    ae.Close()
-    ae.GWs('all', False, True)
-    ae.save_plot('GWs_spectrogram')
-    ae.Close()
-    if not args.noGWs:
-       ae.GWs('all', True, False)
-       ae.save_plot('GWs_decomposition')
-       ae.Close()
+    if sim.dim > 1:
+        ae.GWs('all')
+        ae.save_plot('GWs')
+        ae.Close()
+        ae.GWs('all', False, True)
+        ae.save_plot('GWs_spectrogram')
+        ae.Close()
+        if not args.noGWs or sim.dim == 3:
+            ae.GWs('all', True, False)
+            ae.save_plot('GWs_decomposition')
+            ae.Close()
     
     
     
