@@ -14,6 +14,8 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
                    'entropy', 'convective_flux', 'gas_pressure']:
         return read_profile(simulation, profile, save_checkpoints)
     elif profile == 'BV_frequency':
+        if 'mode' not in kwargs:
+            kwargs['mode'] = 1
         if kwargs['mode'] == 1:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
         elif kwargs['mode'] == 2:
