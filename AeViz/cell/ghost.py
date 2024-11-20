@@ -74,6 +74,20 @@ class ghost:
                            'theta': [self.t_l, self.t_r],
                            'phi': [self.p_l, self.p_r]}
         del updated_parameters
+        
+    def save_ghost_cells_status(self):
+        """
+        Method that allows to save the current ghost cells options
+        """
+        status = {
+            'r_l': self.r_l,
+            'r_r': self.r_r,
+            't_l': self.t_l,
+            't_r': self.t_r,
+            'p_l': self.p_l,
+            'p_r': self.p_r
+        }
+        return status
 
     def return_ghost_dictionary(self):
         """
@@ -144,8 +158,8 @@ class ghost:
 
     def remove_ghost_cells_radii(self, array, dim, **kwargs):
         assert dim in (1, 2, 3), "Simulation MUST be 1, 2 or 3D"
-        
         if kwargs:
+            gstatus = self.save_ghost_cells_status()
             self.update_ghost_cells(**kwargs)
             if dim == 1:
                 pass
@@ -154,6 +168,7 @@ class ghost:
             else:
                 array = self.__remove_3D_ghost_cells_radii(array)
             self.restore_default()
+            self.update_ghost_cells(**gstatus)
             return array
         if dim == 1:
             return array
@@ -185,15 +200,16 @@ class ghost:
                      self.r_l : size_x - self.r_r]
     
     def __remove_2D_ghost_cells_radii(self, array):
-        t_r = abs(self.t_r-self.__options_default['t_r'])
-        t_l = abs(self.t_l-self.__options_default['t_l'])
+        
+        t_l = self.__options_default['t_l'] - self.t_l
+        t_r = self.__options_default['t_r'] - self.t_r
         return array[t_l : array.shape[0] - t_r]
 
     def __remove_3D_ghost_cells_radii(self, array):
-        t_r = abs(self.t_r-self.__options_default['t_r'])
-        t_l = abs(self.t_l-self.__options_default['t_l'])
-        p_r = abs(self.p_r-self.__options_default['p_r'])
-        p_l = abs(self.p_l-self.__options_default['p_l'])
+        p_l = self.__options_default['p_l'] - self.p_l
+        p_r = self.__options_default['p_r'] - self.p_r
+        t_l = self.__options_default['t_l'] - self.t_l
+        t_r = self.__options_default['t_r'] - self.t_r
         return array[p_l : array.shape[0] - p_r,
                      t_l : array.shape[1] - t_r]
 
