@@ -121,7 +121,7 @@ if args.plot:
         ae.GWs('all', False, True)
         ae.save_plot('GWs_spectrogram')
         ae.Close()
-        if not args.noGWs or sim.dim == 3:
+        if not args.noGWs or sim.dim == 2:
             ae.GWs('all', True, False)
             ae.save_plot('GWs_decomposition')
             ae.Close()
