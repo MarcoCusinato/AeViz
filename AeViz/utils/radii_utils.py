@@ -207,18 +207,23 @@ def hampel_filter(shock_radius, sigma=3):
     
     assert shock_radius.size > 1 and shock_radius.ndim >= 1, "Expected 1 or 2 \
             dimensional array, with at least 2 elements."
+    shock_radius_copy = shock_radius.copy()
     for i in range(10):
         rmedian = np.nanmedian(shock_radius)
         diff = np.abs(shock_radius - rmedian)
         diffmedian = np.nanmedian(diff)
+        
         if i == 0:
             threshold = np.minimum(sigma, np.nanmax(diff / (1.4826 * \
                 diffmedian)) * 0.95)
         mask = diff > 1.4826 * diffmedian * threshold
         shock_radius[mask] = np.nan
         num_outliers = np.sum(mask)
+        
         if num_outliers == 0:
             break
+    if np.sum(np.isnan(shock_radius)) >= shock_radius.size / 2:
+        return shock_radius_copy
     return shock_radius
         
     

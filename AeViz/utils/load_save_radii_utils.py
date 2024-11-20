@@ -190,9 +190,14 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 [time, full_radius, max_radius, min_radius, avg_radius,
                 simulation.ghost.return_ghost_dictionary(), processed_hdf])
     print('Done!')
+    ## Unpack the ghost cells
+    out_gcells = {}
+    for key in simulation.ghost.return_ghost_dictionary().keys():
+        out_gcells[key[0]+'_l'] = simulation.ghost.return_ghost_dictionary()[key][0]
+        out_gcells[key[0]+'_r'] = simulation.ghost.return_ghost_dictionary()[key][1]
     simulation.ghost.restore_default()
     return time, full_radius, max_radius, min_radius, avg_radius, \
-        simulation.ghost.return_ghost_dictionary()
+        out_gcells
    
 def read_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus']):
