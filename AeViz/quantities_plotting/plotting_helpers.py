@@ -156,7 +156,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                     data.append(post_data[index1, i, :])
             elif index1 is None and index2 is None:
                 data = function_average(post_data, 3, 'Omega', 
-                                        dV[0][:, None, None] * \
+                                        dV[2][:, None, None] * \
                                             dV[1][None, :, None])
             else:
                 data = post_data[index1, index2, :]
@@ -171,8 +171,8 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                     data.append(post_data[index1, :, i])
             elif index1 is None and index2 is None:
                 data = function_average(post_data, 3, 'theta',
-                                        dV[0][:, None, None] \
-                                            * dV[2][None, None, :])
+                                        dV[2][:, None, None] \
+                                            * dV[0][None, None, :])
             else:
                 data = post_data[index1, :, index2]
         elif xaxis == 'phi':
@@ -187,7 +187,7 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
             elif index1 is None and index2 is None:
                 data = function_average(post_data, 3, 'phi',
                                         dV[1][None, :, None] \
-                                            * dV[2][None, None, None])
+                                            * dV[0][None, None, :])
             else:
                 data = post_data[:, index1, index2]
     return data
