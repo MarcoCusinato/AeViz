@@ -1276,7 +1276,7 @@ class Simulation:
         return time, hydro, vnue, vnua, vnux, 
     
     ## -----------------------------------------------------------------
-    ## CONVECTION AND TURBULENCE DATA
+    ## CONVECTION AND INSTABILITIES DATA
     ## -----------------------------------------------------------------
 
     @smooth
@@ -1372,6 +1372,18 @@ class Simulation:
             H = 1
         return self.convective_velocity(file_name) / (self.cell.radius(
             self.ghost) * self.omega(file_name) * H)
+    
+    @smooth
+    def epicyclic_frequency(self, file_name, **kwargs):
+        """
+        Returns the epicyclic frequency at specific timestep. Defined as
+        kappa² = ( (2Ω) /  R ) ∂(R²Ω)/∂R
+        """
+        R = self.cell.radius(self.ghost)
+        omega = self.omega(file_name, **kwargs)
+        kappa = (2 * omega ) / R * IDL_derivative(R, R ** 2 * omega)
+        return kappa
+        
     
     ## -----------------------------------------------------------------
     ## Spherical Harmonics
