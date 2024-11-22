@@ -145,7 +145,7 @@ class Plotting(PlottingUtils, Data):
             if xaxis == 'time':
                 xlim = (-0.005, np.nanmax(grid))
             else:
-                xlim = (grid.nanmin(), np.nanmax(grid))
+                xlim = (np.nanmin(grid), np.nanmax(grid))
             self.xlim(xlim, axd_letters[number])
             ## SET THE LABELS
             self.labels(xlabel, plot_labels[ylabel_qt]['label'],
