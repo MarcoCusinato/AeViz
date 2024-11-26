@@ -137,21 +137,38 @@ class grid:
         if self.dim == 3:
             raise TypeError("Not implemented yet :\").")
     
-    def cartesian_grid_2D(self, plane):
+    def cartesian_grid_2D(self, plane, theta_points=None):
         """
         Returns a 2D cartesian grid.
         """
         if self.dim == 1:
-            return self.__1D_cartesian_grid(self.radius)
+            return self.__2D_cartesian_grid_1D(self.radius, theta_points, plane)
         elif self.dim == 2:
             return self.__2D_cartesian_grid(self.radius, self.theta)
         else:
             return self.__2D_cartesian_grid_from_3D(self.radius, self.theta,
                                                      self.phi, plane)
     
+    def map_1D_to_2D(self, quantity, theta_points):
+        """
+        Maps a 1D quantity to a 2D grid.
+        """
+        assert theta_points is not None, "Theta angle MUST not be None."
+        return np.tile(quantity, (theta_points, 1))
+
     def __1D_cartesian_grid(self, radius):
         return radius
 
+    def __2D_cartesian_grid_1D(self, radius, theta_points, plane='xz'):
+        assert theta_points is not None, "Theta angle MUST not be None."
+        if plane in ['xy', 'yx']:
+            theta = np.linspace(0, 2*np.pi, theta_points, endpoint=True)
+        else:
+            theta = np.linspace(0, np.pi, theta_points, endpoint=True)
+        X = radius[None, :] * np.sin(theta)[:, None]
+        Y = radius[None, :] * np.cos(theta)[:, None]
+        return X, Y
+    
     def __2D_cartesian_grid(self, radius, theta):
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
