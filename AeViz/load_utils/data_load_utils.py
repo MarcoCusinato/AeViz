@@ -12,6 +12,7 @@ from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_angular_momentum,
                                     return_PNS_kick)
 from AeViz.utils.path_utils import local_storage_folder
+from AeViz.grid.grid import grid
 
 u = units()
     
@@ -158,18 +159,29 @@ class Data(object):
                 return getattr(self.loaded_data, name)(**kwargs)
     
     def __plane_cut(self, data, indextheta = None, indexphi = None):
-        if (indexphi == None and indextheta == None) or \
-            self.sim_dim == 2:
-            return data
-        if indexphi is not None:
-            return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
-                                   data[(indexphi + data.shape[0] // 2) % 
-                                        data.shape[0], :, :]], axis=0)
-        elif indextheta is not None:
-            
-            return data[:, indextheta, :]
-            
-        return data
+        
+        
+        if self.sim_dim == 1:
+            gr = grid(self.sim_dim, self.cell.radius(self.ghost))
+            return gr.map_1D_to_2D(data, 64)
+        elif self.sim_dim == 2:
+            if (indexphi == None and indextheta == None):
+                return data
+            elif indextheta is not None:
+                gr = grid(self.sim_dim, self.cell.radius(self.ghost),
+                          self.cell.theta(self.ghost))
+                return gr.map_1D_to_2D(data, 64)
+        elif self.sim_dim == 3:
+            if indexphi is not None:
+                return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
+                                    data[(indexphi + data.shape[0] // 2) % 
+                                            data.shape[0], :, :]], axis=0)
+            elif indextheta is not None:
+                
+                return data[:, indextheta, :]
+        else:
+            raise ValueError('The simulation dimension is not supported.')
+
     
     def __get_GW_decomposition_data(self, name):
         if self.sim_dim == 2:

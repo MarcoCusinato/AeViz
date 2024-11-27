@@ -31,9 +31,14 @@ class PlottingUtils(PlotCreation):
             for idx in range(len(self.plot_dim[axd_letter])):
                 if self.plot_dim[axd_letter][idx] == 2:
                     sdim = self.sim_dimension[axd_letter][idx]
+                    grid = self.grid[axd_letter][idx][0]
+                    if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                        plane = "xy"
+                    else:
+                        plane = "xz"
                     break
             set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
-                      sdim)
+                      sdim, plane)
             self.__save_lims()
         else:
             self.axd[axd_letter].set_xlim(xlim)
@@ -50,9 +55,14 @@ class PlottingUtils(PlotCreation):
             for idx in range(len(self.plot_dim[axd_letter])):
                 if self.plot_dim[axd_letter][idx] == 2:
                     sdim = self.sim_dimension[axd_letter][idx]
+                    grid = self.grid[axd_letter][idx]
+                    if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                        plane = "xy"
+                    else:
+                        plane = "xz"
                     break
             set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
-                      sdim)
+                      sdim, plane)
             self.__save_lims()
         else:
             self.axd[axd_letter].set_ylim(ylim)
@@ -459,9 +469,14 @@ class PlottingUtils(PlotCreation):
                 for indx in range(len(dm)):
                     if dm[indx] == 2:
                         sdim = self.sim_dimension[ax_letter][indx]
+                        grid = self.grid[ax_letter][indx][0]
+                        if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                            plane = "xy"
+                        else:
+                            plane = "xz"
                         break
                 set2Dlims(self.axd, self.xlims[ax_letter], None, self.number,
-                          self.form_factor, sdim)
+                          self.form_factor, sdim, plane)
             elif -1 in dm:
                 self.__plot2D(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)

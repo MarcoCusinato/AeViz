@@ -201,10 +201,15 @@ def get_plane_indices(sim, plane):
     ## Get the indices associated to the plane
     if plane not in ['xy', 'xz', 'yz']:
         plane = 'xz'
-    if sim.sim_dim == 2:
-        plane = 'xz'
+    if sim.sim_dim == 1:
         index_phi = None
         index_theta = None
+    elif sim.sim_dim == 2:
+        if plane == 'xy':
+            index_theta = len(sim.cell.theta(sim.ghost)) // 2
+        else:
+            index_theta = None
+        index_phi = None
     elif plane == 'xy':
         index_phi = None
         index_theta = len(sim.cell.theta(sim.ghost)) // 2
@@ -264,7 +269,7 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     ## GET THE PLANE CUT
     data = plotting_object._Data__plane_cut(data, indices[0], indices[1])
     qt_label = get_qt_for_label(quantity, **kwargs)
-    plotting_object._PlottingUtils__update_params(letter, grid, 
+    plotting_object._PlottingUtils__update_params(letter, grid,
                                             data,
                                             cbars[letter],
                                             labels[qt_label]['log'],

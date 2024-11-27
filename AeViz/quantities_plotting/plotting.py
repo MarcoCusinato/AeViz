@@ -178,7 +178,7 @@ class Plotting(PlottingUtils, Data):
         ## Set the grid
         gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
                   self.cell.theta(self.ghost), self.cell.phi(self.ghost))
-        X, Y = gr.cartesian_grid_2D(plane)
+        X, Y = gr.cartesian_grid_2D(plane, 64)
         ## Get the number of quantities to plot
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])

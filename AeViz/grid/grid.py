@@ -142,9 +142,11 @@ class grid:
         Returns a 2D cartesian grid.
         """
         if self.dim == 1:
-            return self.__2D_cartesian_grid_1D(self.radius, theta_points, plane)
+            return self.__2D_cartesian_grid_1D(self.radius, theta_points,
+                                               plane)
         elif self.dim == 2:
-            return self.__2D_cartesian_grid(self.radius, self.theta)
+            return self.__2D_cartesian_grid(self.radius, self.theta, plane,
+                                            theta_points)
         else:
             return self.__2D_cartesian_grid_from_3D(self.radius, self.theta,
                                                      self.phi, plane)
@@ -154,7 +156,14 @@ class grid:
         Maps a 1D quantity to a 2D grid.
         """
         assert theta_points is not None, "Theta angle MUST not be None."
-        return np.tile(quantity, (theta_points, 1))
+        if self.dim == 1:
+            return np.tile(quantity, (theta_points, 1))
+        elif self.dim == 2:
+            quantity = quantity[quantity.shape[0] // 2, :]
+            return np.tile(quantity, (theta_points, 1))
+        else:
+            raise TypeError("Your simulation is 3D, you are not supposed to \
+                            be here.")
 
     def __1D_cartesian_grid(self, radius):
         return radius
@@ -169,7 +178,10 @@ class grid:
         Y = radius[None, :] * np.cos(theta)[:, None]
         return X, Y
     
-    def __2D_cartesian_grid(self, radius, theta):
+    def __2D_cartesian_grid(self, radius, theta, plane, phi_points=None):
+        if plane in ['xy', 'yx']:
+            assert phi_points is not None, "Phi angle MUST NOT be None."
+            theta = np.linspace(0, 2*np.pi, phi_points, endpoint=True)
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
         return X, Y

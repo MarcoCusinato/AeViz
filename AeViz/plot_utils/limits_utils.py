@@ -25,7 +25,7 @@ def max_min(data):
     """
     return (np.nanmin(data), np.nanmax(data))
 
-def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim):
+def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim, plane):
     """
     We set the limits given the axes and the number and positioning of
     the figure which is part of.
@@ -38,12 +38,25 @@ def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim):
         if ylim == None:
             ax["E"].set_xlim(xlim)
     else:
-        if sim_dim == 2:
+        if sim_dim == 1:
+            if plane == "xy":
+                ## Plotting  a circle
+                set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
+            else:
+                ## Plotting a semi-circle
+                set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
+        elif sim_dim == 2:
             ## Used for 2D simulations, we do not extend the grid
-            set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
-        else:
+            if plane == "xy":
+                ## Plotting  a circle
+                set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
+            else:
+                set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
+        elif sim_dim == 3:
             ## Used for 3D simulations
             set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
+        else:
+            raise ValueError("The simulation dimension is not supported.")
                 
 def set2dlims2Dsim(ax, xlim, ylim, number, form_factor):
     """
