@@ -1378,12 +1378,34 @@ class Simulation:
         """
         Returns the epicyclic frequency at specific timestep. Defined as
         kappa² = ( (2Ω) /  R ) ∂(R²Ω)/∂R
+        R is the cylindrical radius
         """
-        R = self.cell.radius(self.ghost)
-        omega = self.omega(file_name, **kwargs)
-        kappa = (2 * omega ) / R * IDL_derivative(R, R ** 2 * omega)
+        if self.dim == 1:
+            return None
+        # get the spherical coordinates
+        r = self.cell.radius(self.ghost)
+        theta = self.cell.theta(self.ghost)
+        # get the rotational frequency
+        omega = self.omega(file_name)
+        # We need to derive omega by r and theta
+        domgdr = IDL_derivative(r, omega)
+        domgdtheta = IDL_derivative(theta, omega, 'thata')
+        # fix r and theta dimensions according to the simulation dimension
+        if self.dim == 2:
+            r = r[None, :]
+            theta = theta[:, None]
+        elif self.dim == 3:
+            r = r[None, None, :]
+            theta = theta[None, :, None]
+        else:
+            raise ValueError("Dimension not recognized.")
+        # get the cylindrical radius        
+        R = r * np.sin(theta)
+        domgdr /= np.sin(theta)
+        domgdtheta /= (r * np.cos(theta))
+        kappa = (2 * omega ) / R * (R ** 2 * (domgdr + domgdtheta) + \
+                                    2 * R * omega)
         return kappa
-        
     
     ## -----------------------------------------------------------------
     ## Spherical Harmonics
