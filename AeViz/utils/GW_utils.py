@@ -441,7 +441,6 @@ def Qdot_timeseries(simulation, save_checkpoints):
     check_index = 0
     progress_index = 0
     dV = simulation.cell.dVolume_integration(simulation.ghost)
-    dOmega = simulation.cell.dOmega(simulation.ghost)
     _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
     _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
     
@@ -452,7 +451,7 @@ def Qdot_timeseries(simulation, save_checkpoints):
     
     for file in simulation.hdf_file_list[start_point:]:
         Qtot, Qinner, Qnuc, Qouter, Qradial = calculate_Qdot(simulation, 
-                            grad, file, dV, dOmega,
+                            grad, file, dV,
                             inner_rad[..., findex], igcells,
                             nuc_rad[..., findex], ngcells)
         try:
@@ -516,7 +515,7 @@ def spherical_harmonics_gradient(radius, theta, phi):
                         axis=-1))
     return gradient
 
-def calculate_Qdot(simulation, gradY, file_name, dV, dOmega, 
+def calculate_Qdot(simulation, gradY, file_name, dV, 
                         inner_rad, igcells, nuc_rad, ngcells):
     """
     Calculates the Qdot for the different regions of the star.
