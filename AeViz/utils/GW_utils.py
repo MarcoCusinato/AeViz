@@ -541,8 +541,7 @@ def calculate_Qdot(simulation, gradY, file_name, dV, dOmega,
     Qdot_inner = Qdot[mask_inner].sum()[..., None]
     Qdot_nuc = Qdot[mask_nuc].sum()[..., None]
     Qdot_outer = Qdot[mask_outer].sum()[..., None]
-    Qdot_radial = function_average(Qdot, simulation.dim, 'Omega',
-                                   dOmega)[..., None]
+    Qdot_radial = Qdot.sum(axis=(0,1))[..., None]
     for i in range(1, 5):
         Qdot = (rho * (v_r * gradY[i][..., 0] + v_t * \
             gradY[i][..., 1] + v_p * gradY[i][..., 2]))
@@ -553,8 +552,7 @@ def calculate_Qdot(simulation, gradY, file_name, dV, dOmega,
                                   axis=-1)
         Qdot_outer = np.concatenate((Qdot_outer, Qdot[mask_outer].sum()
                                      [..., None]), axis=-1)
-        Qdot_radial = np.concatenate((Qdot_radial, function_average(Qdot,
-                                     simulation.dim, 'Omega', dOmega)
+        Qdot_radial = np.concatenate((Qdot_radial, Qdot.sum(axis=(0, 1))
                                       [..., None]), axis=-1)
     
     return Qdot_tot, Qdot_inner, Qdot_nuc, Qdot_outer, Qdot_radial
@@ -563,14 +561,13 @@ def read_Qdot(simulation):
     """
     Reads the Qdot and masks from a checkpoint file.
     """
-    data = h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5'), 'r')
-    time = data['time'][...]
-    Qdot_radial = data['Qdot_radial'][...]
-    Qdot_total = data['Qdot_total'][...]
-    Qdot_inner = data['Qdot_inner'][...]
-    Qdot_nucleus = data['Qdot_nucleus'][...]
-    Qdot_outer = data['Qdot_outer'][...]
-    data.close()
+    with h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5')) as data:
+        time = data['time'][...]
+        Qdot_radial = data['Qdot_radial'][...]
+        Qdot_total = data['Qdot_total'][...]
+        Qdot_inner = data['Qdot_inner'][...]
+        Qdot_nucleus = data['Qdot_nucleus'][...]
+        Qdot_outer = data['Qdot_outer'][...]
     return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer
 
 def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
