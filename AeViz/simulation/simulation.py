@@ -638,7 +638,8 @@ class Simulation:
         GWs[:, 1:] /= distance
         return GWs
     
-    def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True):
+    def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True,
+                       **kwargs):
         """
         Parameters:
             window_size: value of the time window to use in ms
@@ -652,7 +653,8 @@ class Simulation:
         In 3D simulations:
             h_pl_e, h_pl_p, h_cr_e, h_cr_p
         """
-        GW_strain = self.GW_Amplitudes(distance=distance, tob_corrected=False)
+        GW_strain = self.GW_Amplitudes(distance=distance, tob_corrected=False,
+                                       **kwargs)
         window = 0
         while (np.abs(GW_strain[window,0] - GW_strain[0,0]) < 
                u.convert_to_s(window_size)):
