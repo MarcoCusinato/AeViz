@@ -98,6 +98,64 @@ def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius',
     else:
         return np.moveaxis(derivative, -1, axis)
 
+def divergence(quantity, x, y, z,
+               mode:Literal['spherical', 'cartesian'] = 'spherical'):
+    """
+    Calculate the divergence of a quantity in spherical or cartesian coordinates
+    quantity: np.array of dim 3, z, y, x
+              0 - x component
+              1 - y component
+              2 - z component
+    x, x grid data or radius
+    y, y grid data or theta
+    z, z grid data or phi
+    """
+    assert quantity.ndim == 4, "The input array MUST be 4-d"
+    assert quantity.shape[0] == 3, "The divergence can be computed only on a \
+                                    3D array"
+    assert quantity.shape[1] == z.shape[0], "Z-data do not match"
+    assert quantity.shape[2] == y.shape[0], "Y-data do not match"
+    assert quantity.shape[3] == x.shape[0], "X-data do not match"
+    
+    if mode == 'cartesian':
+        return IDL_derivative(x, quantity[0, ...], 'radius') + \
+               IDL_derivative(y, quantity[1, ...], 'theta') + \
+               IDL_derivative(z, quantity[2, ...], 'phi')
+    else:
+        dr = 1 / x[None, None, :] ** 2 * IDL_derivative(x, quantity[0, ...] * 
+                                                        x[None, None, :] ** 2)
+        prefact = 1 / (x[None, None, :] * np.sin(y[None, :, None]))
+        dth = prefact * \
+            IDL_derivative(y, quantity[1] * np.sin(y[None, :, None]), 'theta')
+        dph = prefact * \
+            IDL_derivative(z, quantity[3], 'phi')
+        return dr + dth + dph
+
+def gradient(quantity, x, y, z,
+             mode:Literal['spherical', 'cartesian'] = 'spherical'):
+    """
+    Calculate the gradient of a function
+    Quantity: np array of dim z, y, x
+    x, x grid data or radius
+    y, y grid data or theta
+    z, z grid data or phi
+    Return np.array 3, z, y, x
+    """
+    
+    if mode == 'cartesian':
+        return np.concatenate((
+            IDL_derivative(x, quantity, 'radius')[None, ...],
+            IDL_derivative(y, quantity, 'theta')[None, ...],
+            IDL_derivative(z, quantity, 'phi')[None, ...]
+        ), axis=0)
+    else:
+        dr = IDL_derivative(x, quantity, 'radius')[None, ...]
+        dth = (1 / x[None, None, :] * 
+               IDL_derivative(x, quantity, 'theta'))[None, ...]
+        dph = (1 / (x[None, None, :] * np.sin(y[None, :, None])) *
+               IDL_derivative(x, quantity, 'theta'))[None, ...]
+        return np.concatenate((dr, dth, dph), axis=0)
+
 def get_stream_quantities(b1, b2, ax, ay, az, lx, ly, lz, plane):
     if plane != 'xz' and len(b1.shape) < 3:
         raise ValueError("Plane not found")
