@@ -1391,7 +1391,7 @@ class Simulation:
         omega = self.omega(file_name)
         # We need to derive omega by r and theta
         domgdr = IDL_derivative(r, omega)
-        domgdtheta = IDL_derivative(theta, omega, 'thata')
+        domgdtheta = IDL_derivative(theta, omega, 'theta')
         # fix r and theta dimensions according to the simulation dimension
         if self.dim == 2:
             r = r[None, :]
