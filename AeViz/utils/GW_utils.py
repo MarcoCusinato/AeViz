@@ -1,6 +1,6 @@
 import numpy as np
 from AeViz.units.units import units
-from AeViz.utils.math_utils import IDL_derivative, function_average
+from AeViz.utils.math_utils import IDL_derivative, gradient
 from scipy.signal import stft
 from numpy.fft import fft, fftfreq
 import os, h5py
@@ -475,6 +475,7 @@ def Qdot_timeseries(simulation, save_checkpoints):
             
             
         if save_checkpoints and check_index == checkpoint:
+            print("Checkpoint reached. Saving...")
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
                       'Qdot_outer', 'Qdot_radial'],
@@ -503,13 +504,13 @@ def spherical_harmonics_gradient(radius, theta, phi):
     len(radius), 3) containing the gradient of the conjugate spherical
     harmonics times the radius from m=-2 to m=2.
     """
-    gradient = []
+    grd = []
     harmonics = SphericalHarmonics()
-    gradient = np.zeros((phi.shape[0], theta.shape[0], 5), dtype=np.complex128)
     for m in range(-2, 3):
-        gradient[..., m+2] = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
+        Y2m_r = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
             radius[None, None, :] ** 2
-    return gradient
+        grd.append(gradient(Y2m_r, radius, theta, phi, 'spherical'))
+    return grd
 
 def calculate_Qdot(simulation, gradY, file_name, dV, 
                         inner_rad, igcells, nuc_rad, ngcells):
@@ -527,14 +528,19 @@ def calculate_Qdot(simulation, gradY, file_name, dV,
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     
     rho = simulation.rho(file_name) * dV
-    Qdot = rho[ ...] * gradY[..., 0]
+    v_r = simulation.radial_velocity(file_name)
+    v_t = simulation.theta_velocity(file_name)
+    v_p = simulation.phi_velocity(file_name)
+    Qdot = (rho * (v_r * gradY[0][0, ...] + v_t * gradY[0][1, ...] + v_p \
+        * gradY[0][2, ...]))
     Qdot_tot = Qdot.sum()[..., None]
     Qdot_inner = Qdot[mask_inner].sum()[..., None]
     Qdot_nuc = Qdot[mask_nuc].sum()[..., None]
     Qdot_outer = Qdot[mask_outer].sum()[..., None]
     Qdot_radial = Qdot.sum(axis=(0,1))[..., None]
     for i in range(1, 5):
-        Qdot = (rho * gradY[..., i])
+        Qdot = (rho * (v_r * gradY[i][0, ...] + v_t * \
+            gradY[i][1, ...] + v_p * gradY[i][2, ...]))
         Qdot_tot = np.concatenate((Qdot_tot, Qdot.sum()[..., None]), axis=-1)
         Qdot_inner = np.concatenate((Qdot_inner, Qdot[mask_inner].sum()
                                      [..., None]), axis=-1)
