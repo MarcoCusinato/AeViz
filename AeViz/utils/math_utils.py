@@ -153,7 +153,7 @@ def gradient(quantity, x, y, z,
         dth = (1 / x[None, None, :] * 
                IDL_derivative(y, quantity, 'theta'))[None, ...]
         dph = (1 / (x[None, None, :] * np.sin(y[None, :, None])) *
-               IDL_derivative(z, quantity, 'theta'))[None, ...]
+               IDL_derivative(z, quantity, 'phi'))[None, ...]
         return np.concatenate((dr, dth, dph), axis=0)
 
 def get_stream_quantities(b1, b2, ax, ay, az, lx, ly, lz, plane):
