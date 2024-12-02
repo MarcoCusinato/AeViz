@@ -505,14 +505,10 @@ def spherical_harmonics_gradient(radius, theta, phi):
     """
     gradient = []
     harmonics = SphericalHarmonics()
+    gradient = np.zeros((phi.shape[0], theta.shape[0], 5), dtype=np.complex128)
     for m in range(-2, 3):
-        Y2m_r = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
+        gradient[..., m+2] = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
             radius[None, None, :] ** 2
-        gradient.append(np.concatenate(
-                        (IDL_derivative(phi, Y2m_r, 'phi')[..., None],
-                        IDL_derivative(theta, Y2m_r, 'theta')[..., None],
-                        IDL_derivative(radius, Y2m_r, 'radius')[..., None]),
-                        axis=-1))
     return gradient
 
 def calculate_Qdot(simulation, gradY, file_name, dV, 
@@ -531,19 +527,14 @@ def calculate_Qdot(simulation, gradY, file_name, dV,
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     
     rho = simulation.rho(file_name) * dV
-    v_r = simulation.radial_velocity(file_name)
-    v_t = simulation.theta_velocity(file_name)
-    v_p = simulation.phi_velocity(file_name)
-    Qdot = (rho * (v_r * gradY[0][..., 0] + v_t * gradY[0][..., 1] + v_p \
-        * gradY[0][..., 2]))
+    Qdot = rho[ ...] * gradY[..., 0]
     Qdot_tot = Qdot.sum()[..., None]
     Qdot_inner = Qdot[mask_inner].sum()[..., None]
     Qdot_nuc = Qdot[mask_nuc].sum()[..., None]
     Qdot_outer = Qdot[mask_outer].sum()[..., None]
     Qdot_radial = Qdot.sum(axis=(0,1))[..., None]
     for i in range(1, 5):
-        Qdot = (rho * (v_r * gradY[i][..., 0] + v_t * \
-            gradY[i][..., 1] + v_p * gradY[i][..., 2]))
+        Qdot = (rho * gradY[..., i])
         Qdot_tot = np.concatenate((Qdot_tot, Qdot.sum()[..., None]), axis=-1)
         Qdot_inner = np.concatenate((Qdot_inner, Qdot[mask_inner].sum()
                                      [..., None]), axis=-1)
