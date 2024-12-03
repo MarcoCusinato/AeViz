@@ -126,7 +126,7 @@ class Simulation:
         """
         if os.path.exists(os.path.join(self.storage_path, 'tob.dat')):
             tob = np.loadtxt(os.path.join(self.storage_path, 'tob.dat'))
-            return tob[0]
+            return tob
         rho_data = self.rho_max(False)
         rho_index = np.argmax(rho_data[:,1] > 1.4e14)
         if rho_index == 0 or rho_data[rho_index, 0] >= 0.6:
