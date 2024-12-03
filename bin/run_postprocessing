@@ -28,7 +28,7 @@ if args.tob:
     import numpy as np
     import os
     sim.tob = args.tob
-    np.savetxt(np.array([args.tob]), os.path.join(sim.storage_path, 'tob.dat'))
+    np.savetxt(os.path.join(sim.storage_path, 'tob.dat'), np.array([args.tob]))
 time_array(sim)
 sim.PNS_radius()
 sim.shock_radius()
