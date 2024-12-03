@@ -121,10 +121,16 @@ if args.plot:
         ae.GWs('all', False, True)
         ae.save_plot('GWs_spectrogram')
         ae.Close()
-        if not args.noGWs or sim.dim == 2:
-            ae.GWs('all', True, False)
-            ae.save_plot('GWs_decomposition')
-            ae.Close()
+        if not args.noGWs:
+            if sim.dim == 2:
+                ae.GWs('h+eq', True, False)
+                ae.save_plot('GWs_decomposition_h+eq')
+                ae.Close()
+            else:
+                for strain in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
+                    ae.GWs(strain, True, False)
+                    ae.save_plot('GWs_decomposition_' + strain)
+                    ae.Close()
     
     
     
