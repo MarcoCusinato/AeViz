@@ -727,21 +727,30 @@ class Simulation:
         return GWs_energy(GWs, self.dim)
 
     @smooth
-    def AE220(self, tob_corrected=True, save_checkpoints=True):
+    def hydro_strain(self, tob_corrected=True, D=1, theta=np.pi/2, phi=0,
+              save_checkpoints=True):
         """
-        Calculates the AE220 from density and velocities for a
-        2D simulation.
-        ONLY 2D
+        Calculates the gravitational wave strain from the hydro for a
+        simulation
         Returns
-            radius
-            time: array of time step
-            AE220: len(radius), len(time) array
-            full_strain: GWs strain from the full star
-            nucleus_strain: GWs strain from the PNS nucleus
-            convection_strain: GWs strain from the convection region
-            outer_strain: GWs strain from the outer layers
+            2D
+                radius
+                time: array of time step
+                AE220: len(radius), len(time) array
+                full_strain: GWs strain from the full star
+                nucleus_strain: GWs strain from the PNS nucleus
+                convection_strain: GWs strain from the convection region
+                outer_strain: GWs strain from the outer layers
+            3D
+                radius
+                time: array of time step
+                [h_+, h_x]:  len(radius), len(time) array
+                [h_+, h_x]_full: len(time)
+                [h_+, h_x]_nucl: len(time)
+                [h_+, h_x]_conv: len(time)
+                [h_+, h_x]_out: len(time)
         """
-        GW_data = calculate_h(self, save_checkpoints)
+        GW_data = calculate_h(self, D, theta, phi, save_checkpoints)
         if GW_data is None:
             return None        
         if not tob_corrected:
