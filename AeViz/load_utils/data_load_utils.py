@@ -197,9 +197,9 @@ class Data(object):
             _, t, AE220, f_h, nuc_h, conv_h, out_h = \
                 self.loaded_data.hydro_strain(phi=PHI, theta=THETA, **kwargs)
             if '+' in name:
-                return _, t, AE220[0], f_h[0], nuc_h[0], conv_h[0], out_h[0]
+                return t, AE220[0], f_h[0], nuc_h[0], conv_h[0], out_h[0]
             else:
-                return _, t, AE220[1], f_h[1], nuc_h[1], conv_h[1], out_h[1]
+                return t, AE220[1], f_h[1], nuc_h[1], conv_h[1], out_h[1]
         else:
             raise TypeError('Not implemented for 1D simulations.')
     

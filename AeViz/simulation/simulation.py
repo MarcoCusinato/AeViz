@@ -27,7 +27,6 @@ from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
 from AeViz.utils.utils import time_array
-from AeViz.load_utils.data_load_utils import Data
 
 try:
     from PyEMD import EMD
