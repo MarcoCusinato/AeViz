@@ -451,7 +451,7 @@ class AeViz(Plotting):
                 qt = [comp]
             if decomposition:
                 for q in qt:
-                    self.plotGWDecomposition(q)
+                    self.plotGWDecomposition(q, **kwargs)
                     
             elif spectrogram:
                 for q in qt:

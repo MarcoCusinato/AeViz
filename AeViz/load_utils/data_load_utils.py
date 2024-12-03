@@ -183,12 +183,25 @@ class Data(object):
             raise ValueError('The simulation dimension is not supported.')
 
     
-    def __get_GW_decomposition_data(self, name):
+    def __get_GW_decomposition_data(self, name, **kwargs):
         if self.sim_dim == 2:
-            _, t, AE220, f_h, nuc_h, conv_h, out_h = self.loaded_data.AE220()
+            _, t, AE220, f_h, nuc_h, conv_h, out_h = \
+                self.loaded_data.hydro_strain(**kwargs)
             return t, AE220, f_h, nuc_h, conv_h, out_h
+        elif self.sim_dim == 3:
+            PHI = 0
+            if 'eq' in name:
+                THETA = np.pi * 0.5
+            else:
+                THETA = 0
+            _, t, AE220, f_h, nuc_h, conv_h, out_h = \
+                self.loaded_data.hydro_strain(phi=PHI, theta=THETA, **kwargs)
+            if '+' in name:
+                return _, t, AE220[0], f_h[0], nuc_h[0], conv_h[0], out_h[0]
+            else:
+                return _, t, AE220[1], f_h[1], nuc_h[1], conv_h[1], out_h[1]
         else:
-            raise TypeError('Not implemented for 3D simulations.')
+            raise TypeError('Not implemented for 1D simulations.')
     
     def __get_energy_data(self, name, **kwargs):
         qt = name.split('_')[-1]

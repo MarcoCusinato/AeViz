@@ -274,17 +274,26 @@ def GWs_frequency_peak_indices(frequency, htilde):
 ## GWs strain from the postprocessing
 ## ---------------------------------------------------------------------
 
-def calculate_h(simulation, save_checkpoints=True):
+def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
+                save_checkpoints=True):
     """
     Calculates the h cross and x from postprocessing quantities for 
     every timestep of a simulation.
     Returns
-        time: array of time step
-        AE220: len(radius), len(time) array
-        Full_strain: len(time) array
-        PNS_nucleus_strain: len(time) array
-        Convection_strain: len(time) array
-        Oter_innercore_strain: len(time) array
+        2D
+            time: array of time step
+            AE220: len(radius), len(time) array
+            Full_strain: len(time) array
+            PNS_nucleus_strain: len(time) array
+            Convection_strain: len(time) array
+            Oter_innercore_strain: len(time) array
+        3D
+            time
+            [h_+, h_x]:  len(radius), len(time) array
+            [h_+, h_x]_full: len(time)
+            [h_+, h_x]_nucl: len(time)
+            [h_+, h_x]_conv: len(time)
+            [h_+, h_x]_out: len(time)
     """
     if simulation.dim == 1:
         print("No GWs for you :'(")
@@ -292,13 +301,11 @@ def calculate_h(simulation, save_checkpoints=True):
     elif simulation.dim == 2:
         return NE220_2D_timeseries(simulation, save_checkpoints)
     elif simulation.dim == 3:
-        print("Not implemented yet")
-        checkpoint = checkpoints[simulation.dim]
-        return None
+        return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI)
 
 ## 2D
 
-def NE220_2D_timeseries(simulation, save_checkpoints):
+def NE220_2D_timeseries(simulation, save_checkpoints, D):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
@@ -308,7 +315,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints):
         time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
             read_NE220(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain_2D(time, NE220, full_NE220, nuc_NE220,
+            return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
                                      conv_NE220, outer_NE220)
         else:
             start_point = len(time)
@@ -364,7 +371,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints):
                       'convection_NE220', 'outer_NE220'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
                       outer_NE220])
-    return calculate_strain_2D(time, NE220, full_NE220, nuc_NE220,
+    return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
                                         conv_NE220, outer_NE220)
 
 def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
@@ -402,13 +409,13 @@ def read_NE220(simulation):
     data.close()
     return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220
 
-def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
+def calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220, conv_NE220,
                      outer_NE220):
     """
     Derives ancd fixes the constants of the strain.
     """
     const =  -0.125 *  np.sqrt(15/np.pi) * \
-        (u.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * u.speed_light ** 4))
+        (u.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * D * u.speed_light ** 4))
     return time, const * IDL_derivative(time, NE220), const * \
         IDL_derivative(time, full_NE220), const * \
         IDL_derivative(time, nuc_NE220), const * \
@@ -417,7 +424,7 @@ def calculate_strain_2D(time, NE220, full_NE220, nuc_NE220, conv_NE220,
 
 ## 3D
 
-def Qdot_timeseries(simulation, save_checkpoints):
+def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
@@ -427,8 +434,9 @@ def Qdot_timeseries(simulation, save_checkpoints):
         time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer = \
             read_Qdot(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain_3D(1, np.pi/2, 0, time, Qdot_radial, Qdot_total,
-                        Qdot_inner, Qdot_nucleus, Qdot_outer)
+            return calculate_strain_3D(D, THETA, PHI, time, Qdot_radial,
+                                       Qdot_total, Qdot_inner, Qdot_nucleus,
+                                       Qdot_outer)
         else:
             start_point = len(time)
             print("Checkpoint found." \
@@ -436,7 +444,7 @@ def Qdot_timeseries(simulation, save_checkpoints):
     else:
         start_point = 0
         print("No checkpoint found. Starting from step 0")
-    checkpoint = 5
+    checkpoint = checkpoints[simulation.dim]
     findex = start_point
     check_index = 0
     progress_index = 0
@@ -494,7 +502,8 @@ def Qdot_timeseries(simulation, save_checkpoints):
                       'Qdot_outer', 'Qdot_radial'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
                       Qdot_radial])
-    return None
+    return calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
+                               Qdot_inner, Qdot_nucleus, Qdot_outer)
 
 def spherical_harmonics_gradient(radius, theta, phi):
     """
@@ -569,10 +578,9 @@ def read_Qdot(simulation):
 def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
                         Qdot_inner, Qdot_nucleus, Qdot_outer):
     harmonics = SphericalHarmonics()
-    
-    h = 0 + 0j
-    for m in range(-2, 3):
-        Y22m = harmonics.spin_weighted_Ylm(-2, m, 2, THETA, PHI)
+
+    for m in range(5):
+        Y22m = harmonics.spin_weighted_Ylm(-2, m-2, 2, THETA, PHI)
         Qdot_radial[:, m, :] = IDL_derivative(time, Qdot_radial[:, m, :]) * \
             Y22m
         Qdot_total[m, :]= IDL_derivative(time, Qdot_total[m, :]) * Y22m
@@ -580,7 +588,6 @@ def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
         Qdot_nucleus[m, :]= IDL_derivative(time, Qdot_nucleus[m, :]) * Y22m
         Qdot_outer[m, :]= IDL_derivative(time, Qdot_outer[m, :]) * Y22m
     const = np.sqrt(2/3) * 8 * np.pi * u.G / (D * u.speed_light ** 4)
-    print(const)
     Qdot_radial = const * Qdot_radial.sum(axis=1)
     Qdot_total = const * Qdot_total.sum(axis=0)
     Qdot_inner = const * Qdot_inner.sum(axis=0)
@@ -588,7 +595,7 @@ def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
     Qdot_outer = const * Qdot_outer.sum(axis=0)
     
     return time,  [Qdot_radial.real, -Qdot_radial.imag], \
-            [Qdot_total.real, Qdot_inner.real, Qdot_nucleus.real,
-             Qdot_outer.real], \
-            [-Qdot_total.imag, -Qdot_inner.imag, -Qdot_nucleus.imag,
-                -Qdot_outer.imag]
+            [Qdot_total.real, -Qdot_total.imag], \
+            [Qdot_nucleus.real, -Qdot_nucleus.imag], \
+            [Qdot_inner.real, -Qdot_inner.imag] \
+            [Qdot_outer.real, -Qdot_outer.imag]

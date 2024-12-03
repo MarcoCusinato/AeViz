@@ -30,8 +30,8 @@ sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
 if not args.noprofiles:
     sim.radial_profile('Ye')
-if not args.noGWs and sim.dim ==2:
-    sim.AE220()
+if not args.noGWs and sim.dim > 1:
+    sim.hydro_strain()
 if args.plot:
     from AeViz import ae
     ae.Load(args.sim_name)

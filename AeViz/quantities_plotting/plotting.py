@@ -343,7 +343,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         show_figure()
 
-    def plotGWDecomposition(self, qt):
+    def plotGWDecomposition(self, qt, **kwargs):
         """
         Plot the GW decomposition. ONLY in 2D.
         """
@@ -352,20 +352,29 @@ class Plotting(PlottingUtils, Data):
         self.Xscale('linear', 'A')
         self.Yscale('log', 'E')
         t, AE220, f_h, nuc_h, conv_h, out_h  = \
-            self._Data__get_GW_decomposition_data(qt)
+            self._Data__get_GW_decomposition_data(qt, **kwargs)
         if qt == 'h+eq':
             y_strain = r'$h_{+}^{eq}$ [cm]'
         elif qt == 'h+pol':
             y_strain = r'$h_{+}^{pol}$ [cm]'
-        elif qt == 'hx+eq':
+        elif qt == 'hxeq':
             y_strain = r'$h_{\times}^{eq}$ [cm]'
-        elif qt == 'hx+pol':
+        elif qt == 'hxpol':
             y_strain = r'$h_{\times}^{pol}$ [cm]'
         ylim = GW_limit(f_h)
         if self.sim_dim == 2:
             dec_label = r'$A^{E2}_{20}(r, t)$ [cm]'
         else:
-            dec_label = None
+            dec_label = y_strain.split(' ')
+            dec_label[0] = dec_label[0][:-1]
+            dec_label[0] += '(r)$'
+            dec_label = (' ').join(dec_label)
+        if 'D' not in kwargs:
+            dec_label = r'$\mathcal{D}' + dec_label[1:]
+            y_strain = r'$\mathcal{D}' + y_strain[1:]
+            D = kwargs['D']
+        else:
+            D = 1
         _, convect_radius = \
             self._Data__get_1D_radii_data('innercore_radius_avg')
         _, nuc_radius = \
@@ -395,7 +404,7 @@ class Plotting(PlottingUtils, Data):
         self._PlottingUtils__update_params('E', (X, Y),
                                             AE220,
                                             'R', False,
-                                            (-3, 3), 2, 
+                                            (-3/D, 3/D), 2, 
                                             'seismic',
                                             dec_label,
                                             self.sim_dim)
