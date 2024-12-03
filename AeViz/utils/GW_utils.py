@@ -96,8 +96,12 @@ def GWs_energy_3D(GWs):
     """
     Calculates the energy of the GWs in 3D
     """
-    raise ValueError("Not implemented yet")
-   
+    time = GWs[:, 0]
+    const = 8 / 15 * u.speed_light ** 3 / (16 * np.pi * u.G)
+    return const * (IDL_derivative(time, GWs[:, 1]) ** 2 + 
+                    IDL_derivative(time, GWs[:, 2]) ** 2 +
+                    IDL_derivative(time, GWs[:, 3]) ** 2 +
+                    IDL_derivative(time, GWs[:, 4]) ** 2)  
     
 ## ---------------------------------------------------------------------
 ## GW spectrogram
