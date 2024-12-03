@@ -18,9 +18,17 @@ parser.add_argument('--noGWs', action='store_true', default=False,
                         "calculated.")
 parser.add_argument('--plot', action='store_true', default=False,
                     required=False, help="Plots are created.")
+parser.add_argument('--tob', default=None, required=False,
+                    help="Sets the time of bounce manually and stores it into \
+                        a file")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
+if args.tob:
+    import numpy as np
+    import os
+    sim.tob = args.tob
+    np.savetxt(np.array([args.tob]), os.path.join(sim.storage_path, 'tob.dat'))
 time_array(sim)
 sim.PNS_radius()
 sim.shock_radius()
