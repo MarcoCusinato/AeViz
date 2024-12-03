@@ -597,5 +597,5 @@ def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
     return time,  [Qdot_radial.real, -Qdot_radial.imag], \
             [Qdot_total.real, -Qdot_total.imag], \
             [Qdot_nucleus.real, -Qdot_nucleus.imag], \
-            [Qdot_inner.real, -Qdot_inner.imag] \
+            [Qdot_inner.real, -Qdot_inner.imag], \
             [Qdot_outer.real, -Qdot_outer.imag]
