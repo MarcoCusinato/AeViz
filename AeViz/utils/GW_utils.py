@@ -299,7 +299,7 @@ def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
         print("No GWs for you :'(")
         return None
     elif simulation.dim == 2:
-        return NE220_2D_timeseries(simulation, save_checkpoints)
+        return NE220_2D_timeseries(simulation, save_checkpoints, D)
     elif simulation.dim == 3:
         return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI)
 
