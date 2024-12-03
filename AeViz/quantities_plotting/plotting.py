@@ -372,9 +372,9 @@ class Plotting(PlottingUtils, Data):
         if 'D' not in kwargs:
             dec_label = r'$\mathcal{D}' + dec_label[1:]
             y_strain = r'$\mathcal{D}' + y_strain[1:]
-            D = kwargs['D']
-        else:
             D = 1
+        else:
+            D = kwargs['D']
         _, convect_radius = \
             self._Data__get_1D_radii_data('innercore_radius_avg')
         _, nuc_radius = \
