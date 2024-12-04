@@ -1,4 +1,4 @@
-from AeViz.utils.masses_energies_utils import (innercore_mass_energy, 
+from AeViz.utils.masses_energies_utils import (standard_mass_energy, 
                                                gain_region_mass_energy,
                                                PNS_mass_energy,
                                                unbound_mass_energy,
@@ -12,7 +12,7 @@ import numpy as np
 
 def calculate_masses_energies(simulation, save_checkpoints=True):
     if check_existence(simulation, 'masses_energies.h5'):
-        time, mdot, inner_me, gain_me, PNS_me, unb_me, \
+        time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me, \
             processed_hdf = \
             read_masses_energies(simulation)
         ## Retrocompatibility option
@@ -21,21 +21,22 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 save_hdf(os.path.join(simulation.storage_path,
                     'masses_energies.h5'),
                     ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
-                      'unbound', 'processed'],
-                    [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                      'unbound', 'PNS_core', 'processed'],
+                    [time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me,
                     simulation.hdf_file_list])
-                return time, mdot, inner_me, gain_me, PNS_me, unb_me
+                return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
             else:
                 start_point = 0
                 time = 0
                 mdot = 0
+                nuc_me = 0
                 inner_me = 0
                 gain_me = 0
                 PNS_me = 0
                 unb_data = 0
                 processed_hdf = []
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return time, mdot, inner_me, gain_me, PNS_me, unb_me
+            return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -52,9 +53,10 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
         checkpoint = checkpoints[simulation.dim]
     ## Get the radii
     _, innercore_radius, _, _, _, igcells  = simulation.innercore_radius()
-    _, shock_radius, _, _, _, sgcells = simulation.shock_radius()
-    _, gain_radius, _, _, _, ggcells = simulation.gain_radius()
-    _, PNS_radius, _, _, _, pgcells = simulation.PNS_radius()
+    _, PNS_core_radius, _, _, _, pcgcells  = simulation.PNS_nucleus_radius()
+    _, shock_radius, _, _, _, sgcells      = simulation.shock_radius()
+    _, gain_radius, _, _, _, ggcells       = simulation.gain_radius()
+    _, PNS_radius, _, _, _, pgcells        = simulation.PNS_radius()
     ## Get the grid
     if simulation.dim == 1:
         gr = grid(1, simulation.cell.radius(simulation.ghost))
@@ -81,9 +83,12 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
     total_points = len(simulation.hdf_file_list) - start_point
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
-        in_data = innercore_mass_energy(simulation, file,
+        in_data = standard_mass_energy(simulation, file,
                                         innercore_radius[..., findex], 
                                         igcells, dV)
+        nuc_data = standard_mass_energy(simulation, file,
+                                        PNS_core_radius[..., findex], 
+                                        pcgcells, dV)
         gr_data = gain_region_mass_energy(simulation, file,
                                           shock_radius[..., findex], sgcells,
                                           gain_radius[..., findex], ggcells,
@@ -95,6 +100,22 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
             time = np.concatenate((time, simulation.time(file)))
             mdot = np.concatenate((mdot, np.array([mass_flux(simulation, file, 
                                                     dOmega, radius_index)])))
+            ## PNS CORE
+            nuc_me['mass'] = np.concatenate((nuc_me['mass'], 
+                                                np.array([nuc_data[0]])))
+            
+            nuc_me['kinetic_ene'] = np.concatenate((nuc_me['kinetic_ene'],
+                                                np.array([nuc_data[1]])))
+            nuc_me['magnetic_ene'] = np.concatenate((nuc_me['magnetic_ene'],
+                                                np.array([nuc_data[2]])))
+            nuc_me['rotational_ene'] = np.concatenate((
+                nuc_me['rotational_ene'], np.array([nuc_data[3]])))
+            nuc_me['grav_ene'] = np.concatenate((
+                nuc_me['grav_ene'], np.array([nuc_data[4]])))
+            nuc_me['total_ene'] = np.concatenate((
+                nuc_me['total_ene'], np.array([nuc_data[5]])))
+            nuc_me['T_W'] = np.concatenate((
+                nuc_me['T_W'], np.array([nuc_data[6]])))
             ## INNERCORE
             inner_me['mass'] = np.concatenate((inner_me['mass'], 
                                                 np.array([in_data[0]])))
@@ -161,6 +182,15 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 'total_ene': np.array([in_data[5]]),
                 'T_W': np.array([in_data[6]])
             }
+            nuc_me = {
+                'mass': np.array([nuc_data[0]]),
+                'kinetic_ene': np.array([nuc_data[1]]),
+                'magnetic_ene': np.array([nuc_data[2]]),
+                'rotational_ene': np.array([nuc_data[3]]),
+                'grav_ene': np.array([nuc_data[4]]),
+                'total_ene': np.array([nuc_data[5]]),
+                'T_W': np.array([nuc_data[6]])
+            }
             gain_me = {
                 'mass': np.array([gr_data[0]]),
                 'heating_ene': np.array([gr_data[1]])
@@ -192,8 +222,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
             save_hdf(os.path.join(simulation.storage_path,
                     'masses_energies.h5'),
                      ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
-                      'unbound', 'processed'],
-                     [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                      'unbound', 'PNS_core', 'processed'],
+                     [time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me,
                       processed_hdf])
             
             check_index = 0
@@ -203,10 +233,10 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, 'masses_energies.h5'),
                     ['time', 'mass_flux', 'innercore', 'gain_region', 'PNS',
-                    'unbound', 'processed'],
-                    [time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                    'unbound', 'PNS_core', 'processed'],
+                    [time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me,
                      processed_hdf])
-    return time, mdot, inner_me, gain_me, PNS_me, unb_me
+    return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
 
 def read_masses_energies(simulation):
     masses_energies_data = h5py.File(os.path.join(simulation.storage_path, 
@@ -252,6 +282,19 @@ def read_masses_energies(simulation):
             'energy': masses_energies_data['unbound/energy'][...],
             'kinetic_ene': masses_energies_data['unbound/kinetic_ene'][...],
             'magnetic_ene': masses_energies_data['unbound/magnetic_ene'][...]
+        },
+        {
+            'mass': masses_energies_data['PNS_core/mass'][...],
+            'kinetic_ene': masses_energies_data['PNS_core/kinetic_ene']\
+                [...],
+            'magnetic_ene': masses_energies_data['PNS_core/magnetic_ene']\
+                [...],
+            'rotational_ene': masses_energies_data['PNS_core/rotational_ene']\
+                [...],
+            'grav_ene': masses_energies_data['PNS_core/grav_ene']\
+                [...],
+            'total_ene': masses_energies_data['PNS_core/total_ene'][...],
+            'T_W': masses_energies_data['PNS_core/T_W'][...]
         }
     ]
     if 'processed' in masses_energies_data:

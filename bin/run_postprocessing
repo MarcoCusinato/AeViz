@@ -50,11 +50,13 @@ if args.plot:
     ae.explosion('all')
     ae.save_plot('explosion')
     ae.Close()
+    print("Explosion summary plotted.")
     ## GAIN REGION
     ae.gain_radius('all')
     ae.gain('all')
     ae.save_plot('gain')
     ae.Close()
+    print("Gain summary plotted.")
     ## NEUTRINOS
     ae.neutrino_spheres('all')
     ae.save_plot('neutrino_spheres')
@@ -63,6 +65,7 @@ if args.plot:
     ae.nu_integrated('all', 'ene')
     ae.save_plot('neutrinos')
     ae.Close()
+    print("Neutrino summary plotted.")
     ## PNS
     ae.PNS_radius('all')
     ae.PNS('mass')
@@ -79,6 +82,7 @@ if args.plot:
     ae.PNS_angular_mom('all')
     ae.save_plot('PNS_L')
     ae.Close()
+    print("PNS summary plotted.")
     ## INNERCORE
     ae.innercore_radius('all')
     ae.innercore('mass')
@@ -91,10 +95,25 @@ if args.plot:
     ae.innercore('grav')
     ae.save_plot('innercore_E')
     ae.Close()
+    print("Innercore summary plotted.")
+    ## PNS CORE
+    ae.PNS_nucleus_radius('all')
+    ae.PNS_nucleus('mass')
+    ae.PNS_nucleus('ene')
+    ae.save_plot('innercore_ME')
+    ae.Close()
+    ae.PNS_nucleus('kin')
+    ae.PNS_nucleus('mag')
+    ae.PNS_nucleus('rot')
+    ae.PNS_nucleus('grav')
+    ae.save_plot('innercore_E')
+    ae.Close()
+    print("Innercore summary plotted.")
     ## KICK VELOCITY
     ae.kick_velocity()
     ae.save_plot('kick_velocity')
     ae.Close()
+    print("IKick velocity summary plotted.")
     if not args.noprofiles:
         ## PROFILES
         ae.BV_frequency(projection='2D', plane='time')
@@ -121,6 +140,7 @@ if args.plot:
         ae.rho(projection='2D', plane='time')
         ae.save_plot('rho')
         ae.Close()
+        print("Profiles plotted.")
     ## GWs
     if sim.dim > 1:
         ae.GWs('all')
@@ -129,6 +149,7 @@ if args.plot:
         ae.GWs('all', False, True)
         ae.save_plot('GWs_spectrogram')
         ae.Close()
+        print("GWs summary plotted.")
         if not args.noGWs:
             if sim.dim == 2:
                 ae.GWs('h+eq', True, False)
@@ -139,6 +160,8 @@ if args.plot:
                     ae.GWs(strain, True, False)
                     ae.save_plot('GWs_decomposition_' + strain)
                     ae.Close()
+            print("GWs decomposition summary plotted.")
+print("All done.")
     
     
     

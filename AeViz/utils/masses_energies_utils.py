@@ -3,17 +3,17 @@ import numpy as np
 
 u = units()
 
-def innercore_mass_energy(simulation, file_name, innercore_radius, gcells, dV):
+def standard_mass_energy(simulation, file_name, inner_radius, gcells, dV):
     """
     Calculates the mass, kinetic, magnetic, rotational, gravitational
     and total energy and T/|W| of the inner core for one timestep.
     """
     if simulation.dim == 1:
         mask = (simulation.cell.radius(simulation.ghost) <= \
-            innercore_radius)
+            inner_radius)
     else:
         mask = (simulation.cell.radius(simulation.ghost) <= \
-                simulation.ghost.remove_ghost_cells_radii(innercore_radius, 
+                simulation.ghost.remove_ghost_cells_radii(inner_radius, 
                                 simulation.dim, **gcells)[..., None])
         
     rho = simulation.rho(file_name)[mask] * dV[mask]
