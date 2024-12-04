@@ -51,7 +51,8 @@ class Simulation:
         self.path = find_simulation(self.simulation_name, pltf(),
                                     simulation_folder_path)
         self.hydroTHD_index, \
-            self.ghost_cells = get_indices_from_parfile('start.pars',
+            self.ghost_cells, \
+            self.relativistic = get_indices_from_parfile('start.pars',
                                                os.path.join(self.path, 'pars'))
         try:
             self.initial_parameters = get_initial_parameters(
@@ -201,25 +202,37 @@ class Simulation:
     @derive
     @hdf_isopen
     def radial_velocity(self, file_name, **kwargs):
+        if self.relativistic:
+            ivx = 'I_VELX'
+        else:
+            ivx = 'I_VX'
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
-                                        ['I_VELX']]), self.dim)
+                                        [ivx]]), self.dim)
     
     @smooth
     @derive
     @hdf_isopen
     def theta_velocity(self, file_name, **kwargs):
+        if self.relativistic:
+            ivy = 'I_VELY'
+        else:
+            ivy = 'I_VY'
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
-                                        ['I_VELY']]), self.dim)
+                                        [ivy]]), self.dim)
     
     @smooth
     @derive
     @hdf_isopen
     def phi_velocity(self, file_name, **kwargs):
+        if self.relativistic:
+            ivz = 'I_VELZ'
+        else:
+            ivz = 'I_VZ'
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
-                                        ['I_VELZ']]), self.dim)
+                                        [ivz]]), self.dim)
     
     @smooth
     @derive
