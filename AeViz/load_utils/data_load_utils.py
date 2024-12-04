@@ -237,6 +237,22 @@ class Data(object):
                 return data[0], data[5]
             elif qt == 'T/W':
                 return data[0], data[7]
+        elif 'PNS_core' in name:
+            data = getattr(self.loaded_data, 'PNS_core_mass_ene')(**kwargs)
+            if qt == 'mass':
+                return data[0], data[1]
+            elif qt == 'ene':
+                return data[0], data[6]
+            elif qt == 'kin':
+                return data[0], data[2]
+            elif qt == 'mag':
+                return data[0], data[3]
+            elif qt == 'rot':
+                return data[0], data[4]
+            elif qt == 'grav':
+                return data[0], data[5]
+            elif qt == 'T/W':
+                return data[0], data[7]
         elif 'PNS' in name:
             if 'PNS_angular_mom' in name:
                 return return_angular_momentum(self.loaded_data, name,

@@ -395,7 +395,8 @@ class AeViz(Plotting):
     @fig_window_open
     def PNS_nucleus_radius(self, comp:Literal['all', 'min', 'max',
                                               'avg']='avg', **kwargs):
-        self.plot1D(None, 'PNS_nucleus_radius_' + comp, 'time', None, None, **kwargs)
+        self.plot1D(None, 'PNS_nucleus_radius_' + comp, 'time', None, None,
+                    **kwargs)
     
     @fig_window_open
     def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag'],
@@ -420,6 +421,11 @@ class AeViz(Plotting):
     def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
                                       'grav', 'T/W'], **kwargs):
         self.plot1D(None, 'innercore_' + comp, 'time', None, None, **kwargs)
+    
+    @fig_window_open
+    def PNS_nucleus(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
+                                      'grav', 'T/W'], **kwargs):
+        self.plot1D(None, 'PNS_core_' + comp, 'time', None, None, **kwargs)
     
     @fig_window_open
     def PNS(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot', 'grav',

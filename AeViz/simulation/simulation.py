@@ -138,8 +138,8 @@ class Simulation:
         Empirical criterion: time of explosion defined as the time at
         which the explosion energy raises above 5e48 erg
         """
-        time, _, ene, _, _ = self.explosion_mass_ene()
-        _, _, shock_max, _, _, _ = self.shock_radius()
+        time, _, ene, *_ = self.explosion_mass_ene()
+        _, _, shock_max, *_ = self.shock_radius()
         index = np.where((ene > 1e48) & (shock_max > 3e7))[0][0]
         return time[index]
 
@@ -832,7 +832,7 @@ class Simulation:
         Returns: time, instantaneous frequency
         """
         if time is None or IMFs is None:
-            time, IMFs, _ = self.IMFs(strain=strain, mode=mode,
+            time, IMFs, *_ = self.IMFs(strain=strain, mode=mode,
                                       min_imfs=min_imfs, max_imfs=max_imfs,
                                       tob_corrected=tob_corrected)
         if IMFs is None:
@@ -855,7 +855,7 @@ class Simulation:
         time of bounce.
         Returns: time, instantaneous amplitude
         """
-        time, IMFs, _ = self.IMFs(strain=strain, mode=mode,
+        time, IMFs, *_ = self.IMFs(strain=strain, mode=mode,
                                   min_imfs=min_imfs, max_imfs=max_imfs,
                                   tob_corrected=tob_corrected)
         if IMFs is None:
@@ -879,7 +879,7 @@ class Simulation:
         time of bounce.
         Returns: spectrogram, frequencies, time
         """
-        time, IMFs, _ = self.IMFs(strain=strain, mode=mode, max_imfs=max_imfs,
+        time, IMFs, *_ = self.IMFs(strain=strain, mode=mode, max_imfs=max_imfs,
                                   min_imfs=min_imfs,
                                   tob_corrected=tob_corrected)
         if IMFs is None:
@@ -1099,7 +1099,7 @@ class Simulation:
                  rotational energy, gravitational energy, total energy,
                  convective energy, T/W
         """
-        time, _, _, _, data, _ = \
+        time, _, _, _, data, *_= \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1119,7 +1119,7 @@ class Simulation:
         during the calculation.
         Returns: time, Lx, Ly, Lz, L_tot
         """
-        time, _, _, _, data, _ = \
+        time, _, _, _, data, *_ = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1157,7 +1157,7 @@ class Simulation:
         Returns: time, unbound mass, energy, and 
             kinetic energy, magnetic energy of unbounded material
         """
-        time, _, _, _, _, data = \
+        time, _, _, _, _, data, *_ = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1174,7 +1174,7 @@ class Simulation:
         during the calculation.
         Returns: time, mass, neutrino heating
         """
-        time, _, _, data, _, _ = \
+        time, _, _, data, *_ = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1192,7 +1192,27 @@ class Simulation:
                  rotational energy, gravitational energy, total energy,
                  T/W
         """
-        time, _, data, _, _, _ = \
+        time, _, data, *_ = \
+            calculate_masses_energies(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['T_W']]
+    
+    @smooth
+    @derive
+    def PNS_core_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+        """
+        Returns the PNS core mass and energy at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, mass, kinetic energy, magnetic energy,
+                 rotational energy, gravitational energy, total energy,
+                 T/W
+        """
+        time, _, _, _, _, _, data = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1211,7 +1231,7 @@ class Simulation:
         bounce.
         Returns: time, mass accretion rate
         """
-        time, data, _, _, _, _ = \
+        time, data, *_ = \
             calculate_masses_energies(self, save_checkpoints)
         if not tob_corrected:
             time += self.tob
@@ -1275,7 +1295,7 @@ class Simulation:
         dt = np.zeros(time.shape[0])
         dt[1:] = time[1:] - time[:-1]
         dt[0] = dt[1]
-        _, PNSmass, _, _, _, _, _, _, _ = self.PNS_mass_ene()
+        _, PNSmass,*_ = self.PNS_mass_ene()
         vnue = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nue']['x'],
                                                         nu_flux['nue']['y'],
                                                         nu_flux['nue']['z']]]
