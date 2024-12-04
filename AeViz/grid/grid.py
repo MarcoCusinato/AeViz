@@ -64,7 +64,7 @@ class grid:
         if self.dim == 1:
             return self.__1D_cartesian_grid(self.radius)
         elif self.dim == 2:
-            return self.__2D_cartesian_grid(self.radius, self.theta)
+            return self.__2D_cartesian_grid(self.radius, self.theta, 'xz')
         else:
             return self.__3D_cartesian_grid(self.radius, self.theta, self.phi)
     
