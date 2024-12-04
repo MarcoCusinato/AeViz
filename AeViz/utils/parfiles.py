@@ -110,7 +110,7 @@ def get_indices_from_parfile(file_name, path_folder):
                     indices['thd'][k1][i] = None
         elif indices['thd'][k1] < 0:
             indices['thd'][k1] = None
-    return indices, STENCIL
+    return indices, STENCIL, namelist["PHYSSYST"]["RELATIVISTIC"]
 
 def get_initial_parameters(path_folder):
     initial_parameters = {"omgadd": 0.0,
