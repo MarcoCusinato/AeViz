@@ -68,10 +68,10 @@ class units:
         return quantity * self.solar_mass / self.L_cactus ** 3
     
     def convert_to_cactus_pressure(self, quantity):
-        return self.convert_to_cactus_rho(quantity) * self.speed_light ** 2
+        return self.convert_to_cactus_rho(quantity) / self.speed_light ** 2
     
     def convert_from_cactus_pressure(self, quantity):
-        return self.convert_from_cactus_rho(quantity) / self.speed_light ** 2
+        return self.convert_from_cactus_rho(quantity) * self.speed_light ** 2
     
     def convert_to_cactus_velocity(self, quantity):
         return quantity / self.speed_light
