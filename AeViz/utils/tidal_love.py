@@ -130,12 +130,12 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
                 mass[core_index] / core_radius[findex],
                 pgas_prof[:core_index, findex], mass[:core_index],
                 csound[:core_index], rho_prof[:core_index, findex],
-                radius[:core_index, findex])
+                radius[:core_index])
             love_pns, tidal_pns = solve_tidal_love(
                 mass[pns_index] / PNS_radius[findex],
                 pgas_prof[:pns_index, findex], mass[:pns_index],
                 csound[:pns_index], rho_prof[:pns_index, findex],
-                radius[:pns_index, findex])
+                radius[:pns_index])
         ## Save the results into dictionaries
         try:
             time = np.concatenate((time, [t[findex]]))
