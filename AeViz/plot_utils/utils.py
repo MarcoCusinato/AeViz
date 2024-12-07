@@ -541,10 +541,10 @@ plot_labels = {
                                     'label': r'$\tilde{\rho}_{XXYY}$',
                                     'cmap': 'YlGn'},
          'love_number': {'log': False,
-                             'lim': (0, 0.03),
+                             'lim': (0, 0.002),
                              'label': r'$\kappa_2$'},
-          'tidal_deformability': {'log': False,
-                                       'lim': (0, 1000),
+          'tidal_deformability': {'log': True,
+                                       'lim': (1, 10000),
                                        'label': r'$\Lambda$'},
           
 
