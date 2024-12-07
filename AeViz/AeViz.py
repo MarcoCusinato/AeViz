@@ -440,6 +440,14 @@ class AeViz(Plotting):
                     **kwargs)
     
     @fig_window_open
+    def tidal_number(self, type:Literal['love', 'lambda'], **kwargs):
+        if type == 'love':
+            qt = 'love_number'
+        else:
+            qt = 'tidal_deformability'
+        self.plot1D(None, qt, 'time', None, None, **kwargs)
+
+    @fig_window_open
     def mass_accretion(self, **kwargs):
         self.plot1D(None, 'mass_accretion_500km', 'time', None, None, **kwargs)
     

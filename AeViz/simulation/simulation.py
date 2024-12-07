@@ -1514,6 +1514,8 @@ class Simulation:
             time += self.tob
         return [time, data['lambda']]
     
+    @smooth
+    @derive
     def love_number(self, tob_corrected=True, save_checkpoints=True,
                     comp:Literal['PNS_core', 'PNS']='PNS', **kwargs):
         """

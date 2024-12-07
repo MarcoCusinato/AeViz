@@ -539,7 +539,15 @@ plot_labels = {
          'rho_spherical_harmonics': {'log': False,
                                     'lim': max_min,
                                     'label': r'$\tilde{\rho}_{XXYY}$',
-                                    'cmap': 'YlGn'}
+                                    'cmap': 'YlGn'},
+         'love_number': {'log': False,
+                             'lim': max_min,
+                             'label': r'$\kappa_2$'},
+          'tidal_deformability': {'log': False,
+                                       'lim': max_min,
+                                       'label': r'$\Lambda$'},
+          
+
 }
 
 keys = list(plot_labels.keys())
