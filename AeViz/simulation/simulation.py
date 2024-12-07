@@ -17,12 +17,13 @@ from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
                                                     get_sph_profile,
                                                     get_sph_profiles_r,
                                                     get_data_for_barcode)
+from AeViz.utils.tidal_love import solve_tidal_love_profile
 from AeViz.utils.kick_vel_utils import calculate_kick
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.cell.cell import cell as cl
 from AeViz.cell.ghost import ghost as gh
-from AeViz.units.units import units
+from AeViz.units import u
 from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.profiles import calculate_profile
@@ -36,8 +37,6 @@ try:
     PYEMD = True
 except:
     PYEMD = False
-
-u = units()
 
 class Simulation:
     def __init__(self, simulation_name, simulation_folder_path=None,
@@ -1455,7 +1454,7 @@ class Simulation:
         return kappa
     
     ## -----------------------------------------------------------------
-    ## Spherical Harmonics
+    ## SPHERICAL HARMONICS
     ## -----------------------------------------------------------------
     
     @smooth
@@ -1493,7 +1492,48 @@ class Simulation:
                                     zero_norm=zero_norm)
 
     ## -----------------------------------------------------------------
-    ## Profiles
+    ## TIDAL DATA
+    ## -----------------------------------------------------------------
+
+    @smooth
+    @derive
+    def tidal_deformability(self, tob_corrected=True, save_checkpoints=True,
+                            comp:Literal['PNS_core', 'PNS']='PNS', **kwargs):
+        """
+        Returns the tidal deformability at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, tidal deformability
+        """
+        if comp == 'PNS_core':
+            time, _, data = solve_tidal_love_profile(self, save_checkpoints)
+        else:
+            time, data, _ = solve_tidal_love_profile(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['lambda']]
+    
+    def love_number(self, tob_corrected=True, save_checkpoints=True,
+                    comp:Literal['PNS_core', 'PNS']='PNS', **kwargs):
+        """
+        Returns the Love number at every timestep.
+        If tob_corrected is True, the time is corrected for the time of
+        bounce. If save_checkpoints is True, the checkpoints are saved
+        during the calculation.
+        Returns: time, Love number
+        """
+        if comp == 'PNS_core':
+            time, _, data = solve_tidal_love_profile(self, save_checkpoints)
+        else:
+            time, data, _ = solve_tidal_love_profile(self, save_checkpoints)
+        if not tob_corrected:
+            time += self.tob
+        return [time, data['kappa2']]
+    
+
+    ## -----------------------------------------------------------------
+    ## PROFILES
     ## -----------------------------------------------------------------
     
     def radial_profile(self, quantity, save_checkpoints=True, **kwargs):
