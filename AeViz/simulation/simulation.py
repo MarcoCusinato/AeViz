@@ -1,7 +1,10 @@
 import numpy as np
 from typing import Literal
 import os, warnings
-from AeViz.utils.parfiles import (get_indices_from_parfile,
+from AeViz.utils.parfiles import (load_parfile,
+                                  get_stencils,
+                                  get_indices_from_parfile,
+                                  get_simulation_info,
                                   get_initial_parameters)
 from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
@@ -49,18 +52,19 @@ class Simulation:
         self.simulation_name = simulation_name
         self.path = find_simulation(self.simulation_name, pltf(),
                                     simulation_folder_path)
-        self.hydroTHD_index, \
-            self.ghost_cells, \
-            self.relativistic = get_indices_from_parfile('start.pars',
-                                               os.path.join(self.path, 'pars'))
+        parfile = load_parfile('start.pars', os.path.join(self.path, 'pars'))
+        self.GEOM, self.dim, self.relativistic, \
+            self.evolved_qts = get_simulation_info(parfile)
+        self.ghost_cells = get_stencils(parfile)
+        self.hydroTHD_index = get_indices_from_parfile(parfile)
+        del parfile
         try:
             self.initial_parameters = get_initial_parameters(
                                                         os.path.join(self.path,
                                                                        'pars'))
         except:
             self.initial_parameters = None
-        self.cell = cl(self.path, dim)
-        self.dim = self.cell.simulation_dimension()
+        self.cell = cl(self.path, self.dim)
         self.ghost = gh(self.ghost_cells)
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)
@@ -308,7 +312,7 @@ class Simulation:
         return self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                         ['I_LRTZ']]), self.dim)
-    
+
     @smooth
     @derive
     @hdf_isopen
