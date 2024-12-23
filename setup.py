@@ -78,6 +78,7 @@ setup(
         'AeViz.plot_utils': find_files('AeViz/plot_utils'),
         'AeViz.quantities_plotting': find_files('AeViz/quantities_plotting'),
         'AeViz.simulation': find_files('AeViz/simulation'),
+        'AeViz.simulation.methods': find_files('AeViz/simulation/methods'),
         'AeViz.units': find_files('AeViz/units'),
         'AeViz.utils': find_files('AeViz/utils'),
         'AeViz.spherical_harmonics': find_files('AeViz/spherical_harmonics'),

@@ -64,8 +64,21 @@ class Simulation:
         self.hdf_file_list = self.__get_hdf_file_list()
         ## Load the methods based on the simulation type
         self.__load_hydro_methods()
+        self.__load_THD_methods()
+        self.__load_composition_methods()
+        self.__load_global_methods()
         if self.evolved_qts['magdim'] > 0:
             self.__load_magnetic_fields_methods()
+        if self.evolved_qts['neudim'] > 0:
+            self.__load_neutrinos_methods()
+        if self.GEOM == 2:
+            self.__load_supernova_methods()
+            self.__load_instabilities_methods()
+            self.__load_spherical_harmonics_methods()
+            self.__load_spherical_symmetry_methods()
+            if self.dim > 1:
+                self.__load_GWs_methods()
+            self.tob = self.time_of_bounce()
 
     ## -----------------------------------------------------------------
     ## UTILITIES
@@ -110,9 +123,20 @@ class Simulation:
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
     
+    ## TIME
+    @hdf_isopen
+    def time(self, file_name, tob_corrected=True):
+        """
+        Time of the simulation. If tob_corrected is True, the time is 
+        corrected for the time of bounce.
+        """
+        if tob_corrected:
+            return np.array(self.__data_h5['Parameters/t']) - self.tob
+        return np.array(self.__data_h5['Parameters/t'])
+    
     def __load_hydro_methods(self):
-        import AeViz.simulation.hydro
-        funcs = list_module_functions(AeViz.simulation.hydro)
+        import AeViz.simulation.methods.hydro
+        funcs = list_module_functions(AeViz.simulation.methods.hydro)
         for name, obj in funcs:
             method_name = name
             if name == 'omega' and self.GEOM != 2 and self.dim < 2:
@@ -130,17 +154,93 @@ class Simulation:
             setattr(self, method_name, types.MethodType(obj, self))
             
     def __load_THD_methods(self):
-        import AeViz.simulation.thermo
-        funcs = list_module_functions(AeViz.simulation.thermo)
+        import AeViz.simulation.methods.thermo
+        funcs = list_module_functions(AeViz.simulation.methods.thermo)
         for name, obj in funcs:
-            pass
+            if name == 'entropy' and self.evolved_qts['entropie'] < 1:
+                continue
+            if name == 'temperature' and self.evolved_qts['tempratr'] < 1:
+                continue
+            if name == 'lorentz' and not self.relativistic:
+                continue
+            setattr(self, name, types.MethodType(obj, self))
+    
+    def __load_composition_methods(self):
+        import AeViz.simulation.methods.composition
+        funcs = list_module_functions(AeViz.simulation.methods.composition)
+        for name, obj in funcs:
+            if name == 'Ye' and self.evolved_qts['y_edim'] < 1:
+                continue
+            if self.evolved_qts['comp_dim'] < 1 and name in ['heavy_fraction',
+                                                             'Abar', 'Zbar',
+                                                             'proton_fraction',
+                                                             'neutron_fraction',
+                                                             'alpha_fraction']:
+                continue
+            if self.evolved_qts['cpot_dim'] < 1 and 'chemical_potential' in \
+                name:
+                continue
+            setattr(self, name, types.MethodType(obj, self))
+    
+    def __load_neutrinos_methods(self):
+        import AeViz.simulation.methods.neutrinos
+        funcs = list_module_functions(AeViz.simulation.methods.neutrinos)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
     
     def __load_magnetic_fields_methods(self):
-        import AeViz.simulation.magnetic_fields
-        funcs = list_module_functions(AeViz.simulation.magnetic_fields)
-        print(funcs)
+        import AeViz.simulation.methods.magnetic_fields
+        funcs = list_module_functions(AeViz.simulation.methods.magnetic_fields)
         for name, obj in funcs:
             if ('poloidal' in name or 'toroidal' in name) and self.GEOM != 2:
                 continue
             setattr(self, name, types.MethodType(obj, self))
     
+    def __load_GWs_methods(self):
+        import AeViz.simulation.methods.GWs
+        funcs = list_module_functions(AeViz.simulation.methods.GWs)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
+        try:
+            import PyEMD
+            import AeViz.simulation.methods.IMFs
+            funcs = list_module_functions(AeViz.simulation.methods.IMFs)
+            for name, obj in funcs:
+                setattr(self, name, types.MethodType(obj, self))
+        except:
+            pass
+    
+    def __load_global_methods(self):
+        import AeViz.simulation.methods.global_methods
+        funcs = list_module_functions(AeViz.simulation.methods.global_methods)
+        for name, obj in funcs:
+            if 'neutrino' in name and self.evolved_qts['neudim'] < 1:
+                continue
+            if 'Ye' in name and self.evolved_qts['y_edim'] < 1:
+                continue
+            setattr(self, name, types.MethodType(obj, self))
+    
+    def __load_supernova_methods(self):
+        import AeViz.simulation.methods.supernova
+        funcs = list_module_functions(AeViz.simulation.methods.supernova)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
+
+    def __load_instabilities_methods(self):
+        import AeViz.simulation.methods.instabilities
+        funcs = list_module_functions(AeViz.simulation.methods.instabilities)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
+
+    def __load_spherical_harmonics_methods(self):
+        import AeViz.simulation.methods.sph_harmonics
+        funcs = list_module_functions(AeViz.simulation.methods.sph_harmonics)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
+    
+    def __load_spherical_symmetry_methods(self):
+        import AeViz.simulation.methods.other_spherical_sym
+        funcs = list_module_functions(
+            AeViz.simulation.methods.other_spherical_sym)
+        for name, obj in funcs:
+            setattr(self, name, types.MethodType(obj, self))
