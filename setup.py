@@ -82,6 +82,7 @@ setup(
         'AeViz.units': find_files('AeViz/units'),
         'AeViz.utils': find_files('AeViz/utils'),
         'AeViz.spherical_harmonics': find_files('AeViz/spherical_harmonics'),
+        'AeViz.AeVizMethods': find_files('AeViz/AeVizMethods'),
     },
     python_requires='>=3.6',
     classifiers=[
