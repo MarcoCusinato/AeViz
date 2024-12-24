@@ -2,7 +2,7 @@ from AeViz.simulation.methods import *
 
 
 """
-This module contains all the local hydro quantities.add()
+This module contains all the local hydro quantities.
 These functions are not supposed to be used standalone, but as methods
 of the Simulation class
 """

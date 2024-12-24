@@ -3,6 +3,13 @@ from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
                                                     get_sph_profile,
                                                     get_sph_profiles_r,
                                                     get_data_for_barcode)
+"""
+Functions to handle spherical harmonics decomposition of the density
+data from a simulation in spherical coordinates.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## SPHERICAL HARMONICS
 ## -----------------------------------------------------------------

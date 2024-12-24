@@ -5,6 +5,14 @@ from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 import os
 
+"""
+Methods to calculate and handle data from a supernova simulation.
+So far any simulation in spherical coordinates is a supernova
+simulation.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## TIME POINTS           
 def time_of_bounce(self):
     """

@@ -6,6 +6,13 @@ from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
 from AeViz.utils.file_utils import load_file, find_column_changing_line
 from typing import Literal
 
+"""
+Function to process gravitational waves data from a simulation in
+spherical coordinates.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## GRAVIATIONAL WAVES DATA
 ## -----------------------------------------------------------------

@@ -3,6 +3,13 @@ from AeViz.utils.profiles import calculate_profile
 from AeViz.utils.tidal_love import solve_tidal_love_profile
 from typing import Literal
 
+"""
+Functions to calculate tidal deformation and radial profiles from a
+simulation in spherical symmetry.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## TIDAL DATA
 ## -----------------------------------------------------------------

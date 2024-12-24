@@ -1,6 +1,13 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.math_utils import IDL_derivative, function_average
 
+"""
+Function to process convection and instabilities data from a simulation
+in spherical coordinates.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## CONVECTION AND INSTABILITIES DATA
 ## -----------------------------------------------------------------

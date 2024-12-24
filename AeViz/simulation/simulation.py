@@ -21,6 +21,7 @@ class Simulation:
         """
         Simulation class initialization. This is the class that should
         be called when loading up a simulation.
+        Methods are loaded at runtime based on the simulation type.
         """
         # Let's set up the main parameters that define a simulation,
         # dimension, geometry, path and name

@@ -1,5 +1,11 @@
 from AeViz.simulation.methods import *
 
+"""
+Functions to handle thermodynamical data from a simulation.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## THERMODYNAMICAL DATA
 ## -----------------------------------------------------------------

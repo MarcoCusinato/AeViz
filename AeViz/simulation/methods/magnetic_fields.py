@@ -1,6 +1,12 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.math_utils import strfct2D
 
+"""
+Functions to handle magnetic fields data from a simulation.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## MAGNETIC FIELDS DATA
 ## -----------------------------------------------------------------

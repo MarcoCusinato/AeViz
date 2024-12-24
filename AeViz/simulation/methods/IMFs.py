@@ -6,6 +6,14 @@ from PyEMD import EMD
 from typing import Literal
 import warnings
 
+"""
+Functions to process gravitational from a simulation in
+spherical coordinates waves with the EEMD and EMD
+decomposition.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## IMFs
 ## -----------------------------------------------------------------

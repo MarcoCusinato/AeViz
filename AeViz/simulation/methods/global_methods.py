@@ -1,6 +1,12 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.file_utils import load_file
 
+"""
+Function to load and process log files from a simulation.
+These functions are not meant to be used standalone, but rather to be
+imported into the Simulation class.
+"""
+
 ## -----------------------------------------------------------------
 ## GLOBAL DATA
 ## -----------------------------------------------------------------
