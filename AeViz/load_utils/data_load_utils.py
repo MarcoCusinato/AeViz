@@ -1,4 +1,6 @@
-from AeViz.utils.parfiles import get_indices_from_parfile
+from AeViz.utils.parfiles import (get_indices_from_parfile,
+                                  get_stencils,
+                                  get_simulation_info)
 from AeViz.simulation.simulation import Simulation
 from AeViz.units.units import units
 import h5py, os
@@ -52,6 +54,16 @@ class Data(object):
         """
         self.loaded_data = h5py.File(path, 'r')
         dir_path = os.path.dirname(os.path.abspath(path))
+        try:
+            startfile = os.path.join(dir_path, '../pars/start.pars')
+            self.hydroTHD_index = get_indices_from_parfile(startfile)
+            self.gh_cells = get_stencils(startfile)
+            geom, dim, _, qts = get_simulation_info(startfile)
+            self.ghost = ghost(self.gh_cells)
+        except:
+            raise ValueError('No start.pars file detected in the parent '\
+                             'directory of the hdf5 file.')
+
         self.cell = cl(radius=np.stack((self.loaded_data['X']['znl'][...],
                                         self.loaded_data['X']['znc'][...],
                                         self.loaded_data['X']['znr'][...]),
@@ -61,17 +73,10 @@ class Data(object):
                                   self.loaded_data['Y']['znr'][...]), axis=-1),
                   phi=np.stack((self.loaded_data['Z']['znl'][...],
                                 self.loaded_data['Z']['znc'][...],
-                                self.loaded_data['Z']['znr'][...]), axis=-1))
+                                self.loaded_data['Z']['znr'][...]), axis=-1),
+                dim=dim, geom=geom, neu=qts['neudim'])
         self.sim_dim = self.cell.dim
-        try:
-            self.hydroTHD_index, self.gh_cells = get_indices_from_parfile(
-                'start.pars', os.path.join(dir_path, '../pars'))
-            self.ghost = ghost(self.gh_cells)
-        except:
-            self.hydroTHD_index = None
-            Warning.warn('No start.pars file found in the parent directory '\
-                        ' of the hdf5 file. No auto-detection of the indices.'\
-                            ' Please set them manually.')
+        
     
 
     def is_open(self):

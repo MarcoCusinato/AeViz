@@ -1,6 +1,21 @@
 import os, h5py
 import numpy as np
 import pandas as pd
+import inspect
+
+def list_module_functions(module):
+    """
+    Lists all the functions decleared in a specific module
+    Arguments:
+        - imported module
+    Returns:
+        list of all the functions decleared in the module
+    """
+    return [
+        (name, obj) for name, obj in inspect.getmembers(module, inspect.isfunction)
+        if obj.__module__ == module.__name__ 
+    ]
+
 
 def load_file(path_folder, file_name):
     """

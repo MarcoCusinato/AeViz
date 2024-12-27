@@ -3,12 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.ndimage import convolve
+from functools import wraps
 
 def hdf_isopen(func):
     """
     Takes as input the Simulation object and either the file name, or
     file index or time. If the file is not open, it opens it.
     """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         if type(args[1]) is int:
             file = args[0].hdf_file_list[args[1]]
@@ -31,6 +33,7 @@ def fig_window_open(func):
     """
     Check if the window figure has been closed. If it has it destroys it.
     """
+    @wraps(func)
     def check_opens(*args, **kwargs):
         if args[0].fig is not None:
             if not plt.fignum_exists(args[0].fig.number):
@@ -42,6 +45,7 @@ def derive(func):
     """
     Decorator to calculate the derivative of a function.
     """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
         if 'der' not in kwargs:
@@ -94,6 +98,7 @@ def smooth(func):
     """
     Decorator that add a smothing of the data.
     """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
         if 'smooth' not in kwargs:
@@ -151,6 +156,7 @@ def EMD_smooth(func):
     """
     Decorator that add a smothing of the data for EMDs.
     """
+    @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
         if 'smooth' not in kwargs:

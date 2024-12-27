@@ -92,7 +92,7 @@ def return_PNS_kick(sim, name, **kwargs):
 def check_file_to_load(path):
     if path.endswith('.hdf5') or path.endswith('.h5') or path.endswith('.hdf'):
         return 'hdf5'
-    elif not os.path.exists(path):
+    elif not os.path.exists(path) or os.path.isdir(path):
         return 'sim'
 
 def return_index(hydro_dict, name):
