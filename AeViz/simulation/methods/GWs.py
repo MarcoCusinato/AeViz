@@ -1,6 +1,6 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
-                                  GW_spectrogram, GWs_peak_indices,
+                                  GWs_spectrogram, GWs_peak_indices,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
 from AeViz.utils.file_utils import load_file, find_column_changing_line
@@ -91,7 +91,7 @@ def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True,
             u.convert_to_s(window_size)):
         window += 1
     
-    time, frequency, Zxx = GW_spectrogram(self.dim, GW_strain, window)
+    time, frequency, Zxx = GWs_spectrogram(self.dim, GW_strain, window)
     if tob_corrected:
         time -= self.tob
     return time, frequency, Zxx

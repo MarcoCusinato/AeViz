@@ -108,7 +108,7 @@ def GWs_energy_3D(GWs):
 ## ---------------------------------------------------------------------
 
 
-def GW_spectrogram(sim_dim, GWs, window_size):
+def GWs_spectrogram(sim_dim, GWs, window_size):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if sim_dim == 1:
         return GW_spectrogram_1D(GWs)
