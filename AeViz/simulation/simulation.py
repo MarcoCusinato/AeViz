@@ -34,7 +34,8 @@ class Simulation:
             self.evolved_qts = get_simulation_info(parfile)
         self.ghost_cells = get_stencils(parfile)
         self.hydroTHD_index = get_indices_from_parfile(parfile)
-        self.cell = cell(self.path, self.dim)
+        self.cell = cell(self.path, self.dim, geom=self.GEOM,
+                         neu=self.evolved_qts['neudim'])
         self.ghost = ghost(self.ghost_cells)
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)

@@ -73,6 +73,7 @@ setup(
     packages = find_packages(),
     package_data = {
         'AeViz.cell': find_files('AeViz/cell'),
+        'AeViz.cell.cell_methods': find_files('AeViz/cell/cell_methods'),
         'AeViz.grid': find_files('AeViz/grid'),
         'AeViz.load_utils': find_files('AeViz/load_utils'),
         'AeViz.plot_utils': find_files('AeViz/plot_utils'),

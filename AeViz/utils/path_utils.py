@@ -161,7 +161,7 @@ def check_subpaths_for_simulations(path, simDict, simulations):
         if 'outp-hdf' in subfolders:
             standard_path = standardize_simulation_path(path)
             try:
-                key = dim_keys[cl(path_subfolder).dim]
+                key = dim_keys[cl(path_subfolder, geom=2).dim]
                 if folder in simDict[key]:
                     if simDict[key][folder] == standard_path:
                         continue
