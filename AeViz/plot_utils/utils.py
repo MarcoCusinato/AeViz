@@ -548,7 +548,8 @@ plot_labels = {
                                        'label': r'$\Lambda$'},
           'epicyclic_frequency': {'log': True,
                                   'lim': (None, None),
-                                  'label': r'$\kappa$ [s$^{-1}$]'}
+                                  'label': r'$\kappa$ [s$^{-1}$]',
+                                  'cmap': 'viridis'},
 }
 
 keys = list(plot_labels.keys())
