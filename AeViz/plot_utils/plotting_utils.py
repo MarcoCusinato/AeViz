@@ -276,6 +276,10 @@ class PlottingUtils(PlotCreation):
         Sets up the normalization and the tick format of the colorbar.
         Also returns a 1D array with the custom cbar levels.
         """
+        if self.cbar_lv[ax_letter][0] is None:
+            self.cbar_lv[ax_letter][0] = np.nanmin(self.data[ax_letter])
+        if self.cbar_lv[ax_letter][1] is None:
+            self.cbar_lv[ax_letter][1] = np.nanmax(self.data[ax_letter])
         if self.cbar_log[ax_letter]:
             if self.cbar_lv[ax_letter][0] < 0 and \
                 self.cbar_lv[ax_letter][1] > 0:
