@@ -276,6 +276,7 @@ class PlottingUtils(PlotCreation):
         Sets up the normalization and the tick format of the colorbar.
         Also returns a 1D array with the custom cbar levels.
         """
+        self.cbar_lv[ax_letter] = list(self.cbar_lv[ax_letter])
         if self.cbar_lv[ax_letter][0] is None:
             self.cbar_lv[ax_letter][0] = np.nanmin(self.data[ax_letter])
         if self.cbar_lv[ax_letter][1] is None:
@@ -297,7 +298,6 @@ class PlottingUtils(PlotCreation):
             elif self.cbar_lv[ax_letter][0] < 0 and \
                 self.cbar_lv[ax_letter][1] <= 0:
                 if self.cbar_lv[ax_letter][1] == 0:
-                    self.cbar_lv[ax_letter] = list(self.cbar_lv[ax_letter])
                     self.cbar_lv[ax_letter][1] = -10 ** (
                         np.log10(-self.cbar_lv[ax_letter][1]) - 10)
                     self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
@@ -323,6 +323,7 @@ class PlottingUtils(PlotCreation):
                 fmt = lambda x, pos: '{:.2f}'.format(x)
             else: 
                 fmt = lambda x, pos: '{:.1f}'.format(x)
+        self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
         return norm, fmt, cbar_levels
 
     def __plot2Dmesh(self, ax_letter, **kwargs):
