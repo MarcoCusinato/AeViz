@@ -48,3 +48,11 @@ def BV_frequency(self, file=None, projection:Literal['1D', '2D']='1D',
                                     'phi', 'time']='radius', **kwargs):
     qt = 'BV_frequency'
     plot_qt(self, file, qt, projection, index1, index2, plane, **kwargs)
+
+@fig_window_open
+def epicyclic_frequency(self, file=None, projection:Literal['1D', '2D']='1D',
+                        index1=None, index2=None,
+                        plane:Literal['xz', 'yz', 'xy', 'radius', 'theta',
+                                        'phi', 'time']='radius', **kwargs):
+    qt = 'epicyclic_frequency'
+    plot_qt(self, file, qt, projection, index1, index2, plane, **kwargs)

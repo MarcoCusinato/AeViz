@@ -104,7 +104,7 @@ class AeViz(Plotting):
     def __load_simulation_methods(self):
         ignore_list = []
         if self.loaded_data.GEOM != 2 and self.loaded_data.dim < 2:
-            ignore_list.extend(['omega', 'GWs', 'IMFs'])
+            ignore_list.extend(['omega', 'GWs', 'IMFs', 'epicyclic_frequency'])
         if self.loaded_data.evolved_qts['magdim'] < 1:
             ignore_list.extend(['alfven_velocity', 'magnetic_fields',
                                 'magnetic_energy'])
