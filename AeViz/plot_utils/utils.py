@@ -546,8 +546,9 @@ plot_labels = {
           'tidal_deformability': {'log': True,
                                        'lim': (1, 10000),
                                        'label': r'$\Lambda$'},
-          
-
+          'epicyclic_frequency': {'log': True,
+                                  'lim': (None, None),
+                                  'label': r'$\kappa$ [s$^{-1}$]'}
 }
 
 keys = list(plot_labels.keys())
