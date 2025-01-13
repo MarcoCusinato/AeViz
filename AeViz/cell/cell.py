@@ -23,6 +23,8 @@ class cell:
         assert geom in [1, 2], "Geomtry must be either 1 or 2"
         if path_folder is not None:
             self.path_grid = os.path.join(path_folder, 'grid')
+            if neu is None:
+                neu = 0
             if neu >= 1:
                 self.__nu_grid_file = np.loadtxt(os.path.join(self.path_grid,
                                                           'grid.e.dat'))[:, 1:]
