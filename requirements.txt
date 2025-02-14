@@ -5,3 +5,4 @@ pandas
 f90nml
 matplotlib
 opencv-python
+astropy

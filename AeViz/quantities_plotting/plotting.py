@@ -600,7 +600,7 @@ class Plotting(PlottingUtils, Data):
         """
         if axd_letter not in self.axd:
             raise ValueError('The axis letter is not in the figure.')
-        if self.plot_dim[axd_letter] != 2:
+        if 2 not in self.plot_dim[axd_letter]:
             raise ValueError('The axis letter is not a 2D plot.')
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         if comp == 'velocity':
