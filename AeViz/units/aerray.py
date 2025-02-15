@@ -84,7 +84,7 @@ class aerray(np.ndarray):
         return self.__mul__(other)
     
     def __truediv__(self, other):
-        """ Handle division with scalars, units, and other `arrrray` objects."""
+        """ Handle division with scalars, units, and other `aerray` objects."""
         if isinstance(other, u.UnitBase):  # Unit division (removes unit)
             return aerray(self.value, unit=self.unit / other, name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits)
@@ -96,11 +96,11 @@ class aerray(np.ndarray):
         return NotImplemented
 
     def __rtruediv__(self, other):
-        """ Handle division when `other` is on the left: `scalar / arrrray`. """
+        """ Handle division when `other` is on the left: `scalar / aerray`. """
         if isinstance(other, u.UnitBase):  # Unit division (removes unit)
             return aerray(1 / self.value, unit=other / self.unit, name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits)
-        if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by arrrray
+        if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by aerray
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
                           name=self.name,
@@ -110,18 +110,131 @@ class aerray(np.ndarray):
 
 
     def __repr__(self):
-        return f"aerray({super().__repr__()}, unit={self.unit}, " + \
+        return f"aerray({self.value}, unit={self.unit}, " + \
             f"name={self.name})"
+    
+    def __add__(self, other):
+        """ Handle addition with another aerray or quantity. """
+        if isinstance(other, aerray):
+            if self.unit.is_equivalent(other.unit):  # Convert if necessary
+                other_converted = other.to(self.unit)
+                return aerray(self.value + other_converted.value,
+                              unit=self.unit)
+            else:
+                raise ValueError(f"Cannot add incompatible units {self.unit}" \
+                                 " and {other.unit}")
+                
+        elif isinstance(other, (int, float, np.ndarray))  and \
+                        self.unit == u.dimensionless_unscaled:
+            return aerray(self.value + other, unit=self.unit)
+        raise TypeError("Addition only works between compatible units" \
+                        " or dimensionless values.")
 
-        
+    def __sub__(self, other):
+        """ Handle subtraction like addition but with `-`. """
+        if isinstance(other, aerray):
+            if self.unit.is_equivalent(other.unit):  # Convert if necessary
+                other_converted = other.to(self.unit)
+                return aerray(self.value - other_converted.value,
+                              unit=self.unit)
+            else:
+                raise ValueError(f"Cannot add incompatible units {self.unit}" \
+                                 " and {other.unit}")
+                
+        elif isinstance(other, (int, float, np.ndarray)) and \
+                        self.unit == u.dimensionless_unscaled:
+            return aerray(self.value - other, unit=self.unit,
+                              name=self.name)
+        raise TypeError("Subtraction only works between compatible units" \
+                        " or dimensionless values.")
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rsub__(self, other):
+        """ Handle `other - self` correctly. """
+        if isinstance(other, (int, float, np.ndarray)) and \
+            self.unit == u.dimensionless_unscaled:
+            return aerray(other - self.value, unit=self.unit)
+        return NotImplemented
+    
+    def __iadd__(self, other):
+        """ In-place addition (+=) with unit handling. """
+        if isinstance(other, aerray):
+            if self.unit.is_equivalent(other.unit):
+                other_converted = other.to(self.unit)
+                if self.ndim == 0:
+                    self.fill(self.item() + other_converted.item())  # Handle 0-D case
+                else:
+                    self[:] += other_converted.value
+                return self
+            else:
+                raise ValueError(f"Cannot add incompatible units {self.unit} "\
+                                 "and {other.unit}")
+
+        elif isinstance(other, (int, float, np.ndarray)) and \
+            self.unit == u.dimensionless_unscaled:
+            if self.ndim == 0:
+                self.fill(self.item() + other)  # Handle 0-D case
+            else:
+                self[:] += other
+            return self
+
+        raise TypeError("In-place addition only works between compatible"\
+                        " units or dimensionless values.")
+
+    def __isub__(self, other):
+        """ In-place subtraction (-=) with unit handling. """
+        if isinstance(other, aerray):
+            if self.unit.is_equivalent(other.unit):
+                other_converted = other.to(self.unit)
+                if self.ndim == 0:
+                    self.fill(self.item() - other_converted.item())  # Handle 0-D case
+                else:
+                    self[:] -= other_converted.value
+                return self
+            else:
+                raise ValueError(f"Cannot add incompatible units {self.unit} "\
+                                 "and {other.unit}")
+
+        elif isinstance(other, (int, float, np.ndarray)) and \
+            self.unit == u.dimensionless_unscaled:
+            if self.ndim == 0:
+                self.fill(self.item() - other)  # Handle 0-D case
+            else:
+                self[:] -= other
+            return self
+
+        raise TypeError("In-place subtraction only works between compatible"\
+                        " units or dimensionless values.")
+
+
     @property
     def value(self):
         """ Returns the plain NumPy array without units. """
         return np.asarray(self)
     
+    @value.setter
+    def value(self, new_value):
+        """ Set the underlying array data dynamically. """
+        new_value = np.asarray(new_value)
+        if self.ndim == 0:
+            self.fill(new_value)
+        else:
+            if new_value.shape != self.shape:
+                raise ValueError(f"Shape mismatch: expected {self.shape}, got {new_value.shape}")
+            self[:] = new_value  # Update in-place
     
     def to(self, unit):
         convererersion = self.unit.to(unit)
         return aerray(self.value * convererersion, unit=unit, name=self.name,
+                      label=self.label, cmap=self.cmap, limits=self.limits)
+
+    def max(self):
+        return aerray(np.max(self.value), unit=self.unit, name=self.name,
+                      label=self.label, cmap=self.cmap, limits=self.limits)
+    
+    def min(self): 
+        return aerray(np.min(self.value), unit=self.unit, name=self.name,
                       label=self.label, cmap=self.cmap, limits=self.limits)
         
