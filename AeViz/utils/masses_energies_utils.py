@@ -76,12 +76,12 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
             simulation.ghost.remove_ghost_cells_radii(PNS_radius,
                                                       simulation.dim,
                                                   **gcells)[..., None])
-    rho = simulation.rho(file_name)[mask] * dV[mask]
+    rho = simulation.rho(file_name) * dV
     ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] \
         * dV[mask])
     if simulation.dim == 1:
         ene_rot = 0
-        ene_kin = np.sum(0.5 * rho * \
+        ene_kin = np.sum(0.5 * rho[mask] * \
             simulation.radial_velocity(file_name)[mask] ** 2)
         ene_mag = 0
         conv_ene = 0
@@ -91,15 +91,15 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
         vr = simulation.radial_velocity(file_name)
         vt = simulation.theta_velocity(file_name)
         vp = simulation.phi_velocity(file_name)
-        ene_rot = np.sum(0.5 * rho * \
+        ene_rot = np.sum(0.5 * rho[mask] * \
             vp[mask] ** 2)
-        ene_kin = np.sum(0.5 * rho * \
+        ene_kin = np.sum(0.5 * rho[mask] * \
             (vr[mask] ** 2 + \
             vt[mask] ** 2))
         ene_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] \
             * dV[mask])
         conv_ene = np.sum(vt[mask] ** 2 \
-            * rho)
+            * rho[mask])
         vx, vy, vz = gr.velocity_sph_to_cart(rho * vr, rho * vt, rho * vp)
         masked_grid = [i[mask] if not type(i) == int else i for i in grid] 
         Lx, Ly, Lz = \
@@ -107,7 +107,7 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
             ((vx[mask] * masked_grid[2] - vz[mask] * masked_grid[0])).sum(), \
             ((vy[mask] * masked_grid[0] - vx[mask] * masked_grid[1])).sum()
         L_tot = np.sqrt(Lx ** 2 + Ly ** 2 + Lz ** 2)
-    return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
+    return u.convert_to_solar_masses(np.sum(rho[mask])), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, conv_ene, Lx, Ly, Lz, L_tot
 
 def unbound_mass_energy(simulation, file_name, dV):
