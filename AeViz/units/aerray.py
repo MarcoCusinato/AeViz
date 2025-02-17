@@ -1,6 +1,5 @@
 from AeViz.units import u
 import numpy as np
-from AeViz.units.units import units
 
 
 class aerray(np.ndarray):
