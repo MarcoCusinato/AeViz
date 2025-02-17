@@ -1,3 +1,2 @@
-from AeViz.units.units import units
-
-u = units()
+from astropy import units as u
+from AeViz.units.aerray import aerray as aerray

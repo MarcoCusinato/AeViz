@@ -1,4 +1,4 @@
-from astropy import units as u
+from AeViz.units import u
 import numpy as np
 from AeViz.units.units import units
 
@@ -260,6 +260,12 @@ class aerray(np.ndarray):
     def min(self): 
         return aerray(np.min(self.value), unit=self.unit, name=self.name,
                       label=self.label, cmap=self.cmap, limits=self.limits)
+    
+    def set(self, name=None, label=None, cmap=None, limits=None):
+        self.name = name
+        self.label = label
+        self.cmap = cmap
+        self.limits = limits
 
 # --- Monkey-Patch Astropy Units ---
 def ae_multiply(self, other):
