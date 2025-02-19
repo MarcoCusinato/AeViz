@@ -1,5 +1,8 @@
 from AeViz.units import u
+from astropy.units import UnitBase, CompositeUnit, Unit
+from astropy.utils.compat import COPY_IF_NEEDED
 import numpy as np
+
 
 
 class aerray(np.ndarray):
@@ -10,13 +13,15 @@ class aerray(np.ndarray):
                 name=None,
                 label=None,
                 cmap=None,
-                limits=None):
+                limits=None,
+                log=False):
         obj = np.asarray(value).view(cls)
         obj.unit = unit if unit else u.dimensionless_unscaled
         obj.name = name
         obj.label = label
         obj.cmap = cmap
         obj.limits = limits
+        obj.log = log
         return obj
     
     def __array_finalize__(self, obj):
@@ -26,6 +31,7 @@ class aerray(np.ndarray):
         self.label = getattr(obj, 'label', None)
         self.cmap = getattr(obj, 'cmap', None)
         self.limits = getattr(obj, 'limits', None)
+        self.log = getattr(obj, 'log', False)
         
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """
@@ -50,13 +56,14 @@ class aerray(np.ndarray):
 
         if ufunc in [np.sin, np.cos, np.tan]:
             new_unit = u.dimensionless_unscaled
-        elif ufunc in [np.sqrt, np.exp, np.log]:
+        elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
+        elif ufunc == np.sqrt:
+            new_unit = old_unit ** 0.5
         else:
-            new_unit = old_unit
+            raise NotImplementedError
         
-        return aerray(result, unit=new_unit, name=None, label=None, cmap=None,
-                      limits=None)
+        return aerray(result, unit=new_unit)
     
     def __mul__(self, other):
         """
@@ -70,7 +77,7 @@ class aerray(np.ndarray):
                 conv = 1
             return aerray(self.value * conv, unit=self.unit * other,
                           name=self.name, label=self.label, cmap=self.cmap,
-                          limits=self.limits)
+                          limits=self.limits, log=self.log)
         elif isinstance(other, aerray): #Handle aerray * aerray
             try:
                 other = other.to(self.unit)
@@ -79,12 +86,50 @@ class aerray(np.ndarray):
             return aerray(self.value * other.value, unit=self.unit * other.unit)
         elif isinstance(other, (int, float, np.ndarray)):
             return aerray(self.value * other, unit=self.unit, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits)
+                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          log=self.log)
             
         return NotImplemented
     
     def __rmul__(self, other):
         return self.__mul__(other)
+    
+    def __imul__(self, other):
+        """
+        In-place multliplication (*=) with unit handling.
+        """
+        if isinstance(other, u.UnitBase):  # Handle aerray * unit
+            try:
+                conv = other.to(self.unit)
+                other = self.unit
+            except:
+                conv = 1
+            if self.ndim == 0:
+                self.fill(self.item() * conv)  # Handle 0-D case
+            else:
+                self[:] *= conv
+            self.unit *= other
+            return self    
+        elif isinstance(other, aerray): #Handle aerray * aerray
+            try:
+                other = other.to(self.unit)
+            except:
+                pass
+            if self.ndim == 0:
+                self.fill(self.item() * other.value)
+            else:
+                self[:] *= other.value
+            self.unit *= other.unit
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            if self.ndim == 0:
+                self.fill(self.item() * other)
+            else:
+                self[:] *= other
+            return self
+
+        raise TypeError("In-place multilpication  only works between compatible"\
+                        " units or dimensionless values.")
     
     def __truediv__(self, other):
         """
@@ -92,12 +137,14 @@ class aerray(np.ndarray):
         """
         if isinstance(other, u.UnitBase):  # Unit division (removes unit)
             return aerray(self.value, unit=self.unit / other, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits)
+                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          log=self.log)
         elif isinstance(other, aerray):  # Array division (unit-aware)
             return aerray(self.value / other.value, unit=self.unit / other.unit)
         elif isinstance(other, (int, float, np.ndarray)):  # Scalar division
             return aerray(self.value / other, unit=self.unit, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits)
+                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          log=self.log)
         return NotImplemented
 
     def __rtruediv__(self, other):
@@ -106,15 +153,17 @@ class aerray(np.ndarray):
         """
         if isinstance(other, u.UnitBase):  # Unit division (removes unit)
             return aerray(1 / self.value, unit=other / self.unit, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits)
+                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          log=self.log)
         if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by aerray
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
                           name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits)
+                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          log=self.log)
 
         return NotImplemented
-
+    
 
     def __repr__(self):
         return f"aerray({self.value}, unit={self.unit}, " + \
@@ -225,7 +274,16 @@ class aerray(np.ndarray):
         raise TypeError("In-place subtraction only works between compatible"\
                         " units or dimensionless values.")
 
+    def __pow__(self, exponent):
+        """Handle exponentiation while adjusting units correctly."""
+        if not np.isscalar(exponent):
+            raise TypeError("Exponent must be a scalar value.")
 
+        new_value = self.value ** exponent
+        new_unit = self.unit ** exponent  # Properly scale the unit
+
+        return aerray(new_value, new_unit)
+    
     @property
     def value(self):
         """
@@ -250,28 +308,115 @@ class aerray(np.ndarray):
     def to(self, unit):
         convererersion = self.unit.to(unit)
         return aerray(self.value * convererersion, unit=unit, name=self.name,
-                      label=self.label, cmap=self.cmap, limits=self.limits)
+                      label=self.label, cmap=self.cmap, limits=self.limits,
+                      log=self.log)
 
     def max(self):
         return aerray(np.max(self.value), unit=self.unit, name=self.name,
-                      label=self.label, cmap=self.cmap, limits=self.limits)
+                      label=self.label, cmap=self.cmap, limits=self.limits,
+                      log=self.log)
     
     def min(self): 
         return aerray(np.min(self.value), unit=self.unit, name=self.name,
-                      label=self.label, cmap=self.cmap, limits=self.limits)
+                      label=self.label, cmap=self.cmap, limits=self.limits,
+                      log=self.log)
     
-    def set(self, name=None, label=None, cmap=None, limits=None):
-        self.name = name
-        self.label = label
-        self.cmap = cmap
-        self.limits = limits
+    def set(self, name=None, label=None, cmap=None, limits=None, log=False):
+        if name is not None:
+            self.name = name
+        if label is not None:
+            self.label = label
+        if cmap is not None:
+            self.cmap = cmap
+        if limits is not None:
+            self.limits = limits
+        if log is not None:
+            self.log = log
 
-# --- Monkey-Patch Astropy Units ---
-def ae_multiply(self, other):
-    """
-    Redirect multiplication with an Astropy unit to create an `aerray`.
-    """
-    return aerray(other, unit=self)
 
-u.UnitBase.__mul__ = ae_multiply
-u.UnitBase.__rmul__ = ae_multiply
+
+### Monkey patches for multiplication and division
+def aetruediv(self, m):
+    if isinstance(m, (bytes, str)):
+        m = Unit(m)
+
+    if isinstance(m, UnitBase):
+        if m.is_unity():
+            return self
+        return CompositeUnit(1, [self, m], [1, -1], _error_check=False)
+
+    try:
+        return aerray(1, self) / m
+    except TypeError:
+        return NotImplemented
+
+def aertruediv(self, m):
+    if isinstance(m, (bytes, str)):
+        return Unit(m) / self
+
+    try:
+        # Cannot handle this as Unit.  Here, m cannot be a Quantity,
+        # so we make it into one, fasttracking when it does not have a
+        # unit, for the common case of <array> / <unit>.
+
+        if hasattr(m, "unit"):
+            result = aerray(m)
+            result /= self
+            return result
+        else:
+            return aerray(m, self ** (-1))
+    except TypeError:
+        if isinstance(m, np.ndarray):
+            raise
+        return NotImplemented
+
+def aemul(self, m):
+    if isinstance(m, (bytes, str)):
+        m = Unit(m)
+
+    if isinstance(m, UnitBase):
+        if m.is_unity():
+            return self
+        elif self.is_unity():
+            return m
+        return CompositeUnit(1, [self, m], [1, 1], _error_check=False)
+
+    # Cannot handle this as Unit, re-try as Quantity.
+    try:
+        return aerray(1, unit=self) * m
+    except TypeError:
+        return NotImplemented
+
+def aermul(self, m):
+    if isinstance(m, (bytes, str)):
+        return Unit(m) * self
+
+    # Cannot handle this as Unit.  Here, m cannot be a Quantity,
+    # so we make it into one, fasttracking when it does not have a unit
+    # for the common case of <array> * <unit>.
+    try:
+        if hasattr(m, "unit"):
+            result = aerray(m)
+            result *= self
+            return result
+        else:
+            return aerray(m, unit=self)
+    except TypeError:
+        if isinstance(m, np.ndarray):
+            raise
+        return NotImplemented
+
+def aerlshift(self, m):
+    try:
+        return aerray(m, self, copy=COPY_IF_NEEDED, subok=True)
+    except Exception:
+        if isinstance(m, np.ndarray):
+            raise
+        return NotImplemented
+
+
+u.UnitBase.__mul__ = aemul
+u.UnitBase.__rmul__ = aermul
+u.UnitBase.__truediv__ = aetruediv
+u.UnitBase.__rtruediv__ = aertruediv
+u.UnitBase.__rlshift__ = aerlshift

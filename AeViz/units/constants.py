@@ -26,3 +26,5 @@ class constants:
                 label=r'$m_\mathrm{n}$')
     Msol = aerray(1.989e33, u.g, name='solar_mass', label=r'$M_\odot$')
     Rsol = aerray(6.955e10, u.cm, name='solar_radius', label=r'$R_\odot$')
+    mu0 = aerray(1, u.cm * u.s **2 * u.G ** 2 / u.g, name='mu0', 
+                 label=r'$\mu_0$')
