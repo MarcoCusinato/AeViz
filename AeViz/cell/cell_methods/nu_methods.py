@@ -1,3 +1,6 @@
+from AeViz.units.aerray import aerray
+from AeViz.units import u
+
 def E_nu_left(self):
     """
     Method that returns an array with the left neutrino energy grid.
@@ -6,7 +9,8 @@ def E_nu_left(self):
     """
     if self.path_grid is None:
         raise TypeError("You shouldn't be here.")
-    return self._cell__nu_grid_file[:, 0]
+    return aerray(self._cell__nu_grid_file[:, 0], u.MeV, name='E_left',
+                  label=r'$E_\mathrm{l}$')
 
 def E_nu_right(self):
     """
@@ -16,7 +20,8 @@ def E_nu_right(self):
     """
     if self.path_grid is None:
         raise TypeError("You shouldn't be here.")
-    return self._cell__nu_grid_file[:, 2]
+    return aerray(self._cell__nu_grid_file[:, 2], u.MeV, name='E_right',
+                  label=r'$E_\mathrm{r}$')
 
 def E_nu(self):
     """
@@ -26,7 +31,8 @@ def E_nu(self):
     """
     if self.path_grid is None:
         raise TypeError("You shouldn't be here.")
-    return self._cell__nu_grid_file[:, 1]
+    return aerray(self._cell__nu_grid_file[:, 1], u.MeV, name='E',
+                  label=r'$E$')
 
 def dE_nu(self):
     """
@@ -34,4 +40,6 @@ def dE_nu(self):
     Results:
         dE_nu: (numpy array)
     """
-    return self.E_nu_right() - self.E_nu_left()
+    dE = self.E_nu_right() - self.E_nu_left()
+    dE.set(name='dE', label=r'$\mathrm{d}E$')
+    return dE
