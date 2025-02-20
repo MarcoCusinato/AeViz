@@ -59,4 +59,22 @@ def time_array(simulation):
              ['time'], [time_array])
     return time_array
         
+def merge_strings(*args):
+    """
+    Marges the strings keeping in mind that they can have latex sintax
+    in them
+    """
+    if len(args) == 0:
+        return None
+    if len(args) == 1:
+        return args
+    assert all([type(ar) == str for ar in args]), "Can only be concatenating strings"
+    out_string = r''
+    for ar in args:
+        if out_string.endswith('$') and ar.startswith('$'):
+            out_string = out_string[:-1] + ar[1:]
+        else:
+            out_string += ar
+    return out_string
+        
         

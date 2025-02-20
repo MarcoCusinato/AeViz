@@ -1,5 +1,7 @@
 import numpy as np
 from typing import Literal
+from AeViz.units.aerray import aerray
+from AeViz.utils.utils import merge_strings
 
 def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                                               'radius', 'volume'], dV):
@@ -88,6 +90,13 @@ def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius',
                                         y[..., -1] * (x02 + x12) / \
                                             (x02 * x12))[..., None]), 
                             axis = -1)
+    
+    if isinstance(derivative, aerray):
+        name = merge_strings('d', y.name, '_d', x.name)
+        label = merge_strings(r'$\partial_{$', x.label, r'$}$', y.label)
+        derivative.set(name=name, label=label, cmap=y.cmap, log=y.log,
+                       limits=[derivative.min().value, derivative.min().value])
+        
     if axis is None:
         if xvariable == 'radius':
             return derivative
