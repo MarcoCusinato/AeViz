@@ -61,10 +61,20 @@ class aerray(np.ndarray):
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
         else:
-            raise NotImplementedError
+            new_unit = old_unit
         
         return aerray(result, unit=new_unit)
     
+    def __array_function__(self, func, types, args, kwargs):
+        """Intercept NumPy functions."""
+        if func == np.concatenate:
+            return aerray._concatenate(*args, **kwargs)
+        elif func == np.moveaxis:
+            return aerray._moveaxis(*args, **kwargs)
+        else:
+            return aerray._other_functions(func, *args, **kwargs)
+        return NotImplemented
+
     def __mul__(self, other):
         """
         Handle multiplication with Astropy units and scalars.
@@ -88,7 +98,6 @@ class aerray(np.ndarray):
             return aerray(self.value * other, unit=self.unit, name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
-            
         return NotImplemented
     
     def __rmul__(self, other):
@@ -107,8 +116,8 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() * conv)  # Handle 0-D case
             else:
-                self[:] *= conv
-            self.unit *= other
+                self[:] = self.value * conv
+            self.unit = self.unit *  other
             return self    
         elif isinstance(other, aerray): #Handle aerray * aerray
             try:
@@ -118,17 +127,52 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() * other.value)
             else:
-                self[:] *= other.value
-            self.unit *= other.unit
+                self[:] = self.value * other.value
+            self.unit = self.unit * other.unit
             return self
         elif isinstance(other, (int, float, np.ndarray)):
             if self.ndim == 0:
                 self.fill(self.item() * other)
             else:
-                self[:] *= other
+                self[:] = self.value * other
             return self
-
         raise TypeError("In-place multilpication  only works between compatible"\
+                        " units or dimensionless values.")
+    
+    def __itruediv__(self, other):
+        """
+        In-place division (/=) with unit handling.
+        """
+        if isinstance(other, u.UnitBase):  # Handle aerray * unit
+            try:
+                conv = other.to(self.unit)
+                other = self.unit
+            except:
+                conv = 1
+            if self.ndim == 0:
+                self.fill(self.item() / conv)  # Handle 0-D case
+            else:
+                self[:] = self.value / conv
+            self.unit = self.unit / other
+            return self    
+        elif isinstance(other, aerray): #Handle aerray * aerray
+            try:
+                other = other.to(self.unit)
+            except:
+                pass
+            if self.ndim == 0:
+                self.fill(self.item() / other.value)
+            else:
+                self[:] = self.value / other.value
+            self.unit = self.unit / other.unit
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            if self.ndim == 0:
+                self.fill(self.item() / other)
+            else:
+                self[:] = self.value /other
+            return self
+        raise TypeError("In-place division  only works between compatible"\
                         " units or dimensionless values.")
     
     def __truediv__(self, other):
@@ -161,10 +205,8 @@ class aerray(np.ndarray):
                           name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
-
         return NotImplemented
     
-
     def __repr__(self):
         return f"aerray({self.value}, unit={self.unit}, " + \
             f"name={self.name})"
@@ -270,7 +312,6 @@ class aerray(np.ndarray):
             else:
                 self[:] -= other
             return self
-
         raise TypeError("In-place subtraction only works between compatible"\
                         " units or dimensionless values.")
 
@@ -283,6 +324,39 @@ class aerray(np.ndarray):
         new_unit = self.unit ** exponent  # Properly scale the unit
 
         return aerray(new_value, new_unit)
+    
+    @staticmethod
+    def _concatenate(arrays, axis=0):
+        """Custom `concatenate` implementation for `aerray`."""
+        # Ensure all elements are `aerray`
+        if not all(isinstance(arr, aerray) for arr in arrays):
+            raise TypeError("All inputs to concatenate must be aerray instances.")
+
+        # Ensure all units match
+        units = {arr.unit for arr in arrays}
+        if len(units) > 1:
+            raise ValueError(f"Cannot concatenate aerrays with different units: {units}")
+
+        # Concatenate raw values and return a new `aerray`
+        concatenated_values = np.concatenate([arr.view(np.ndarray) for arr in arrays], axis=axis)
+        return aerray(concatenated_values, unit=arrays[0].unit)
+    
+    @staticmethod
+    def _moveaxis(array, source, destination):
+        """Custom moveaxis fiunction for the aerray"""
+        if not isinstance(array, aerray):
+            raise TypeError("Must be an aerray to move the axis")
+        moved_axis = np.moveaxis(array.value, source, destination)
+        return aerray(moved_axis, array.unit, array.name, array.label,
+                      array.cmap, array.limits, array.log)
+    
+    @staticmethod
+    def _other_functions(function, *args, **kwargs):
+        arr = args[0]
+        assert isinstance(arr, aerray), "Works only with aerray"
+        return aerray(function(arr.value, *args[1:], **kwargs), unit=arr.unit,
+                      label=arr.label, cmap=arr.cmap, limits=arr.limits,
+                      log=arr.log)
     
     @property
     def value(self):
