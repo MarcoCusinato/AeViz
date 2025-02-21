@@ -1,6 +1,7 @@
 from AeViz.cell.cell import cell
 from AeViz.cell.ghost import ghost
 from AeViz.units import u
+from AeViz.units.aerray import aerray
 from AeViz.utils.parfiles import (load_parfile,
                                   get_stencils,
                                   get_indices_from_parfile,
@@ -106,8 +107,9 @@ class Simulation:
         hdf_file_list. If time_in_ms is True, the time to giveis in ms,
         otherwise is in s.
         """
+        time_to_find = aerray(time_to_find, u.s)
         if time_in_ms:
-            time_to_find = u.convert_to_s(time_to_find)
+            time_to_find = time_to_find.to(u.ms)
         
         file_list = self.hdf_file_list
         time = time_array(self)
@@ -121,10 +123,12 @@ class Simulation:
     ## ERROR
     @hdf_isopen
     def error(self, file_name, **kwargs):
-        return self.ghost.remove_ghost_cells(np.squeeze(
+        data = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
-    
+        return aerray(data, u.dimensionless_unscaled, 'error', '$Error$',
+                      cmap='seismic', limits=[0, 1], log=False)
+
     ## TIME
     @hdf_isopen
     def time(self, file_name, tob_corrected=True):
@@ -132,9 +136,11 @@ class Simulation:
         Time of the simulation. If tob_corrected is True, the time is 
         corrected for the time of bounce.
         """
+        data = aerray(self.__data_h5['Parameters/t'][0], u.s, 'time', '$t$')
         if tob_corrected:
-            return np.array(self.__data_h5['Parameters/t']) - self.tob
-        return np.array(self.__data_h5['Parameters/t'])
+            data -= self.tob
+            data.set('time', '$t-t_\mathrm{b}$')
+        return data
     
     def __load_hydro_methods(self):
         import AeViz.simulation.methods.hydro
