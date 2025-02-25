@@ -81,7 +81,7 @@ class aerray(np.ndarray):
                 if self.ndim == 0:
                     self.fill(self.item() + other_converted.item())
                 else:
-                    self[:] += other_converted.value
+                    self.value = self.value + other_converted.value
                 return self
             else:
                 raise ValueError(f"Cannot add incompatible units {self.unit} "\
@@ -92,7 +92,7 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() + other)  # Handle 0-D case
             else:
-                self[:] += other
+                self.value = self.value + other
             return self
 
         raise TypeError("In-place addition only works between compatible"\
@@ -137,7 +137,7 @@ class aerray(np.ndarray):
                 if self.ndim == 0:
                     self.fill(self.item() - other_converted.item())  # Handle 0-D case
                 else:
-                    self[:] -= other_converted.value
+                    self.value = self.value - other_converted.value
                 return self
             else:
                 raise ValueError(f"Cannot add incompatible units {self.unit} "\
@@ -148,7 +148,7 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() - other)  # Handle 0-D case
             else:
-                self[:] -= other
+                self.value = self.value - other
             return self
         raise TypeError("In-place subtraction only works between compatible"\
                         " units or dimensionless values.")
@@ -194,7 +194,7 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() * conv)  # Handle 0-D case
             else:
-                self[:] = self.value * conv
+                self.value = self.__dict__[name] = value * conv
             self.unit = self.unit *  other
             return self    
         elif isinstance(other, aerray): #Handle aerray * aerray
@@ -205,14 +205,14 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() * other.value)
             else:
-                self[:] = self.value * other.value
+                self.value = self.value * other.value
             self.unit = self.unit * other.unit
             return self
         elif isinstance(other, (int, float, np.ndarray)):
             if self.ndim == 0:
                 self.fill(self.item() * other)
             else:
-                self[:] = self.value * other
+                self.value = self.value * other
             return self
         raise TypeError("In-place multilpication  only works between compatible"\
                         " units or dimensionless values.")
@@ -262,7 +262,7 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() / conv)  # Handle 0-D case
             else:
-                self[:] = self.value / conv
+                self.value = self.value / conv
             self.unit = self.unit / other
             return self    
         elif isinstance(other, aerray): #Handle aerray * aerray
@@ -273,14 +273,14 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() / other.value)
             else:
-                self[:] = self.value / other.value
+                self.value = self.value / other.value
             self.unit = self.unit / other.unit
             return self
         elif isinstance(other, (int, float, np.ndarray)):
             if self.ndim == 0:
                 self.fill(self.item() / other)
             else:
-                self[:] = self.value /other
+                self.value = self.value /other
             return self
         raise TypeError("In-place division  only works between compatible"\
                         " units or dimensionless values.")
