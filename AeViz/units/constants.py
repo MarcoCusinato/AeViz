@@ -3,19 +3,19 @@ from astropy import units as u
 import numpy as np
 
 class constants:
-    c = aerray(2.99792458e10, u.cm / u.s, 'speed_of_light', label='$c$')
+    c = aerray(2.99792458e10, u.cm / u.s, 'speed_of_light', label=r'$c$')
     G = aerray(6.6743e-8, u.cm ** 3 / u.g / u.s ** 2, 'gravitational_constant',
-               label='$G$')
+               label=r'$G$')
     h = aerray(6.62607015e-27, u.erg * u.s, 'planck_constant', label='$h$')
     hbar = aerray(1.0545718e-27, u.erg * u.s, 'reduced_planck_constant',
-                  label='$\hbar$')
+                  label=r'$\hbar$')
     kB = aerray(1.3807e-16, u.cm ** 2 / u.g / u.s ** 3 / u.K,
-                'boltzmann_constant', label='$k_\mathrm{B}$')
+                'boltzmann_constant', label=r'$k_\mathrm{B}$')
     sSB = aerray(5.6704e-5, u.g / u.s ** 3 / u.K ** 4,
                  name='stefan_boltzmann_constant',
                  label=r'$\sigma_\mathrm{SB}$')
     lambda_cosm = aerray(1.089e-56, u.cm ** (-2), name='cosmological_constant',
-                         label='$\Lambda$')
+                         label=r'$\Lambda$')
     e = aerray(4.8032e-10, u.cm ** (3/2) * u.g ** (1/2) / u.s, name='e',
                label='$e$')
     me = aerray(9.1093837139e-28, u.g, name='electron_mass',

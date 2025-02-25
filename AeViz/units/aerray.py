@@ -41,9 +41,13 @@ class aerray(np.ndarray):
                       self.cmap, self.limits, self.log)
     
     def __repr__(self):
-        return f"aerray({self.value}, unit={self.unit}, " + \
-            f"name={self.name})"    
-
+        outstring = f"aerray({self.value}"
+        for nm in ['unit', 'name', 'label', 'cmap', 'limits', 'log']:
+            if getattr(self, nm) is not None:
+                outstring += f"\n\t{nm}: {getattr(self, nm)}"
+        outstring += ")"
+        return outstring  
+    
     ## Operation ridefinition
     def __add__(self, other):
         """
