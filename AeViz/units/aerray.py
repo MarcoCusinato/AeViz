@@ -1,9 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from AeViz.units import u
 from astropy.units import UnitBase, CompositeUnit, Unit
 from astropy.utils.compat import COPY_IF_NEEDED
 import numpy as np
-
-
+if TYPE_CHECKING:
+    from AeViz.units.aeseries import aeseries
 
 class aerray(np.ndarray):
     
@@ -65,6 +67,8 @@ class aerray(np.ndarray):
         elif isinstance(other, (int, float, np.ndarray))  and \
                         self.unit == u.dimensionless_unscaled:
             return aerray(self.value + other, unit=self.unit)
+        elif type(other).__name__ == "aeseries":
+            return other.__add__(self)
         raise TypeError("Addition only works between compatible units" \
                         " or dimensionless values.")
 
@@ -94,6 +98,9 @@ class aerray(np.ndarray):
             else:
                 self.value = self.value + other
             return self
+        
+        elif type(other).__name__ == "aeseries":
+            raise TypeError("In place addition does not work between aerray and aeseries, try the opposite ;).")
 
         raise TypeError("In-place addition only works between compatible"\
                         " units or dimensionless values.")
@@ -115,6 +122,8 @@ class aerray(np.ndarray):
                         self.unit == u.dimensionless_unscaled:
             return aerray(self.value - other, unit=self.unit,
                               name=self.name)
+        elif type(other).__name__ == "aeseries":
+            raise TypeError("Subtraction only works between aeseries and aerray, not the opposite.")
         raise TypeError("Subtraction only works between compatible units" \
                         " or dimensionless values.")
 
@@ -150,6 +159,9 @@ class aerray(np.ndarray):
             else:
                 self.value = self.value - other
             return self
+        elif type(other).__name__ == "aeseries":
+            raise TypeError("In-place subtraction only works between aeseries " \
+                " and aerray, not the opposite.")
         raise TypeError("In-place subtraction only works between compatible"\
                         " units or dimensionless values.")
 
@@ -176,6 +188,9 @@ class aerray(np.ndarray):
             return aerray(self.value * other, unit=self.unit, name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
+        elif type(other).__name__ == "aeseries":
+            return other.__mul__(self)
+        
         return NotImplemented
     
     def __rmul__(self, other):
@@ -194,8 +209,8 @@ class aerray(np.ndarray):
             if self.ndim == 0:
                 self.fill(self.item() * conv)  # Handle 0-D case
             else:
-                self.value = self.__dict__[name] = value * conv
-            self.unit = self.unit *  other
+                self.value = self.value * conv
+            self.unit = self.unit * other
             return self    
         elif isinstance(other, aerray): #Handle aerray * aerray
             try:
@@ -214,8 +229,7 @@ class aerray(np.ndarray):
             else:
                 self.value = self.value * other
             return self
-        raise TypeError("In-place multilpication  only works between compatible"\
-                        " units or dimensionless values.")
+        raise TypeError("Not implemented")
     
     def __truediv__(self, other):
         """
@@ -231,6 +245,8 @@ class aerray(np.ndarray):
             return aerray(self.value / other, unit=self.unit, name=self.name,
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
+        elif type(other).__name__ == "aeseries":
+            raise TypeError("Division does not work between aerray and aeseries.")
         return NotImplemented
 
     def __rtruediv__(self, other):
@@ -282,8 +298,7 @@ class aerray(np.ndarray):
             else:
                 self.value = self.value /other
             return self
-        raise TypeError("In-place division  only works between compatible"\
-                        " units or dimensionless values.")
+        raise TypeError("Not implemented")
     
     def __pow__(self, exponent):
         """Handle exponentiation while adjusting units correctly."""
@@ -297,25 +312,34 @@ class aerray(np.ndarray):
     
     ## Operators redefinition
     def __eq__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__eq__(self)
         return np.equal(self, other)
     
-    def __neq__(self, other):
+    def __ne__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__ne__(self)
         return np.not_equal(self, other)
 
     def __ge__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__lt__(self)
         return np.greater_equal(self, other)
     
     def __le__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__gt__(self)
         return np.less_equal(self, other)
     
     def __gt__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__le__(self)
         return np.greater(self, other)
     
     def __lt__(self, other):
+        if type(other).__name__ == "aeseries":
+            return other.__ge__(self)
         return np.less(self, other)
-    
-    def __ne__(self, other):
-        return np.not_equal(self, other)
     
     ## Functions redefinition
     
@@ -445,8 +469,8 @@ class aerray(np.ndarray):
             self[:] = new_value
     
     def to(self, unit):
-        convererersion = self.unit.to(unit)
-        return aerray(self.value * convererersion, unit=unit, name=self.name,
+        conversion = self.unit.to(unit)
+        return aerray(self.value * conversion, unit=unit, name=self.name,
                       label=self.label, cmap=self.cmap, limits=self.limits,
                       log=self.log)
 
