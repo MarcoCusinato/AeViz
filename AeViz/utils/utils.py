@@ -1,6 +1,9 @@
 import sys, os, h5py
 import numpy as np
 from AeViz.utils.file_utils import save_hdf
+from AeViz.units import u
+from AeViz.units.aerray import aerray
+import re
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
 checkpoints = {
@@ -37,7 +40,8 @@ def time_array(simulation):
     """
     if check_existence(simulation, 'time.h5'):
         data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
-        time_array = data['time'][...]
+        time_array = aerray(data['time'][...], u.s, 'time', r'$t$', None,
+                            [None, None])
         data.close()
         if len(time_array) == len(simulation.hdf_file_list):
             return time_array
@@ -56,7 +60,8 @@ def time_array(simulation):
         progressBar(progress_index, total_index, 'Storing timeseries')
         progress_index += 1
     save_hdf(os.path.join(simulation.storage_path, 'time.h5'),
-             ['time'], [time_array])
+             ['time'], [time_array.value])
+    time_array.set('time', r'$t$', None, [None, None])
     return time_array
         
 def merge_strings(*args):
@@ -76,5 +81,27 @@ def merge_strings(*args):
         else:
             out_string += ar
     return out_string
-        
+
+def apply_symbol(latex_str: str, symbol: str = "\\tilde"):
+    if latex_str is None:
+        return None
+    # Check if the string starts and ends with $
+    in_math_mode = latex_str.startswith('$') and latex_str.endswith('$')
+    
+    # Remove surrounding $ if present
+    core_str = latex_str[1:-1] if in_math_mode else latex_str
+    
+    # Find the first letter or word before an underscore
+    match = re.match(r"([^_]+)(.*)", core_str)
+    
+    if not match:
+        return latex_str  # Return unchanged if no valid match
+    
+    first_part, rest = match.groups()
+    
+    # Apply the symbol
+    modified = f"{symbol}{{{first_part}}}{rest}"
+    
+    # Restore math mode if needed
+    return f"${modified}$" if in_math_mode else modified
         
