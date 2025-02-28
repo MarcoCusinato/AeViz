@@ -46,6 +46,7 @@ def BV_frequency(self, file_name, mode=1, **kwargs):
     BV.unit = BV.unit.decompose()
     BV.set(name='BV_frequency2', label=r'$\omega^2_\mathrm{BV}$',
            cmap='RdYlBu_r', log=True, limits=[-1e5, 1e5])
+    return BV
 
 @smooth
 def convective_velocity(self, file_name, **kwargs):
