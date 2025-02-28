@@ -422,6 +422,13 @@ class aeseries:
         """Allows NumPy to recognize aeseries as an array-like object."""
         return np.asarray(self.data, dtype=dtype)
 
+    def to(self, unit):
+        """
+        converts "data" to the selected unit
+        """
+        return aeseries(self.data.to(unit), **{
+                name: getattr(self, name) for name in self.__axis_names
+            })
     
     def fft(self, norm:Literal['backward', 'ortho', 'forward']='backward',
             norm_by_max=False, time_range=None, axis=-1,
