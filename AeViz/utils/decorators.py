@@ -4,6 +4,10 @@ import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.ndimage import convolve
 from functools import wraps
+import inspect
+from AeViz.utils.utils import merge_strings
+import warnings
+from AeViz.units.aerray import aerray
 
 def hdf_isopen(func):
     """
@@ -14,7 +18,7 @@ def hdf_isopen(func):
     def wrapper(*args, **kwargs):
         if type(args[1]) is int:
             file = args[0].hdf_file_list[args[1]]
-        elif type(args[1]) is float:
+        elif type(args[1]) is float or isinstance(args[1], aerray):
             file = args[0].find_file_from_time(args[1])
         else:
             file = args[1]
@@ -179,4 +183,36 @@ def EMD_smooth(func):
         
         return data
 
+    return wrapper
+
+def subtract_tob(func):
+    """
+    subtract the tob from an aeseries
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        sig = inspect.signature(func)
+        bound_args = sig.bind_partial(*args, **kwargs)
+        bound_args.apply_defaults()
+        data = func(*args, **kwargs)
+        if not bound_args.arguments['tob_corrected']:
+            return data
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if type(data) == tuple:
+                data = list(data)
+            if type(data) == list:
+                for dd in data:
+                    nm, lb = dd.time.name, dd.time.label
+                    dd.time -= args[0].tob
+                    dd.time.set(name=nm,
+                                label=merge_strings(lb,r'$-$', r'$t_\mathrm{b}$'),
+                                limits=[-0.005, dd.time.value[-1]])
+            else:
+                nm, lb = data.time.name, data.time.label
+                data.time -= args[0].tob
+                data.time.set(name=nm,
+                            label=merge_strings(lb,r'$-$', r'$t_\mathrm{b}$'),
+                            limits=[-0.005, data.time.value[-1]])
+        return data
     return wrapper
