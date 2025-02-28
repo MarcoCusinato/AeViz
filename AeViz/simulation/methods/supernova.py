@@ -23,12 +23,14 @@ def time_of_bounce(self):
     """
     if os.path.exists(os.path.join(self.storage_path, 'tob.dat')):
         tob = np.loadtxt(os.path.join(self.storage_path, 'tob.dat'))
-        return tob
+        return tob * u.s
     rho_data = self.rho_max(False)
-    rho_index = np.argmax(rho_data[:,1] > 1.4e14)
-    if rho_index == 0 or rho_data[rho_index, 0] >= 0.6:
-        rho_index = np.argmax(rho_data[:,1]>2e14)
-    return rho_data[rho_index, 0]
+    rho_index = np.argmax(rho_data.data > 1.4e14 * u.g / u.cm ** 3)
+    if rho_index == 0 or rho_data.time[rho_index] >= 0.6 * u.s:
+        rho_index = np.argmax(rho_data.data > 2e14 * u.g / u.cm ** 3)
+    tob = rho_data.time[rho_index]
+    tob.set(name='tob', label=r'$t_\mathrm{b}$', limits=None)
+    return tob
 
 def time_of_explosion(self):
     """
