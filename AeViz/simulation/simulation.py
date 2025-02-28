@@ -99,17 +99,17 @@ class Simulation:
         file_list.sort()
         return file_list
 
-    def find_file_from_time(self, time_to_find, time_in_ms=True, 
-                            return_index=False, tob_corrected=True):
+    def find_file_from_time(self, time_to_find, return_index=False,
+                            tob_corrected=True):
         """
         Returns the name of the file corresponding to the given time. If
         return_index is True, returns the index of the file in the 
         hdf_file_list. If time_in_ms is True, the time to giveis in ms,
         otherwise is in s.
         """
-        time_to_find = aerray(time_to_find, u.s)
-        if time_in_ms:
-            time_to_find = time_to_find.to(u.ms)
+        if not isinstance(time_to_find, aerray):
+            time_to_find = aerray(time_to_find, u.s)
+        time_to_find = time_to_find.to(u.s)
         
         file_list = self.hdf_file_list
         time = time_array(self)
