@@ -19,7 +19,8 @@ imported into the Simulation class.
 
 @smooth
 @derive
-def GW_Amplitudes(self, distance=1, tob_corrected=True, 
+@subtract_tob
+def GW_Amplitudes(self, distance=None, tob_corrected=True, 
                     zero_correction=True, lower_refinement=False,
                     **kwargs):
     """
@@ -57,26 +58,36 @@ def GW_Amplitudes(self, distance=1, tob_corrected=True,
     column_change = find_column_changing_line(self._Simulation__log_path,
                                                 self._Simulation__grw_path)
     if zero_correction:
-        index = np.argmax((data[:, 2] - self.tob)  
-        >= -0.01)
+        index = np.argmax((data[:, 2] - self.tob) >= -0.01)
     else:
         index = None
-    if tob_corrected and zero_correction:
-        data[:,2] -= self.tob
-    GWs = GW_strain(self.dim, column_change, data, index)
+    GWs = GW_strain(self.dim, column_change, data, index, distance)
     if GWs is None:
         return None
-    GWs[:, 1:] /= distance
     return GWs
 
-def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True,
+
+def GW_spectrogram(self, distance=None, window_size=aerray(10, u.ms),
+                   tob_corrected=True,
+                   scale_to:Literal['magnitude', 'psd']='magnitude',
                     **kwargs):
     """
     Parameters:
-        window_size: value of the time window to use in ms
         distance: distance of the observer from the GW source
         tob_corrected: if the returned timeseries has to be 
         corrected for the tob
+        window_size: size of the time window in which to perform the sft,
+                    can be aerray or scalar. If scalar the uniit is the
+                    one from time
+        time_range: list of float or aerrays, crop the signal between
+                    the two times
+        check_spacing: if true check if the time array is equally spaced,
+                       can cause issue for small timesteps
+        windowing{'bartlett', 'blackman', 'hamming', 'hanning', 'kaiser'}:
+                Window to apply to the signal, default is hann
+        scale_to{'magnitude', 'psd'} default magnitude. Each STFT column
+                represents either a 'magnitude' or a power spectral
+                density ('psd') spectrum
     Returns:
         time: timeseries in s
         frequency: aray of the frequencies in Hz
@@ -84,17 +95,9 @@ def GW_spectrogram(self, distance=1, window_size=10, tob_corrected=True,
     In 3D simulations:
         h_pl_e, h_pl_p, h_cr_e, h_cr_p
     """
-    GW_strain = self.GW_Amplitudes(distance=distance, tob_corrected=False,
-                                    **kwargs)
-    window = 0
-    while (np.abs(GW_strain[window,0] - GW_strain[0,0]) < 
-            u.convert_to_s(window_size)):
-        window += 1
-    
-    time, frequency, Zxx = GWs_spectrogram(self.dim, GW_strain, window)
-    if tob_corrected:
-        time -= self.tob
-    return time, frequency, Zxx
+    GW_strain = self.GW_Amplitudes(distance=distance,
+                                   tob_corrected=tob_corrected, **kwargs)
+    return GWs_spectrogram(self.dim, GW_strain, window_size, scale_to, **kwargs)
 
 def Deltah(self, peak:Literal['bounce', 'highest']='bounce',
             interval=[None, None], min_time=1.75, max_time=2, distance=1, 
