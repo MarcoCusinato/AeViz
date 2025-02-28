@@ -58,8 +58,13 @@ class aerray(np.ndarray):
         if isinstance(other, aerray):
             if self.unit.is_equivalent(other.unit):  # Convert if necessary
                 other_converted = other.to(self.unit)
+                if self.name == other.name and self.label == other.label:
+                    nm, lb, cm, lm, lg = self.name, self.label, self.cmap,\
+                        self.limits, self.log
+                else:
+                    nm, lb, cm, lm, lg = None, None, None, None, False
                 return aerray(self.value + other_converted.value,
-                              unit=self.unit)
+                              self.unit, nm, lb, cm, lm, lg)
             else:
                 raise ValueError(f"Cannot add incompatible units {self.unit}" \
                                  f" and {other.unit}")
@@ -112,8 +117,13 @@ class aerray(np.ndarray):
         if isinstance(other, aerray):
             if self.unit.is_equivalent(other.unit):  # Convert if necessary
                 other_converted = other.to(self.unit)
+                if self.name == other.name and self.label == other.label:
+                    nm, lb, cm, lm, lg = self.name, self.label, self.cmap,\
+                        self.limits, self.log
+                else:
+                    nm, lb, cm, lm, lg = None, None, None, None, False
                 return aerray(self.value - other_converted.value,
-                              unit=self.unit)
+                              self.unit, nm, lb, cm, lm, lg)
             else:
                 raise ValueError(f"Cannot add incompatible units {self.unit}" \
                                  f" and {other.unit}")
@@ -240,6 +250,10 @@ class aerray(np.ndarray):
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
         elif isinstance(other, aerray):  # Array division (unit-aware)
+            try:
+                other = other.to(self.unit)
+            except:
+                pass
             return aerray(self.value / other.value, unit=self.unit / other.unit)
         elif isinstance(other, (int, float, np.ndarray)):  # Scalar division
             return aerray(self.value / other, unit=self.unit, name=self.name,
@@ -474,13 +488,18 @@ class aerray(np.ndarray):
                       label=self.label, cmap=self.cmap, limits=self.limits,
                       log=self.log)
 
-    def max(self):
-        return aerray(np.max(self.value), unit=self.unit, name=self.name,
+    def max(self, axis=None):
+        return aerray(np.max(self.value, axis), unit=self.unit, name=self.name,
                       label=self.label, cmap=self.cmap, limits=self.limits,
                       log=self.log)
     
-    def min(self): 
-        return aerray(np.min(self.value), unit=self.unit, name=self.name,
+    def min(self, axis=None): 
+        return aerray(np.min(self.value, axis), unit=self.unit, name=self.name,
+                      label=self.label, cmap=self.cmap, limits=self.limits,
+                      log=self.log)
+    
+    def mean(self, axis=None):
+        return aerray(np.mean(self.value, axis), unit=self.unit, name=self.name,
                       label=self.label, cmap=self.cmap, limits=self.limits,
                       log=self.log)
     

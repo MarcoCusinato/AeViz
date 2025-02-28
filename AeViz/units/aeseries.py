@@ -553,8 +553,7 @@ class aeseries:
     def stft(self, window_size=aerray(10, u.ms), check_spacing=False,
              time_range=None, scale_to:Literal['magnitude', 'psd']='magnitude',
              windowing:Literal['bartlett', 'blackman', 'hamming', 'hanning',
-                                'kaiser']='hanning',
-             overlap=0.5):
+                                'kaiser']='hanning', overlap=0.5):
         """
         Returns an aeseries with the short time fourier transform of the signal.
         Time is necessary to perform this.
