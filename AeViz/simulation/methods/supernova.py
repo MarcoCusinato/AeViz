@@ -49,8 +49,9 @@ def time_of_BH(self):
     (6e15 g/cm3)
     """
     rho_data = self.rho_max()
-    rho_BH = 6e15
-    return rho_data[np.argmax(rho_data[:,1]>=rho_BH),0]
+    rho_BH = 6e15 * u.g/u.cm**3
+    
+    return rho_data.time[np.argmax(rho_data.data>=rho_BH)]
 
 ## BOUNCE COMPACTNESS
 def bounce_compactness(self, mass = None):
@@ -64,13 +65,15 @@ def bounce_compactness(self, mass = None):
     """
     bounce_file = self.find_file_from_time(0, True)
     rho = self.rho(bounce_file)
-    radius = u.convert_to_km(self.cell.radius(self.ghost)) / 1000
+    radius = self.cell.radius(self.ghost).to(u.km) / 1000
     dV = self.cell.dVolume_integration(self.ghost)
     if self.dim > 1:
         enclosed_mass = np.sum(rho * dV, axis = tuple(range(self.dim - 1)))
-    enclosed_mass = u.convert_to_solar_masses(np.cumsum(enclosed_mass))
+    enclosed_mass = np.cumsum(enclosed_mass).to(u.M_sun)
     compactness = enclosed_mass / radius
     if mass is not None:
+        if not isinstance(mass, aerray):
+            mass = mass * u.M_sun
         return compactness[ np.argmax( enclosed_mass >= mass ) ]
     else:
         return compactness
