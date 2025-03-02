@@ -2,6 +2,7 @@ import os, h5py
 import numpy as np
 import pandas as pd
 import inspect
+from AeViz.units.aerray import aerray
 
 def list_module_functions(module):
     """
@@ -123,9 +124,15 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
                 if type(v) == dict:
                     subgroup = group.create_group(k)
                     for (kk, vv) in v.items():
-                        subgroup.create_dataset(kk, data = vv)
+                        if isinstance(vv, aerray):
+                            subgroup.create_dataset(kk, data = vv.value)
+                        else:
+                            subgroup.create_dataset(kk, data = vv)
                 else:
-                    group.create_dataset(k, data = v)
+                    if isinstance(v, aerray):
+                        group.create_dataset(k, data = v.value)
+                    else:
+                        group.create_dataset(k, data = v)
         else:
             file_out.create_dataset(key, data = value)
     file_out.close()
