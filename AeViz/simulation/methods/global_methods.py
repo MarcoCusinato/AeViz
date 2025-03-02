@@ -35,11 +35,11 @@ def global_neutrino_luminosity(self, tob_corrected=True, **kwargs):
             aeseries(
                     aerray(nu_tmp[:, 39], u.erg / u.s, 'Lnua',
                            r'$L_\mathrm{\overline{\nu}_e}$', None, [0, 1e52]),
-                           time=time),
+                           time=time.copy()),
             aeseries(
                     aerray(nu_tmp[:, 40] / 4, u.erg / u.s, 'Lnux',
                            r'$L_\mathrm{\nu_x}$', None, [0, 1e52]),
-                           time=time),
+                           time=time.copy()),
             ]
 
 @subtract_tob
@@ -62,12 +62,12 @@ def global_neutrino_number_luminosity(self, tob_corrected=True, **kwargs):
                     aerray(nu_tmp[:, 36], u.dimensionless_unscaled / u.s,
                            'Lnumnua',
                            r'$N_\mathrm{\overline{\nu}_e}$', None, [0, 1e55]),
-                           time=time),
+                           time=time.copy()),
             aeseries(
                     aerray(nu_tmp[:, 37] / 4, u.dimensionless_unscaled / u.s,
                            'Lnumnux',
                            r'$N_\mathrm{\nu_x}$', None, [0, 1e55]),
-                           time=time),
+                           time=time.copy()),
     ]
 
 @smooth

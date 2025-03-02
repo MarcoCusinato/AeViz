@@ -7,7 +7,7 @@ from functools import wraps
 import inspect
 from AeViz.utils.utils import merge_strings
 import warnings
-from AeViz.units.aerray import aerray
+from AeViz.units.aeseries import aeseries, aerray
 
 def hdf_isopen(func):
     """
@@ -214,5 +214,53 @@ def subtract_tob(func):
                 data.time.set(name=nm,
                             label=merge_strings(lb,r'$-$', r'$t_\mathrm{b}$'),
                             limits=[-0.005, data.time.value[-1]])
+        return data
+    return wrapper
+
+def sum_tob(func):
+    """
+    sum the tob from an aeseries
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        def handle_dict(a):
+            for k, v in a.items():
+                if isinstance(v, aeseries):
+                    nm, lb = v.time.name, v.time.label
+                    v.time += args[0].tob
+                    v.time.set(name=nm,
+                                label=merge_strings(lb,r'$+$', r'$t_\mathrm{b}$'),
+                                limits=[0, v.time.value[-1]])
+                else:
+                    continue
+            return a
+        sig = inspect.signature(func)
+        bound_args = sig.bind_partial(*args, **kwargs)
+        bound_args.apply_defaults()
+        data = func(*args, **kwargs)
+        if bound_args.arguments['tob_corrected']:
+            return data
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if type(data) == tuple:
+                data = list(data)
+            if type(data) == dict:
+                data = handle_dict(data)
+            elif type(data) == list:
+                for dd in data:
+                    if isinstance(dd, aeseries):
+                        nm, lb = dd.time.name, dd.time.label
+                        dd.time += args[0].tob
+                        dd.time.set(name=nm,
+                                    label=merge_strings(lb,r'$+$', r'$t_\mathrm{b}$'),
+                                    limits=[0, dd.time.value[-1]])
+                    elif isinstance(dd, dict):
+                        dd = handle_dict(dd)
+            else:
+                nm, lb = data.time.name, data.time.label
+                data.time += args[0].tob
+                data.time.set(name=nm,
+                            label=merge_strings(lb,r'$+$', r'$t_\mathrm{b}$'),
+                            limits=[0, data.time.value[-1]])
         return data
     return wrapper

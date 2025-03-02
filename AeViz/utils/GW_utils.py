@@ -72,15 +72,15 @@ def GW_strain_3D(data, distance):
     hD_pl_p = aeseries(
         aerray(const * IDL_derivative( data[:,2], hD_pl_p ), u.cm, 'h+pol',
                r'$\mathcal{D}h_{+,pol}$', 'Spectral_r', [-150, 150]),
-        time=time)
+        time=time.copy())
     hD_cr_e = aeseries(
         aerray(const * IDL_derivative( data[:,2], hD_cr_e ), u.cm, 'hxeq',
                r'$\mathcal{D}h_{x,eq}$', 'Spectral_r', [-150, 150]),
-        time=time)
+        time=time.copy())
     hD_cr_p = aeseries(
         aerray(const * IDL_derivative( data[:,2], hD_cr_p ), u.cm, 'hxpol',
                r'$\mathcal{D}h_{x,pol}$', 'Spectral_r', [-150, 150]),
-        time=time)
+        time=time.copy())
     GWs = [hD_pl_e, hD_pl_p, hD_cr_e, hD_cr_p]
     if distance:
         for hh in GWs:

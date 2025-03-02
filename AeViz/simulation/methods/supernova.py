@@ -4,6 +4,7 @@ from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.load_save_radii_utils import calculate_radius
 from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 import os
+from typing import Literal
 
 """
 Methods to calculate and handle data from a supernova simulation.
@@ -84,23 +85,39 @@ def bounce_compactness(self, mass = None):
 
 @smooth
 @derive
-def PNS_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def PNS_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+               tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the radius of the PNS at every timestep.
     If tob_corrected is True, the time is corrected for the time of
     bounce. If save_checkpoints is True, the checkpoints are saved
     during the calculation.
-    Returns: time, radius(phi, theta), max_radius, min_radius,
-                average_radius, number of ghost cells
+    If rad is specified, it returns the specified component of the
+    radius. If rad is 'all', it returns all the 1D-components. If None,
+    it returns everything.
+    Returns: radius(phi, theta), max_radius, min_radius,
+             average_radius, number of ghost cells
     """
     data = calculate_radius(self, 'PNS', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 @smooth
 @derive
-def shock_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def shock_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                 tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the shock radius at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -110,13 +127,25 @@ def shock_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
                 average_radius, number of ghost cells
     """
     data = calculate_radius(self, 'shock', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 @smooth
 @derive
-def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def neutrino_spheres(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                     comp:Literal['nue', 'nua', 'nux', 'all']='all',
+                     tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the neutrino spheres at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -127,13 +156,26 @@ def neutrino_spheres(self, tob_corrected=True, save_checkpoints=True, **kwargs):
     Radii are returned as disctionaries of nue, nua and nux
     """
     data = calculate_radius(self, 'neutrino', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if comp != 'all':
+        data = [dd[comp] if comp in dd else dd for dd in data]
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 @smooth
 @derive
-def gain_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def gain_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the gain radius at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -143,13 +185,24 @@ def gain_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
                 average_radius, number of ghost cells
     """
     data = calculate_radius(self, 'gain', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 @smooth
 @derive
-def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def PNS_nucleus_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                       tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the PNS nucleus at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -159,13 +212,24 @@ def PNS_nucleus_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs
                 average_radius, number of ghost cells
     """
     data = calculate_radius(self, 'nucleus', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 @smooth
 @derive
-def innercore_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def innercore_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                     tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the inner core radius at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -175,9 +239,18 @@ def innercore_radius(self, tob_corrected=True, save_checkpoints=True, **kwargs):
                 average_radius, number of ghost cells
     """
     data = calculate_radius(self, 'innercore', save_checkpoints)
-    if not tob_corrected:
-        data[0] += self.tob
-    return data
+    if rad is None:
+        return data
+    if rad == 'full':
+        return data[0], data[-1]
+    elif rad == 'min':
+        return data[2]
+    elif rad == 'max':
+        return data[1]
+    elif rad == 'avg':
+        return data[3]
+    elif rad == 'all':
+        return data[1], data[2], data[3]
 
 ## -----------------------------------------------------------------
 ## MASS AND ENERGY DATA

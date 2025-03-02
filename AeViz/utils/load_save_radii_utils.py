@@ -287,9 +287,10 @@ def create_radius_series(time, *args):
     series = []
     for arg in args:
         if type(arg) == dict:
-            series.append({key: aeseries(arg[key], time=time) for key in arg.keys()})
+            series.append({key: aeseries(arg[key], time=time.copy())
+                           for key in arg.keys()})
         else:
-            series.append(aeseries(arg, time=time))
+            series.append(aeseries(arg, time=time.copy()))
     if ghost_cells:
         series.append(ghost_cells)
     return series
