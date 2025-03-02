@@ -401,9 +401,10 @@ class aerray(np.ndarray):
         elif func == np.moveaxis:
             return aerray._moveaxis(*args, **kwargs)
         elif func in [np.argmax, np.nanargmax, np.argmin, np.nanargmin, 
-                      np.where, np.argwhere, np.nonzero, np.flatnonzero,
-                      np.count_nonzero]:
+                      np.argwhere, np.nonzero, np.flatnonzero, np.count_nonzero]:
             return aerray._index_functions(func, *args, **kwargs)
+        elif func == np.where:
+            return aerray._where(*args, **kwargs)
         elif func == np.interp:
             return aerray._interp(*args, **kwargs)
         else:
@@ -445,6 +446,24 @@ class aerray(np.ndarray):
         assert isinstance(arr, aerray), "Works only with aerray"
         return function(arr.value, *args[1:], **kwargs)
     
+    @staticmethod
+    def _where(condition, x=None, y=None):
+        if x is None and y is None:
+            return np.where(condition)
+        if isinstance(x, aerray) and isinstance(y, aerray):
+            if x.unit != y.unit:
+                raise ValueError(f"Cannot mix units: {x.unit} and {y.unit}")
+            return aerray(np.where(condition, x.value, y.value), unit=x.unit)
+        elif isinstance(x, aerray):
+            return aerray(np.where(condition, x.value, y), unit=x.unit,
+                          name=x.name, label=x.label, cmap=x.cmap,
+                          limits=x.limits, log=x.log)
+        elif isinstance(y, aerray):
+            return aerray(np.where(condition, x, y.value), unit=y.unit,
+                          name=y.name, label=y.label, cmap=y.cmap,
+                          limits=y.limits, log=y.log)
+        return NotImplemented
+
     @staticmethod
     def _comparison_functions(function, *args):
         assert isinstance(args[0], aerray) or isinstance(args[1], aerray), \
