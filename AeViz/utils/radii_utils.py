@@ -1,6 +1,7 @@
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
 from scipy.interpolate import griddata
+from AeViz.units import u
 
 def PNS_radius(simulation, file_name):
     """
@@ -9,7 +10,7 @@ def PNS_radius(simulation, file_name):
                      10^11 g/cm^3
     """
     return simulation.cell.radius(simulation.ghost)[np.argmax(
-        simulation.rho(file_name) < 1e11, axis=-1)]
+        simulation.rho(file_name) < (1e11 * u.g / u.cm ** 3), axis=-1)]
 
 def innercore_radius(simulation, file_name):
     """
@@ -56,14 +57,15 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    k = np.nansum(momenta * kappa, axis=(-1, simulation.dim)) / \
-               np.nansum(momenta, axis=(-1, simulation.dim))
-    dr = simulation.cell.dr(simulation.ghost)[..., None]
-    while dr.ndim < k.ndim:
+    k = [np.nansum(mom * ka, axis=(-1, simulation.dim)) /
+          np.nansum(mom, axis=(-1, simulation.dim)) for (mom, ka) in
+          zip(momenta, kappa)] 
+    dr = simulation.cell.dr(simulation.ghost)
+    while dr.ndim < k[0].ndim:
         dr = dr[None, ...]
-    k = np.nancumsum(np.flip(k * dr, axis=-2), axis=-2)
-    return np.flip(simulation.cell.radius(simulation.ghost))\
-                                [np.argmax(k >= tau, axis=-2)]
+    k = [np.nancumsum(np.flip(ka * dr, axis=-1), axis=-1) for ka in k]
+    return [np.flip(simulation.cell.radius(simulation.ghost))\
+                                [np.argmax(ka >= tau, axis=-1)] for ka in k]
 
 def PNS_nucleus(simulation, file_name):
     """
@@ -71,12 +73,10 @@ def PNS_nucleus(simulation, file_name):
     Employed method: entropy jump at s=4kb from the inside out.
     """
     radius = simulation.cell.radius(simulation.ghost)
-    R_30Km_index = np.argmax(radius >= 30e5)
+    R_30Km_index = np.argmax(radius >= (30 * u.km))
     s = simulation.entropy(file_name)[..., :R_30Km_index]
-    minYe = np.argmax(s >= 4, axis=-1)
-    return radius[minYe]
-
-
+    S4Kb = np.argmax(s >= (4 * u.kBol / u.bry), axis=-1)
+    return radius[S4Kb]
 
 def shock_radius(simulation, file_name):
     """
@@ -86,9 +86,10 @@ def shock_radius(simulation, file_name):
     """
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
-            return np.array([0])
+            return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
         return np.zeros(simulation.cell.dVolume_integration(
-            simulation.ghost).shape[:-1])
+            simulation.ghost).shape[:-1]) * \
+                simulation.cell.radius(simulation.ghost).unit
     if simulation.dim == 1:
         return shock_radius_1D(simulation, file_name)
     elif simulation.dim == 2:
@@ -98,13 +99,10 @@ def shock_radius(simulation, file_name):
     elif simulation.dim == 3:
         Theta, Phi = np.meshgrid(simulation.cell.theta(simulation.ghost), 
                                  simulation.cell.phi(simulation.ghost))
-        return interpol_2D(shock_radius_3D(simulation,
-                                                         file_name),
-                           Theta, Phi)
+        return interpol_2D(shock_radius_3D(simulation, file_name), Theta, Phi)
     else:
         raise ValueError("Invalid dimension")
-    
-    
+   
 def shock_radius_1D(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
                         simulation.gas_pressure(file_name)) * \
@@ -117,8 +115,7 @@ def shock_radius_1D(simulation, file_name):
     for ir in range(len(dP) - 1):
         if (dP[ir] < 10) and np.any(dvr[ir-5:ir+6] < -20):
             return np.array([simulation.cell.radius(simulation.ghost)[ir]])
-    return np.array([0])
-            
+    return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
 
 def shock_radius_2D(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
@@ -129,7 +126,6 @@ def shock_radius_2D(simulation, file_name):
                          simulation.radial_velocity(file_name)) * \
                              simulation.cell.radius(simulation.ghost) / \
                              np.abs(simulation.radial_velocity(file_name))
-    s = simulation.entropy(file_name)
     shock_r = np.empty(dP.shape[0])
     shock_r.fill(np.nan)
     for it in range(dP.shape[0]):
@@ -140,8 +136,8 @@ def shock_radius_2D(simulation, file_name):
                 break
     ## COPY over the gcells
     if np.isnan(shock_r).all():
-        return np.zeros(dP.shape[0])
-    return shock_r
+        return np.zeros(dP.shape[0]) * simulation.cell.radius(simulation.ghost).unit
+    return shock_r * simulation.cell.radius(simulation.ghost).unit
 
 def shock_radius_3D(simulation, file_name):
     """
@@ -225,8 +221,7 @@ def hampel_filter(shock_radius, sigma=3):
     if np.sum(np.isnan(shock_radius)) >= shock_radius.size / 2:
         return shock_radius_copy
     return shock_radius
-        
-    
+ 
 def interpol_1D(shock_radius, theta):
     mask = np.isnan(shock_radius)
     if mask.sum() == 0:
