@@ -92,12 +92,12 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     progress_index = 0
     total_points = len(simulation.hdf_file_list) - start_point
     if radius == 'gain':
-        _, PNS_rad, _, _, _, _ = calculate_radius(simulation, 'PNS')
+        PNS_rad, _ = simulation.PNS_radius(rad='full')
     for file in simulation.hdf_file_list[start_point:]:
         progressBar(progress_index, total_points, suffix='Computing...')
         if radius == 'gain':
             rad_step = functions[radius](simulation, file,
-                                         PNS_rad[..., check_index])   
+                                         PNS_rad.data[..., check_index])   
         else:
             try:
                 rad_step = functions[radius](simulation, file)
@@ -196,6 +196,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
         out_gcells[key[0]+'_l'] = simulation.ghost.return_ghost_dictionary()[key][0]
         out_gcells[key[0]+'_r'] = simulation.ghost.return_ghost_dictionary()[key][1]
     simulation.ghost.restore_default()
+    time, full_radius, max_radius, min_radius, avg_radius, ghost_cells, \
+            _ = read_radius(simulation, radius)
     return create_radius_series(time, full_radius, max_radius, min_radius,
                                 avg_radius, out_gcells)
    
@@ -257,7 +259,7 @@ def read_radius(simulation,
                 aerray(radius_data['max'][...], u.cm, 'R_'+lab+'_max',
                       merge_strings(r'$R_\mathrm{', lab, r',max}$'), None, lm),
                 aerray(radius_data['min'][...], u.cm, 'R_'+lab+'_min',
-                      merge_strings(r'$R_\mathrm{', lab, r'min}$'), None, lm),
+                      merge_strings(r'$R_\mathrm{', lab, r',min}$'), None, lm),
                 aerray(radius_data['avg'][...], u.cm, 'R_'+lab+'_avg',
                       merge_strings(r'$R_\mathrm{', lab, r',avg}$'), None, lm),
                 {'p_l': list(radius_data['gcells/phi'])[0],
