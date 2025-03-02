@@ -404,6 +404,8 @@ class aerray(np.ndarray):
                       np.where, np.argwhere, np.nonzero, np.flatnonzero,
                       np.count_nonzero]:
             return aerray._index_functions(func, *args, **kwargs)
+        elif func == np.interp:
+            return aerray._interp(*args, **kwargs)
         else:
             return aerray._other_functions(func, *args, **kwargs)
         return NotImplemented
@@ -419,10 +421,14 @@ class aerray(np.ndarray):
         units = {arr.unit for arr in arrays}
         if len(units) > 1:
             raise ValueError(f"Cannot concatenate aerrays with different units: {units}")
-
         # Concatenate raw values and return a new `aerray`
-        concatenated_values = np.concatenate([arr.view(np.ndarray) for arr in arrays], axis=axis)
-        return aerray(concatenated_values, unit=arrays[0].unit)
+        concatenated_values = np.concatenate([[arr.value]
+                                              if arr.ndim == 0 else
+                                              arr.value
+                                              for arr in arrays], axis=axis)
+        return aerray(concatenated_values, arrays[0].unit, arrays[0].name,
+                      arrays[0].label, arrays[0].cmap, arrays[0].limits,
+                      arrays[0].log)
     
     @staticmethod
     def _moveaxis(array, source, destination):
@@ -452,6 +458,14 @@ class aerray(np.ndarray):
             return function(main.value, other.value)
         elif isinstance(other, (int, float, np.ndarray)):
             return function(main.value, other)
+    
+    @staticmethod
+    def _interp(x, xp, yp):
+        
+        assert isinstance(x, aerray), "Works only with aerray"
+        return aerray(np.interp(x.value, xp.value, yp.value), unit=yp.unit,
+                      name=yp.name, label=yp.label, cmap=yp.cmap,
+                      limits=yp.limits, log=yp.log)
 
     @staticmethod
     def _other_functions(function, *args, **kwargs):
