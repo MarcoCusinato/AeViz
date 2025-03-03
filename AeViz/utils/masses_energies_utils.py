@@ -1,7 +1,5 @@
-from AeViz.units.units import units
+from AeViz.units import u
 import numpy as np
-
-u = units()
 
 def standard_mass_energy(simulation, file_name, inner_radius, gcells, dV):
     """
@@ -18,10 +16,10 @@ def standard_mass_energy(simulation, file_name, inner_radius, gcells, dV):
         
     rho = simulation.rho(file_name)[mask] * dV[mask]
     if simulation.dim == 1:
-        ene_rot = 0
+        ene_rot = 0 * u.erg
         ene_kin = np.sum(0.5 * rho * \
             simulation.radial_velocity(file_name)[mask] ** 2)
-        ene_mag = 0
+        ene_mag = 0 * u.erg
         
     else:
         ene_rot = np.sum(0.5 * rho * \
@@ -33,7 +31,7 @@ def standard_mass_energy(simulation, file_name, inner_radius, gcells, dV):
              dV[mask])
     ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] * \
         dV[mask])
-    return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
+    return np.sum(rho).to(u.M_sun), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, ene_rot / np.abs(ene_grav)
         
 def gain_region_mass_energy(simulation, file_name, shock_radius, sgcells, 
@@ -58,8 +56,7 @@ def gain_region_mass_energy(simulation, file_name, shock_radius, sgcells,
                                 simulation.dim, **sgcells)[..., None], 
                        simulation.ghost.remove_ghost_cells_radii(gain_radius, 
                                 simulation.dim, **ggcells)[..., None]))
-    mass = u.convert_to_solar_masses(np.sum(simulation.rho(file_name)[mask] \
-        * dV[mask]))
+    mass = np.sum(simulation.rho(file_name)[mask] * dV[mask]).to(u.M_sun)
     nu_heat = np.sum(simulation.nu_heat(file_name)[mask] * dV[mask])
     return mass, nu_heat
 
@@ -76,40 +73,34 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
             simulation.ghost.remove_ghost_cells_radii(PNS_radius,
                                                       simulation.dim,
                                                   **gcells)[..., None])
-    rho = simulation.rho(file_name)[mask] * dV[mask]
+    rho = simulation.rho(file_name) * dV
     ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] \
         * dV[mask])
     if simulation.dim == 1:
-        ene_rot = 0
-        ene_kin = np.sum(0.5 * rho * \
+        ene_rot = 0 * u.erg
+        ene_kin = np.sum(0.5 * rho[mask] * \
             simulation.radial_velocity(file_name)[mask] ** 2)
-        ene_mag = 0
-        conv_ene = 0
-        Lx, Ly, Lz = 0, 0, 0
-        L_tot = 0
+        ene_mag = 0 * u.erg
+        conv_ene = 0 * u.erg
+        Lx, Ly, Lz = 0*u.erg*u.s, 00*u.erg*u.s, 00*u.erg*u.s
+        L_tot = 0*u.erg*u.s
     else:
         vr = simulation.radial_velocity(file_name)
         vt = simulation.theta_velocity(file_name)
         vp = simulation.phi_velocity(file_name)
-        ene_rot = np.sum(0.5 * rho * \
-            vp[mask] ** 2)
-        ene_kin = np.sum(0.5 * rho * \
-            (vr[mask] ** 2 + \
-            vt[mask] ** 2))
+        ene_rot = np.sum(0.5 * rho[mask] * vp[mask] ** 2)
+        ene_kin = np.sum(0.5 * rho[mask] * (vr[mask] ** 2 + vt[mask] ** 2))
         ene_mag = np.sum(simulation.magnetic_energy(file_name)[0][mask] \
             * dV[mask])
-        conv_ene = np.sum(vt[mask] ** 2 \
-            * rho)
-        vx, vy, vz = gr.velocity_sph_to_cart(vr, vt, vp)
-        masked_grid = [i[mask] if not type(i) == int else i for i in grid] 
-        Lx, Ly, Lz = (rho * (vz[mask] * masked_grid[1] - vy[mask] * \
-            masked_grid[2])).sum(), \
-            (rho * (vx[mask] * masked_grid[2] - vz[mask] * \
-                masked_grid[0])).sum(), \
-            (rho * (vy[mask] * masked_grid[0] - vx[mask] * \
-                masked_grid[1])).sum()
+        conv_ene = np.sum(vt[mask] ** 2 * rho[mask])
+        vx, vy, vz = gr.velocity_sph_to_cart(rho * vr, rho * vt, rho * vp)
+        masked_grid = [i[mask] if not i.ndim == 0 else i for i in grid] 
+        Lx, Ly, Lz = \
+            (vz[mask] * masked_grid[1] - vy[mask] * masked_grid[2]).sum(), \
+            (vx[mask] * masked_grid[2] - vz[mask] * masked_grid[0]).sum(), \
+            (vy[mask] * masked_grid[0] - vx[mask] * masked_grid[1]).sum()
         L_tot = np.sqrt(Lx ** 2 + Ly ** 2 + Lz ** 2)
-    return u.convert_to_solar_masses(np.sum(rho)), ene_kin, ene_mag, ene_rot, \
+    return np.sum(rho[mask]).to(u.M_sun), ene_kin, ene_mag, ene_rot, \
         ene_grav, ene_kin + ene_rot, conv_ene, Lx, Ly, Lz, L_tot
 
 def unbound_mass_energy(simulation, file_name, dV):
@@ -122,7 +113,7 @@ def unbound_mass_energy(simulation, file_name, dV):
     mhd_ene = simulation.MHD_energy(file_name) + \
         2 * simulation.gravitational_energy(file_name)
     mask = (mhd_ene > 0) & (simulation.cell.radius(simulation.ghost) < 1e10)
-    ej_mass = u.convert_to_solar_masses(np.sum(rho[mask] * dV[mask]))
+    ej_mass = np.sum(rho[mask] * dV[mask]).to(u.M_sun)
     expl_ene = np.sum(mhd_ene[mask] * dV[mask])
     if simulation.dim == 1:
         ej_kin = np.sum(0.5 * rho[mask] * \
@@ -142,13 +133,13 @@ def mass_flux(simulation, file_name, dOmega, radius_index):
     Callulates the flow of matter at the index
     """
     if simulation.dim == 1:
-        return -u.convert_to_solar_masses(4 * np.pi * \
+        return -(4 * np.pi * \
                 simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \
                 np.sum(simulation.radial_velocity(file_name)[radius_index] * \
-                simulation.rho(file_name)[radius_index]))
+                simulation.rho(file_name)[radius_index])).to(u.M_sun/u.s)
     
-    return  -u.convert_to_solar_masses(
+    return  -(
         simulation.cell.radius(simulation.ghost)[radius_index] ** 2 * \
             np.sum(dOmega *\
                 simulation.radial_velocity(file_name)[..., radius_index] * \
-            simulation.rho(file_name)[..., radius_index]))
+            simulation.rho(file_name)[..., radius_index])).to(u.M_sun/u.s)
