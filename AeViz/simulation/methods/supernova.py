@@ -258,7 +258,10 @@ def innercore_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
 
 @smooth
 @derive
-def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def PNS_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
+                                    'conv', 'grav', 'tot', 'T/W']=None,
+                 tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the PNS mass and energy at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -268,19 +271,39 @@ def PNS_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
                 rotational energy, gravitational energy, total energy,
                 convective energy, T/W
     """
-    time, _, _, _, data, *_= \
-        calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
-            data['rotational_ene'], data['grav_ene'], data['total_ene'],
-            data['convective_ene'], data['rotational_ene'] / \
-                np.abs(data['grav_ene'])]
+    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    if comp is None:
+        TW = data['rotational_ene'] / np.abs(data['grav_ene'])
+        TW.data.set(label=r'$T/|W|_\mathrm{PNS}$', cmap=None, limits=[0, 0.05],
+                    log=False, name='T/W_PNS')
+        return [data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['convective_ene'], TW]
+    elif comp == 'mass':
+        return data['mass']
+    elif comp == 'kin':
+        return data['kinetic_ene']
+    elif comp == 'mag':
+        return data['magnetic_ene']
+    elif comp == 'rot':
+        return data['rotational_ene']
+    elif comp == 'conv':
+        data['convective_ene']
+    elif comp == 'grav':
+        return data['grav_ene']
+    elif comp == 'tot':
+        return data['total_ene']
+    else:
+        TW = data['rotational_ene'] / np.abs(data['grav_ene'])
+        TW.data.set(label=r'$T/|W|_\mathrm{PNS}$', cmap=None, limits=[0, 0.05],
+                    log=False, name='T/W_PNS')
+        return TW
 
 @smooth
 @derive
-def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True,
-                    **kwargs):
+@sum_tob
+def PNS_angular_mom(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=None,
+                    tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the PNS angular momentum at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -288,12 +311,12 @@ def PNS_angular_mom(self, tob_corrected=True, save_checkpoints=True,
     during the calculation.
     Returns: time, Lx, Ly, Lz, L_tot
     """
-    time, _, _, _, data, *_ = \
-        calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['L']['Lx'], data['L']['Ly'],
-            data['L']['Lz'], data['L']['L_tot']]
+    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    if comp is None:
+        return [data['L']['Lx'], data['L']['Ly'], data['L']['Lz'],
+                data['L']['L_tot']]
+    else:
+        return data['L'][comp]
 
 @smooth
 @derive
@@ -317,7 +340,9 @@ def PNS_angular_momentum_neutrinos(self, tob_corrected=True,
 
 @smooth
 @derive
-def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def explosion_mass_ene(self, comp:Literal['mass', 'tot', 'kin', 'mag', 'ratio']=None,
+                       tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the explosion mass and energy at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -326,16 +351,30 @@ def explosion_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs
     Returns: time, unbound mass, energy, and 
         kinetic energy, magnetic energy of unbounded material
     """
-    time, _, _, _, _, data, *_ = \
-        calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['mass'], data['energy'], data['kinetic_ene'],
+    _, _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    if comp is None:
+        return [data['mass'], data['energy'], data['kinetic_ene'],
             data['magnetic_ene']]
+    elif comp == 'mass':
+        return data['mass']
+    elif comp == 'tot':
+        return data['energy']
+    elif comp == 'kin':
+        return data['kinetic_ene']
+    elif comp == 'mag':
+        return data['magnetic_ene']
+    else:
+        dd = data['magnetic_ene'] / data['kinetic_ene']
+        dd.data.set(name='mag_kin_ratio_expl',
+                    label=r'$E_\mathrm{expl,mag}/E_\mathrm{expl,kin}$', log=False,
+                    limits=[0, 1])
+        return dd
 
 @smooth
 @derive
-def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def gain_mass_nu_heat(self, comp:Literal['mass', 'heath']=None,
+                      tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the gain mass and neutrino heating at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -343,15 +382,21 @@ def gain_mass_nu_heat(self, tob_corrected=True, save_checkpoints=True, **kwargs)
     during the calculation.
     Returns: time, mass, neutrino heating
     """
-    time, _, _, data, *_ = \
+    _, _, data, *_ = \
         calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['mass'], data['heating_ene']]
+    if comp is None:
+        return [data['mass'], data['heating_ene']]
+    elif comp == 'mass':
+        return data['mass']
+    else:
+        return data['heating_ene'],
 
 @smooth
 @derive
-def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def innercore_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
+                                          'grav', 'tot', 'T/W']=None,
+                       tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the inner core mass and energy at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -361,17 +406,32 @@ def innercore_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs
                 rotational energy, gravitational energy, total energy,
                 T/W
     """
-    time, _, data, *_ = \
-        calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
-            data['rotational_ene'], data['grav_ene'], data['total_ene'],
-            data['T_W']]
+    _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    if comp is None:    
+        return [data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['T_W']]
+    elif comp == 'mass':
+        return data['mass']
+    elif comp == 'kin':
+        return data['kinetic_ene']
+    elif comp == 'mag':
+        return data['magnetic_ene']
+    elif comp == 'rot':
+        return data['rotational_ene']
+    elif comp == 'grav':
+        return data['grav_ene']
+    elif comp == 'tot':
+        return data['total_ene']
+    else:
+        return data['T_W']
 
 @smooth
 @derive
-def PNS_core_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs):
+@sum_tob
+def PNS_core_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
+                                          'grav', 'tot', 'T/W']=None,
+                      tob_corrected=True, save_checkpoints=True, **kwargs):
     """
     Returns the PNS core mass and energy at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -381,16 +441,30 @@ def PNS_core_mass_ene(self, tob_corrected=True, save_checkpoints=True, **kwargs)
                 rotational energy, gravitational energy, total energy,
                 T/W
     """
-    time, _, _, _, _, _, data = \
+    _, _, _, _, _, data = \
         calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['mass'], data['kinetic_ene'], data['magnetic_ene'],
-            data['rotational_ene'], data['grav_ene'], data['total_ene'],
-            data['T_W']]
+    if comp is None:    
+        return [data['mass'], data['kinetic_ene'], data['magnetic_ene'],
+                data['rotational_ene'], data['grav_ene'], data['total_ene'],
+                data['T_W']]
+    elif comp == 'mass':
+        return data['mass']
+    elif comp == 'kin':
+        return data['kinetic_ene']
+    elif comp == 'mag':
+        return data['magnetic_ene']
+    elif comp == 'rot':
+        return data['rotational_ene']
+    elif comp == 'grav':
+        return data['grav_ene']
+    elif comp == 'tot':
+        return data['total_ene']
+    else:
+        return data['T_W']
 
 @smooth
 @derive
+@sum_tob
 def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
                             **kwargs):
     """
@@ -400,11 +474,8 @@ def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
     bounce.
     Returns: time, mass accretion rate
     """
-    time, data, *_ = \
-        calculate_masses_energies(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data]
+    data, *_ = calculate_masses_energies(self, save_checkpoints)
+    return data
 
 ## -----------------------------------------------------------------
 ## VELOCITIES DATA

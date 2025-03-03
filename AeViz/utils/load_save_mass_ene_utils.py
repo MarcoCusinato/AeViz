@@ -26,7 +26,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                       'unbound', 'PNS_core', 'processed'],
                     [time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me,
                     simulation.hdf_file_list])
-                return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
+                return create_series(time, mdot, inner_me, gain_me, PNS_me,
+                                     unb_me, nuc_me)
             else:
                 start_point = 0
                 time = 0
@@ -38,7 +39,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 unb_data = 0
                 processed_hdf = []
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
+            return create_series(time, mdot, inner_me, gain_me, PNS_me, unb_me,
+                                 nuc_me)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -236,7 +238,9 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                     'unbound', 'PNS_core', 'processed'],
                     [time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me,
                      processed_hdf])
-    return time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me
+    time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me, _ = \
+        read_masses_energies(simulation)
+    return create_series(time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me)
 
 def read_masses_energies(simulation):
     masses_energies_data = h5py.File(os.path.join(simulation.storage_path, 

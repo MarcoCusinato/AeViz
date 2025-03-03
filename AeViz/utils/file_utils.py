@@ -150,8 +150,16 @@ def create_series(time, *args):
     series = []
     for arg in args:
         if type(arg) == dict:
-            series.append({key: aeseries(arg[key], time=time.copy())
-                           for key in arg.keys()})
+            ddict = {}
+            for key in arg.keys():
+                if isinstance(arg[key], aerray):
+                    ddict[key] = aeseries(arg[key], time=time.copy())
+                elif type(arg[key]) == dict:
+                    dddict = {}
+                    for kk in arg[key].keys():
+                        dddict[kk] = aeseries(arg[key][kk], time=time.copy())
+                    ddict[key] = dddict                   
+            series.append(ddict)
         else:
             series.append(aeseries(arg, time=time.copy()))
     if ghost_cells:
