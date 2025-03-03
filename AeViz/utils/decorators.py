@@ -5,7 +5,7 @@ from AeViz.utils.math_utils import IDL_derivative
 from scipy.ndimage import convolve
 from functools import wraps
 import inspect
-from AeViz.utils.utils import merge_strings
+from AeViz.utils.string_utils import merge_strings
 import warnings
 from AeViz.units.aeseries import aeseries, aerray
 

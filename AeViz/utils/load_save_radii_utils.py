@@ -1,7 +1,7 @@
 from AeViz.utils.radii_utils import (PNS_radius, innercore_radius, gain_radius,
                                      neutrino_sphere_radii, PNS_nucleus,
                                      shock_radius)
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.file_utils import save_hdf, create_series
 import numpy as np
 from typing import Literal
 import os, h5py
@@ -9,7 +9,7 @@ from AeViz.utils.math_utils import function_average_radii
 from AeViz.utils.utils import progressBar, check_existence, checkpoints
 from AeViz.units.aeseries import aerray, aeseries
 from AeViz.units import u
-from AeViz.utils.utils import merge_strings
+from AeViz.utils.string_utils import merge_strings
 
 functions = {
     'PNS': PNS_radius,
@@ -56,7 +56,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                         [time, full_radius, max_radius, min_radius, avg_radius,
                         simulation.ghost.return_ghost_dictionary(),
                         simulation.hdf_file_list])
-                return create_radius_series(time, full_radius, max_radius,
+                return create_series(time, full_radius, max_radius,
                                             min_radius, avg_radius, ghost_cells)
             else:
                 start_point = 0
@@ -68,7 +68,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 ghost_cells = 0
                 processed_hdf = []
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return create_radius_series(time, full_radius, max_radius,
+            return create_series(time, full_radius, max_radius,
                                         min_radius, avg_radius, ghost_cells)
         else:
             start_point = len(processed_hdf)
@@ -197,7 +197,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
     simulation.ghost.restore_default()
     time, full_radius, max_radius, min_radius, avg_radius, ghost_cells, \
             _ = read_radius(simulation, radius)
-    return create_radius_series(time, full_radius, max_radius, min_radius,
+    return create_series(time, full_radius, max_radius, min_radius,
                                 avg_radius, out_gcells)
    
 def read_radius(simulation,
@@ -273,25 +273,4 @@ def read_radius(simulation,
         data.append(None)
     radius_data.close()
     return data
-
-def create_radius_series(time, *args):
-    """
-    Creates as many aeseries as argument.
-    """
-    ghost_cells = False
-    if type(args[-1]) == dict:
-        ghost_cells = args[-1]
-        args = args[:-1]
-    
-    series = []
-    for arg in args:
-        if type(arg) == dict:
-            series.append({key: aeseries(arg[key], time=time.copy())
-                           for key in arg.keys()})
-        else:
-            series.append(aeseries(arg, time=time.copy()))
-    if ghost_cells:
-        series.append(ghost_cells)
-    return series
-
 

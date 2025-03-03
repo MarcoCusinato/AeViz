@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Literal
 from AeViz.units.aerray import aerray
-from AeViz.utils.utils import merge_strings
+from AeViz.utils.string_utils import merge_strings
 
 def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                                               'radius', 'volume'], dV):

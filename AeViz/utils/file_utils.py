@@ -2,6 +2,7 @@ import os, h5py
 import numpy as np
 import pandas as pd
 import inspect
+from AeViz.units.aeseries import aeseries
 from AeViz.units.aerray import aerray
 
 def list_module_functions(module):
@@ -137,3 +138,22 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
             file_out.create_dataset(key, data = value)
     file_out.close()
     
+def create_series(time, *args):
+    """
+    Creates as many aeseries as argument.
+    """
+    ghost_cells = False
+    if type(args[-1]) == dict:
+        ghost_cells = args[-1]
+        args = args[:-1]
+    
+    series = []
+    for arg in args:
+        if type(arg) == dict:
+            series.append({key: aeseries(arg[key], time=time.copy())
+                           for key in arg.keys()})
+        else:
+            series.append(aeseries(arg, time=time.copy()))
+    if ghost_cells:
+        series.append(ghost_cells)
+    return series
