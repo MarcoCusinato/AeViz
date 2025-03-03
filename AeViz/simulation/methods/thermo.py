@@ -112,5 +112,5 @@ def nu_heat(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                     ['I_HEAT']]), self.dim)
-    return aerray(data, u.erg, 'neutrino_heat', r'$Q_\nu$', 'Spectral_r',
-                  [-1e31, 1e32], True)
+    return aerray(data, u.erg / u.cm ** 3, 'neutrino_heat', r'$Q_\nu$',
+                  'Spectral_r', [-1e31, 1e32], True)
