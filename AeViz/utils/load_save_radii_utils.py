@@ -29,7 +29,6 @@ save_names = {
     'nucleus': 'PNS_nucleus.h5'
 }
 
-
 def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus'],
                      save_checkpoints=True):
