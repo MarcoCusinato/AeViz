@@ -421,7 +421,7 @@ class aerray(np.ndarray):
         # Ensure all units match
         units = {arr.unit for arr in arrays}
         if len(units) > 1:
-            raise ValueError(f"Cannot concatenate aerrays with different units: {units}")
+            arrays = [arr.to(arrays[0].unit) for arr in arrays]
         # Concatenate raw values and return a new `aerray`
         concatenated_values = np.concatenate([[arr.value]
                                               if arr.ndim == 0 else

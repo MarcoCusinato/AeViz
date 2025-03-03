@@ -2,7 +2,7 @@ from __future__ import annotations
 from AeViz.units.aerray import aerray
 import numpy as np
 from AeViz.units import u
-from AeViz.utils.utils import apply_symbol, merge_strings
+from AeViz.utils.string_utils import apply_symbol, merge_strings
 import numpy as np
 import scipy.signal 
 import warnings
