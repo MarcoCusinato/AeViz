@@ -504,68 +504,40 @@ def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
 
 @smooth
 @derive
-def PNS_kick_velocity(self, tob_corrected=True, save_checkpoints=True,
-                        **kwargs):
+@sum_tob
+def PNS_kick_velocity(self, comp:Literal['x', 'y', 'z', 'tot']=None,
+                 flavour:Literal['hydro', 'nu', 'nue', 'nua', 'nux', 'all']='all',
+                 tob_corrected=True, save_checkpoints=True, **kwargs):
     """
-    Returns the modeule of the PNS kick velocity at every timestep.
+    Returns the PNS velocity at every timestep.
     If tob_corrected is True, the time is corrected for the time of
-    bounce. If save_checkpoints is True, the checkpoints are saved
+    If save_checkpoints is True, the checkpoints are saved
     during the calculation.
-    Returns: time, kick velocity, hydro kick velocity, 
-                nu kick velocity
     """
-    def modulus(v):
-        vtot = 0
-        for comp in v:
-            vtot += comp ** 2
-        return vtot ** 0.5
-    def sum_components(vcomp):
-        vtot = 0
-        for comp in vcomp:
-            vtot += comp
-        return vtot
-        
-    time, hydro, vnue, vnua, vnux = \
-                    self.PNS_kick_velocity_components(tob_corrected,
-                                                    save_checkpoints)
-    vkick = modulus([sum_components([hydro[0], vnue[0], vnua[0], vnux[0]]),
-                    sum_components([hydro[1], vnue[1], vnua[1], vnux[1]]),
-                    sum_components([hydro[2], vnue[2], vnua[2], vnux[2]])])
-    vkick_hydro = modulus(hydro)
-    vkick_nue = modulus([sum_components([vnue[0], vnua[0], vnux[0]]),
-                        sum_components([vnue[1], vnua[1], vnux[1]]),
-                        sum_components([vnue[2], vnua[2], vnux[2]])])
-    return time, vkick, vkick_hydro, vkick_nue
-
-@smooth
-@derive
-def PNS_kick_velocity_components(self, tob_corrected=True,
-                                    save_checkpoints=True, **kwargs):
-    """
-    Returns the components of the PNS kick velocity at every timestep.
-    If tob_corrected is True, the time is corrected for the time of
-    bounce. If save_checkpoints is True, the checkpoints are saved
-    during the calculation.
-    Returns: time, vr, vtheta, vphi, v_nu
-            v_nu is returned for each neutrino species (nue, nuebar, nux)
-    """
-    time, hydro, nu_flux = \
-        calculate_kick(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    dt = np.zeros(time.shape[0])
-    dt[1:] = time[1:] - time[:-1]
-    dt[0] = dt[1]
-    _, PNSmass,*_ = self.PNS_mass_ene()
-    vnue = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nue']['x'],
-                                                    nu_flux['nue']['y'],
-                                                    nu_flux['nue']['z']]]
-    vnua = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nua']['x'],
-                                                    nu_flux['nua']['y'],
-                                                    nu_flux['nua']['z']]]
-    vnux = [np.cumsum(comp * dt) / PNSmass for comp in [nu_flux['nux']['x'],
-                                                    nu_flux['nux']['y'],
-                                                    nu_flux['nux']['z']]]
-    hydro = [comp / PNSmass for comp in [hydro['x'], hydro['y'],
-                                            hydro['z']]]
-    return time, hydro, vnue, vnua, vnux, 
+    hydro, nue, nua, nux, h_tot, nue_tot, nua_tot, nux_tot, nu_tot, tot =\
+          calculate_kick(self, save_checkpoints)
+    if comp is None:
+        return [hydro, nue, nua, nux, h_tot, nue_tot, nua_tot, nux_tot, tot]
+    elif comp =='tot':
+        if flavour == 'hydro':
+            return h_tot
+        elif flavour == 'nue':
+            return nue_tot
+        elif flavour == 'nua':
+            return nua_tot
+        elif flavour == 'nux':
+            return nux_tot
+        elif flavour == 'nu':
+            return nu_tot
+        else:
+            return tot
+    elif flavour == 'hydro':
+        return hydro[comp]
+    elif flavour == 'nue':
+        return nue[comp]
+    elif flavour == 'nua':
+        return nua[comp]
+    elif flavour == 'nux':
+        return nux[comp]
+    else:
+        raise NotImplementedError

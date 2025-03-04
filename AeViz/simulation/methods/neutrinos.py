@@ -171,17 +171,17 @@ def neutrino_momenta_grey(self, file_name, **kwargs):
                   r'$F_{\nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
                 )
     nu_flux[..., 2, :] /= 4
-    return (aerray(nu_flux[..., 0], u.erg / u.s / u.cm ** 2, 'nue_fdens',
+    return (aerray(nu_flux[..., 0, :], u.erg / u.s / u.cm ** 2, 'nue_fdens',
                   [r'$F_{\nu_\mathrm{e}, r}$', r'$F_{\nu_\mathrm{e}, \theta}$',
                    r'$F_{\nu_\mathrm{e}, \phi}$'],
                   ['PiYG_r', 'PRGn_r', 'BrBG_r'],
                   [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True),
-            aerray(nu_flux[..., 1], u.erg / u.s / u.cm ** 2, 'nua_fdens',
+            aerray(nu_flux[..., 1, :], u.erg / u.s / u.cm ** 2, 'nua_fdens',
                 [r'$F_{\overline{\nu}_\mathrm{e}, r}$', r'$F_{\overline{\nu}_\mathrm{e}, \theta}$',
                  r'$F_{\overline{\nu}_\mathrm{e}, \phi}$'],
                 ['PuOr_r', 'RdGy_r', 'RdBu_r'],
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True),
-            aerray(nu_flux[..., 2], u.erg / u.s / u.cm ** 2, 'nux_fdens',
+            aerray(nu_flux[..., 2, :], u.erg / u.s / u.cm ** 2, 'nux_fdens',
                 [r'$F_{\nu_\mathrm{x}, r}$', r'$F_{\nu_\mathrm{x}, \theta}$',
                  r'$F_{\nu_\mathrm{x}, \phi}$'],
                 ['RdYlBu_r', 'RdYlGn_r', 'Spectral_r'],

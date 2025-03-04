@@ -160,6 +160,11 @@ def create_series(time, *args):
                         dddict[kk] = aeseries(arg[key][kk], time=time.copy())
                     ddict[key] = dddict                   
             series.append(ddict)
+        elif type(arg) == list:
+            llist = []
+            for a in arg:
+                llist.append(aeseries(a, time=time.copy()))
+            series.append(llist)
         else:
             series.append(aeseries(arg, time=time.copy()))
     if ghost_cells:

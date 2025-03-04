@@ -148,26 +148,6 @@ plot_labels = {
                          'lim': (15, 60),
                          'cmap': 'brg',
                          'label': r'$\langle E_{\nu_x} \rangle$ [MeV]'},
-         'PNS_angular_mom_all': {'log': False,
-                                 'lim': (-1e49, 1e49),
-                                 'label': r'L [erg$\cdot$s]'},
-    
-         'kick_velocity_modulus': {'log': False,
-                                   'lim': (0, 750),
-                                   'label': r'v$_\mathrm{kick}$'\
-                                          ' [km$\cdot$s$^{-1}$]'},
-         'kick_velocity_hydro': {'log': False,
-                                 'lim': (0, 750),
-                                 'label': r'v$_\mathrm{kick}^\mathrm{hydro}$'\
-                                          ' [km$\cdot$s$^{-1}$]'},
-         'kick_velocity_nu': {'log': False,
-                              'lim': (0, 750),
-                              'label': r'v$_\mathrm{kick}^{\nu}$'\
-                                          ' [km$\cdot$s$^{-1}$]'},
-         'kick_velocity_all': {'log': False,
-                               'lim': (0, 750),
-                               'label': r'v$_\mathrm{kick}$'\
-                                          ' [km$\cdot$s$^{-1}$]'},
          'rho_spherical_harmonics': {'log': False,
                                     'lim': max_min,
                                     'label': r'$\tilde{\rho}_{XXYY}$',
