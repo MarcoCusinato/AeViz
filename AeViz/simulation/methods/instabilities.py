@@ -103,6 +103,7 @@ def convective_flux(self, file_name, **kwargs):
         self.cell.dOmega(self.ghost))
     flux.set(name='Fconv', label=r'$F_\mathrm{conv}$',
            cmap='RdYlGn_r', log=True, limits=[-1e40, 1e40])
+    return flux.to(u.erg / u.s / u.cm ** 2)
 
 @smooth
 def Rossby_number(self, file_name, lenghtscale=True):

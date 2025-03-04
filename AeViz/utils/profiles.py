@@ -3,6 +3,9 @@ from AeViz.utils.math_utils import function_average
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from AeViz.utils.file_utils import save_hdf
+from AeViz.units.aeseries import aerray, aeseries
+from AeViz.units import u
+from AeViz.utils.string_utils import merge_strings
 
 
 def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
@@ -33,7 +36,8 @@ def read_profile(simulation, profile, save_checkpoints):
         if len(data['time'][...])  == len(simulation.hdf_file_list):
             t, pr = data['time'][...], data['profiles/' + profile][...]
             data.close()
-            return t, simulation.cell.radius(simulation.ghost), pr
+            return make_series(t, simulation.cell.radius(simulation.ghost), pr,
+                               profile)
         else:
             derive_profiles(simulation, data, save_checkpoints)
             return read_profile(simulation, profile, save_checkpoints)
@@ -48,7 +52,11 @@ def derive_profile(simulation, profile, **kwargs):
     qt = getattr(simulation, profile)
     radius = len(simulation.cell.radius(simulation.ghost))
     dOmega = simulation.cell.dOmega(simulation.ghost)
-    
+    zeroth_step = qt(0)
+    nm, lb, lm, = zeroth_step.name, zeroth_step.label, zeroth_step.limits
+    lg, cm = zeroth_step.log, zeroth_step.cmap
+    nm = nm + '_profile'
+    lb = merge_strings(r'$\langle$', lb, r'$\rangle_\Omega$')
     for (file, progress) in zip(simulation.hdf_file_list,
                          range(len(simulation.hdf_file_list))):
         try:
@@ -81,7 +89,9 @@ def derive_profile(simulation, profile, **kwargs):
                     'Calculating profile')
     if profiles.ndim == 3:
         profiles = profiles.swapaxes(-2, -1)
-    return time, simulation.cell.radius(simulation.ghost), profiles
+    profiles.set(name=nm, label=lb, limits=lm, cmap=cm, log=lg)
+    return aeseries(profiles, time=time,
+                    radius=simulation.cell.radius(simulation.ghost)) 
 
 def derive_profiles(simulation, data, save_checkpoints):
     """
@@ -92,16 +102,19 @@ def derive_profiles(simulation, data, save_checkpoints):
     if data is None:
         start_point = 0
     else:
-        time = data['time'][...]
+        time = data['time'][...] * u.s
         start_point = len(time)
-        profiles = {'BV_frequency': data['profiles/BV_frequency'][...],
-                    'Rossby_number': data['profiles/Rossby_number'][...],
-                    'Ye': data['profiles/Ye'][...],
-                    'temperature': data['profiles/temperature'][...],
-                    'rho': data['profiles/rho'][...],
-                    'entropy': data['profiles/entropy'][...],
-                    'convective_flux': data['profiles/convective_flux'][...],
-                    'gas_pressure': data['profiles/gas_pressure'][...]}
+        print('Checkpoint found. Starting from timestep', start_point)
+        profiles = {'BV_frequency': data['profiles/BV_frequency'][...] * u.s ** (-2),
+                    'Rossby_number': data['profiles/Rossby_number'][...] * \
+                    u.dimensionless_unscaled,
+                    'Ye': data['profiles/Ye'][...] * u.dimensionless_unscaled,
+                    'temperature': data['profiles/temperature'][...] * u.MeV,
+                    'rho': data['profiles/rho'][...] * u.g / u.cm ** 3,
+                    'entropy': data['profiles/entropy'][...] * u.kBol / u.bry,
+                    'convective_flux': data['profiles/convective_flux'][...] * \
+                    u.erg / u.s / u.cm ** 2,
+                    'gas_pressure': data['profiles/gas_pressure'][...] * u.Ba}
         data.close()
     
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -132,7 +145,6 @@ def derive_profiles(simulation, data, save_checkpoints):
         else:
             Ro_av = function_average(simulation.Rossby_number(file), 
                                     simulation.dim, 'Omega', dOmega)[..., None]
-            
             Fc_av = simulation.convective_flux(file)[..., None]
         
 
@@ -154,7 +166,8 @@ def derive_profiles(simulation, data, save_checkpoints):
                 'gas_pressure': np.concatenate((profiles['gas_pressure'],
                                                     P_av), axis=-1)
             }
-        except:
+        except Exception as e:
+            print(e)
             time = t_file
             profiles = {
                 'BV_frequency': BV_av,
@@ -172,15 +185,43 @@ def derive_profiles(simulation, data, save_checkpoints):
             save_hdf(os.path.join(simulation.storage_path, 'profiles.h5'),
                      ['time', 'profiles'],  [time, profiles])
         
-        progressBar(progress_index, total_points, 'Calculating profiles')
+        progressBar(progress_index, total_points, 'Calculating profiles...')
         progress_index += 1
         checkpoint_index += 1
     save_hdf(os.path.join(simulation.storage_path, 'profiles.h5'),
              ['time', 'profiles'],  [time, profiles])
     print('Profiles saved.')
     
-    
-        
-        
-        
-        
+def make_series(time, radius, prof, name):
+    """
+    Returns a series of profiles for a given time.
+    """
+    t = aerray(time, u.s, 'time', r'$t-t_\mathrm{b}$', None, [-0.005, time[-1]])
+    if name == 'Rossby_number':
+        pr = aerray(prof, u.dimensionless_unscaled, 'Rossby_number_profile',
+                    r'$\langle Ro\rangle_\Omega$', 'RdYlBu_r', [-1e-4, 1e-4],
+                    True)
+    elif name == 'Ye':
+        pr = aerray(prof, u.dimensionless_unscaled, 'Ye_profile',
+                    r'$\langle Y_\mathrm{e}\rangle_\Omega$', 'gist_rainbow',
+                    [0.0, 0.5], False)
+    elif name == 'temperature':
+        pr = aerray(prof, u.MeV, 'temperature_profile',
+                    r'$\langle T\rangle_\Omega$', 'inferno', [0.0, 40], False)
+    elif name == 'rho':
+        pr = aerray(prof, u.g / u.cm ** 3, 'rho_profile',
+                    r'$\langle \rho\rangle_\Omega$', 'viridis',  [1e4, 1e15],
+                    True)
+    elif name == 'entropy':
+        pr = aerray(prof, u.kBol / u.bry, 'rho_profile',
+                    r'$\langle s\rangle_\Omega$', 'gist_rainbow_r',  [1.5, 15],
+                    False)
+    elif name == 'convective_flux':
+        pr = aerray(prof, u.erg / u.s / u.cm ** 2, 'Fconv_profile',
+                    r'$\langle F_\mathrm{conv}\rangle_\Omega$', 'RdYlGn_r',
+                    [-1e40, 1e40], True)
+    elif name == 'gas_pressure':
+        pr = aerray(prof, u.Ba, 'gas_pressure_profile',
+                    r'$\langle P_\mathrm{gas}\rangle_\Omega$',
+                    'gist_rainbow_r',  [1e25, 1e34], True)
+    return aeseries(pr, time=t, radius=radius)
