@@ -38,10 +38,13 @@ def time_of_explosion(self):
     Empirical criterion: time of explosion defined as the time at
     which the explosion energy raises above 5e48 erg
     """
-    time, _, ene, *_ = self.explosion_mass_ene()
-    _, _, shock_max, *_ = self.shock_radius()
-    index = np.where((ene > 1e48) & (shock_max > 3e7))[0][0]
-    return time[index]
+    ene = self.explosion_mass_ene(comp='tot')
+    shock_max = self.shock_radius(rad='max')
+    index = np.where((ene.data > (1e48*u.erg)) & 
+                     (shock_max.data > (3e7*u.cm)))[0][0]
+    tm = ene.time[index]
+    tm.set(name='toe', label=r'$t_\mathrm{exp}$', limits=None)
+    return tm
 
 def time_of_BH(self):
     """
@@ -320,8 +323,10 @@ def PNS_angular_mom(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=None,
 
 @smooth
 @derive
-def PNS_angular_momentum_neutrinos(self, tob_corrected=True,
-                                    save_checkpoints=True, 
+@sum_tob
+def PNS_angular_momentum_neutrinos(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=None,
+                                   flavour:Literal['nue', 'nua', 'nux', 'tot']='tot',
+                                   tob_corrected=True, save_checkpoints=True, 
                                     **kwargs):
     """
     Returns the PNS angular momentum carried away by neutrinos at every
@@ -332,11 +337,27 @@ def PNS_angular_momentum_neutrinos(self, tob_corrected=True,
     Returns: time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot
         The momentum Lx, Ly and Lz are dictionaries
     """
-    time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot = \
+    Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot = \
         calculate_angular_mom_PNS_nu(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot]
+    if comp is None:
+        return [Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot]
+    elif comp == 'Ltot':
+        return L_tot
+    elif comp == 'Lx':
+        if flavour == 'tot':
+            return Lx_tot
+        else:
+            return Lx[flavour]
+    elif comp == 'Ly':
+        if flavour == 'tot':
+            return Ly_tot
+        else:
+            return Ly[flavour]
+    elif comp == 'Lz':
+        if flavour == 'tot':
+            return Lz_tot
+        else:
+            return Lz[flavour]
 
 @smooth
 @derive
