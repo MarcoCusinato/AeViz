@@ -130,17 +130,7 @@ plot_labels = {
         'BZ': {'log': True,
                'lim': (-1e15, 1e15),
                'cmap': 'coolwarm',
-               'label': r'B$_\phi$ [G]'},
-         'rho_spherical_harmonics': {'log': False,
-                                    'lim': max_min,
-                                    'label': r'$\tilde{\rho}_{XXYY}$',
-                                    'cmap': 'YlGn'},
-         'love_number': {'log': False,
-                             'lim': (0, 0.002),
-                             'label': r'$\kappa_2$'},
-          'tidal_deformability': {'log': True,
-                                       'lim': (1, 10000),
-                                       'label': r'$\Lambda$'},
+               'label': r'B$_\phi$ [G]'}
 }
 
 keys = list(plot_labels.keys())
