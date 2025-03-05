@@ -1,10 +1,10 @@
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative, gradient
-from scipy.signal import stft
+from AeViz.utils.string_utils import merge_strings
 from numpy.fft import fft, fftfreq
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.file_utils import save_hdf, create_series
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units import u
@@ -337,8 +337,10 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
             read_NE220(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
-                                     conv_NE220, outer_NE220)
+            return calculate_strain_2D(D, time,
+                                       simulation.cell.radius(simulation.ghost),
+                                       NE220, full_NE220, nuc_NE220,
+                                       conv_NE220, outer_NE220)
         else:
             start_point = len(time)
             print("Checkpoint found." \
@@ -352,11 +354,12 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     progress_index = 0
     dV = -simulation.cell.dVolume_integration(simulation.ghost)
     ctheta = np.cos(simulation.cell.theta(simulation.ghost))[:, None]
-    _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
-    _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
-    
-    
-    
+    inner_rad, igcells = simulation.innercore_radius(rad='full')
+    nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
+
+    inner_rad = inner_rad.data
+    nuc_rad = nuc_rad.data
+
     for file in simulation.hdf_file_list[start_point:]:
         fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
             file, dV, ctheta, inner_rad[..., findex], igcells,
@@ -364,17 +367,18 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         try:
             time = np.concatenate((time, simulation.time(file)))
             NE220 = np.concatenate((NE220, fNE220[..., None]), axis=-1)
-            full_NE220 = np.concatenate((full_NE220, np.array([ffull])))
-            nuc_NE220 = np.concatenate((nuc_NE220, np.array([fnuc])))
-            conv_NE220 = np.concatenate((conv_NE220, np.array([finner])))
-            outer_NE220 = np.concatenate((outer_NE220, np.array([fouter])))
-        except:
+            full_NE220 = np.concatenate((full_NE220, ffull))
+            nuc_NE220 = np.concatenate((nuc_NE220, fnuc))
+            conv_NE220 = np.concatenate((conv_NE220, finner))
+            outer_NE220 = np.concatenate((outer_NE220, fouter))
+        except Exception as e:
+            print(e)
             time = simulation.time(file)
             NE220 = fNE220[..., None]
-            full_NE220 = np.array([ffull])
-            nuc_NE220 = np.array([fnuc])
-            conv_NE220 = np.array([finner])
-            outer_NE220 = np.array([fouter])
+            full_NE220 = ffull
+            nuc_NE220 = fnuc
+            conv_NE220 = finner
+            outer_NE220 = fouter
         if save_checkpoints and check_index == checkpoint:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
@@ -393,8 +397,9 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
                       'convection_NE220', 'outer_NE220'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
                       outer_NE220])
-    return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
-                                        conv_NE220, outer_NE220)
+    return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
+                               NE220, full_NE220, nuc_NE220, conv_NE220,
+                               outer_NE220)
 
 def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
           nuc_rad, ngcells):
@@ -411,7 +416,7 @@ def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
                                                     **ngcells)[..., None]
     mask_inner = (simulation.cell.radius(simulation.ghost) <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
-                                             **igcells)[..., None] + 2e6) & \
+                                             **igcells)[..., None] + (20 * u.km)) & \
         (np.logical_not(mask_nuc))
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner), \
@@ -422,27 +427,46 @@ def read_NE220(simulation):
     Reads the NE220 from a checkpoint file.
     """
     data = h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r')
-    time = data['time'][...]
-    NE220 = data['NE220'][...]
-    full_NE220 = data['full_NE220'][...]
-    nuc_NE220 = data['nucleus_NE220'][...]
-    conv_NE220 = data['convection_NE220'][...]
-    outer_NE220 = data['outer_NE220'][...]
+    time = data['time'][...] * u.s
+    NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
+    full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
+    nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
+    conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
+    outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
     data.close()
     return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220
 
-def calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                     outer_NE220):
+def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
+                        conv_NE220, outer_NE220):
     """
     Derives ancd fixes the constants of the strain.
     """
     const =  -0.125 *  np.sqrt(15/np.pi) * \
-        (u.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * D * u.speed_light ** 4))
-    return time, const * IDL_derivative(time, NE220), const * \
-        IDL_derivative(time, full_NE220), const * \
-        IDL_derivative(time, nuc_NE220), const * \
-        IDL_derivative(time, conv_NE220), const * \
-        IDL_derivative(time, outer_NE220)
+        (c.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * c.c ** 4))
+    if D is not None:
+        if not isinstance(D, aerray):
+            D = D * u.cm
+        const /= D
+        add_lb = r''
+    else:
+        add_lb = r'$\mathcal{D}$'
+    NE220 = const * IDL_derivative(time, NE220)
+    NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
+              cmap='Spectral_r', limits=[-3, 3])
+    full_NE220 = const * IDL_derivative(time, full_NE220)
+    full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
+                   cmap='Spectral_r', limits=[-70, 70])
+    nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
+    nuc_NE220.set(name='nuc_NE220', cmap='Spectral_r', limits=[-70, 70],
+                  label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
+    conv_NE220 = const * IDL_derivative(time, conv_NE220)
+    conv_NE220.set(name='conv_NE220', cmap='Spectral_r', limits=[-70, 70],
+                   label=merge_strings(add_lb,r'$h_{+,\mathrm{eq,conv}}$'))
+    outer_NE220 = const * IDL_derivative(time, outer_NE220)
+    outer_NE220.set(name='outer_NE220', cmap='Spectral_r', limits=[-70, 70],
+                    label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
+    return aeseries(NE220, time=time.copy(), radius=radius.copy()),\
+            create_series(time, full_NE220, nuc_NE220, conv_NE220, outer_NE220)
 
 ## 3D
 

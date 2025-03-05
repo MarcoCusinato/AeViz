@@ -161,7 +161,8 @@ def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True):
     return GWs_energy(GWs, self.dim)
 
 @smooth
-def hydro_strain(self, tob_corrected=True, D=1, theta=np.pi/2, phi=0,
+@sum_tob
+def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
             save_checkpoints=True):
     """
     Calculates the gravitational wave strain from the hydro for a
@@ -187,7 +188,4 @@ def hydro_strain(self, tob_corrected=True, D=1, theta=np.pi/2, phi=0,
     GW_data = calculate_h(self, D, theta, phi, save_checkpoints)
     if GW_data is None:
         return None        
-    if not tob_corrected:
-        GW_data[0] += self.tob
-    return self.cell.radius(self.ghost), GW_data[0], GW_data[1], \
-            GW_data[2], GW_data[3], GW_data[4], GW_data[5]
+    return GW_data
