@@ -93,9 +93,12 @@ def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius',
     
     if isinstance(derivative, aerray):
         name = merge_strings('d', y.name, '_d', x.name)
-        label = merge_strings(r'$\partial_{$', x.label, r'$}$', y.label)
+        if x.label == r'$t-t_\mathrm{b}$':
+            label = merge_strings(r'$\partial_{t}$', y.label)
+        else:
+            label = merge_strings(r'$\partial_{$', x.label, r'$}$', y.label)
         derivative.set(name=name, label=label, cmap=y.cmap, log=y.log,
-                       limits=[derivative.min().value, derivative.min().value])
+                       limits=[derivative.min().value, derivative.max().value])
         
     if axis is None:
         if xvariable == 'radius':

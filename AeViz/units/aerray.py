@@ -7,6 +7,38 @@ import numpy as np
 if TYPE_CHECKING:
     from AeViz.units.aeseries import aeseries
 
+def apply_monkey_patch():
+    UnitBase.__mul__ = aemul
+    UnitBase.__rmul__ = aermul
+    UnitBase.__truediv__ = aetruediv
+    UnitBase.__rtruediv__ = aertruediv
+    UnitBase.__rlshift__ = aerlshift
+
+def remove_monkey_patch():
+    UnitBase.__mul__      = UnitBase._original_mul
+    UnitBase.__rmul__     = UnitBase._original_rmul
+    UnitBase.__truediv__  = UnitBase._original_truediv
+    UnitBase.__rtruediv__ = UnitBase._original_rtruediv
+    UnitBase.__rlshift__  = UnitBase._original_rlshift
+
+## Save original multiplication
+if not hasattr(UnitBase, "_original_mul"):
+    UnitBase._original_mul = UnitBase.__mul__
+
+if not hasattr(UnitBase, "_original_rmul"):
+    UnitBase._original_rmul = UnitBase.__rmul__
+
+if not hasattr(UnitBase, "_original_truediv"):
+    UnitBase._original_truediv = UnitBase.__truediv__
+
+if not hasattr(UnitBase, "_original_rtruediv"):
+    UnitBase._original_rtruediv = UnitBase.__rtruediv__
+
+if not hasattr(UnitBase, "_original_rlshift"):
+    UnitBase._original_rlshift = UnitBase.__rlshift__
+
+
+
 class aerray(np.ndarray):
     
     def __new__(cls,
@@ -548,8 +580,6 @@ class aerray(np.ndarray):
         if log is not None:
             self.log = log
 
-
-
 ### Monkey patches for multiplication and division
 def aetruediv(self, m):
     if isinstance(m, (bytes, str)):
@@ -563,7 +593,7 @@ def aetruediv(self, m):
     try:
         return aerray(1, self) / m
     except TypeError:
-        return NotImplemented
+        return UnitBase._original_truediv
 
 def aertruediv(self, m):
     if isinstance(m, (bytes, str)):
@@ -583,7 +613,7 @@ def aertruediv(self, m):
     except TypeError:
         if isinstance(m, np.ndarray):
             raise
-        return NotImplemented
+        return UnitBase._original_rtruediv
 
 def aemul(self, m):
     if isinstance(m, (bytes, str)):
@@ -600,7 +630,7 @@ def aemul(self, m):
     try:
         return aerray(1, unit=self) * m
     except TypeError:
-        return NotImplemented
+        return UnitBase._original_mul
 
 def aermul(self, m):
     if isinstance(m, (bytes, str)):
@@ -619,7 +649,7 @@ def aermul(self, m):
     except TypeError:
         if isinstance(m, np.ndarray):
             raise
-        return NotImplemented
+        return UnitBase._original_rmul
 
 def aerlshift(self, m):
     try:
@@ -627,11 +657,6 @@ def aerlshift(self, m):
     except Exception:
         if isinstance(m, np.ndarray):
             raise
-        return NotImplemented
+        return UnitBase._original_rlshift
 
 
-UnitBase.__mul__ = aemul
-UnitBase.__rmul__ = aermul
-UnitBase.__truediv__ = aetruediv
-UnitBase.__rtruediv__ = aertruediv
-UnitBase.__rlshift__ = aerlshift

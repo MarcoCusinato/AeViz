@@ -1,4 +1,4 @@
-import re
+import re, numpy as np
 
 def merge_strings(*args):
     """
@@ -9,6 +9,8 @@ def merge_strings(*args):
         return None
     if len(args) == 1:
         return args
+    if any([ar is None for ar in args]):
+        return None
     assert all([type(ar) == str for ar in args]), "Can only be concatenating strings"
     out_string = r''
     for ar in args:

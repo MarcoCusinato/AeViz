@@ -7,6 +7,7 @@ import numpy as np
 import scipy.signal 
 import warnings
 from typing import Literal
+from AeViz.utils.math_utils import IDL_derivative
 
 def get_selection_indices(a, b):
     """
@@ -615,5 +616,19 @@ class aeseries:
                       True)
         return aeseries(ZZxx, time=ttm, frequency=ffreq)
     
-
+    def parameters(self):
+        """
+        Returns the parameters of the aeseries
+        """
+        return self.__axis_names
+    
+    def derive(self, axis):
+        """
+        Derive the data along the selected axis
+        """
+        if axis not in self.__axis_names:
+            raise AttributeError("Axis not found in the aeseries")
+        return aeseries(IDL_derivative(getattr(self, axis), self.data,
+                                           axis=self.__axis_indices[axis]),
+                        **{name: getattr(self, name) for name in self.__axis_names})
             

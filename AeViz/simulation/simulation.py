@@ -139,7 +139,7 @@ class Simulation:
         data = aerray(self.__data_h5['Parameters/t'][0], u.s, 'time', '$t$')
         if tob_corrected:
             data -= self.tob
-            data.set('time', '$t-t_\mathrm{b}$')
+            data.set('time', r'$t-t_\mathrm{b}$')
         return data
     
     def __load_hydro_methods(self):

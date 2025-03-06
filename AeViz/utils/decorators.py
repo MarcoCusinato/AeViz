@@ -2,12 +2,18 @@ import h5py, os
 import matplotlib.pyplot as plt
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
-from scipy.ndimage import convolve
 from functools import wraps
 import inspect
 from AeViz.utils.string_utils import merge_strings
 import warnings
 from AeViz.units.aeseries import aeseries, aerray
+from AeViz.units.aerray import apply_monkey_patch, remove_monkey_patch
+try:
+    from astropy.convolution import convolve, Gaussian1DKernel, Gaussian2DKernel, Box1DKernel, Box2DKernel
+except:
+    remove_monkey_patch()
+    from astropy.convolution import convolve, Gaussian1DKernel, Gaussian2DKernel, Box1DKernel, Box2DKernel
+    apply_monkey_patch()
 
 def hdf_isopen(func):
     """
@@ -56,51 +62,51 @@ def derive(func):
             return data
         if type(data) == tuple:
             data = list(data)
-        if kwargs['der'] in ['r', 'radius']:
-            r = args[0].cell.radius(args[0].ghost)
-            if type(data) == list:
-                return data
-            elif len(r) in data.shape:
-                return IDL_derivative(r, data, 'radius')
-            else:
-                return data
-        elif kwargs['der'] in ['theta', 'th']:
-            if args[0].dim < 1:
-                return data
-            theta = args[0].cell.theta(args[0].ghost)
-            if type(data) == list:
-                return data
-            elif len(theta) in data.shape:
-                return IDL_derivative(theta, data, 'theta')
-            else:
-                return data
-        elif kwargs['der'] in ['phi', 'ph']:
-            if args[0].dim < 2:
-                return data
-            phi = args[0].cell.phi(args[0].ghost)
-            if type(data) == list:
-                return data
-            elif len(phi) in data.shape:
-                return IDL_derivative(phi, data, 'phi')
-            else:
-                return data
-        elif kwargs['der'] in ['t', 'time']:
-            if type(data) == list:
-                for i in range(1, len(data)):
-                    if type(data[i]) != dict:
-                        data[i] = IDL_derivative(data[0], data[i])
-                return data
-            else:
-                data[:, 1:] = IDL_derivative(data[:, 0], data[:, 1:], axis=0)
-                return data
-        else:
-            return data
-
+        if not type(data) == list:
+            data = [data]
+        for i, dd in enumerate(data):
+            if isinstance(dd, aerray):
+                if kwargs['der'] in ['time', 't']:
+                    raise AttributeError('No time provided in aerray')
+                elif kwargs['der'] in ['r', 'radius']:
+                    r = args[0].cell.radius(args[0].ghost)
+                    if not len(r) in dd.shape:
+                        raise AttributeError(f'No dimension to derive. '\
+                                             f'Radius has {len(r)} points '\
+                                                f'and data has {dd.shape}')
+                    data[i] = IDL_derivative(r, dd, axis=dd.shape.index(len(r)))
+                elif kwargs['der'] in ['theta', 'th']:
+                    if args[0].dim < 2:
+                        raise AttributeError('Sorry, you do not have a '\
+                                             'second dimension')
+                    theta = args[0].cell.theta(args[0].ghost)
+                    if not len(theta) in dd.shape:
+                        raise AttributeError(f'No dimension to derive. '\
+                                             f'Theta has {len(theta)} points '\
+                                                f'and data has {dd.shape}')
+                    data[i] = IDL_derivative(theta, dd,
+                                        axis=dd.shape.index(len(theta)))
+                elif kwargs['der'] in ['phi', 'ph']:
+                    if args[0].dim < 3:
+                        raise AttributeError('Sorry, you do not have a '\
+                                             'third dimension')
+                    phi = args[0].cell.phi(args[0].ghost)
+                    if not len(phi) in dd.shape:
+                        raise AttributeError(f'No dimension to derive. '\
+                                             f'Phi has {len(phi)} points '\
+                                                f'and data has {dd.shape}')
+                    data[i] = IDL_derivative(phi, dd, axis=dd.shape.index(len(phi)))
+            elif isinstance(dd, aeseries):
+                data[i] = dd.derive(kwargs['der'])
+        if len(data) == 1:
+            return data[0]
+        return data
     return wrapper
 
 def smooth(func):
     """
-    Decorator that add a smothing of the data.
+    Decorator that applies a convolution filter to the data, does not work with
+    3D arrays.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -109,51 +115,54 @@ def smooth(func):
             return data
         if 'smooth_window' in kwargs:
             window_points = kwargs['smooth_window']
+            if window_points % 2 == 0:
+                window_points += 1
         else:
             window_points = 5
         if kwargs['smooth'] == 'gauss':
-            x = np.linspace(-window_points // 2, window_points // 2,
-                            window_points)
-            window = np.exp(-(x**2) / (2 * 2 ** 2))
+            smooth_type = 'gauss'
         else:
-            window = np.ones(window_points) / window_points   
+            smooth_type = 'box'
+
         if type(data) == tuple:
             data = list(data)
-        if type(data) == list:
-            for i in range(1, len(data)):
-                if type(data[i]) != dict:
-                    data[i] = np.convolve(data[i], window, mode='same')
-            return data
-        elif len(data.shape) == 1:
-            return np.convolve(data, window, mode='same')
-        elif data.shape[0] not in [len(args[0].cell.radius(args[0].ghost)),
-                                   len(args[0].cell.theta(args[0].ghost)),
-                                   len(args[0].cell.phi(args[0].ghost)),
-                                   len(args[0].hdf_file_list)]:
-            for i in range(data.shape[1]):
-                data[:, i] = np.convolve(data[:, i], window, mode='same')
-            return data
-        elif len(args[0].hdf_file_list) == data.shape[0]:
-            for i in range(data.shape[1]):
-                data[:, i] = np.convolve(data[:, i], window, mode='same')
-            return data
-        else:
-            if kwargs['smooth'] == 'gauss':
-                grid = np.meshgrid(*[np.linspace(-window_points // 2,
-                                                 window_points // 2,
-                                                 window_points)
-                                     for _ in range(data.ndim)],
-                                   indexing='ij')
-                coords = np.stack(grid, axis=-1)
-                exponent = -np.sum((coords) ** 2, axis=-1) / \
-                            (2 * 2 ** 2)
-                window = np.exp(exponent)
-                window /= np.sum(window)
+        if type(data) != list:
+            data = [data]
+        
+                
+        for i, dd in enumerate(data):
+            try:
+                dim = dd.ndim
+            except:
+                dim = dd.data.ndim
+            if smooth_type == 'gauss':
+                if dim == 1:
+                    kernel = Gaussian1DKernel(2, x_size = window_points)
+                elif dim == 2:
+                    kernel = Gaussian2DKernel(2, 2, x_size=window_points,
+                                              y_size=window_points)
+                else:
+                    kernel = np.ones(window_points ** dim).reshape(tuple([window_points] * dim))
+                    kernel /= kernel.sum()
+            elif smooth_type == 'box':
+                if dim == 1:
+                    kernel = Box1DKernel(window_points)
+                elif dim == 2:
+                    kernel = Box2DKernel(window_points)
+                else:
+                    kernel = np.ones(window_points ** dim).reshape(tuple([window_points] * dim))
+                    kernel /= kernel.sum()
+            if isinstance(dd, aerray):
+                data[i] = aerray(convolve(dd.value, kernel, boundary='extend'),
+                                 dd.unit, dd.name, dd.label, dd.cmap, dd.limits,
+                                 dd.log)
+            elif isinstance(dd, aeseries):
+                data[i].data = aerray(convolve(dd.data.value, kernel, boundary='extend'),
+                                      dd.data.unit, dd.data.name, dd.data.label,
+                                      dd.data.cmap, dd.data.limits, dd.data.log)
             else:
-                window = np.ones([window_points] * data.ndim)
-                window /= np.sum(window)
-            return convolve(data, window, mode='wrap')
-
+                raise TypeError("Type not supported.")
+        return data
     return wrapper
 
 def EMD_smooth(func):

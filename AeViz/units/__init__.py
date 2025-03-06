@@ -10,6 +10,7 @@ u.add_enabled_units(new_units)
 setattr(u, 'kBol', kBol)
 setattr(u, 'bry', bry)
 u.set_enabled_equivalencies(u.dimensionless_angles())
-
-
 __all__ = ['u']
+
+from .aerray import apply_monkey_patch
+apply_monkey_patch()

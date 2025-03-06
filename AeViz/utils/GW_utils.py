@@ -28,8 +28,8 @@ def GW_strain(sim_dim, column_change, data, index, distance):
         GWs = GW_strain_3D(data, distance)
         if column_change is not None:
             GWs[0].data[:column_change] = GW_strain_2D(data, distance).data[:column_change]
-            for hh in GWs[1:]:
-                hh.data.value[:column_change] = np.zeros(column_change)
+            for hh in range(1, len(GWs)):
+                GWs[hh].data.value[:column_change] = np.zeros(column_change)
         return correct_zero(3, GWs, index)
 
 def GW_strain_1D(data):
@@ -53,7 +53,7 @@ def GW_strain_2D(data, distance):
         lb, cm, lm, nm = GWs.data.label, GWs.data.cmap, \
             GWs.data.limits, GWs.data.name
         GWs /= distance
-        GWs.data.set(label=lb.replace('\mathcal{D}', ''), name=nm, cmap=cm,
+        GWs.data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
                      limits=lm)
     return GWs
 
@@ -83,11 +83,11 @@ def GW_strain_3D(data, distance):
         time=time.copy())
     GWs = [hD_pl_e, hD_pl_p, hD_cr_e, hD_cr_p]
     if distance:
-        for hh in GWs:
-            lb, cm, lm, nm = hh.data.label, hh.data.cmap, \
-                hh.data.limits, hh.data.name
-            hh /= distance
-            hh.data.set(label=lb.replace('\mathcal{D}', ''), name=nm, cmap=cm,
+        for hh in range(len(GWs)):
+            lb, cm, lm, nm = GWs[hh].data.label, GWs[hh].data.cmap, \
+                GWs[hh].data.limits, GWs[hh].data.name
+            GWs[hh] /= distance
+            GWs[hh].data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
                         limits=lm)
     return GWs
 
@@ -495,9 +495,12 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     check_index = 0
     progress_index = 0
     dV = simulation.cell.dVolume_integration(simulation.ghost)
-    _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
-    _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
-    
+    inner_rad, igcells = simulation.innercore_radius(rad='full')
+    nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
+
+    inner_rad = inner_rad.data
+    nuc_rad = nuc_rad.data
+        
     grad = spherical_harmonics_gradient(
                                     simulation.cell.radius(simulation.ghost),
                                     simulation.cell.theta(simulation.ghost),
