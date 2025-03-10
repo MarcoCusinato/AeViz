@@ -88,20 +88,20 @@ class PlotCreation(object):
                                       True)
                 elif self.form_factor == 5:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 
-                                                    self.axd["C"],
-                                                    self.axd["D"]],
-                                        True, False)
+                                                      self.axd["C"],
+                                                      self.axd["D"]],
+                                      True, False)
             elif self.number == 3:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["B"], [self.axd["C"]], False,
                                       True)
                 elif self.form_factor == 5:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 
-                                                    self.axd["C"],
-                                                    self.axd["D"],
-                                                    self.axd["E"],
-                                                    self.axd["F"]],
-                                        True, False)
+                                                      self.axd["C"],
+                                                      self.axd["D"],
+                                                      self.axd["E"],
+                                                      self.axd["F"]],
+                                      True, False)
             elif self.number == 4:
                 if self.form_factor == 2:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True,
