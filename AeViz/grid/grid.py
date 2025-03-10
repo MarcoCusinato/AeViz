@@ -176,6 +176,8 @@ class grid:
             theta = np.linspace(0, np.pi, theta_points, endpoint=True)
         X = radius[None, :] * np.sin(theta)[:, None]
         Y = radius[None, :] * np.cos(theta)[:, None]
+        X.set(name='X', label=r'$X$', log=False)
+        Y.set(name='Y', label=r'$Y$', log=False)
         return X, Y
     
     def __2D_cartesian_grid(self, radius, theta, plane, phi_points=None):
@@ -184,6 +186,8 @@ class grid:
             theta = np.linspace(0, 2*np.pi, phi_points, endpoint=True)
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
+        X.set(name='X', label=r'$X$', log=False)
+        Y.set(name='Z', label=r'$Z$', log=False)
         return X, Y
     
     def __2D_cartesian_grid_from_3D(self, radius, theta, phi, plane):
@@ -192,10 +196,20 @@ class grid:
                 np.cos(phi)[:, None]
             Y = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
                 np.sin(phi)[:, None]
-        elif plane in ['xz', 'yz']:
+            X.set(name='X', label=r'$X$', log=False)
+            Y.set(name='Y', label=r'$Y$', log=False)
+        elif plane == 'xz':
             theta = np.concatenate([theta, theta + np.pi])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
+            X.set(name='X', label=r'$X$', log=False)
+            Y.set(name='Z', label=r'$Z$', log=False)
+        elif plane == 'yz':
+            theta = np.concatenate([theta, theta + np.pi])
+            X = radius[None, :] * np.sin(theta)[:, None]
+            Y = radius[None, :] * np.cos(theta)[:, None]
+            X.set(name='Y', label=r'$Y$', log=False)
+            Y.set(name='Z', label=r'$Z$', log=False)
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
@@ -205,6 +219,9 @@ class grid:
             np.sin(phi)[:, None, None]
         Z = radius[None, None, :] * np.cos(theta)[None, :, None] * \
             np.ones(phi.shape)[:, None, None]
+        X.set(name='X', label=r'$X$', log=False)
+        Y.set(name='Y', label=r'$Y$', log=False)
+        Z.set(name='Z', label=r'$Z$', log=False)
         return X, Y, Z
     
     def __new_radius(par):

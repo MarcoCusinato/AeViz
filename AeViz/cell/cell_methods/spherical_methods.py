@@ -14,7 +14,8 @@ def radius_left(self, ghost):
     """
     radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 0], self.dim,
                                     'radius')
-    return aerray(radius, u.cm, name='radius_left', label=r'$r_\mathrm{l}$')
+    return aerray(radius, u.cm, name='radius_left', label=r'$r_\mathrm{l}$',
+                  log=True)
 
 def radius_right(self, ghost):
     """
@@ -27,7 +28,8 @@ def radius_right(self, ghost):
     """
     radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 2], self.dim,
                                     'radius')
-    return aerray(radius, u.cm, name='radius_right', label=r'$r_\mathrm{r}$')
+    return aerray(radius, u.cm, name='radius_right', label=r'$r_\mathrm{r}$',
+                  log=True)
 
 def radius(self, ghost):
     """
@@ -40,7 +42,7 @@ def radius(self, ghost):
     """
     radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 1], self.dim,
                                     'radius')
-    return aerray(radius, u.cm, name='radius', label=r'$r$')
+    return aerray(radius, u.cm, name='radius', label=r'$r$', log=True)
 
 def dr(self, ghost):
     """

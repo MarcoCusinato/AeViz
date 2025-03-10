@@ -56,7 +56,10 @@ def love_number(self, tob_corrected=True, save_checkpoints=True,
 ## PROFILES
 ## -----------------------------------------------------------------
 
-def radial_profile(self, quantity, save_checkpoints=True, **kwargs):
+@derive
+@sum_tob
+def radial_profile(self, quantity, tob_corrected=True,
+                   save_checkpoints=True, **kwargs):
     """
     Calucaltes the radial profile of the selected quantity. Name of
     the quantity must be the same as the one of the simulation

@@ -18,24 +18,45 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
         if dV.ndim != qt.ndim:
             dV = dV[..., None]
         av = np.nansum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
+        if isinstance(qt, aerray):
+            av.set(name=merge_strings(qt.name, '_ang_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_\Omega$'),
+                   log=qt.log, limits=qt.limits)
     elif av_type == 'theta':
         if dim < 2:
             return qt
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['p']] 
                                          if i is not None])) / np.sum(dV)
+        av.set(name=merge_strings(qt.name, '_th_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_\theta$'),
+                   log=qt.log, limits=qt.limits)
     elif av_type == 'phi':
         if dim < 2:
             return qt
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['r'], 
                                                      indices['t']]
                                          if i is not None])) / np.sum(dV)
+        av.set(name=merge_strings(qt.name, '_phi_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_\phi$'),
+                   log=qt.log, limits=qt.limits)
     elif av_type == 'radius':
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['t'], 
                                                      indices['p']] 
                                          if i is not None])) / np.sum(dV)
+        av.set(name=merge_strings(qt.name, '_r_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_r$'),
+                   log=qt.log, limits=qt.limits)
     elif av_type == 'volume':
         av = np.nansum(qt * dV) / np.sum(dV)
+        av.set(name=merge_strings(qt.name, '_vol_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_V$'),
+                   log=qt.log, limits=qt.limits)
     return av
 
 def function_average_radii(qt, dim, dOmega):
@@ -43,8 +64,13 @@ def function_average_radii(qt, dim, dOmega):
         return qt
     else:
         mask = np.isnan(qt)
-        return np.nansum(qt * dOmega) / (dOmega[~mask]).sum()
-
+        av =  np.nansum(qt * dOmega) / (dOmega[~mask]).sum()
+        av.set(name=merge_strings(qt.name, '_ang_avg'), 
+                   label=merge_strings(r'$\langle$', qt.label, 
+                                        r'$\rangle_\Omega$'),
+                   log=qt.log, limits=qt.limits)
+        return av
+    
 def IDL_derivative(x, y, xvariable:Literal['radius', 'theta', 'phi']='radius',
                    axis=None):
     """
