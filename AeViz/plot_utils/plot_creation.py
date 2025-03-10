@@ -115,20 +115,20 @@ class PlotCreation(object):
                 elif self.form_factor == 5:
                     for ax_letter in self.axd:
                         self.__share_axis(self.axd["A"], [self.axd["B"], 
-                                                    self.axd["C"],
-                                                    self.axd["D"],
-                                                    self.axd["E"],
-                                                    self.axd["F"],
-                                                    self.axd["G"],
-                                                    self.axd["H"]],
-                                        True, False)
+                                                          self.axd["C"],
+                                                          self.axd["D"],
+                                                          self.axd["E"],
+                                                          self.axd["F"],
+                                                          self.axd["G"],
+                                                          self.axd["H"]],
+                                          True, False)
             elif self.number == 5:
                 if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 
                                                       self.axd["C"],
                                                       self.axd["D"],
                                                       self.axd["E"]],
-                                        True, False)
+                                      True, False)
             self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
@@ -178,28 +178,28 @@ class PlotCreation(object):
         if self.number == 2:
             if self.form_factor == 2:
                 self.axd["A"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
+                                          bottom=True, labelbottom=True,
+                                          left=True, labelleft=True,
+                                          right=False, labelright=False)
                 self.axd["B"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=False, labelleft=False,
-                        right=True, labelright=True)
+                                          bottom=True, labelbottom=True,
+                                          left=False, labelleft=False,
+                                          right=True, labelright=True)
                 self.axd["A"].yaxis.set_label_position('left')
                 self.axd["B"].yaxis.set_label_position('right')
         elif self.number == 3 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
-                        bottom=False, labelbottom=False,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
+                                      bottom=False, labelbottom=False,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
             self.axd["B"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
+                                      bottom=True, labelbottom=True,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
             self.axd["C"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=False, labelleft=False,
-                        right=True, labelright=True)
+                                      bottom=True, labelbottom=True,
+                                      left=False, labelleft=False,
+                                      right=True, labelright=True)
             self.axd["A"].xaxis.set_label_position('top')
             self.axd["B"].xaxis.set_label_position('bottom')
             self.axd["C"].xaxis.set_label_position('bottom')
@@ -207,21 +207,21 @@ class PlotCreation(object):
             self.axd["C"].yaxis.set_label_position('right')
         elif self.number == 4 and self.form_factor == 2:
             self.axd["A"].tick_params(top=True, labeltop=True,
-                        bottom=False, labelbottom=False,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
+                                      bottom=False, labelbottom=False,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
             self.axd["B"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=True, labelleft=True,
-                        right=False, labelright=False)
+                                      bottom=True, labelbottom=True,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
             self.axd["C"].tick_params(top=True, labeltop=True,
-                        bottom=False, labelbottom=False,
-                        left=False, labelleft=False,
-                        right=True, labelright=True)
+                                      bottom=False, labelbottom=False,
+                                      left=False, labelleft=False,
+                                      right=True, labelright=True)
             self.axd["D"].tick_params(top=False, labeltop=False,
-                        bottom=True, labelbottom=True,
-                        left=False, labelleft=False,
-                        right=True, labelright=True)
+                                      bottom=True, labelbottom=True,
+                                      left=False, labelleft=False,
+                                      right=True, labelright=True)
             self.axd["A"].xaxis.set_label_position('top')
             self.axd["B"].xaxis.set_label_position('bottom')
             self.axd["C"].xaxis.set_label_position('top')
@@ -231,21 +231,21 @@ class PlotCreation(object):
             self.axd["C"].yaxis.set_label_position('right')
             self.axd["D"].yaxis.set_label_position('right')
         elif self.number == 5 and self.form_factor == 1:
-                self.axd["A"].tick_params(top=False, labeltop=False,
-                                          bottom=False, labelbottom=False,
-                                          left=True, labelleft=True,
-                                          right=False, labelright=False)
-                self.axd["B"].tick_params(top=False, labeltop=False,
-                                            bottom=False, labelbottom=False,
-                                            left=True, labelleft=True,
-                                            right=False, labelright=False)
-                self.axd["C"].tick_params(top=False, labeltop=False,
-                                            bottom=False, labelbottom=False,
-                                            left=True, labelleft=True,
-                                            right=False, labelright=False)
-                self.axd["D"].tick_params(top=False, labeltop=False,
-                                            bottom=True, labelbottom=True,
-                                            left=True, labelleft=True,
-                                            right=False, labelright=False)
+            self.axd["A"].tick_params(top=False, labeltop=False,
+                                      bottom=False, labelbottom=False,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
+            self.axd["B"].tick_params(top=False, labeltop=False,
+                                      bottom=False, labelbottom=False,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
+            self.axd["C"].tick_params(top=False, labeltop=False,
+                                      bottom=False, labelbottom=False,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
+            self.axd["D"].tick_params(top=False, labeltop=False,
+                                      bottom=True, labelbottom=True,
+                                      left=True, labelleft=True,
+                                      right=False, labelright=False)
     
     
