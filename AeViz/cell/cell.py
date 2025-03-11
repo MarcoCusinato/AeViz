@@ -1,4 +1,4 @@
-from AeViz.utils.file_utils import list_module_functions
+from AeViz.utils.files.file_utils import list_module_functions
 import numpy as np
 import os
 import types

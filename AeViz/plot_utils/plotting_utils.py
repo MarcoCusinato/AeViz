@@ -375,7 +375,7 @@ class PlottingUtils(PlotCreation):
                                         self.field[ax_letter], 45,
                                         colors = 'black',
                                         linewidths=0.2)
-        
+
     def __plot2D(self, ax_letter):
         """
         Adds a contourf plot to the selected axes.

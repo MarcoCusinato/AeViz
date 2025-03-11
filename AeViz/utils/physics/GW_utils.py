@@ -1,10 +1,10 @@
 import numpy as np
 from AeViz.utils.math_utils import IDL_derivative, gradient
-from AeViz.utils.string_utils import merge_strings
+from AeViz.utils.files.string_utils import merge_strings
 from numpy.fft import fft, fftfreq
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
-from AeViz.utils.file_utils import save_hdf, create_series
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units import u

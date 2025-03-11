@@ -2,7 +2,7 @@
 from AeViz.units import u
 from AeViz.units.aeseries import aerray, aeseries
 from AeViz.units.constants import constants as c
-from AeViz.utils.file_utils import save_hdf, create_series
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from scipy.interpolate import Akima1DInterpolator

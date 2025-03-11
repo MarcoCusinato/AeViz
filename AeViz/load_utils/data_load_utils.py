@@ -1,4 +1,4 @@
-from AeViz.utils.parfiles import (get_indices_from_parfile,
+from AeViz.utils.files.parfiles import (get_indices_from_parfile,
                                   get_stencils,
                                   get_simulation_info)
 from AeViz.simulation.simulation import Simulation
@@ -13,7 +13,7 @@ from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_integrated_neutrinos,
                                     return_angular_momentum,
                                     return_PNS_kick)
-from AeViz.utils.path_utils import local_storage_folder
+from AeViz.utils.files.path_utils import local_storage_folder
 from AeViz.grid.grid import grid
 
 u = units()
@@ -47,7 +47,6 @@ class Data(object):
         elif self.data_type == 'sim':
             return self.loaded_data.storage_path
 
-    
     def __load_hdf(self, path):
         """
         Load an hdf5 file into the memory using its path. 
@@ -76,8 +75,6 @@ class Data(object):
                                 self.loaded_data['Z']['znr'][...]), axis=-1),
                 dim=dim, geom=geom, neu=qts['neudim'])
         self.sim_dim = self.cell.dim
-        
-    
 
     def is_open(self):
         if self.loaded_data is None:
@@ -186,8 +183,7 @@ class Data(object):
                 return data[:, indextheta, :]
         else:
             raise ValueError('The simulation dimension is not supported.')
-
-    
+ 
     def __get_GW_decomposition_data(self, name, **kwargs):
         if self.sim_dim == 2:
             _, t, AE220, f_h, nuc_h, conv_h, out_h = \

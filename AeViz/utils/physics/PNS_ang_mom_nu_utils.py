@@ -1,7 +1,7 @@
 import numpy as np
 import h5py, os
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
-from AeViz.utils.file_utils import save_hdf, create_series
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.units import u
 from AeViz.grid.grid import grid
 from AeViz.units. aerray import aerray

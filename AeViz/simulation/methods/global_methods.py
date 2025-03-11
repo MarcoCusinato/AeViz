@@ -1,5 +1,5 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.file_utils import load_file
+from AeViz.utils.files.file_utils import load_file
 from AeViz.units.aeseries import aeseries
 from AeViz.units.aerray import aerray
 from AeViz.units import u

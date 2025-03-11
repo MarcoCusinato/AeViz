@@ -4,15 +4,19 @@ import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
 from functools import wraps
 import inspect
-from AeViz.utils.string_utils import merge_strings
+from AeViz.utils.files.string_utils import merge_strings
 import warnings
 from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units.aerray import apply_monkey_patch, remove_monkey_patch
 try:
-    from astropy.convolution import convolve, Gaussian1DKernel, Gaussian2DKernel, Box1DKernel, Box2DKernel
+    from astropy.convolution import (convolve, Gaussian1DKernel,
+                                     Gaussian2DKernel, Box1DKernel,
+                                     Box2DKernel)
 except:
     remove_monkey_patch()
-    from astropy.convolution import convolve, Gaussian1DKernel, Gaussian2DKernel, Box1DKernel, Box2DKernel
+    from astropy.convolution import (convolve, Gaussian1DKernel,
+                                     Gaussian2DKernel, Box1DKernel,
+                                     Box2DKernel)
     apply_monkey_patch()
 
 def hdf_isopen(func):

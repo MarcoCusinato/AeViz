@@ -2,10 +2,10 @@ import numpy as np
 from AeViz.utils.math_utils import function_average
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.files.file_utils import save_hdf
 from AeViz.units.aeseries import aerray, aeseries
 from AeViz.units import u
-from AeViz.utils.string_utils import merge_strings
+from AeViz.utils.files.string_utils import merge_strings
 
 
 def calculate_profile(simulation, profile, save_checkpoints, **kwargs):

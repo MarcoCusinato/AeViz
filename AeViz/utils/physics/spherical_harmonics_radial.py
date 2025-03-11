@@ -2,7 +2,7 @@ from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 import numpy as np
 import scipy.special as sp
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.files.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
 from AeViz.units import u

@@ -2,15 +2,15 @@ from AeViz.cell.cell import cell
 from AeViz.cell.ghost import ghost
 from AeViz.units import u
 from AeViz.units.aerray import aerray
-from AeViz.utils.parfiles import (load_parfile,
+from AeViz.utils.files.parfiles import (load_parfile,
                                   get_stencils,
                                   get_indices_from_parfile,
                                   get_simulation_info,
                                   get_initial_parameters)
-from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder, 
+from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
-from AeViz.utils.decorators import hdf_isopen
-from AeViz.utils.file_utils import list_module_functions
+from AeViz.utils.decorators.decorators import hdf_isopen
+from AeViz.utils.files.file_utils import list_module_functions
 from AeViz.utils.utils import time_array
 import numpy as np
 import types, os

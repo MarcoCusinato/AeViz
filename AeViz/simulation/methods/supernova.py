@@ -1,8 +1,8 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.kick_vel_utils import calculate_kick
-from AeViz.utils.load_save_mass_ene_utils import calculate_masses_energies
-from AeViz.utils.load_save_radii_utils import calculate_radius
-from AeViz.utils.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
+from AeViz.utils.physics.kick_vel_utils import calculate_kick
+from AeViz.utils.physics.load_save_mass_ene_utils import calculate_masses_energies
+from AeViz.utils.physics.load_save_radii_utils import calculate_radius
+from AeViz.utils.physics.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 import os
 from typing import Literal
 

@@ -1,7 +1,7 @@
 from AeViz.units import aerray, aeseries, u
 import numpy as np
 from  matplotlib import ticker, units
-from AeViz.utils.string_utils import merge_strings
+from AeViz.utils.files.string_utils import merge_strings
 
 def rad_fn(x, pos=None):
         n = int((x / np.pi) * 2.0 + 0.25)

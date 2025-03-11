@@ -35,7 +35,7 @@ def time_array(simulation):
     Get the time array of the local simulation output.
     """
     from AeViz.units.aerray import aerray
-    from AeViz.utils.file_utils import save_hdf
+    from AeViz.utils.files.file_utils import save_hdf
     from AeViz.units import u
     import numpy as np
     import h5py

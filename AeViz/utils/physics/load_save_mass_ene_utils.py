@@ -1,10 +1,10 @@
-from AeViz.utils.masses_energies_utils import (standard_mass_energy, 
+from AeViz.utils.physics.masses_energies_utils import (standard_mass_energy, 
                                                gain_region_mass_energy,
                                                PNS_mass_energy,
                                                unbound_mass_energy,
                                                mass_flux)
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
-from AeViz.utils.file_utils import save_hdf, create_series
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.grid.grid import grid
 import os, h5py
 import numpy as np

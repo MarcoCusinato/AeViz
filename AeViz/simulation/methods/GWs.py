@@ -1,9 +1,9 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.GW_utils import (GW_strain, GWs_energy, calculate_h,
+from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_spectrogram, GWs_peak_indices,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices)
-from AeViz.utils.file_utils import load_file, find_column_changing_line
+from AeViz.utils.files.file_utils import load_file, find_column_changing_line
 from typing import Literal
 
 """

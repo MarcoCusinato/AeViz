@@ -1,7 +1,7 @@
-from AeViz.utils.radii_utils import (PNS_radius, innercore_radius, gain_radius,
+from AeViz.utils.physics.radii_utils import (PNS_radius, innercore_radius, gain_radius,
                                      neutrino_sphere_radii, PNS_nucleus,
                                      shock_radius)
-from AeViz.utils.file_utils import save_hdf, create_series
+from AeViz.utils.files.file_utils import save_hdf, create_series
 import numpy as np
 from typing import Literal
 import os, h5py
@@ -9,7 +9,7 @@ from AeViz.utils.math_utils import function_average_radii
 from AeViz.utils.utils import progressBar, check_existence, checkpoints
 from AeViz.units.aeseries import aerray, aeseries
 from AeViz.units import u
-from AeViz.utils.string_utils import merge_strings
+from AeViz.utils.files.string_utils import merge_strings
 
 functions = {
     'PNS': PNS_radius,

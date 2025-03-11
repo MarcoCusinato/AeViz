@@ -1,6 +1,6 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.profiles import calculate_profile
-from AeViz.utils.tidal_love import solve_tidal_love_profile
+from AeViz.utils.physics.profiles import calculate_profile
+from AeViz.utils.physics.tidal_love import solve_tidal_love_profile
 from typing import Literal
 
 """

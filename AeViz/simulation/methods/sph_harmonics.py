@@ -1,5 +1,5 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.spherical_harmonics_radial import (calculate_rho_decomposition,
+from AeViz.utils.physics.spherical_harmonics_radial import (calculate_rho_decomposition,
                                                     get_sph_profile,
                                                     get_sph_profiles_r,
                                                     get_data_for_barcode)

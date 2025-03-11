@@ -1,4 +1,4 @@
-from AeViz.utils.EMD_utils import (get_IMFs, HHT_spectra,
+from AeViz.utils.physics.EMD_utils import (get_IMFs, HHT_spectra,
                                     instantaneous_amplitude,
                                     instantaneous_frequency)
 import numpy as np
