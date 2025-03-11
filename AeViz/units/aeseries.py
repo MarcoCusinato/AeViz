@@ -60,7 +60,7 @@ class aeseries:
         
         for name, axis in kwargs.items():
             assert isinstance(axis, aerray), f"{name} must be an aerray"
-            assert axis.ndim == 1, f"Axes must be 1D aerrays, {name} is {axis.ndim}"
+            #assert axis.ndim == 1, f"Axes must be 1D aerrays, {name} is {axis.ndim}"
             setattr(self, name, axis)
             self.__axis_indices[name] = data.shape.index(len(axis))
             self.__axis_names.append(name)

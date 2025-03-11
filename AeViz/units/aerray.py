@@ -37,8 +37,6 @@ if not hasattr(UnitBase, "_original_rtruediv"):
 if not hasattr(UnitBase, "_original_rlshift"):
     UnitBase._original_rlshift = UnitBase.__rlshift__
 
-
-
 class aerray(np.ndarray):
     
     def __new__(cls,
@@ -439,6 +437,8 @@ class aerray(np.ndarray):
             return aerray._where(*args, **kwargs)
         elif func == np.interp:
             return aerray._interp(*args, **kwargs)
+        elif func == np.meshgrid:
+            return self._meshgrid(*args, **kwargs)
         else:
             return aerray._other_functions(func, *args, **kwargs)
         return NotImplemented
@@ -517,6 +517,21 @@ class aerray(np.ndarray):
         return aerray(np.interp(x.value, xp.value, yp.value), unit=yp.unit,
                       name=yp.name, label=yp.label, cmap=yp.cmap,
                       limits=yp.limits, log=yp.log)
+    
+    @staticmethod
+    def _meshgrid(*arrays, **kwargs):
+        """Custom handling for np.meshgrid."""
+        # Ensure all inputs are `aerray` and have compatible units
+        assert all(isinstance(arr, aerray) for arr in arrays), "All inputs must be aerray."
+        # Compute meshgrid on raw numpy arrays
+        values = [arr.value for arr in arrays]
+        grids = np.meshgrid(*values, **kwargs)
+
+        # Convert back to aerray with correct unit
+        return tuple(aerray(grid, arr.unit, arr.name, arr.label,
+                            arr.cmap, arr.limits, arr.log) for (grid, arr)
+                            in zip(grids, arrays))
+
 
     @staticmethod
     def _other_functions(function, *args, **kwargs):
