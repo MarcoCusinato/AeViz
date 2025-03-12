@@ -6,7 +6,7 @@ from PyEMD import EMD
 from scipy.signal import hilbert
 from scipy.signal import savgol_filter
 from sparse import COO
-from AeViz.utils.decorators.decorators import EMD_smooth
+from AeViz.utils.decorators.simulation import EMD_smooth
 
 
 def polish_signal(GWs, frequency_cut):

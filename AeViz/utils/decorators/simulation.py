@@ -1,12 +1,9 @@
 import h5py, os
-import matplotlib.pyplot as plt
-import numpy as np
 from AeViz.utils.math_utils import IDL_derivative
-from functools import wraps
+from . import wraps, np, aerray, aeseries
 import inspect
 from AeViz.utils.files.string_utils import merge_strings
 import warnings
-from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units.aerray import apply_monkey_patch, remove_monkey_patch
 try:
     from astropy.convolution import (convolve, Gaussian1DKernel,
@@ -42,18 +39,6 @@ def hdf_isopen(func):
                 os.path.join(args[0]._Simulation__hdf_path, file), 'r')
         return func(*args, **kwargs)
     return wrapper
-
-def fig_window_open(func):
-    """
-    Check if the window figure has been closed. If it has it destroys it.
-    """
-    @wraps(func)
-    def check_opens(*args, **kwargs):
-        if args[0].fig is not None:
-            if not plt.fignum_exists(args[0].fig.number):
-                args[0].Close()
-        return func(*args, **kwargs)
-    return check_opens
 
 def derive(func):
     """

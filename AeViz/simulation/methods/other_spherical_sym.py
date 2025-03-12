@@ -1,6 +1,7 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.physics.profiles import calculate_profile
 from AeViz.utils.physics.tidal_love import solve_tidal_love_profile
+from AeViz.utils.decorators.grid import profile_grid
 from typing import Literal
 
 """
@@ -56,6 +57,7 @@ def love_number(self, tob_corrected=True, save_checkpoints=True,
 ## PROFILES
 ## -----------------------------------------------------------------
 
+@profile_grid
 @derive
 @sum_tob
 def radial_profile(self, quantity, tob_corrected=True,

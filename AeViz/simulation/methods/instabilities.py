@@ -13,6 +13,7 @@ imported into the Simulation class.
 ## CONVECTION AND INSTABILITIES DATA
 ## -----------------------------------------------------------------
 
+@get_grid
 @smooth
 def BV_frequency(self, file_name, mode=1, **kwargs):
     """
@@ -48,6 +49,7 @@ def BV_frequency(self, file_name, mode=1, **kwargs):
            cmap='RdYlBu_r', log=True, limits=[-1e5, 1e5])
     return BV
 
+@get_grid
 @smooth
 def convective_velocity(self, file_name, **kwargs):
     """
@@ -65,6 +67,7 @@ def convective_velocity(self, file_name, **kwargs):
            cmap='Spectral_r', log=True, limits=[-1e9, 1e9])
     return vconv
 
+@get_grid
 @smooth
 def turbulent_velocity(self, file_name, **kwargs):
     """
@@ -89,6 +92,7 @@ def turbulent_velocity(self, file_name, **kwargs):
     return vturb
     
 
+@get_grid
 @smooth
 def convective_flux(self, file_name, **kwargs):
     """
@@ -105,6 +109,7 @@ def convective_flux(self, file_name, **kwargs):
            cmap='RdYlGn_r', log=True, limits=[-1e40, 1e40])
     return flux.to(u.erg / u.s / u.cm ** 2)
 
+@get_grid
 @smooth
 def Rossby_number(self, file_name, lenghtscale=True):
     """
@@ -127,6 +132,7 @@ def Rossby_number(self, file_name, lenghtscale=True):
     return ross
     
 
+@get_grid
 @smooth
 def epicyclic_frequency(self, file_name, **kwargs):
     """

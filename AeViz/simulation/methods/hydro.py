@@ -11,6 +11,7 @@ of the Simulation class
 ## HYDRODYNAMICAL DATA
 ## -----------------------------------------------------------------
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -22,6 +23,7 @@ def rho(self, file_name, **kwargs):
                   [1e4, 1e15], log=True)
 
 ## ENERGY
+@get_grid
 @smooth
 @hdf_isopen
 def MHD_energy(self, file_name, **kwargs):
@@ -32,6 +34,7 @@ def MHD_energy(self, file_name, **kwargs):
                   r'$E$', 'nipy_spectral', [1e24, 1e35], log=True)
 
 ## VELOCITY
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -46,6 +49,7 @@ def radial_velocity(self, file_name, **kwargs):
     return aerray(data, u.cm / u.s, 'velocity_radial', r'$v_r$', 'Spectral_r',
                   [-1e10, 5e10], log=True)
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -60,6 +64,7 @@ def theta_velocity(self, file_name, **kwargs):
     return aerray(data, u.cm / u.s, 'velocity_theta', r'$v_\theta$',
                   'Spectral_r', [-1e10, 5e10], log=True)
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -75,6 +80,7 @@ def phi_velocity(self, file_name, **kwargs):
                   'cividis', [1e7, 5e10], log=True)
 
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -85,6 +91,7 @@ def soundspeed(self, file_name, **kwargs):
     return aerray(data, u.cm / u.s, 'soundspeed', r'$c_\mathrm{s}$',
                   'nipy_spectral', [1e8, 1e10], log=True)
 
+@get_grid
 @smooth
 @derive
 def omega(self, file_name, **kwargs):

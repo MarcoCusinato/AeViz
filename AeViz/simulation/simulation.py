@@ -9,7 +9,7 @@ from AeViz.utils.files.parfiles import (load_parfile,
                                   get_initial_parameters)
 from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
-from AeViz.utils.decorators.decorators import hdf_isopen
+from AeViz.utils.decorators.simulation import hdf_isopen
 from AeViz.utils.files.file_utils import list_module_functions
 from AeViz.utils.utils import time_array
 import numpy as np

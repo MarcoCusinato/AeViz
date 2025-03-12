@@ -11,6 +11,7 @@ imported into the Simulation class.
 ## -----------------------------------------------------------------
 
 ## THERMODYNAMICAL
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -21,6 +22,7 @@ def gas_pressure(self, file_name, **kwargs):
     return aerray(data, u.Ba, name='gas_pressure', label=r'$P_\mathrm{gas}$',
                   cmap='gist_rainbow_r', limits=[1e25, 1e34], log=True)
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -30,6 +32,8 @@ def temperature(self, file_name, **kwargs):
                                     ['I_TMPR']]), self.dim)
     return aerray(data, u.MeV, name='temperature', label=r'$T$',
                   cmap='inferno', limits=[0, 40], log=False)
+
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -40,6 +44,7 @@ def enthalpy(self, file_name, **kwargs):
     return aerray(data, u.erg, 'enthalpy', r'$H$', 'gist_stern', [1e25, 1e36],
                   True)
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -49,6 +54,8 @@ def entropy(self, file_name, **kwargs):
                                     ['I_ENTR']]), self.dim)
     return aerray(data, u.kBol / u.bry, 'entropy', r'$s$', 'gist_rainbow_r',
                   [1.5, 15], False)
+
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -60,6 +67,7 @@ def adiabatic_index(self, file_name, **kwargs):
                   r'$\Gamma$', 'cividis', [0.5, 3.5], False)
 
 ## RELATIVITY AND GRAVITY
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -70,6 +78,7 @@ def lorentz(self, file_name, **kwargs):
     return aerray(data, u.dimensionless_unscaled, 'lorentz_factor',
                   r'$\gamma$', 'gist_rainbow', [1, 1.1], False)
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -84,6 +93,7 @@ def gravitational_potential(self, file_name, **kwargs):
     return aerray(data, u.erg / u.g, 'gravitational_potential', r'\Phi',
                   'magma', [-1e22, -1e15], True)
 
+@get_grid
 @smooth
 @derive
 def gravitational_energy(self, file_name, **kwargs):
@@ -94,6 +104,7 @@ def gravitational_energy(self, file_name, **kwargs):
     return data
 
 ## ENERGY
+@get_grid
 @smooth
 @derive
 @hdf_isopen
@@ -103,8 +114,8 @@ def internal_energy(self, file_name, **kwargs):
                                     ['I_EINT']]), self.dim)
     return aerray(data, u.erg / u.cm**3, 'internal_energy',
                   r'$E_\mathrm{int}$', 'nipy_spectral', [1e24, 1e35], log=True)
-     
 
+@get_grid
 @smooth
 @derive
 @hdf_isopen

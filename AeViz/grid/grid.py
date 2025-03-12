@@ -1,5 +1,6 @@
 from scipy.interpolate import (griddata, interp1d)
 import numpy as np
+from AeViz.units.aerray import aerray
 
 class grid:
     """
@@ -157,7 +158,7 @@ class grid:
         """
         assert theta_points is not None, "Theta angle MUST not be None."
         if self.dim == 1:
-            return np.tile(quantity, (theta_points, 1))
+            return np.tile(quantity)
         elif self.dim == 2:
             quantity = quantity[quantity.shape[0] // 2, :]
             return np.tile(quantity, (theta_points, 1))
@@ -186,25 +187,29 @@ class grid:
             theta = np.linspace(0, 2*np.pi, phi_points, endpoint=True)
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
-        X.set(name='X', label=r'$X$', log=False)
-        Y.set(name='Z', label=r'$Z$', log=False)
+        if plane in ['xy', 'yx']:
+            X.set(name='X', label=r'$X$', log=False)
+            Y.set(name='Y', label=r'$Y$', log=False)
+        else:
+            X.set(name='X', label=r'$X$', log=False)
+            Y.set(name='Z', label=r'$Z$', log=False)
         return X, Y
     
     def __2D_cartesian_grid_from_3D(self, radius, theta, phi, plane):
-        if plane == 'xy':
+        if plane in ['xy', 'yx']:
             X = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
                 np.cos(phi)[:, None]
             Y = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
                 np.sin(phi)[:, None]
             X.set(name='X', label=r'$X$', log=False)
             Y.set(name='Y', label=r'$Y$', log=False)
-        elif plane == 'xz':
+        elif plane in ['xz', 'zx']:
             theta = np.concatenate([theta, theta + np.pi])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
             X.set(name='X', label=r'$X$', log=False)
             Y.set(name='Z', label=r'$Z$', log=False)
-        elif plane == 'yz':
+        elif plane in ['yz', 'zy']:
             theta = np.concatenate([theta, theta + np.pi])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]

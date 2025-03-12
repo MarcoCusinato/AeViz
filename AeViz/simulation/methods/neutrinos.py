@@ -12,6 +12,7 @@ imported into the Simulation class.
 
 ## ENERGY DEPENDENT
 
+@get_grid
 @smooth
 @hdf_isopen
 def neutrino_energy_density(self, file_name, **kwargs):
@@ -27,6 +28,7 @@ def neutrino_energy_density(self, file_name, **kwargs):
                   r'$E_{\nu_\mathrm{x}}$', 'plasma', [1e28, 1e32], True)
             )
 
+@get_grid
 @smooth
 @hdf_isopen
 def neutrino_momenta(self, file_name, **kwargs):
@@ -65,6 +67,7 @@ def neutrino_momenta(self, file_name, **kwargs):
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True)
             )
 
+@get_grid
 @smooth
 @hdf_isopen
 def neutrino_momenta_opacities(self, file_name, **kwargs):
@@ -100,6 +103,7 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True)
             )
 
+@get_grid
 @smooth
 def neutrino_number_density(self, file_name, **kwargs):
     edens = list(self.neutrino_energy_density(file_name, **kwargs))
@@ -114,6 +118,7 @@ def neutrino_number_density(self, file_name, **kwargs):
                     ['gnuplot', 'gnuplot_2', 'CMRmap']) for ed in edens]
     return tuple(edens)
 
+@get_grid
 @smooth
 def neutrino_mean_energy(self, file_name, **kwargs):
     """
@@ -136,6 +141,7 @@ def neutrino_mean_energy(self, file_name, **kwargs):
 
 ## GREY
 
+@get_grid
 @smooth
 @hdf_isopen
 def neutrino_energy_density_grey(self, file_name, **kwargs):
@@ -151,6 +157,7 @@ def neutrino_energy_density_grey(self, file_name, **kwargs):
                   r'$E_{\nu_\mathrm{x}}$', 'plasma', [1e28, 1e32], True)
             )
 
+@get_grid
 @smooth
 @hdf_isopen
 def neutrino_momenta_grey(self, file_name, **kwargs):

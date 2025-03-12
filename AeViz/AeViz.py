@@ -1,7 +1,7 @@
 from AeViz.quantities_plotting.plotting import Plotting
 from typing import Literal
 from AeViz.utils.files.file_utils import list_module_functions
-from AeViz.utils.decorators.decorators import fig_window_open
+from AeViz.utils.decorators.figure import fig_window_open
 import os
 import types
 
