@@ -21,14 +21,21 @@ def get_grid(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
-        if type(kwargs['plane']) == str:
-            kwargs['plane'] = kwargs['plane'].casefold()
         if 'plane' not in kwargs:
             return data
+        if type(kwargs['plane']) == str:
+            kwargs['plane'] = kwargs['plane'].casefold()
+        if type(data) == tuple:
+            data = list(data)
+        if type(data) != list:
+            data = [data]
+        outdata = []
         if kwargs['plane'] in ['radius', 'r', 'theta', 'th', 'phi', 'ph']:
-            return _get_plane_avgs(args[0], data, kwargs['plane'])
+            for dd in data:
+                outdata.append(_get_plane_avgs(args[0], dd, kwargs['plane']))
         elif type(kwargs['plane']) == tuple and len(kwargs['plane']) <= 3:
-            return _get_indices(args[0], data, kwargs['plane'])
+            for dd in data:
+                outdata.append(_get_indices(args[0], dd, kwargs['plane']))
         elif kwargs['plane'] in ['xy', 'yx', 'xz', 'zx', 'zy', 'yz']:
             gr = grid(args[0].dim, args[0].cell.radius(args[0].ghost),
                                        args[0].cell.theta(args[0].ghost),
@@ -36,10 +43,15 @@ def get_grid(func):
             X, Y = gr.cartesian_grid_2D(kwargs['plane'], 64)
             index_theta, index_phi = _get_plane_indices(args[0],
                                                         kwargs['plane'])
-            return aeseries(_plane_cut(args[0].dim, data, gr, index_theta,
-                                     index_phi), **{X.name: X, Y.name: Y})
+            for dd in data:
+                outdata.append(aeseries(_plane_cut(args[0].dim, data, gr, index_theta,
+                                     index_phi), **{X.name: X, Y.name: Y})) 
         else:
             raise TypeError(f'plane type {kwargs['plane']} not recognized')
+        if len(outdata) == 1:
+            return outdata[0]
+        else:
+            return outdata
     return wrapper
 
 def _get_plane_indices(sim, plane):

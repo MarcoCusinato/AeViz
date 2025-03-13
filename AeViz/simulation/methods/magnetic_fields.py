@@ -22,6 +22,7 @@ def __CT_magnetic_fields(self, file_name, **kwargs):
         self._Simulation__data_h5['mag_CT/data'][...]), self.dim)
     return aerray(data, u.G, 'cell_magnetic_fields')
 
+@get_grid
 @smooth
 @hdf_isopen
 def magnetic_fields(self, file_name, **kwargs):
@@ -37,27 +38,30 @@ def magnetic_fields(self, file_name, **kwargs):
             aerray(data[..., 2], u.G, 'B_phi', r'$B_\phi$', 'coolwarm',
                    [-1e15, 1e15], True))
 
+@get_grid
 @smooth
 @derive
 def poloidal_magnetic_fields(self, file_name, **kwargs):
-    Br, Btheta, _ = self.magnetic_fields(file_name, **kwargs)
+    Br, Btheta, _ = self.magnetic_fields(file_name)
     data = np.sqrt(Br ** 2 + Btheta ** 2)
     data.set(label=r'$B_\mathrm{pol}$', name='B_pol', limits=[-1e15, 1e15],
              log=True, cmap='inferno')
     return data
 
+@get_grid
 @smooth
 @derive
 def toroidal_magnetic_fields(self, file_name, **kwargs):
-    _, _, Bphi = self.magnetic_fields(file_name, **kwargs)
+    _, _, Bphi = self.magnetic_fields(file_name)
     return Bphi
 
+@get_grid
 @smooth
 def magnetic_energy(self, file_name, **kwargs):
     """
     Magnetic energy density. Total, poloidal and toroidal.
     """
-    Br, Btheta, Bphi = self.magnetic_fields(file_name, **kwargs)
+    Br, Btheta, Bphi = self.magnetic_fields(file_name)
     tot_b = 0.5 * (Br ** 2 + Btheta ** 2 + Bphi ** 2) / c.mu0
     tot_b.set(label=r'$E_\mathrm{mag}$', name='E_mag_tot', limits=[1e20, 1e28],
              log=True, cmap='magma')
@@ -69,11 +73,13 @@ def magnetic_energy(self, file_name, **kwargs):
               limits=[1e20, 1e28], log=True, cmap='magma')
     return  tot_b, pol_b, tor_b
 
+@get_grid
 @smooth
 def stream_function(self, file_name, plane):
     return strfct2D(self.__CT_magnetic_fields(file_name), self.cell, 
                     self.ghost, plane)
 
+@get_grid
 @smooth
 @derive
 def alfven_velocity(self, file_name, **kwargs):
@@ -82,9 +88,9 @@ def alfven_velocity(self, file_name, **kwargs):
     """
     if self.dim == 1:
         return None
-    Br, Btheta, Bphi = self.magnetic_fields(file_name, **kwargs)
+    Br, Btheta, Bphi = self.magnetic_fields(file_name)
     data = np.sqrt((Br ** 2 + Btheta ** 2 + Bphi ** 2) / 
-                   self.rho(file_name, **kwargs) / c.mu0)
+                   self.rho(file_name) / c.mu0)
     data.set(label=r'$v_\mathrm{A}$', name='alfven_velocity',
               limits=[1e4, 1e7], log=True, cmap='gnuplot')
     return data

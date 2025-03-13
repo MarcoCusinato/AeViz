@@ -19,27 +19,25 @@ def BV_frequency(self, file_name, mode=1, **kwargs):
     """
     Returns the Brunt-Vaisala frequency at specific timestep.
     """
-    rho = self.rho(file_name, **kwargs)
+    rho = self.rho(file_name)
     radius = self.cell.radius(self.ghost)
-    BV = (1 / self.soundspeed(file_name, **kwargs) ** 2 * \
-            IDL_derivative(radius, self.gas_pressure(file_name, **kwargs)) - \
+    BV = (1 / self.soundspeed(file_name) ** 2 * \
+            IDL_derivative(radius, self.gas_pressure(file_name)) - \
             IDL_derivative(radius, rho)) / rho
     if mode == 1:
         """
         check e.g. Gossan+20 `10.1093/mnras/stz3243`
         """
         geff = IDL_derivative(radius,
-                                self.gravitational_potential(file_name,
-                                                            **kwargs))
+                                self.gravitational_potential(file_name))
     elif mode == 2:
         """
         Check Fryer+21 ` 10.1134/S1063772921100103`
         """
         
-        vr = self.radial_velocity(file_name, **kwargs)
+        vr = self.radial_velocity(file_name)
         geff = IDL_derivative(radius,
-                                self.gravitational_potential(file_name,
-                                                            **kwargs)) - \
+                                self.gravitational_potential(file_name)) - \
                 vr * IDL_derivative(radius, vr) 
     else:
         raise ValueError("Mode not recognized.")
@@ -58,8 +56,8 @@ def convective_velocity(self, file_name, **kwargs):
     v_conv = <vr-vr_ave>_omega
     """
     dOmega = self.cell.dOmega(self.ghost)
-    rho = self.rho(file_name, **kwargs)
-    vr = self.radial_velocity(file_name, **kwargs)
+    rho = self.rho(file_name)
+    vr = self.radial_velocity(file_name)
     vrave = function_average(vr * rho, self.dim, 'Omega', dOmega) / \
         function_average(rho, self.dim, 'Omega', dOmega)
     vconv = function_average((vr - vrave), self.dim, 'Omega', dOmega)
@@ -76,10 +74,10 @@ def turbulent_velocity(self, file_name, **kwargs):
     v_conv = <(v-v_ave)²>^0.5_omega
     """
     dOmega = self.cell.dOmega(self.ghost)
-    rho = self.rho(file_name, **kwargs)
+    rho = self.rho(file_name)
     rho_ave = function_average(rho, self.dim, 'Omega', dOmega)
-    vr, vtheta, vphi = self.radial_velocity(file_name, **kwargs), \
-        self.theta_velocity(file_name, **kwargs), self.phi_velocity(file_name, **kwargs)
+    vr, vtheta, vphi = self.radial_velocity(file_name), \
+        self.theta_velocity(file_name), self.phi_velocity(file_name)
     vrave, vthetaave, vphiave = \
         function_average(vr * rho, self.dim, 'Omega', dOmega) / rho_ave, \
             aerray(0, unit=u.cm/u.s), \
@@ -100,10 +98,10 @@ def convective_flux(self, file_name, **kwargs):
     in `https://doi.org/10.3847/1538-4357/ac4507`:
     F_conv = <(0.5 rho v_turb² + e + P)v_conv>_omega
     """
-    flux = function_average((0.5 * self.rho(file_name, **kwargs) * \
-        self.turbulent_velocity(file_name, **kwargs) ** 2 + self.internal_energy(
-            file_name, **kwargs) + self.gas_pressure(file_name, **kwargs)) * \
-        self.convective_velocity(file_name, **kwargs), self.dim, 'Omega', 
+    flux = function_average((0.5 * self.rho(file_name) * \
+        self.turbulent_velocity(file_name) ** 2 + self.internal_energy(
+            file_name) + self.gas_pressure(file_name)) * \
+        self.convective_velocity(file_name), self.dim, 'Omega', 
         self.cell.dOmega(self.ghost))
     flux.set(name='Fconv', label=r'$F_\mathrm{conv}$',
            cmap='RdYlGn_r', log=True, limits=[-1e40, 1e40])
@@ -111,7 +109,7 @@ def convective_flux(self, file_name, **kwargs):
 
 @get_grid
 @smooth
-def Rossby_number(self, file_name, lenghtscale=True):
+def Rossby_number(self, file_name, lenghtscale=True, **kwargs):
     """
     Returns the Rossby number at specific timestep. Defined as
     in `https://doi.org/10.3847/1538-4357/ac4507`:

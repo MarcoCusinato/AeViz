@@ -17,7 +17,7 @@ imported into the Simulation class.
 def Ye(self, file_name, **kwargs):
     data = aerray(self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['hydro/data'][..., self.hydroTHD_index['hydro']
-        ['I_YE']]), self.dim), u.g / u.cm ** 3) / self.rho(file_name, **kwargs)
+        ['I_YE']]), self.dim), u.g / u.cm ** 3) / self.rho(file_name)
     data.set(name='Ye', label= r'$Y_\mathrm{e}$', limits=[0.0, 0.5],
              cmap='gist_rainbow', log=False)
     return data

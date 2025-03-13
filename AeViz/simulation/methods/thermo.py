@@ -97,8 +97,8 @@ def gravitational_potential(self, file_name, **kwargs):
 @smooth
 @derive
 def gravitational_energy(self, file_name, **kwargs):
-    data = 0.5 * self.rho(file_name, **kwargs) * \
-        self.gravitational_potential(file_name, **kwargs)
+    data = 0.5 * self.rho(file_name) * \
+        self.gravitational_potential(file_name)
     data.set(label=r'$E_mathrm{grav}$', name='gravitational_energy', log=True,
              limits=[-1e22, -1e15], cmap='magma')
     return data

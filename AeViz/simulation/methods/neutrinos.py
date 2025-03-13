@@ -106,7 +106,7 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
 @get_grid
 @smooth
 def neutrino_number_density(self, file_name, **kwargs):
-    edens = list(self.neutrino_energy_density(file_name, **kwargs))
+    edens = list(self.neutrino_energy_density(file_name))
     de = self.cell.E_nu().to(u.erg)
     edens = [ed / de for ed in edens]
     [ed.set(label=s1, name=s2, limits=s3, cmap=s4, log=True) for (s1, s2, s3, s4) 
@@ -126,8 +126,8 @@ def neutrino_mean_energy(self, file_name, **kwargs):
     <e> = sum_w E_nu(w) / sum_w N_nu(w),
         with w the center of the neutrino bin
     """
-    edens = list(self.neutrino_energy_density(file_name, **kwargs))
-    num_den = list(self.neutrino_number_density(file_name, **kwargs))
+    edens = list(self.neutrino_energy_density(file_name))
+    num_den = list(self.neutrino_number_density(file_name))
     mean_ene = [(ed.sum(axis=-1)/nd.sum(axis=-1)).to(u.MeV) for 
                 (ed, nd) in zip(edens, num_den)]
     [me.set(label=s1, name=s2, limits=s3, cmap=s4) for (s1, s2, s3, s4)
