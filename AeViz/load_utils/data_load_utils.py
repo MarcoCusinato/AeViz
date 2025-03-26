@@ -117,48 +117,8 @@ class Data(object):
                 data /= np.squeeze(self.loaded_data['hydro']['data']\
                                    [..., self.hydroTHD_index['hydro']['I_RH']])
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
-        elif self.data_type == 'sim':
-            if file is not None:
-                if name == 'BX':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_fields')(file, **kwargs)[..., 0]
-                elif name == 'BY':
-                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
-                        [..., 1]
-                elif name == 'BZ':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_fields')(file, **kwargs)[..., 2]
-                elif name == 'total_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[0]
-                elif name == 'poloidal_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[1]
-                elif name == 'toroidal_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[2]
-                elif 'nu' in name and 'moment' in name:
-                    out = return_neutrino_flux(self.loaded_data, name, file,
-                                               **kwargs)
-                elif 'nue_mean_ene' == name or 'nua_mean_ene' == name or \
-                    'nux_mean_ene' == name:
-                    out = return_neutrino_mean_ene(self.loaded_data,
-                                                   name, file, **kwargs)
-                else:
-                    out = getattr(self.loaded_data, name)(file, **kwargs)
-                return out
-            else:
-                if ('explosion' in name) or ('gain' in name) or \
-                    ('innercore' in name) or \
-                    ('PNS' in name and 'radius' not in name):
-                    return self.__get_energy_data(name, **kwargs)
-                elif 'nu_integrated_' in name:
-                    return  return_integrated_neutrinos(self.loaded_data, name,
-                                                        **kwargs)
-                elif 'kick_velocity_' in name:
-                    return return_PNS_kick(self.loaded_data, name)
-                    
-                return getattr(self.loaded_data, name)(**kwargs)
+        elif self.data_type == 'sim':            
+            return getattr(self.loaded_data, name)(**kwargs)
     
     def __plane_cut(self, data, indextheta = None, indexphi = None):
         

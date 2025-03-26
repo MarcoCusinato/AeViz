@@ -151,31 +151,37 @@ class PlottingUtils(PlotCreation):
                     self.legend[axd_letter][ll])
             self.axd[axd_letter].legend(loc='upper right')
 
-    def __update_params(self, ax_letter, grid, data, cbar_position, 
-                        cbar_log, cbar_levels, dim, cmap, cbar_label,
+    def __update_params(self, ax_letter, plane, data, cbar_position, dim,
                         sim_dim, **kwargs):
         """
         Most important method of the class. It updates the dictionaries
         containing the plot parameters and data information.
         It is meat to be called BEFORE plotting.
         """
+        if plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
+            if plane in ['yx', 'zx', 'zy']:
+                plane = plane[::-1]
+            plane = plane.upper()
+            grid = (getattr(data, plane[0]), getattr(data, plane[1]))
+        else:
+            grid = getattr(data, plane)
         if ax_letter not in self.plot_dim:
             self.grid[ax_letter] = [grid]
-            self.data[ax_letter] = [data]
+            self.data[ax_letter] = [data.data]
             self.plot_dim[ax_letter] = [dim]
             self.sim_dimension[ax_letter] = [sim_dim]
             self.cbar_position[ax_letter] = cbar_position
-            self.cbar_log[ax_letter] = cbar_log
-            self.cbar_lv[ax_letter] = cbar_levels
-            self.cmap_color[ax_letter] = cmap
-            self.cbar_label[ax_letter] = cbar_label
+            self.cbar_log[ax_letter] = data.data.log
+            self.cbar_lv[ax_letter] = None
+            self.cmap_color[ax_letter] = data.data.cmap
+            self.cbar_label[ax_letter] = data.data.label
             if 'alpha' in kwargs:
                 self.alpha[ax_letter] = [kwargs['alpha']]
             else:
                 self.alpha[ax_letter] = [1]
             if 'color' in kwargs or 'c' in kwargs:
                 self.line_color[ax_letter] = [kwargs.get('color',
-                                                         kwargs.get('c'))]
+                                              kwargs.get('c'))]
             else:
                 self.line_color[ax_letter] = [None]
             if 'lw' in kwargs:
@@ -184,7 +190,7 @@ class PlottingUtils(PlotCreation):
                 self.lw[ax_letter] = [None]
         else:
             self.grid[ax_letter].append(grid)
-            self.data[ax_letter].append(data)
+            self.data[ax_letter].append([data.data])
             self.plot_dim[ax_letter].append(dim)
             self.sim_dimension[ax_letter].append(sim_dim)
             if 'alpha' in kwargs:
@@ -494,18 +500,18 @@ class PlottingUtils(PlotCreation):
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
             if 1 in dm:
+                self.__plot1D(ax_letter, redo=True)
                 if all_1D:
                     self.ylim(self.ylims[ax_letter], ax_letter)
                     self.xlim(self.xlims[ax_letter], ax_letter)
                     self.Xscale(self.logX[ax_letter], ax_letter)
                     self.Yscale(self.logY[ax_letter], ax_letter)
-                self.__plot1D(ax_letter, redo=True)
             if ax_letter in self.legend:
                 self.update_legend(self.legend[ax_letter], ax_letter)
             if ax_letter in self.field:
                 self.__plot2Dfield(ax_letter)
-            self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
-                        ax_letter)
+            #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
+            #            ax_letter)
         self._PlotCreation__setup_aspect()
 
     def __save_xlims(self, ax_letter=None):
@@ -514,9 +520,13 @@ class PlottingUtils(PlotCreation):
         """
         if ax_letter is None:
             for ax_letter in self.axd:
-                self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
+                xlims = self.axd[ax_letter].get_xlim()
+                unit = self.axd[ax_letter].xaxis.get_units()[1]
+                self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
         else:
-            self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
+            xlims = self.axd[ax_letter].get_xlim()
+            unit = self.axd[ax_letter].xaxis.get_units()[1]
+            self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
     
     def __save_ylims(self, ax_letter=None):
         """
@@ -524,21 +534,20 @@ class PlottingUtils(PlotCreation):
         """
         if ax_letter is None:
             for ax_letter in self.axd:
-                self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+                ylims = self.axd[ax_letter].get_ylim()
+                unit = self.axd[ax_letter].yaxis.get_units()[1]
+                self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
         else:
-            self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+            ylims = self.axd[ax_letter].get_ylim()
+            unit = self.axd[ax_letter].yaxis.get_units()[1]
+            self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
     
     def __save_lims(self, ax_letter=None):
         """
         Saves the x and y limits into the dictionary.
         """
-        if ax_letter is None:
-            for ax_letter in self.axd:
-                self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
-                self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
-        else:
-            self.xlims[ax_letter] = self.axd[ax_letter].get_xlim()
-            self.ylims[ax_letter] = self.axd[ax_letter].get_ylim()
+        self.__save_xlims(ax_letter)
+        self.__save_ylims(ax_letter)
  
     def __save_labels(self, ax_letter=None):
         """
@@ -546,11 +555,15 @@ class PlottingUtils(PlotCreation):
         """
         if ax_letter is None:
             for ax_letter in self.axd:
-                self.xlabels[ax_letter] = self.axd[ax_letter].get_xlabel()
-                self.ylabels[ax_letter] = self.axd[ax_letter].get_ylabel()
+                xlabel = self.axd[ax_letter].xaxis.get_units()[0]
+                ylabel = self.axd[ax_letter].yaxis.get_units()[0]
+                self.xlabels[ax_letter] = xlabel
+                self.ylabels[ax_letter] = ylabel
         else:
-            self.xlabels[ax_letter] = self.axd[ax_letter].get_xlabel()
-            self.ylabels[ax_letter] = self.axd[ax_letter].get_ylabel()
+            xlabel = self.axd[ax_letter].xaxis.get_units()[0]
+            ylabel = self.axd[ax_letter].yaxis.get_units()[0]
+            self.xlabels[ax_letter] = xlabel
+            self.ylabels[ax_letter] = ylabel
 
     def __save_scale(self, ax_letter=None):
         """

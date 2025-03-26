@@ -44,7 +44,7 @@ def get_grid(func):
             index_theta, index_phi = _get_plane_indices(args[0],
                                                         kwargs['plane'])
             for dd in data:
-                outdata.append(aeseries(_plane_cut(args[0].dim, data, gr, index_theta,
+                outdata.append(aeseries(_plane_cut(args[0].dim, dd, gr, index_theta,
                                      index_phi), **{X.name: X, Y.name: Y})) 
         else:
             raise TypeError(f'plane type {kwargs['plane']} not recognized')

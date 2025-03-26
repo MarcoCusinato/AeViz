@@ -230,6 +230,8 @@ def show_figure():
     if TERMINAL:
         plt.ion()
         plt.show()
+    else:
+        plt.ioff()
 
 def get_qt_for_label(qt, **kwargs):
     """
@@ -288,7 +290,7 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     plotting_object._PlottingUtils__plot2D(letter)
     plotting_object.Xscale('linear', letter)
     plotting_object.Yscale('linear', letter)
-    
+
 def plot_profile_panel(plotting_object, letter, quantity,
                        cbars, labels, **kwargs):
     time, r, prof = plotting_object._Data__get_profile(quantity, **kwargs)

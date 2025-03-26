@@ -17,7 +17,7 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         get_qt_for_label,
                                                         plot_panel,
                                                         plot_profile_panel)
-from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
+from AeViz.plot_utils.utils import GW_limit
 import cv2
 
 class Plotting(PlottingUtils, Data):
@@ -25,96 +25,17 @@ class Plotting(PlottingUtils, Data):
         PlottingUtils.__init__(self)
         Data.__init__(self)
     
-    def plot1D(self, file, qt, xaxis, index1, index2, **kwargs):
+    def plot1D(self, file, qt, plane, **kwargs):
         """
         Plots a line for the quantity in the xaxis. This can be either a
         radial average, angular or a single radius.
         """
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
-
-        ## GET THE DATA
-        if 'radius' not in qt and 'spheres' not in qt:
-            if 'GW' in qt:
-                post_data = self._Data__get_data_from_name(
-                    "_".join(qt.split('_')[:-1]), file, **kwargs)
-            else:
-                post_data = self._Data__get_data_from_name(qt, file, **kwargs)
-            if 'nu_integrated'in qt and 'all' in qt:
-                legend = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
-            if 'nu_integrated_lum' in qt:
-                post_data[:, 1:] *= 1e-53
-            if 'PNS_angular_mom_all' == qt:
-                legend = ['L$_x$', 'L$_y$', 'L$_z$', r'L$_\mathrm{tot}$']
-            if 'kick_velocity' in qt and 'all' in qt:
-                legend = ['tot',  'hydro', r'$\nu$']
-        else:
-            post_data = list(self._Data__get_1D_radii_data(qt, **kwargs))
-            if 'all' in qt:
-                legend = ['max', 'min', 'avg']
-            qt = "_".join(qt.split('_')[:-1])
-            for i in range(1, len(post_data)):
-                post_data[i] = u.convert_to_km(post_data[i])
+        if plane != 'time':
+            kwargs['plane'] = plane
+        data = self._Data__get_data_from_name(name=qt, file=file, **kwargs)
         
-        ##POSTPROCESS THE DATA
-        if xaxis != 'time':
-            index1, index2 = normalize_indices(index1, index2)
-            data = get_data_to_plot(index1, index2, post_data, xaxis,
-                                    (self.cell.dr_integration(self.ghost), 
-                                    self.cell.dtheta_integration(self.ghost),
-                                    self.cell.dphi(self.ghost)))
-        elif qt == 'PNS_angular_mom_all' or 'radius' in qt or \
-            'kick_velocity_all' in qt:
-            data = post_data[1:]
-        elif 'GW' in qt:
-            if self.sim_dim == 2:
-                data = post_data[:, 1:]
-            else:
-                if qt.endswith('h+eq'):
-                    data = post_data[:,1]
-                elif qt.endswith('h+pol'):
-                    data = post_data[:,2]
-                elif qt.endswith('hxeq'):
-                    data = post_data[:,3]
-                elif qt.endswith('hxpol'):
-                    data = post_data[:,4]
-        elif type(post_data) == list or type(post_data) == tuple:
-            data = post_data[1]
-        elif 'radius' not in qt and 'spheres' not in qt and \
-            'nu_integrated' not in qt:
-            data = post_data[:, 1]
-        else:
-            data = post_data[:, 1:]
-        
-        ## CHECK THE XAXIS IS CORRECT AND GET THE GRID
-        if xaxis == 'radius':
-            grid = u.convert_to_km(self.cell.radius(self.ghost))
-            xlabel = 'R [km]'
-            scale = 'log'
-        elif xaxis == 'theta':
-            if self.sim_dim == 1:
-                raise ValueError('Cannot plot theta in 1D.')
-            grid = self.cell.theta(self.ghost)
-            xlabel = r'$\theta$ [rad]'
-            scale = 'linear'
-        elif xaxis == 'phi':
-            if self.sim_dim == 1 or self.sim_dim == 2:
-                raise ValueError('Cannot plot phi in 1D or 2D.')
-            grid = self.cell.phi(self.ghost)
-            xlabel = '$\phi$ [rad]'
-            scale = 'linear'
-        elif xaxis == 'time':
-            if 'radius' in qt or 'spheres' in qt :
-                grid = post_data[0]
-            elif type(post_data) == list or type(post_data) == tuple:
-                grid = post_data[0]
-            else:
-                grid = post_data[:, 0]
-            xlabel = 't [s]'
-            scale = 'linear'
-        else:
-            raise ValueError('xaxis must be radius, theta, phi or time.')
-        xlim = (np.nanmin(grid), np.nanmax(grid))
 
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
@@ -127,33 +48,26 @@ class Plotting(PlottingUtils, Data):
                     break
         if not overplot:
         ##PLOT CREATION
-            ylabel_qt = get_qt_for_label(qt, **kwargs)
-            number = self.__check_axd_1D(ylabel_qt, xaxis)
+            number = self.__check_axd_1D(data.data.label, getattr(data, plane))
 
-            self._PlottingUtils__update_params(axd_letters[number], grid, data,
-                                            None, plot_labels[ylabel_qt]['log'],
-                                            None, 1, None, None, self.sim_dim,
-                                            **kwargs)
+            self._PlottingUtils__update_params(
+                                                ax_letter=axd_letters[number],
+                                                plane=plane,
+                                                data=data,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
             self._PlottingUtils__plot1D(axd_letters[number])
             
             ## SET THE LIMITS
-            
-            if 'GW' not in qt:
-                self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
-            else:
-                self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
-            if xaxis == 'time':
-                xlim = (-0.005, np.nanmax(grid))
-            else:
-                xlim = (np.nanmin(grid), np.nanmax(grid))
-            self.xlim(xlim, axd_letters[number])
-            ## SET THE LABELS
-            self.labels(xlabel, plot_labels[ylabel_qt]['label'],
-                        axd_letters[number])
-            ## SET THE SCALES
-            self.Xscale(scale, axd_letters[number])
-            self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
-            ## SET THE LEGEND        
+            if axd_letters[number] not in self.xlims:
+                self.xlim(getattr(data, plane).limits, axd_letters[number])
+                self.ylim(data.data.limits, axd_letters[number])
+                self.Xscale(getattr(data, plane).log, axd_letters[number])
+                self.Yscale(data.data.log, axd_letters[number])
+                self._PlottingUtils__save_labels(axd_letters[number])
             self.update_legend(legend, axd_letters[number])
         else:
             if 'plot' in kwargs:
@@ -162,10 +76,15 @@ class Plotting(PlottingUtils, Data):
                 ax_letter = 'A'
             if ax_letter not in self.axd:
                 ax_letter = 'A'
-            self._PlottingUtils__update_params(ax_letter, grid, data,
-                                            None, None, None, 1, None,
-                                            None, self.sim_dim,
-                                            **kwargs)
+            self._PlottingUtils__update_params(
+                                                ax_letter=ax_letter,
+                                                plane=plane,
+                                                data=data,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
             self._PlottingUtils__plot1D(ax_letter)
  
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
@@ -813,18 +732,18 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
             return number - 1
         elif self.number == 3 and self.form_factor == 2:
-            if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
-                        (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
+            if (qt != self.ylabels['A']) or \
+                        (xaxis.label != self.xlabels['A']):
                 self.Close()
                 show_figure()
                 self._PlotCreation__setup_axd(number, 1)
         else:
             number = 1
             for axd_letter in self.axd:
-                if (plot_labels[qt]['label'] == \
-                    self.axd[axd_letter].get_ylabel()) and \
-                        (xaxis_labels[xaxis] == \
-                            self.axd[axd_letter].get_xlabel()):
+                if (qt == \
+                    self.ylabels[axd_letter]) and \
+                        (xaxis.label == \
+                            self.xlabels[axd_letter]):
                     return number - 1
                 number += 1
             if number > 4:

@@ -188,11 +188,11 @@ class grid:
         X = (radius[None, :] * np.sin(theta)[:, None])
         Y = (radius[None, :] * np.cos(theta)[:, None])
         if plane in ['xy', 'yx']:
-            X.set(name='X', label=r'$X$', log=False)
-            Y.set(name='Y', label=r'$Y$', log=False)
+            X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
+            Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
         else:
-            X.set(name='X', label=r'$X$', log=False)
-            Y.set(name='Z', label=r'$Z$', log=False)
+            X.set(name='X', label=r'$X$', log=False, limits=[0, 1.5e7])
+            Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y
     
     def __2D_cartesian_grid_from_3D(self, radius, theta, phi, plane):
@@ -201,20 +201,20 @@ class grid:
                 np.cos(phi)[:, None]
             Y = radius[None, :] * np.sin(theta[len(theta) // 2]) * \
                 np.sin(phi)[:, None]
-            X.set(name='X', label=r'$X$', log=False)
-            Y.set(name='Y', label=r'$Y$', log=False)
+            X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
+            Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
         elif plane in ['xz', 'zx']:
             theta = np.concatenate([theta, theta + np.pi])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
-            X.set(name='X', label=r'$X$', log=False)
-            Y.set(name='Z', label=r'$Z$', log=False)
+            X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
+            Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         elif plane in ['yz', 'zy']:
             theta = np.concatenate([theta, theta + np.pi])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
-            X.set(name='Y', label=r'$Y$', log=False)
-            Y.set(name='Z', label=r'$Z$', log=False)
+            X.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
+            Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
