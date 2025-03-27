@@ -76,11 +76,11 @@ class PlottingUtils(PlotCreation):
         custom symlog scale. 
         """
         self.__save_lims(ax_letter)
-        if scale == 'log':
+        if scale == 'log' or scale == True:
             if self.xlims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
-                    min(np.log10(-self.ylims[ax_letter][0]),
-                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                    min(np.log10(-self.xlims[ax_letter][0].value),
+                    np.log10(self.xlims[ax_letter][1].value))) - 6)
                 self.axd[ax_letter].set_xscale('symlog', linthresh=lntresh)
             else:
                 self.axd[ax_letter].set_xscale('log')

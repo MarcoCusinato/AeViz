@@ -20,7 +20,7 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
         av = np.nansum(qt * dV, axis=tuple(range(dim-1))) / np.sum(dV)
         if isinstance(qt, aerray):
             av.set(name=merge_strings(qt.name, '_ang_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_\Omega$'),
                    log=qt.log, limits=qt.limits)
     elif av_type == 'theta':
@@ -30,7 +30,7 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                                                      indices['p']] 
                                          if i is not None])) / np.sum(dV)
         av.set(name=merge_strings(qt.name, '_th_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_\theta$'),
                    log=qt.log, limits=qt.limits)
     elif av_type == 'phi':
@@ -40,7 +40,7 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                                                      indices['t']]
                                          if i is not None])) / np.sum(dV)
         av.set(name=merge_strings(qt.name, '_phi_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_\phi$'),
                    log=qt.log, limits=qt.limits)
     elif av_type == 'radius':
@@ -48,13 +48,13 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                                                      indices['p']] 
                                          if i is not None])) / np.sum(dV)
         av.set(name=merge_strings(qt.name, '_r_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_r$'),
                    log=qt.log, limits=qt.limits)
     elif av_type == 'volume':
         av = np.nansum(qt * dV) / np.sum(dV)
         av.set(name=merge_strings(qt.name, '_vol_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_V$'),
                    log=qt.log, limits=qt.limits)
     return av
@@ -66,7 +66,7 @@ def function_average_radii(qt, dim, dOmega):
         mask = np.isnan(qt)
         av =  np.nansum(qt * dOmega) / (dOmega[~mask]).sum()
         av.set(name=merge_strings(qt.name, '_ang_avg'), 
-                   label=merge_strings(r'$\langle$', qt.label, 
+                   label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_\Omega$'),
                    log=qt.log, limits=qt.limits)
         return av

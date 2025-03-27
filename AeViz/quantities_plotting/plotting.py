@@ -32,11 +32,10 @@ class Plotting(PlottingUtils, Data):
         """
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
+        d_kwargs = kwargs.copy()
         if plane != 'time':
-            kwargs['plane'] = plane
-        data = self._Data__get_data_from_name(name=qt, file=file, **kwargs)
-        
-
+            d_kwargs['plane'] = plane
+        data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
         if self.axd is not None:
@@ -49,7 +48,6 @@ class Plotting(PlottingUtils, Data):
         if not overplot:
         ##PLOT CREATION
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
-
             self._PlottingUtils__update_params(
                                                 ax_letter=axd_letters[number],
                                                 plane=plane,
@@ -60,14 +58,14 @@ class Plotting(PlottingUtils, Data):
                                                 **kwargs
                                                 )
             self._PlottingUtils__plot1D(axd_letters[number])
-            
             ## SET THE LIMITS
             if axd_letters[number] not in self.xlims:
                 self.xlim(getattr(data, plane).limits, axd_letters[number])
                 self.ylim(data.data.limits, axd_letters[number])
-                self.Xscale(getattr(data, plane).log, axd_letters[number])
-                self.Yscale(data.data.log, axd_letters[number])
+                
                 self._PlottingUtils__save_labels(axd_letters[number])
+            self.Xscale(getattr(data, plane).log, axd_letters[number])
+            self.Yscale(data.data.log, axd_letters[number])
             self.update_legend(legend, axd_letters[number])
         else:
             if 'plot' in kwargs:
@@ -732,18 +730,14 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
             return number - 1
         elif self.number == 3 and self.form_factor == 2:
-            if (qt != self.ylabels['A']) or \
-                        (xaxis.label != self.xlabels['A']):
+            if (qt != self.ylabels['A']) or (xaxis.label != self.xlabels['A']):
                 self.Close()
                 show_figure()
                 self._PlotCreation__setup_axd(number, 1)
         else:
-            number = 1
             for axd_letter in self.axd:
-                if (qt == \
-                    self.ylabels[axd_letter]) and \
-                        (xaxis.label == \
-                            self.xlabels[axd_letter]):
+                if (qt == self.ylabels[axd_letter]) and \
+                    (xaxis.label == self.xlabels[axd_letter]):
                     return number - 1
                 number += 1
             if number > 4:
