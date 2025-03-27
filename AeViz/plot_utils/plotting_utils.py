@@ -221,6 +221,35 @@ class PlottingUtils(PlotCreation):
         self.field[ax_letter] = field
         self.field_type[ax_letter] = field_type
     
+    def __copy_param_key(self, ax_letter_in, ax_letter_out):
+        """
+        Clears the dictionaries containing the plot parameters.
+        """
+        keys = [self.plot_dim,
+                self.grid,
+                self.data,
+                self.sim_dimension,
+                self.cbar_position,
+                self.cbar_log,
+                self.cbar_lv,
+                self.cmap_color,
+                self.cbar_label,
+                self.xlims,
+                self.ylims,
+                self.logX,
+                self.logY,
+                self.xlabels,
+                self.ylabels,
+                self.legend,
+                self.alpha,
+                self.line_color,
+                self.lw,
+                self.field,
+                self.field_type]
+        for key in keys:
+            if ax_letter_out in key:
+                key[ax_letter_in] = key[ax_letter_out]
+    
     def __clear_param_key(self, ax_letter):
         """
         Clears the dictionaries containing the plot parameters.

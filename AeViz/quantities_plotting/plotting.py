@@ -698,35 +698,9 @@ class Plotting(PlottingUtils, Data):
             self._PlotCreation__setup_axd(number, 1)
         elif self.number == 2 and self.form_factor == 2:
             self.number = 3
-            self.plot_dim['C'], self.grid['C'], self.data['C'] = self.plot_dim['B'], \
-                self.grid['B'], self.data['B']
-            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = \
-                self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
-            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], \
-                self.cbar_label['B']
-            self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
-            self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
-            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], \
-                self.ylabels['B']
-            
-            self.plot_dim['B'], self.grid['B'], self.data['B'] = self.plot_dim['A'], \
-                self.grid['A'], self.data['A']
-            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = \
-                self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
-            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'],\
-                self.cbar_label['A']
-            self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
-            self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
-            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'],\
-                self.ylabels['A']
-
-            self.plot_dim['A'], self.grid['A'], self.data['A'] = None, None, None
-            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = \
-                None, None, None
-            self.cmap_color['A'], self.cbar_label['A'] = None, None
-            self.xlims['A'], self.ylims['A'] = None, None
-            self.logX['A'], self.logY['A'] = None, None
-            self.xlabels['A'], self.ylabels['A'] = None, None
+            self._PlottingUtils__copy_param_key('C', 'B')
+            self._PlottingUtils__copy_param_key('B', 'A')
+            self._PlottingUtils__clear_param_key('A')
             self._PlottingUtils__redo_plot()
             return number - 1
         elif self.number == 3 and self.form_factor == 2:
