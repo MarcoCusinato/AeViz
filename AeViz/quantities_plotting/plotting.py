@@ -10,11 +10,8 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars_profile,
                                                         setup_cbars_spectrogram,
                                                         setup_cbars_HHT,
-                                                        normalize_indices,
-                                                        get_data_to_plot,
                                                         get_plane_indices,
                                                         show_figure,
-                                                        get_qt_for_label,
                                                         plot_panel,
                                                         plot_profile_panel)
 from AeViz.plot_utils.utils import GW_limit
@@ -92,15 +89,9 @@ class Plotting(PlottingUtils, Data):
         """
         ## Set the ghost cells
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
-        ## Set the grid
-        gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
-                  self.cell.theta(self.ghost), self.cell.phi(self.ghost))
-        X, Y = gr.cartesian_grid_2D(plane, 64)
         ## Get the number of quantities to plot
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
-        ## Get the indices associated to the plane
-        plane, index_theta, index_phi = get_plane_indices(self, plane)
         ## Create the plot
         redo = False
         if self.axd is not None:
@@ -158,26 +149,17 @@ class Plotting(PlottingUtils, Data):
         self._PlotCreation__setup_axd(number, form_factor)
         
         if qt1 is not None:
-            plot_panel(self, 'A', file, qt1, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
-            ## Default limits
-            self.xlim((0, 100), "A")
+            plot_panel(self, 'A', file, qt1, cbars, plane, **kwargs)
         if qt2 is not None:
-            plot_panel(self, 'B', file, qt2, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'B', file, qt2, cbars, plane, **kwargs)
         if qt3 is not None and qt4 is None:
-            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
-            plot_panel(self, 'D', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'C', file, qt3, cbars, plane, **kwargs)
+            plot_panel(self, 'D', file, qt3, cbars, plane, **kwargs)
         elif qt3 is not None:
-            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'C', file, qt3, cbars, plane, **kwargs)
         if qt4 is not None:
-            plot_panel(self, 'D', file, qt4, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'D', file, qt4, cbars, plane, **kwargs)
         self.ghost.restore_default()
-        self.xlim(self.xlims["A"], "A")
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():

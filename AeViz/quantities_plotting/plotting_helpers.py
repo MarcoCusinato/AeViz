@@ -250,8 +250,8 @@ def get_qt_for_label(qt, **kwargs):
     else:
         return qt
 
-def plot_panel(plotting_object, letter, file, quantity, grid,
-               indices, cbars, labels, plane, **kwargs):
+def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
+               **kwargs):
     """
     Single panel plotting for contourf plots.
     Inputs:
@@ -267,29 +267,27 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     - **kwargs: additional arguments.
     """
     ## GET THE DATA
+    if not 'plane' in kwargs:
+        kwargs['plane'] = plane
     data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
-    ## GET THE PLANE CUT
-    data = plotting_object._Data__plane_cut(data, indices[0], indices[1])
-    qt_label = get_qt_for_label(quantity, **kwargs)
-    plotting_object._PlottingUtils__update_params(letter, grid,
-                                            data,
-                                            cbars[letter],
-                                            labels[qt_label]['log'],
-                                            labels[qt_label]['lim'], 2, 
-                                            labels[qt_label]['cmap'], 
-                                            labels[qt_label]['label'],
-                                            plotting_object.sim_dim)
-    ## SET THE PLANE LABELS
-    if plane == 'xy':
-        plotting_object.labels('X [km]', 'Y [km]', letter)
-    elif plane == 'xz':
-        plotting_object.labels('X [km]', 'Z [km]', letter)
-    elif plane == 'yz':
-        plotting_object.labels('Y [km]', 'Z [km]', letter)
+    plotting_object._PlottingUtils__update_params(
+                                            ax_letter=letter,
+                                            plane=plane,
+                                            data=data,
+                                            cbar_position=cbars[letter],
+                                            dim=2,
+                                            sim_dim=plotting_object.sim_dim)
     ## MAKE THE PLOT
     plotting_object._PlottingUtils__plot2D(letter)
-    plotting_object.Xscale('linear', letter)
-    plotting_object.Yscale('linear', letter)
+    plot_number = plotting_object.plot_dim[letter].index(2)
+    plotting_object.xlim(tuple(
+        plotting_object.grid[letter][plotting_object.plot_dim['A'].index(2)][0].limits),
+                         "A")
+    plotting_object.Xscale(plotting_object.grid[letter][plot_number][0].log,
+                           letter)
+    plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
+                           letter)
+    plotting_object._PlottingUtils__save_labels(letter)
 
 def plot_profile_panel(plotting_object, letter, quantity,
                        cbars, labels, **kwargs):

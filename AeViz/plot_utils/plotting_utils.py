@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
+from AeViz.units import aerray
 
 
 class PlottingUtils(PlotCreation):
@@ -27,12 +28,20 @@ class PlottingUtils(PlotCreation):
         plot. In case of 2D plots, it sets the limits of all the axes.
         The limits are saved in the xlims dictionary.
         """
+        xlim = list(xlim)
+        for i, xl in enumerate(xlim):
+            if not isinstance(xl, aerray):
+                xlim[i] = xlim[i] * self.axd[axd_letter].xaxis.get_units()[1]
+            else:
+                xlim[i] = xlim[i].to(self.axd[axd_letter].xaxis.get_units()[1])
+        xlim = tuple(xlim)
         if 2 in self.plot_dim[axd_letter]:
             for idx in range(len(self.plot_dim[axd_letter])):
                 if self.plot_dim[axd_letter][idx] == 2:
                     sdim = self.sim_dimension[axd_letter][idx]
                     grid = self.grid[axd_letter][idx][0]
-                    if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                    if np.isclose((np.abs(grid.max())).value,
+                                  (np.abs(grid.min()).value)):
                         plane = "xy"
                     else:
                         plane = "xz"
@@ -42,7 +51,7 @@ class PlottingUtils(PlotCreation):
             self.__save_lims()
         else:
             self.axd[axd_letter].set_xlim(xlim)
-        self.__save_xlims(axd_letter)
+            self.__save_xlims(axd_letter)
         self._PlotCreation__setup_aspect()
     
     def ylim(self, ylim, axd_letter="A"):
@@ -51,12 +60,20 @@ class PlottingUtils(PlotCreation):
         plot. In case of 2D plots, it sets the limits of all the axes.
         The limits are saved in the ylims dictionary.
         """
+        ylim = list(ylim)
+        for i, yl in enumerate(ylim):
+            if not isinstance(yl, aerray):
+                ylim[i] = ylim[i] * self.axd[axd_letter].yaxis.get_units()[1]
+            else:
+                ylim[i] = ylim[i].to(self.axd[axd_letter].yaxis.get_units()[1])
+        ylim = tuple(ylim)
         if 2 in self.plot_dim[axd_letter]:
             for idx in range(len(self.plot_dim[axd_letter])):
                 if self.plot_dim[axd_letter][idx] == 2:
                     sdim = self.sim_dimension[axd_letter][idx]
                     grid = self.grid[axd_letter][idx]
-                    if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                    if np.isclose((np.abs(grid.max())).value,
+                                  (np.abs(grid.min())).value):
                         plane = "xy"
                     else:
                         plane = "xz"
@@ -129,9 +146,11 @@ class PlottingUtils(PlotCreation):
         corresponding letter. For whatever reason...
         """
         if xlabel is not None:
-            self.axd[axd_letter].set_xlabel(xlabel)
+            unit = self.axd[axd_letter].xaxis.get_units()[1].to_string(format='latex')
+            self.axd[axd_letter].set_xlabel(xlabel + f' [{unit}]')
         if ylabel is not None:
-            self.axd[axd_letter].set_ylabel(ylabel)
+            unit = self.axd[axd_letter].yaxis.get_units()[1].to_string(format='latex')
+            self.axd[axd_letter].set_ylabel(ylabel + f' [{unit}]')
         self.__save_labels(axd_letter)
     
     def update_legend(self, legend, axd_letter="A"):
@@ -151,8 +170,9 @@ class PlottingUtils(PlotCreation):
                     self.legend[axd_letter][ll])
             self.axd[axd_letter].legend(loc='upper right')
 
-    def __update_params(self, ax_letter, plane, data, cbar_position, dim,
-                        sim_dim, **kwargs):
+    def __update_params(self, ax_letter=None, plane=None, data=None,
+                        cbar_position=None, dim=None, sim_dim=None,
+                        **kwargs):
         """
         Most important method of the class. It updates the dictionaries
         containing the plot parameters and data information.
@@ -172,7 +192,7 @@ class PlottingUtils(PlotCreation):
             self.sim_dimension[ax_letter] = [sim_dim]
             self.cbar_position[ax_letter] = cbar_position
             self.cbar_log[ax_letter] = data.data.log
-            self.cbar_lv[ax_letter] = None
+            self.cbar_lv[ax_letter] = data.data.limits
             self.cmap_color[ax_letter] = data.data.cmap
             self.cbar_label[ax_letter] = data.data.label
             if 'alpha' in kwargs:
@@ -429,7 +449,7 @@ class PlottingUtils(PlotCreation):
         
         pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][indx][0],
                                             self.grid[ax_letter][indx][1],
-                                            self.data[ax_letter][indx],
+                                            self.data[ax_letter][indx].value,
                                             norm=norm,
                                             levels=cbar_levels,
                                             antialiased=True,
@@ -440,7 +460,8 @@ class PlottingUtils(PlotCreation):
                                  format=ticker.FuncFormatter(fmt), 
                                 location=cbar_loaction(
                                     self.cbar_position[ax_letter]))
-        cbar.set_label(self.cbar_label[ax_letter])
+        cbar.set_label(self.cbar_label[ax_letter] + 
+                       f' [{self.data[ax_letter][indx].unit.to_string(format='latex')}]')
         ## Moved the label to avoid overlapping with the cbar
         if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
             self.axd[ax_letter].yaxis.labelpad = -10
@@ -448,6 +469,12 @@ class PlottingUtils(PlotCreation):
         if self.cbar_position[ax_letter] in ['T', 'B']:
             for lb in cbar.ax.xaxis.get_ticklabels()[::2]:
                 lb.set_visible(False)
+        if self.axd[ax_letter].xaxis.get_units() is None:
+            self.axd[ax_letter].xaxis.set_units((self.grid[ax_letter][indx][0].label,
+                                                self.grid[ax_letter][indx][0].unit))
+        if self.axd[ax_letter].yaxis.get_units() is None:
+            self.axd[ax_letter].yaxis.set_units((self.grid[ax_letter][indx][1].label,
+                                                self.grid[ax_letter][indx][1].unit))
 
     def __plot1D(self, ax_letter, redo=False):
         """
@@ -510,7 +537,8 @@ class PlottingUtils(PlotCreation):
                     if dm[indx] == 2:
                         sdim = self.sim_dimension[ax_letter][indx]
                         grid = self.grid[ax_letter][indx][0]
-                        if np.isclose(np.abs(grid.max()), np.abs(grid.min())):
+                        if np.isclose((np.abs(grid.max())).value,
+                                      (np.abs(grid.min())).value):
                             plane = "xy"
                         else:
                             plane = "xz"
@@ -549,13 +577,22 @@ class PlottingUtils(PlotCreation):
         """
         if ax_letter is None:
             for ax_letter in self.axd:
+                if ax_letter.islower():
+                    continue
+                print(ax_letter)
                 xlims = self.axd[ax_letter].get_xlim()
-                unit = self.axd[ax_letter].xaxis.get_units()[1]
+                unit = self.axd[ax_letter].xaxis.get_units()
+                if unit is None:
+                    continue
+                else:
+                    unit = unit[1]
                 self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
         else:
             xlims = self.axd[ax_letter].get_xlim()
-            unit = self.axd[ax_letter].xaxis.get_units()[1]
-            self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
+            unit = self.axd[ax_letter].xaxis.get_units()
+            if unit is not None:
+                unit = unit[1]
+                self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
     
     def __save_ylims(self, ax_letter=None):
         """
@@ -563,13 +600,22 @@ class PlottingUtils(PlotCreation):
         """
         if ax_letter is None:
             for ax_letter in self.axd:
+                if ax_letter.islower():
+                    continue
                 ylims = self.axd[ax_letter].get_ylim()
-                unit = self.axd[ax_letter].yaxis.get_units()[1]
+                unit = self.axd[ax_letter].yaxis.get_units()
+                if unit is None:
+                    continue
+                else:
+                    unit = unit[1]
+                print(ylims[0])
                 self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
         else:
             ylims = self.axd[ax_letter].get_ylim()
-            unit = self.axd[ax_letter].yaxis.get_units()[1]
-            self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
+            unit = self.axd[ax_letter].yaxis.get_units()
+            if unit is not None:
+                unit = unit[1]
+                self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
     
     def __save_lims(self, ax_letter=None):
         """

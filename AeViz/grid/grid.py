@@ -177,8 +177,8 @@ class grid:
             theta = np.linspace(0, np.pi, theta_points, endpoint=True)
         X = radius[None, :] * np.sin(theta)[:, None]
         Y = radius[None, :] * np.cos(theta)[:, None]
-        X.set(name='X', label=r'$X$', log=False)
-        Y.set(name='Y', label=r'$Y$', log=False)
+        X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
+        Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y
     
     def __2D_cartesian_grid(self, radius, theta, plane, phi_points=None):
@@ -224,9 +224,9 @@ class grid:
             np.sin(phi)[:, None, None]
         Z = radius[None, None, :] * np.cos(theta)[None, :, None] * \
             np.ones(phi.shape)[:, None, None]
-        X.set(name='X', label=r'$X$', log=False)
-        Y.set(name='Y', label=r'$Y$', log=False)
-        Z.set(name='Z', label=r'$Z$', log=False)
+        X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
+        Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
+        Z.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y, Z
     
     def __new_radius(par):
