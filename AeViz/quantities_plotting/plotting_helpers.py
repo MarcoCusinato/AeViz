@@ -289,14 +289,10 @@ def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
                            letter)
     plotting_object._PlottingUtils__save_labels(letter)
 
-def plot_profile_panel(plotting_object, letter, quantity,
-                       cbars, labels, **kwargs):
-    time, r, prof = plotting_object._Data__get_profile(quantity, **kwargs)
-    X, Y = np.meshgrid(time, u.convert_to_km(r))
-    if hasattr(labels[quantity]['lim'], '__call__'):
-        lim = labels[quantity]['lim'](prof)
-    else:
-        lim = labels[quantity]['lim']
+def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
+    kwargs["mesh"] = True
+    data = plotting_object._Data__get_profile(quantity, **kwargs)
+    """
     if 'rho_spherical_harmonics' in quantity:
         lab = labels[quantity]['label'].replace('XX', str(kwargs['l']))
         if kwargs['m'] is not None:
@@ -305,14 +301,21 @@ def plot_profile_panel(plotting_object, letter, quantity,
             lab = lab.replace('YY', '')
     else:
         lab = labels[quantity]['label']
-    plotting_object._PlottingUtils__update_params(letter, (X, Y), prof,
-                                    cbars[letter], labels[quantity]['log'],
-                                    lim, -1, 
-                                    labels[quantity]['cmap'], 
-                                    lab,
-                                    plotting_object.sim_dim)
-    plotting_object.labels('t-t$_b$ [s]', 'R [km]', letter)
+    """
+    plotting_object._PlottingUtils__update_params( 
+                                                  ax_letter=letter,
+                                                  plane=('time', 'radius'),
+                                                  data=data,
+                                                  cbar_position=cbars[letter],
+                                                  dim=-1,
+                                                  sim_dim=plotting_object.sim_dim)
     plotting_object._PlottingUtils__plot2D(letter)
-    plotting_object.xlim((-0.005, time.max()), letter)
-    plotting_object.Yscale('log', letter)
-    plotting_object.Xscale('linear', letter)
+    plot_number = plotting_object.plot_dim[letter].index(-1)
+    plotting_object.xlim(tuple(
+        plotting_object.grid[letter][plot_number][0].limits), letter)
+    plotting_object.ylim(tuple(
+        plotting_object.grid[letter][plot_number][1].limits), letter)
+    plotting_object.Xscale(plotting_object.grid[letter][plot_number][0].log,
+                           letter)
+    plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
+                           letter)

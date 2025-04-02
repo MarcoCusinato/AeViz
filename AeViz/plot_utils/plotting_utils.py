@@ -178,7 +178,9 @@ class PlottingUtils(PlotCreation):
         containing the plot parameters and data information.
         It is meat to be called BEFORE plotting.
         """
-        if plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
+        if type(plane) == tuple:
+            grid = getattr(data, plane[0]), getattr(data, plane[1])
+        elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
             if plane in ['yx', 'zx', 'zy']:
                 plane = plane[::-1]
             plane = plane.upper()
@@ -400,7 +402,8 @@ class PlottingUtils(PlotCreation):
             sh = 'gouraud'
         pcm = self.axd[ax_letter].pcolormesh(self.grid[ax_letter][indx][0],
                                             self.grid[ax_letter][indx][1],
-                                            self.data[ax_letter][indx], norm=norm,
+                                            self.data[ax_letter][indx].value,
+                                            norm=norm,
                                             cmap=self.cmap_color[ax_letter],
                                             shading=sh)
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
@@ -579,7 +582,6 @@ class PlottingUtils(PlotCreation):
             for ax_letter in self.axd:
                 if ax_letter.islower():
                     continue
-                print(ax_letter)
                 xlims = self.axd[ax_letter].get_xlim()
                 unit = self.axd[ax_letter].xaxis.get_units()
                 if unit is None:
@@ -608,7 +610,6 @@ class PlottingUtils(PlotCreation):
                     continue
                 else:
                     unit = unit[1]
-                print(ylims[0])
                 self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
         else:
             ylims = self.axd[ax_letter].get_ylim()

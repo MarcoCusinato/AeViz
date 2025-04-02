@@ -42,7 +42,8 @@ def radius(self, ghost):
     """
     radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 1], self.dim,
                                     'radius')
-    return aerray(radius, u.cm, name='radius', label=r'$r$', log=True)
+    return aerray(radius, u.cm, name='radius', label=r'$r$', log=True,
+                  limits=[radius.min(), radius.max()])
 
 def dr(self, ghost):
     """

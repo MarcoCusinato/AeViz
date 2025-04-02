@@ -226,13 +226,13 @@ class Plotting(PlottingUtils, Data):
                                                              qt4)
         self._PlotCreation__setup_axd(number, form_factor)
         if qt1 is not None:
-            plot_profile_panel(self, 'A', qt1, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'A', qt1, cbars, **kwargs)
         if qt2 is not None:
-            plot_profile_panel(self, 'B', qt2, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'B', qt2, cbars, **kwargs)
         if qt3 is not None:
-            plot_profile_panel(self, 'C', qt3, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'C', qt3, cbars, **kwargs)
         if qt4 is not None:
-            plot_profile_panel(self, 'D', qt4, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'D', qt4, cbars, **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
@@ -318,7 +318,7 @@ class Plotting(PlottingUtils, Data):
         
         show_figure()
 
-    def plotGWspectrogram(self, qt):
+    def plotSpectrogram(self, qt, **kwargs):
         """
         Plots the GW spectrogram and the GW signal.
         """
@@ -327,71 +327,54 @@ class Plotting(PlottingUtils, Data):
             number_spect = sum([-2 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
-            number_GW = sum([((1 in self.plot_dim[ax_letter]) and 
+            number_curve = sum([((1 in self.plot_dim[ax_letter]) and 
                              (-2 not in self.plot_dim[ax_letter]))
                              for ax_letter in self.axd if ax_letter in 
                              self.plot_dim])
-            if number_spect != number_GW:
+            if number_spect != number_curve:
                 self.Close()
                 number = 1
             else:
-                number = number_GW + 1
+                number = number_curve + 1
                 redo = True
         else:
             number = 1
         cbars, plots = setup_cbars_spectrogram(number)
         self._PlotCreation__setup_axd(number, 5)
-        post_data_GWs = self._Data__get_data_from_name(
-                    'GW_Amplitudes')
-        post_data_spect = self._Data__get_data_from_name(
-                    'GW_spectrogram', 3.086e+22)
-        
-        if self.sim_dim == 2:
-            dataGWs = post_data_GWs[:, 1:]
-            t, f, Zxx = post_data_spect[0], post_data_spect[1], \
-                post_data_spect[2]
-        else:
-            if qt == 'h+eq':
-                dataGWs = post_data_GWs[:,1]
-                t, f, Zxx = post_data_spect[0][:, 0], \
-                    post_data_spect[1][..., 0], post_data_spect[2][..., 0]
-            elif qt == 'h+pol':
-                dataGWs = post_data_GWs[:,2]
-                t, f, Zxx = post_data_spect[0][:, 1], \
-                    post_data_spect[1][..., 1], post_data_spect[2][..., 1]
-            elif qt == 'hxeq':
-                dataGWs = post_data_GWs[:,3]
-                t, f, Zxx = post_data_spect[0][:,2], \
-                    post_data_spect[1][..., 2], post_data_spect[2][..., 2]
-            elif qt == 'hxpol':
-                dataGWs = post_data_GWs[:,4]
-                t, f, Zxx = post_data_spect[0][:, 3], \
-                    post_data_spect[1][..., 3], post_data_spect[2][..., 3]
-        f /= 1e3
+        data = self._Data__get_data_from_name(qt, **kwargs)
+        keep_kwargs = {}
+        for nm in ['window_size', 'check_spacing', 'time_range', 'scale_to',
+                   'windowing', 'overlap']:
+            if nm in kwargs:
+                keep_kwargs[nm] = kwargs[nm]
+        spectrogram = data.stft(**keep_kwargs)
+    
         ## 1D plot of GWs
-        self._PlottingUtils__update_params(plots[0], post_data_GWs[:,0],
-                                           dataGWs, None, False, None,
-                                           1, None, None, self.sim_dim)
-        
-        self.labels(None, plot_labels['GW_Amplitudes_'+qt]['label'], plots[0])
-        self.ylim(plot_labels['GW_Amplitudes_'+qt]['lim'](dataGWs), plots[0])
-        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[0])
-        self.Xscale('linear', plots[0])
-        self.Yscale('linear', plots[0])
+        self._PlottingUtils__update_params(ax_letter=plots[0],
+                                           plane='time',
+                                           data=data,
+                                           cbar_position=None,
+                                           dim=1,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot1D(plots[0])
+        self.Xscale(data.time.log, plots[0])
+        self.Yscale(data.data.log, plots[0])
+        self.xlim(data.time.limits, plots[0])
+        self.ylim(data.data.limits, plots[0])
         ## 2D plot of spectrogram
-        self._PlottingUtils__update_params(plots[1], (t, f),
-                                           Zxx, cbars[plots[1]], True, 
-                                           (1e-24, 1e-20),
-                                           -2, 'magma',
-                r'$\frac{\mathrm{dE_{GW}}}{\mathrm{df}}$ [B$\cdot$HZ$^{-1}$]',
-                                           self.sim_dim)
-        self.labels('t-t$_b$ [s]', '$f$ [kHz]', plots[1])
+        self._PlottingUtils__update_params(ax_letter=plots[1],
+                                           plane=('time', 'frequency'),
+                                           data=spectrogram,
+                                           cbar_position=cbars[plots[1]],
+                                           dim=-2,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot2Dmesh(plots[1])
-        self.ylim((0, 2), plots[1])
-        self.Xscale('linear', plots[1])
-        self.Yscale('linear', plots[1])
-        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[1])
+        self.Xscale(spectrogram.time.log, plots[1])
+        self.Yscale(spectrogram.frequency.log, plots[1])
+        self.xlim(spectrogram.time.limits, plots[1])
+        self.ylim(spectrogram.frequency.limits, plots[1])
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower() or -2 not in self.plot_dim[ax_letter]:

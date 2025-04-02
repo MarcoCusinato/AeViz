@@ -612,7 +612,7 @@ class aeseries:
             uu = self.data.unit ** 2 / u.Hz
             lab = merge_strings(r'PSD$_{$', self.data.label, r'$}(f)$')
         ZZxx = aerray(Zxx, uu, self.data.name+f'_{scale_to}', lab,
-                      self.data.cmap, [Zxx.min() * 1.1, Zxx.max() * 0.9],
+                      self.data.cmap, [np.min(Zxx[np.nonzero(Zxx)]) * 1.1, Zxx.max() * 0.9],
                       True)
         return aeseries(ZZxx, time=ttm, frequency=ffreq)
     

@@ -22,10 +22,9 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
         if kwargs['mode'] == 1:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
         elif kwargs['mode'] == 2:
-            return derive_profile(simulation, 'BV_frequency',
-                                  **kwargs)
+            return derive_profile(simulation, 'BV_frequency', mode = 2)
     else:
-        return derive_profile(simulation, profile, **kwargs)
+        return derive_profile(simulation, profile)
 
 def read_profile(simulation, profile, save_checkpoints):
     """
@@ -45,7 +44,7 @@ def read_profile(simulation, profile, save_checkpoints):
         derive_profiles(simulation, None, save_checkpoints)
         return read_profile(simulation, profile, save_checkpoints)
 
-def derive_profile(simulation, profile, **kwargs):
+def derive_profile(simulation, profile):
     """
     Calculates a single profile and returns it.
     """
@@ -56,12 +55,12 @@ def derive_profile(simulation, profile, **kwargs):
     nm, lb, lm, = zeroth_step.name, zeroth_step.label, zeroth_step.limits
     lg, cm = zeroth_step.log, zeroth_step.cmap
     nm = nm + '_profile'
-    lb = merge_strings(r'$\langle$', lb, r'$\rangle_\Omega$')
+    lb = merge_strings(r'$\langle $', lb, r'$\rangle_\Omega$')
     for (file, progress) in zip(simulation.hdf_file_list,
                          range(len(simulation.hdf_file_list))):
         try:
             time = np.concatenate((time, simulation.time(file)))
-            qt_local = qt(file, **kwargs)
+            qt_local = qt(file)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):
@@ -74,7 +73,7 @@ def derive_profile(simulation, profile, **kwargs):
             profiles = np.concatenate((profiles, qt_av[..., None]), axis=-1)
         except:
             time = simulation.time(file)
-            qt_local = qt(file, **kwargs)
+            qt_local = qt(file)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):
@@ -90,6 +89,8 @@ def derive_profile(simulation, profile, **kwargs):
     if profiles.ndim == 3:
         profiles = profiles.swapaxes(-2, -1)
     profiles.set(name=nm, label=lb, limits=lm, cmap=cm, log=lg)
+    time = aerray(time, u.s, 'time', r'$t-t_\mathrm{b}$', None,
+                  [-0.005, time[-1]])
     return aeseries(profiles, time=time,
                     radius=simulation.cell.radius(simulation.ghost)) 
 

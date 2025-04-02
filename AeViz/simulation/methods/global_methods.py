@@ -17,7 +17,9 @@ imported into the Simulation class.
 @smooth
 @derive
 @subtract_tob
-def global_neutrino_luminosity(self, tob_corrected=True, **kwargs):
+def global_neutrino_luminosity(self, tob_corrected=True,
+                               comp:Literal['nue', 'nua', 'nux']='all',
+                               **kwargs):
     """
     aeseries
     luminosity flux nue  5: number luminosity flux nue
@@ -27,22 +29,40 @@ def global_neutrino_luminosity(self, tob_corrected=True, **kwargs):
     nu_tmp = load_file(self._Simulation__log_path,
                        self._Simulation__integrated_nu_path)
     time = aerray(nu_tmp[:,2], u.s, 'time', r'$t$', None, [0, nu_tmp[-1, 2]], False)
-    return [aeseries(
-                    aerray(nu_tmp[:, 38], u.erg / u.s, 'Lnue',
-                           r'$L_\mathrm{\nu_e}$', None, [0, 1e52]),
-                           time=time),
-            aeseries(
-                    aerray(nu_tmp[:, 39], u.erg / u.s, 'Lnua',
-                           r'$L_\mathrm{\overline{\nu}_e}$', None, [0, 1e52]),
-                           time=time.copy()),
-            aeseries(
-                    aerray(nu_tmp[:, 40] / 4, u.erg / u.s, 'Lnux',
-                           r'$L_\mathrm{\nu_x}$', None, [0, 1e52]),
-                           time=time.copy()),
-            ]
+    if comp == 'all':
+        return [aeseries(
+                        aerray(nu_tmp[:, 38], u.erg / u.s, 'Lnue',
+                            r'$L_\mathrm{\nu_e}$', None, [0, 1e52]),
+                            time=time),
+                aeseries(
+                        aerray(nu_tmp[:, 39], u.erg / u.s, 'Lnua',
+                            r'$L_\mathrm{\overline{\nu}_e}$', None, [0, 1e52]),
+                            time=time.copy()),
+                aeseries(
+                        aerray(nu_tmp[:, 40] / 4, u.erg / u.s, 'Lnux',
+                            r'$L_\mathrm{\nu_x}$', None, [0, 1e52]),
+                            time=time.copy()),
+                ]
+    elif comp == 'nua':
+        return aeseries(
+                        aerray(nu_tmp[:, 39], u.erg / u.s, 'Lnua',
+                            r'$L_\mathrm{\overline{\nu}_e}$', None, [0, 1e52]),
+                            time=time.copy())
+    elif comp == 'nue':
+        return aeseries(
+                        aerray(nu_tmp[:, 38], u.erg / u.s, 'Lnue',
+                            r'$L_\mathrm{\nu_e}$', None, [0, 1e52]),
+                            time=time)
+    elif comp == 'nux':
+        return aeseries(
+                        aerray(nu_tmp[:, 40] / 4, u.erg / u.s, 'Lnux',
+                            r'$L_\mathrm{\nu_x}$', None, [0, 1e52]),
+                            time=time.copy())
 
 @subtract_tob
-def global_neutrino_number_luminosity(self, tob_corrected=True, **kwargs):
+def global_neutrino_number_luminosity(self, tob_corrected=True,
+                                      comp:Literal['nue', 'nua', 'nux']='all',
+                                      **kwargs):
     """
     aeseries
     number luminosity flux nue
@@ -52,26 +72,47 @@ def global_neutrino_number_luminosity(self, tob_corrected=True, **kwargs):
     nu_tmp = load_file(self._Simulation__log_path,
                        self._Simulation__integrated_nu_path)
     time = aerray(nu_tmp[:,2], u.s, 'time', r'$t$', None, [0, nu_tmp[-1, 2]], False)
-    return [aeseries(
-                    aerray(nu_tmp[:, 35], u.dimensionless_unscaled / u.s,
-                           'Lnue',
-                           r'$N_\mathrm{\nu_e}$', None, [0, 1e55]),
-                           time=time),
-            aeseries(
-                    aerray(nu_tmp[:, 36], u.dimensionless_unscaled / u.s,
-                           'Lnumnua',
-                           r'$N_\mathrm{\overline{\nu}_e}$', None, [0, 1e55]),
-                           time=time.copy()),
-            aeseries(
-                    aerray(nu_tmp[:, 37] / 4, u.dimensionless_unscaled / u.s,
-                           'Lnumnux',
-                           r'$N_\mathrm{\nu_x}$', None, [0, 1e55]),
-                           time=time.copy()),
-    ]
+    if comp == 'all':
+        return [aeseries(
+                        aerray(nu_tmp[:, 35], u.dimensionless_unscaled / u.s,
+                            'Lnue',
+                            r'$N_\mathrm{\nu_e}$', None, [0, 1e55]),
+                            time=time),
+                aeseries(
+                        aerray(nu_tmp[:, 36], u.dimensionless_unscaled / u.s,
+                            'Lnumnua',
+                            r'$N_\mathrm{\overline{\nu}_e}$', None, [0, 1e55]),
+                            time=time.copy()),
+                aeseries(
+                        aerray(nu_tmp[:, 37] / 4, u.dimensionless_unscaled / u.s,
+                            'Lnumnux',
+                            r'$N_\mathrm{\nu_x}$', None, [0, 1e55]),
+                            time=time.copy()),
+        ]
+    elif comp == 'nua':
+        return aeseries(
+                        aerray(nu_tmp[:, 36], u.dimensionless_unscaled / u.s,
+                            'Lnumnua',
+                            r'$N_\mathrm{\overline{\nu}_e}$', None, [0, 1e55]),
+                            time=time.copy())
+    elif comp == 'nue':
+        return aeseries(
+                        aerray(nu_tmp[:, 35], u.dimensionless_unscaled / u.s,
+                            'Lnue',
+                            r'$N_\mathrm{\nu_e}$', None, [0, 1e55]),
+                            time=time)
+    elif comp == 'nux':
+        return aeseries(
+                        aerray(nu_tmp[:, 37] / 4, u.dimensionless_unscaled / u.s,
+                            'Lnumnux',
+                            r'$N_\mathrm{\nu_x}$', None, [0, 1e55]),
+                            time=time.copy())
 
 @smooth
 @derive
-def global_neutrino_mean_energies(self, tob_corrected=True, **kwargs):
+def global_neutrino_mean_energies(self, tob_corrected=True,
+                                  comp:Literal['nue', 'nua', 'nux']='all',
+                                  **kwargs):
     """
     list of aeseries
     1: mean energy nue  
@@ -85,8 +126,15 @@ def global_neutrino_mean_energies(self, tob_corrected=True, **kwargs):
                           [r'$\langle E_{\nu_e}\rangle$',
                            r'$\langle E_{\overline{\nu}_e}\rangle$',
                            r'$\langle E_{\nu_x}\rangle$']):
-        me.data.set(name=nm, limits=[0,30], label=lb) 
-    return mean_ene
+        me.data.set(name=nm, limits=[0,30], label=lb)
+    if comp == 'all': 
+        return mean_ene
+    elif comp == 'nue':
+        return mean_ene[0]
+    elif comp == 'nua':
+        return mean_ene[1]
+    elif comp == 'nux':
+        return mean_ene[2]
 
 @smooth
 @derive
