@@ -333,6 +333,6 @@ def global_internal_energy(self, tob_corrected=True, **kwargs):
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     return aeseries(
         aerray(en[:, 4], u.erg, 'internal_energy',
-                  r'$E_{\mathrm{max}}$', 'nipy_spectral', [1e24, 1e35], log=True),
+                  r'$E_{\mathrm{int,max}}$', 'nipy_spectral', [1e24, 1e35], log=True),
         time=time
     )

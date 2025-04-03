@@ -26,11 +26,11 @@ def rho(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
-def internal_energy(self, file_name, **kwargs):
+def MHD_energy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['hydro/data']\
             [..., self.hydroTHD_index['hydro']['I_EN']]), self.dim)
-    return aerray(data, u.erg / u.cm**3, 'internal_energy',
+    return aerray(data, u.erg / u.cm**3, 'MHD_energy',
                   r'$E$', 'nipy_spectral', [1e24, 1e35], log=True)
 
 ## VELOCITY

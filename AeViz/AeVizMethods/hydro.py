@@ -16,9 +16,9 @@ def rho(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
     AeViz_plot_panel(self, 'rho', file, projection, plane, **kwargs)
 
 @fig_window_open
-def internal_energy(self, file=None, projection:Literal['1D', '2D']='1D',
+def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
                     plane='time', **kwargs):
-    AeViz_plot_panel(self, 'internal_energy', file, projection, plane, **kwargs)
+    AeViz_plot_panel(self, 'MHD_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
 def radial_velocity(self, file=None, projection:Literal['1D', '2D']='1D',
