@@ -273,6 +273,9 @@ def global_gas_pressure(self, tob_corrected=True, comp:Literal['max', 'min']='ma
                 time = time
             )
 
+@smooth
+@derive
+@subtract_tob
 def global_radial_velocity(self, tob_corrected=True, **kwargs):
     v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
@@ -282,6 +285,9 @@ def global_radial_velocity(self, tob_corrected=True, **kwargs):
             time = time
         )
 
+@smooth
+@derive
+@subtract_tob
 def global_theta_velocity(self, tob_corrected=True, **kwargs):
     v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
@@ -291,6 +297,9 @@ def global_theta_velocity(self, tob_corrected=True, **kwargs):
             time = time
         )
 
+@smooth
+@derive
+@subtract_tob
 def global_theta_velocity(self, tob_corrected=True, **kwargs):
     v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
@@ -313,5 +322,17 @@ def rotational_energy_total(self, tob_corrected=True, **kwargs):
     return aeseries(
         aerray(en[:, 3], u.dimensionless_unscaled, 'Erottot',
                r'$E_\mathrm{rot,tot}$', None, [0, 1e53], False),
+        time=time
+    )
+
+@smooth
+@derive
+@subtract_tob
+def global_internal_energy(self, tob_corrected=True, **kwargs):
+    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
+    return aeseries(
+        aerray(en[:, 4], u.erg, 'internal_energy',
+                  r'$E_{\mathrm{max}}$', 'nipy_spectral', [1e24, 1e35], log=True),
         time=time
     )

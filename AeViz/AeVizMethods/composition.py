@@ -62,7 +62,6 @@ def cpot_n(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
 @fig_window_open
 def cpot_p(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
        **kwargs):
-    qt = 'proton_chemical_potential'
     AeViz_plot_panel(self, 'proton_chemical_potential', file, projection,
                      plane, **kwargs)
 

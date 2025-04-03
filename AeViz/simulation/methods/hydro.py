@@ -26,7 +26,7 @@ def rho(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
-def MHD_energy(self, file_name, **kwargs):
+def internal_energy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['hydro/data']\
             [..., self.hydroTHD_index['hydro']['I_EN']]), self.dim)
