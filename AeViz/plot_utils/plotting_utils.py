@@ -115,8 +115,8 @@ class PlottingUtils(PlotCreation):
         if scale in ['log', 'symlog'] or scale == True:
             if self.ylims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
-                    min(np.log10(-self.ylims[ax_letter][0]),
-                    np.log10(self.ylims[ax_letter][1]))) - 6)
+                    min(np.log10(-self.ylims[ax_letter][0].value),
+                    np.log10(self.ylims[ax_letter][1].value))) - 6)
                 self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
             else:
                 self.axd[ax_letter].set_yscale('log')
@@ -179,7 +179,7 @@ class PlottingUtils(PlotCreation):
         It is meat to be called BEFORE plotting.
         """
         if type(plane) == tuple:
-            grid = getattr(data, plane[0]), getattr(data, plane[1])
+            grid = (getattr(data, plane[0]), getattr(data, plane[1]))
         elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
             if plane in ['yx', 'zx', 'zy']:
                 plane = plane[::-1]

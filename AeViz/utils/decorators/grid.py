@@ -107,6 +107,9 @@ def _get_plane_avgs(sim, data, plane):
         radius = sim.cell.radius(sim.ghost)
         if sim.dim == 1:
             return aeseries(data, radius=radius)
+        elif data.shape == radius.shape:
+            return aeseries(data,
+                            radius=radius)
         else:
             return aeseries(function_average(data, sim.dim, 'Omega',
                                              sim.cell.dOmega(sim.ghost)),

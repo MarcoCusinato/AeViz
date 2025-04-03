@@ -20,8 +20,5 @@ def add_field(self, file, plot, comp: Literal['velocity', 'Bfield'],
 
 @fig_window_open
 def error(self, file=None, projection:Literal['1D', '2D']='1D',
-            index1=None, index2=None,
-            plane:Literal['xz', 'yz', 'xy', 'radius', 'theta', 'phi',
-                        'time']='radius', **kwargs):
-    qt = 'error'
-    plot_qt(self, file, qt, projection, index1, index2, plane, **kwargs)
+          plane='time', **kwargs):
+    AeViz_plot_panel(self, 'error', file, projection, plane, **kwargs)

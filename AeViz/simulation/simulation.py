@@ -61,6 +61,8 @@ class Simulation:
         self.__rho_max_path = 'rho.dat'
         self.__grw_path = 'grw.dat'
         self.__mag_data = 'mag.dat'
+        self.__erg_data = 'erg.dat'
+        self.__vel_data = 'vel.dat'
         ## Opened file name
         self.__data_h5 = None
         self.__opened_hdf_file = ''

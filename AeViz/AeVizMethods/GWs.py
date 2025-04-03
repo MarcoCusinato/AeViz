@@ -1,4 +1,5 @@
 from AeViz.AeVizMethods import *
+from AeViz.simulation.methods.GWs import GW_Amplitudes
 
 ## ---------------------------------------------------------------------
 ## GRAVITATIONAL WAVES
@@ -11,28 +12,28 @@ imported into the AeViz class.
 """
 
 @fig_window_open
-def GWs(self, comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
+def GWs(self, projection:Literal['1D', '2D']='1D',
+        comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
         decomposition=False, spectrogram=False, **kwargs):
     if self.sim_dim == 1:
         pass
+    kwargs['spectrogram'] = spectrogram
+    if self.sim_dim == 2:
+        kwargs['comp'] = 'h+eq'
+        AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 'time',
+                         **kwargs)
     else:
-        if comp == 'all' and self.sim_dim == 3:
-            qt = ['h+eq', 'h+pol', 'hxeq', 'hxpol']
-        elif self.sim_dim == 2:
-            qt = ['h+eq']
+        if comp == 'all':
+            for cm in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
+                kwargs['comp'] = cm
+                AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
+                                 'time', **kwargs)
         else:
-            qt = [comp]
-        if decomposition:
-            for q in qt:
-                self.plotGWDecomposition(q, **kwargs)
-                
-        elif spectrogram:
-            for q in qt:
-                self.plotGWspectrogram(q)
-        else:
-            for q in qt:
-                self.plot1D(None, 'GW_Amplitudes_' + q, 'time', None, None,
-                            **kwargs)
+            kwargs['comp'] = comp
+            AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
+                                 'time', **kwargs)
+        
+    kwargs['comp'] = comp
 
 @fig_window_open
 def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',

@@ -25,7 +25,7 @@ def time_of_bounce(self):
     if os.path.exists(os.path.join(self.storage_path, 'tob.dat')):
         tob = np.loadtxt(os.path.join(self.storage_path, 'tob.dat'))
         return tob * u.s
-    rho_data = self.rho_max(False)
+    rho_data = self.global_rho(False)
     rho_index = np.argmax(rho_data.data > 1.4e14 * u.g / u.cm ** 3)
     if rho_index == 0 or rho_data.time[rho_index] >= 0.6 * u.s:
         rho_index = np.argmax(rho_data.data > 2e14 * u.g / u.cm ** 3)
@@ -52,7 +52,7 @@ def time_of_BH(self):
     For now is when the rho max raises above a certain limit
     (6e15 g/cm3)
     """
-    rho_data = self.rho_max()
+    rho_data = self.global_rho()
     rho_BH = 6e15 * u.g/u.cm**3
     
     return rho_data.time[np.argmax(rho_data.data>=rho_BH)]

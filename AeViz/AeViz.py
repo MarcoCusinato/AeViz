@@ -87,8 +87,6 @@ class AeViz(Plotting):
         self.__supernova_methods.extend(list_module_functions(
             AeViz.AeVizMethods.GWs))
 
-
-
     def __delete_methods(self):
         for name in self.__loaded_methods:
             if hasattr(self, name):

@@ -3,7 +3,6 @@ import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
-from AeViz.grid.grid import grid
 from AeViz.units import u
 from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars,

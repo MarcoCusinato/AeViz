@@ -282,7 +282,7 @@ def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
     plot_number = plotting_object.plot_dim[letter].index(2)
     plotting_object.xlim(tuple(
         plotting_object.grid[letter][plotting_object.plot_dim['A'].index(2)][0].limits),
-                         "A")
+                         letter)
     plotting_object.Xscale(plotting_object.grid[letter][plot_number][0].log,
                            letter)
     plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
