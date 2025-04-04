@@ -107,7 +107,7 @@ def theta(self, ghost):
     except:
         theta = self._cell__theta_file[1]
     
-    return aerray(theta, u.radian, name='theta', label=r'$\theta$')
+    return aerray(theta, u.radian, name='theta', label=r'$\theta$', limits=[0, 3.14])
 
 def dtheta(self, ghost):
     """

@@ -13,8 +13,7 @@ imported into the AeViz class.
 ## RADII
 
 @fig_window_open
-def PNS_radius(self, comp:Literal['all', 'min', 'max', 'avg']='avg',
-                **kwargs):
+def PNS_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg', **kwargs):
     self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None, **kwargs)
 
 @fig_window_open
@@ -46,7 +45,6 @@ def PNS_nucleus_radius(self, comp:Literal['all', 'min', 'max',
                 **kwargs)
     
 ## ENERGIES
-
 @fig_window_open
 def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag'],
                 **kwargs):

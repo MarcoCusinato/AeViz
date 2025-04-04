@@ -407,7 +407,6 @@ class aeseries:
             })
     
     def __array_function__(self, func, types, args, kwargs):
-        print('pippoooooo')
         if func == np.fft.fft:
             return self.fft(**kwargs)
         elif func == np.fft.rfft:
@@ -422,6 +421,9 @@ class aeseries:
     def __array__(self, dtype=None):
         """Allows NumPy to recognize aeseries as an array-like object."""
         return np.asarray(self.data, dtype=dtype)
+    
+    def return_axis_names(self):
+        return self.__axis_names
 
     def to(self, unit):
         """

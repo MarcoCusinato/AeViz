@@ -43,6 +43,9 @@ class Plotting(PlottingUtils, Data):
                     break
         if not overplot:
         ##PLOT CREATION
+            if type(plane) == tuple:
+                if plane[0] is None or type(plane[0]) == int:
+                    plane = data.return_axis_names()[0]
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
             self._PlottingUtils__update_params(
                                                 ax_letter=axd_letters[number],
@@ -58,8 +61,7 @@ class Plotting(PlottingUtils, Data):
             if axd_letters[number] not in self.xlims:
                 self.xlim(getattr(data, plane).limits, axd_letters[number])
                 self.ylim(data.data.limits, axd_letters[number])
-                
-                self._PlottingUtils__save_labels(axd_letters[number])
+            self._PlottingUtils__save_labels(axd_letters[number])
             self.Xscale(getattr(data, plane).log, axd_letters[number])
             self.Yscale(data.data.log, axd_letters[number])
             self.update_legend(legend, axd_letters[number])

@@ -1,6 +1,7 @@
 from AeViz.simulation.methods import *
 from AeViz.utils.math_utils import strfct2D
 from AeViz.units.constants import constants as c
+from typing import Literal
 
 """
 Functions to handle magnetic fields data from a simulation.
@@ -25,18 +26,29 @@ def __CT_magnetic_fields(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
-def magnetic_fields(self, file_name, **kwargs):
+def magnetic_fields(self, file_name, comp:Literal['all', 'r', 'th', 'ph']='all',
+                    **kwargs):
     """
     Magnetic field at the cells center.
     """
     data = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['mag_vol/data'][...]), self.dim)
-    return (aerray(data[..., 0], u.G, 'B_r', r'$B_r$', 'coolwarm', [-1e15, 1e15],
-                  True), 
-            aerray(data[..., 1], u.G, 'B_theta', r'$B_\theta$', 'coolwarm',
-                   [-1e15, 1e15], True),
-            aerray(data[..., 2], u.G, 'B_phi', r'$B_\phi$', 'coolwarm',
-                   [-1e15, 1e15], True))
+    if comp == 'all':
+        return (aerray(data[..., 0], u.G, 'B_r', r'$B_r$', 'coolwarm', [-1e15, 1e15],
+                    True), 
+                aerray(data[..., 1], u.G, 'B_theta', r'$B_\theta$', 'coolwarm',
+                    [-1e15, 1e15], True),
+                aerray(data[..., 2], u.G, 'B_phi', r'$B_\phi$', 'coolwarm',
+                    [-1e15, 1e15], True))
+    elif comp == 'r':
+        return aerray(data[..., 0], u.G, 'B_r', r'$B_r$', 'coolwarm', [-1e15, 1e15],
+                    True)
+    elif comp == 'th':
+        return aerray(data[..., 1], u.G, 'B_theta', r'$B_\theta$', 'coolwarm',
+                    [-1e15, 1e15], True)
+    elif comp == 'ph':
+        return aerray(data[..., 2], u.G, 'B_phi', r'$B_\phi$', 'coolwarm',
+                    [-1e15, 1e15], True)
 
 @get_grid
 @smooth
@@ -57,7 +69,8 @@ def toroidal_magnetic_fields(self, file_name, **kwargs):
 
 @get_grid
 @smooth
-def magnetic_energy(self, file_name, **kwargs):
+def magnetic_energy(self, file_name, comp: Literal['all', 'tot', 'pol', 'tor']='all',
+                    **kwargs):
     """
     Magnetic energy density. Total, poloidal and toroidal.
     """
@@ -71,7 +84,12 @@ def magnetic_energy(self, file_name, **kwargs):
     tor_b = 0.5 * Bphi / c.mu0
     tor_b.set(label=r'$E_\mathrm{mag,tor}$', name='E_mag_tor',
               limits=[1e20, 1e28], log=True, cmap='magma')
-    return  tot_b, pol_b, tor_b
+    if comp == 'all':
+        return  tot_b, pol_b, tor_b
+    elif comp == 'pol':
+        return pol_b
+    elif comp == 'tor':
+        return tor_b
 
 @get_grid
 @smooth

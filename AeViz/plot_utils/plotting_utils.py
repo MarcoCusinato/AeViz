@@ -179,7 +179,10 @@ class PlottingUtils(PlotCreation):
         It is meat to be called BEFORE plotting.
         """
         if type(plane) == tuple:
-            grid = (getattr(data, plane[0]), getattr(data, plane[1]))
+            if type(plane[0]) == str:
+                grid = (getattr(data, plane[0]), getattr(data, plane[1]))
+            else:
+                grid = getattr(data, data.return_axis_names()[0])
         elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
             if plane in ['yx', 'zx', 'zy']:
                 plane = plane[::-1]

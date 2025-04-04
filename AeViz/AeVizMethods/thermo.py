@@ -42,7 +42,8 @@ def lorentz_factor(self, file=None, projection:Literal['1D', '2D']='1D', plane='
 @fig_window_open
 def gravitational_potential(self, file=None, projection:Literal['1D', '2D']='1D',
                             plane='time', **kwargs):
-    AeViz_plot_panel(self, 'gravitational_potential', file, projection, plane, **kwargs)
+    AeViz_plot_panel(self, 'gravitational_potential', file, projection, plane,
+                     **kwargs)
 
 @fig_window_open
 def gravitational_energy(self, file=None, projection:Literal['1D', '2D']='1D',
@@ -50,11 +51,9 @@ def gravitational_energy(self, file=None, projection:Literal['1D', '2D']='1D',
     AeViz_plot_panel(self, 'gravitational_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
-def int_ene(self, file=None, projection:Literal['1D', '2D']='1D', index1=None, 
-        index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',
-                        'theta', 'phi', 'time']='radius', **kwargs):
-    qt = 'internal_energy'
-    plot_qt(self, file, qt, projection, index1, index2, plane, **kwargs)
+def int_ene(self, file=None, projection:Literal['1D', '2D']='1D',
+                            plane='time', **kwargs):
+    AeViz_plot_panel(self, 'internal_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
 def nu_heat(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
