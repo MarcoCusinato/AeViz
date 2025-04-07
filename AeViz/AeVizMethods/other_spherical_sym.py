@@ -34,9 +34,13 @@ def rho_decomposition_barcode(self, lmin=None, lmax=None, msum=False,
 ## TIDAL DATA
 
 @fig_window_open
-def tidal_number(self, type:Literal['love', 'lambda'], **kwargs):
+def tidal_number(self, projection:Literal['1D', '2D']='1D',
+                 type:Literal['love', 'lambda']='love',
+                 comp:Literal['PNS_core', 'PNS']='PNS',
+                 **kwargs):
+    kwargs['comp'] = comp
     if type == 'love':
         qt = 'love_number'
     else:
         qt = 'tidal_deformability'
-    self.plot1D(None, qt, 'time', None, None, **kwargs)
+    AeViz_plot_panel(self, qt, None, projection, 'time', **kwargs)
