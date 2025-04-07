@@ -159,6 +159,14 @@ class PlottingUtils(PlotCreation):
         number of legend entries must be the same as the number of
         lines in the plot.
         """
+        if axd_letter in self.legend:
+            old_legend = legend.copy()
+            legend = self.legend[axd_letter]
+            if type(old_legend) == list:
+                for ll in old_legend:
+                    legend.append(ll)
+            else:
+                legend.append(old_legend)
         if legend is None:
             pass
         elif len(self.axd[axd_letter].lines) != len(legend):

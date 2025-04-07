@@ -12,14 +12,21 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         get_plane_indices,
                                                         show_figure,
                                                         plot_panel,
-                                                        plot_profile_panel)
-from AeViz.plot_utils.utils import GW_limit
+                                                        plot_profile_panel,
+                                                        remove_labelling)
 import cv2
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
         PlottingUtils.__init__(self)
         Data.__init__(self)
+        self.__simple_labelling = False
+        
+    def set_simple_labelling(self):
+        if self.__simple_labelling:
+            self.__simple_labelling = False
+        else:
+            self.__simple_labelling = True
     
     def plot1D(self, file, qt, plane, **kwargs):
         """
@@ -46,6 +53,9 @@ class Plotting(PlottingUtils, Data):
             if type(plane) == tuple:
                 if plane[0] is None or type(plane[0]) == int:
                     plane = data.return_axis_names()[0]
+            if self.__simple_labelling:
+                data, label = remove_labelling(data)
+                legend = [label]
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
             self._PlottingUtils__update_params(
                                                 ax_letter=axd_letters[number],
@@ -317,10 +327,7 @@ class Plotting(PlottingUtils, Data):
         self.plot1D(None, 'innercore_radius', 'time', rad='avg', plot='E',
                     color='black', ls='dashed', lw=0.75)
         self.plot1D(None, 'PNS_nucleus_radius', 'time', rad='avg', plot='E',
-                    color='black', lw=0.75)
-        #self.fig.text(0.04, 0.685, y_strain, va="center", rotation='vertical')
-        #self.labels('t-t$_b$ [s]', 'R [km]', 'E')
-        
+                    color='black', lw=0.75)        
         show_figure()
 
     def plotSpectrogram(self, qt, **kwargs):
