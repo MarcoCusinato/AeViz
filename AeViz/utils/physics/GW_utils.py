@@ -450,22 +450,26 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
         add_lb = r''
     else:
         add_lb = r'$\mathcal{D}$'
+        D = 1 * u.cm
+    time.set(name='time', label=r'$t-t_\mathrm{b}$',
+             cmap=None, limits=[-0.005, time[-1]])
     NE220 = const * IDL_derivative(time, NE220)
     NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
-              cmap='Spectral_r', limits=[-3, 3])
+              cmap='Spectral_r', limits=[-3 / D.value, 3 / D.value])
     full_NE220 = const * IDL_derivative(time, full_NE220)
     full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
-                   cmap='Spectral_r', limits=[-70, 70])
+                   cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value])
     nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
-    nuc_NE220.set(name='nuc_NE220', cmap='Spectral_r', limits=[-70, 70],
+    nuc_NE220.set(name='nuc_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
                   label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
     conv_NE220 = const * IDL_derivative(time, conv_NE220)
-    conv_NE220.set(name='conv_NE220', cmap='Spectral_r', limits=[-70, 70],
+    conv_NE220.set(name='conv_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
                    label=merge_strings(add_lb,r'$h_{+,\mathrm{eq,conv}}$'))
     outer_NE220 = const * IDL_derivative(time, outer_NE220)
-    outer_NE220.set(name='outer_NE220', cmap='Spectral_r', limits=[-70, 70],
+    outer_NE220.set(name='outer_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
                     label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
-    return aeseries(NE220, time=time.copy(), radius=radius.copy()),\
+    T, R = np.meshgrid(time, radius)
+    return aeseries(NE220, time=T, radius=R),\
             create_series(time, full_NE220, nuc_NE220, conv_NE220, outer_NE220)
 
 ## 3D

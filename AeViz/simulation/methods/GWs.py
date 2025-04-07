@@ -163,7 +163,7 @@ def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True):
 @smooth
 @sum_tob
 def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
-            save_checkpoints=True):
+            save_checkpoints=True, **kwargs):
     """
     Calculates the gravitational wave strain from the hydro for a
     simulation

@@ -249,73 +249,77 @@ class Plotting(PlottingUtils, Data):
         """
         self.Close()
         self._PlotCreation__setup_axd(5, 1)
-        self.Xscale('linear', 'A')
-        self.Yscale('log', 'E')
-        t, AE220, f_h, nuc_h, conv_h, out_h  = \
-            self._Data__get_GW_decomposition_data(qt, **kwargs)
-        if qt == 'h+eq':
-            y_strain = r'$h_{+}^{eq}$ [cm]'
-        elif qt == 'h+pol':
-            y_strain = r'$h_{+}^{pol}$ [cm]'
-        elif qt == 'hxeq':
-            y_strain = r'$h_{\times}^{eq}$ [cm]'
-        elif qt == 'hxpol':
-            y_strain = r'$h_{\times}^{pol}$ [cm]'
-        ylim = GW_limit(f_h)
-        if self.sim_dim == 2:
-            dec_label = r'$A^{E2}_{20}(r, t)$ [cm]'
-        else:
-            dec_label = y_strain.split(' ')
-            dec_label[0] = dec_label[0][:-1]
-            dec_label[0] += '(r)$'
-            dec_label = (' ').join(dec_label)
-        if 'D' not in kwargs:
-            dec_label = r'$\mathcal{D}' + dec_label[1:]
-            y_strain = r'$\mathcal{D}' + y_strain[1:]
-            D = 1
-        else:
-            D = kwargs['D']
-        _, convect_radius = \
-            self._Data__get_1D_radii_data('innercore_radius_avg')
-        _, nuc_radius = \
-            self._Data__get_1D_radii_data('PNS_nucleus_radius_avg')
-        self._PlottingUtils__update_params('A', t, f_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('B', t, nuc_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('C', t, conv_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('D', t, out_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        color = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        for (axd_letter, label, c) in zip(['A', 'B', 'C', 'D'],
-                                       [r'$h_f$', r'$h_{nuc}$', r'$h_{conv}$',
-                                        r'$h_{out}$'],
-                                       color[:4]):
+        AE220, oth  = self._Data__get_data_from_name(qt, **kwargs)
+        f_h, nuc_h, conv_h, out_h = oth
+        kwargs['color'] = 'C0'
+        self._PlottingUtils__update_params(
+                                            ax_letter='A',
+                                            plane='time',
+                                            data=f_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C1'
+        self._PlottingUtils__update_params(
+                                            ax_letter='B',
+                                            plane='time',
+                                            data=nuc_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C2'
+        self._PlottingUtils__update_params(
+                                            ax_letter='C',
+                                            plane='time',
+                                            data=conv_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C3'
+        self._PlottingUtils__update_params(
+                                            ax_letter='D',
+                                            plane='time',
+                                            data=out_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs.pop('color')
+        for (axd_letter, dd) in zip(['A', 'B', 'C', 'D'],
+                                       [f_h, nuc_h, conv_h, out_h]
+                                       ):
             self._PlottingUtils__plot1D(axd_letter)
-            self.axd[axd_letter].get_lines()[0].set_color(c)
-            self.update_legend([label], axd_letter)
-            self.ylim(ylim, axd_letter)
-        X, Y = np.meshgrid(t, u.convert_to_km(self.cell.radius(self.ghost)))
-        self._PlottingUtils__update_params('E', (X, Y),
-                                            AE220,
-                                            'R', False,
-                                            (-3/D, 3/D), 2, 
-                                            'seismic',
-                                            dec_label,
-                                            self.sim_dim)
-        self.axd['E'].plot(t, u.convert_to_km(convect_radius), ls='dashed',
-                           color='black', lw=0.75)
-        self.axd['E'].plot(t, u.convert_to_km(nuc_radius),
-                           color='black', lw=0.75)
-        self.fig.text(0.04, 0.685, y_strain, va="center", rotation='vertical')
-        self.labels('t-t$_b$ [s]', 'R [km]', 'E')
+            self.update_legend([dd.data.label], axd_letter)
+            self.ylim(dd.data.limits, axd_letter)
+            self.Yscale(dd.data.log, axd_letter)
+            self.Xscale(dd.time.log, axd_letter)
+        self._PlottingUtils__update_params(
+                                            ax_letter='E',
+                                            plane=('time', 'radius'),
+                                            data=AE220,
+                                            cbar_position='R',
+                                            dim=-1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
         self._PlottingUtils__plot2D('E')
-        self.xlim((-0.005, t.max()), 'A')
+        self.Xscale(AE220.time.log, 'E')
+        self.Yscale(AE220.radius.log, 'E')
+        self.xlim(AE220.time.limits, 'E')
+        self.ylim(AE220.radius.limits, 'E')
+        self.plot1D(None, 'innercore_radius', 'time', rad='avg', plot='E',
+                    color='black', ls='dashed', lw=0.75)
+        self.plot1D(None, 'PNS_nucleus_radius', 'time', rad='avg', plot='E',
+                    color='black', lw=0.75)
+        #self.fig.text(0.04, 0.685, y_strain, va="center", rotation='vertical')
+        #self.labels('t-t$_b$ [s]', 'R [km]', 'E')
         
         show_figure()
 

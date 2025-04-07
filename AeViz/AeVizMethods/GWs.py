@@ -20,8 +20,11 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
     kwargs['spectrogram'] = spectrogram
     if self.sim_dim == 2:
         kwargs['comp'] = 'h+eq'
-        AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 'time',
-                         **kwargs)
+        if decomposition:
+            self.plotGWDecomposition('hydro_strain', **kwargs)
+        else:
+            AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 'time',
+                             **kwargs)
     else:
         if comp == 'all':
             for cm in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
