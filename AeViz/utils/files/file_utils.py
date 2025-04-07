@@ -144,9 +144,9 @@ def create_series(time, *args):
     """
     ghost_cells = False
     if type(args[-1]) == dict:
-        ghost_cells = args[-1]
-        args = args[:-1]
-    
+        if 'r_l' in args[-1]:
+            ghost_cells = args[-1]
+            args = args[:-1]
     series = []
     for arg in args:
         if type(arg) == dict:

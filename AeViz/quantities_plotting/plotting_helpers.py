@@ -320,20 +320,25 @@ def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
     plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
                            letter)
     
-def remove_labelling(data):
+def remove_labelling(data, no_nu):
     label = data.data.label
     new_label = label
     remove_symbols = [r'\mathrm{max}', r'\mathrm{min}', r'\mathrm{avg}',
                       r'\mathrm{tot}',
-                       ',max', ',min', ',avg', ',tot' ', max', ', min', ', avg',
+                       ',max', ',min', ',avg', ',tot', ', max', ', min', ', avg',
                        ', tot', ',x', ',y', ',z', ', x', ', y', ', z']
     for symb in remove_symbols:
         new_label = new_label.replace(symb, '')
+
+    data.data.set(label=new_label)
+    if no_nu:
+        return data, label
     
-    replace_nu = [r'\nu_\mathrm{e}', r'\nu_\mathrm{x}', r'\overline{\nu}_\mathrm{e}',
-                  r'\mathrm{\nu_e}', r'\mathrm{\nu_x}', r'\mathrm{\overline{\nu}_e}']
+    replace_nu = [
+         r'\mathrm{\nu_e}', r'\mathrm{\nu_x}', r'\mathrm{\overline{\nu}_e}',
+         r'\nu_\mathrm{e}', r'\nu_\mathrm{x}', r'\overline{\nu}_\mathrm{e}',
+                 ]
     for nu  in replace_nu:
         new_label = new_label.replace(nu, r'\nu')
     data.data.set(label=new_label)
-    
     return data, label  

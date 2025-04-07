@@ -21,12 +21,14 @@ class Plotting(PlottingUtils, Data):
         PlottingUtils.__init__(self)
         Data.__init__(self)
         self.__simple_labelling = False
+        self.__no_nu = False
         
-    def set_simple_labelling(self):
+    def set_simple_labelling(self, no_nu=False):
         if self.__simple_labelling:
             self.__simple_labelling = False
         else:
             self.__simple_labelling = True
+        self.__no_nu = no_nu
     
     def plot1D(self, file, qt, plane, **kwargs):
         """
@@ -54,7 +56,7 @@ class Plotting(PlottingUtils, Data):
                 if plane[0] is None or type(plane[0]) == int:
                     plane = data.return_axis_names()[0]
             if self.__simple_labelling:
-                data, label = remove_labelling(data)
+                data, label = remove_labelling(data, self.__no_nu)
                 legend = [label]
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
             self._PlottingUtils__update_params(

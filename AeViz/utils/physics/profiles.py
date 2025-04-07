@@ -225,4 +225,8 @@ def make_series(time, radius, prof, name):
         pr = aerray(prof, u.Ba, 'gas_pressure_profile',
                     r'$\langle P_\mathrm{gas}\rangle_\Omega$',
                     'gist_rainbow_r',  [1e25, 1e34], True)
+    elif name == 'BV_frequency':
+        pr = aerray(prof, u.s ** (-2), 'BV_profile',
+                    r'$\langle \omega_\mathrm{BV}\rangle_\Omega$', 'coolwarm',  [-1e6, 1e6],
+                    True)
     return aeseries(pr, time=t, radius=radius)

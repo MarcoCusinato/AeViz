@@ -412,7 +412,7 @@ def gain_mass_nu_heat(self, comp:Literal['mass', 'heath']=None,
     elif comp == 'mass':
         return data['mass']
     else:
-        return data['heating_ene'],
+        return data['heating_ene']
 
 @smooth
 @derive
