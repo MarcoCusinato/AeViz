@@ -62,5 +62,10 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
                 AeViz.plotProfile(qt, **kwargs)
         else:
             AeViz.plot2D(file, plane, qt, **kwargs)
-        
-    
+
+def AeViz_plot_radius_panel(AeViz, qt, projection, rad, **kwargs):
+    kwargs.setdefault('spectrogram', False)
+    kwargs.setdefault('rad', rad)
+    if rad == 'all' and kwargs['spectrogram']:
+        raise ValueError('Cannot plot all radii in spectrogram mode.')
+    AeViz.plot1D(None, qt, 'time', **kwargs)

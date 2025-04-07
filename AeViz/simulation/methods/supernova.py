@@ -319,6 +319,8 @@ def PNS_angular_mom(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=None,
         return [data['L']['Lx'], data['L']['Ly'], data['L']['Lz'],
                 data['L']['L_tot']]
     else:
+        if comp == 'Ltot':
+            comp = 'L_tot'
         return data['L'][comp]
 
 @smooth

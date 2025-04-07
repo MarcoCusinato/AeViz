@@ -120,7 +120,30 @@ def neutrino_number_density(self, file_name, **kwargs):
 
 @get_grid
 @smooth
-def neutrino_mean_energy(self, file_name, **kwargs):
+def neutrino_number_density_grey(self, file_name,
+                                 comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                                 **kwargs):
+    ndens = self.neutrino_number_density(file_name)
+    final_nd = []
+    for nd in ndens:
+        lm, lb, cm, nm, lg  = nd.limits, nd.label, nd.cmap, nd.name, nd.log
+        nnd = nd.sum(axis=-1)
+        nnd.set(limits=lm, label=lb, cmap=cm, name=nm, log=lg)
+        final_nd.append(nnd)
+    if comp == 'all':
+        return final_nd
+    elif comp == 'nue':
+        return final_nd[0]
+    elif comp == 'nua':
+        return final_nd[1]
+    elif comp == 'nux':
+        return final_nd[2]
+
+@get_grid
+@smooth
+def neutrino_mean_energy(self, file_name,
+                         comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                         **kwargs):
     """
     Average neutrino energy per cell so 
     <e> = sum_w E_nu(w) / sum_w N_nu(w),
@@ -137,25 +160,45 @@ def neutrino_mean_energy(self, file_name, **kwargs):
             ['Enue', 'Enua', 'Enux'],
             [[0, 120], [0, 90], [0, 100]],
             ['ocean', 'gist_earth', 'terrain']) for me in mean_ene]
-    return tuple(mean_ene)
+    if comp == 'all':
+        return tuple(mean_ene)
+    elif comp == 'nue':
+        return mean_ene[0]
+    elif comp == 'nua':
+        return mean_ene[1]
+    elif comp == 'nux':
+        return mean_ene[2]
 
 ## GREY
 
 @get_grid
 @smooth
 @hdf_isopen
-def neutrino_energy_density_grey(self, file_name, **kwargs):
+def neutrino_energy_density_grey(self, file_name,
+                                 comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                                 **kwargs):
     nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
     nu_ene[..., 2] /= 4
-    return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
-                  r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
-            aerray(nu_ene[..., 1], u.erg / u.cm ** 3, 'nua_edens',
-                  r'$E_{\overline{\nu}_\mathrm{e}}$', 'magma',
-                  [1e28, 1e32], True),
-            aerray(nu_ene[..., 2], u.erg / u.cm ** 3, 'nux_edens',
-                  r'$E_{\nu_\mathrm{x}}$', 'plasma', [1e28, 1e32], True)
-            )
+    if comp == 'all':
+        return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
+                    r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
+                aerray(nu_ene[..., 1], u.erg / u.cm ** 3, 'nua_edens',
+                    r'$E_{\overline{\nu}_\mathrm{e}}$', 'magma',
+                    [1e28, 1e32], True),
+                aerray(nu_ene[..., 2], u.erg / u.cm ** 3, 'nux_edens',
+                    r'$E_{\nu_\mathrm{x}}$', 'plasma', [1e28, 1e32], True)
+                )
+    elif comp == 'nue':
+        return aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
+                    r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True)
+    elif comp == 'nua':
+        return aerray(nu_ene[..., 1], u.erg / u.cm ** 3, 'nua_edens',
+                    r'$E_{\overline{\nu}_\mathrm{e}}$', 'magma',
+                    [1e28, 1e32], True)
+    elif comp == 'nux':
+        aerray(nu_ene[..., 2], u.erg / u.cm ** 3, 'nux_edens',
+                    r'$E_{\nu_\mathrm{x}}$', 'plasma', [1e28, 1e32], True)
 
 @get_grid
 @smooth

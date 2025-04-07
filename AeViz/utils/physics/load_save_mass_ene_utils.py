@@ -306,16 +306,16 @@ def read_masses_energies(simulation):
                 'PNS_conv', r'$E_\mathrm{conv,PNS}$', None, [1e47, 1e51], True),
             'L': {
                 'Lx': aerray(masses_energies_data['PNS/L/Lx'][...],
-                             u.erg*u.s, 'PNS_Lx', r'$L_\mathrm{PNS,x}$', None,
+                             u.erg*u.s, 'PNS_Jx', r'$J_\mathrm{PNS,x}$', None,
                              [-1e47, 1e47], False),
                 'Ly': aerray(masses_energies_data['PNS/L/Ly'][...],
-                             u.erg*u.s, 'PNS_Ly', r'$L_\mathrm{PNS,y}$', None,
+                             u.erg*u.s, 'PNS_Jy', r'$J_\mathrm{PNS,y}$', None,
                              [-1e47, 1e47], False),
                 'Lz': aerray(masses_energies_data['PNS/L/Lz'][...],
-                             u.erg*u.s, 'PNS_Lz', r'$L_\mathrm{PNS,z}$', None,
+                             u.erg*u.s, 'PNS_Jz', r'$J_\mathrm{PNS,z}$', None,
                              [0, 1e49], False),
                 'L_tot': aerray(masses_energies_data['PNS/L/L_tot'][...],
-                             u.erg*u.s, 'PNS_Ltot', r'$L_\mathrm{PNS,tot}$', None,
+                             u.erg*u.s, 'PNS_Jtot', r'$J_\mathrm{PNS,tot}$', None,
                              [0, 1e49], False)
             }
         },

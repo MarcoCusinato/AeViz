@@ -24,26 +24,26 @@ def create_aerrays(time, Lx, Ly, Lz):
     nus = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
     Lx, Ly, Lz = integrate_momenta(time, Lx, Ly, Lz)
     [Lx[key].set(name='PNS_Lx_'+key, limits=[-1e47, 1e47],
-                 label=r'$L_\mathrm{'+nu+r',x}$', log=True) for (key, nu)
+                 label=r'$J_\mathrm{'+nu+r',x}$', log=False) for (key, nu)
                  in zip(Lx.keys(), nus)]
     [Ly[key].set(name='PNS_Ly_'+key, limits=[-1e47, 1e47],
-                 label=r'$L_\mathrm{'+nu+r',y}$', log=True) for (key, nu)
+                 label=r'$J_\mathrm{'+nu+r',y}$', log=False) for (key, nu)
                  in zip(Ly.keys(), nus)]
     [Lz[key].set(name='PNS_Lz_'+key, limits=[0, 1e49],
-                 label=r'$L_\mathrm{'+nu+r',z}$', log=True) for (key, nu)
+                 label=r'$J_\mathrm{'+nu+r',z}$', log=False) for (key, nu)
                  in zip(Lz.keys(), nus)]
     Ltotx = Lx['nue'] + Lx['nua'] + Lx['nux']
     Ltotx.set(name='PNS_Ltotx_nu', limits=[-1e47, 1e47],
-               label=r'$L_\mathrm{\nu,x}$', log=True)
+               label=r'$J_\mathrm{\nu,x}$', log=False)
     Ltoty = Ly['nue'] + Ly['nua'] + Ly['nux']
     Ltoty.set(name='PNS_Ltoty_nu', limits=[-1e47, 1e47],
-                label=r'$L_\mathrm{\nu,y}$', log=True)
+                label=r'$J_\mathrm{\nu,y}$', log=True)
     Ltotz = Lz['nue'] + Lz['nua'] + Lz['nux']
     Ltotz.set(name='PNS_Ltotz_nu', limits=[0, 1e49],
-                label=r'$L_\mathrm{\nu,z}$', log=True)
+                label=r'$J_\mathrm{\nu,z}$', log=False)
     Ltot = np.sqrt(Ltotx ** 2 + Ltoty ** 2 + Ltotz ** 2)
     Ltot.set(name='PNS_Ltot_nu', limits=[0, 1e49],
-             label=r'$L_\mathrm{\nu}$', log=True)
+             label=r'$J_\mathrm{\nu}$', log=False)
     Lx = {key: Lx[key].to(u.erg*u.s) for key in Lx.keys()}
     Ly = {key: Ly[key].to(u.erg*u.s) for key in Ly.keys()}
     Lz = {key: Lz[key].to(u.erg*u.s) for key in Lz.keys()}
@@ -211,7 +211,7 @@ def read_angular_mom_PNS_nu(simulation):
                                   'PNS_angular_momentum_nu.h5'), 'r') as f:
         time = aerray(f['time'][...], u.s, 'time',
                r'$t-t_\mathrm{b}$', None, [-0.005, f['time'][-1]])
-        Lx = {'nue': aerray(f['Lx/nue'][...], u.erg*u.cm**2/u.s**2),
+        Lx = {'nue': aerray(f['Lx/nue'][...], u.erg*u.cm**2/u.s**2, ),
               'nua': aerray(f['Lx/nua'][...], u.erg*u.cm**2/u.s**2),
               'nux': aerray(f['Lx/nux'][...], u.erg*u.cm**2/u.s**2)}
         Ly = {'nue': aerray(f['Ly/nue'][...], u.erg*u.cm**2/u.s**2),

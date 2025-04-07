@@ -11,6 +11,30 @@ imported into the AeViz class.
 """
 
 @fig_window_open
+def neutrino_energy_density(self, file=None, projection:Literal['1D', '2D']='1D',
+                            plane='radius', comp:Literal['nue', 'nua', 'nux']='nue',
+                            **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'neutrino_energy_density_grey', file, projection,
+                     plane, **kwargs)
+
+@fig_window_open
+def neutrino_mean_energy(self, file=None, projection:Literal['1D', '2D']='1D',
+                        plane='radius', comp:Literal['nue', 'nua', 'nux']='nue',
+                        **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'neutrino_energy_density_grey', file, projection,
+                     plane, **kwargs)
+    
+@fig_window_open
+def neutrino_number_density(self, file=None, projection:Literal['1D', '2D']='1D',
+                        plane='radius', comp:Literal['nue', 'nua', 'nux']='nue',
+                        **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'neutrino_number_density_grey', file, projection,
+                     plane, **kwargs)
+
+@fig_window_open
 def nue_moment(self, file=None, projection:Literal['1D', '2D']='1D',
                 comp:Literal['x', 'y', 'z', 'e', 'all']='all', index1=None,
                 index2=None, plane:Literal['xz', 'yz', 'xy', 'radius',

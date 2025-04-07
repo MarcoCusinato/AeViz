@@ -13,90 +13,114 @@ imported into the AeViz class.
 ## RADII
 
 @fig_window_open
-def PNS_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg', **kwargs):
-    self.plot1D(None, 'PNS_radius_' + comp, 'time', None, None, **kwargs)
+def PNS_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+               projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_radius_panel(self, 'PNS_radius', projection, rad, **kwargs)
 
 @fig_window_open
-def shock_radius(self, comp:Literal['all', 'min', 'max','avg']='avg',
-                    **kwargs):
-    self.plot1D(None, 'shock_radius_' + comp, 'time', None, None, **kwargs)
+def shock_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                 projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_radius_panel(self, 'shock_radius', projection, rad, **kwargs)
 
 @fig_window_open
-def neutrino_spheres(self, comp:Literal['all', 'min', 'max', 'avg']='avg',
-                        **kwargs):
-    for flavour in ['nue', 'nua', 'nux']:
-        self.plot1D(None, 'neutrino_spheres_' + flavour + '_' + comp,
-                    'time', None, None, **kwargs)
+def neutrino_spheres(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                     comp:Literal['nue', 'nua', 'nux']='nue',
+                     projection:Literal['1D', '2D']='1D', **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_radius_panel(self, 'neutrino_spheres', projection, rad, **kwargs)
 
 @fig_window_open
-def gain_radius(self,  comp:Literal['all', 'min', 'max', 'avg']='avg',
-                **kwargs):
-    self.plot1D(None, 'gain_radius_' + comp, 'time', None, None, **kwargs)
+def gain_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                 projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_radius_panel(self, 'gain_radius', projection, rad, **kwargs)
 
 @fig_window_open
-def innercore_radius(self, comp:Literal['all', 'min', 'max','avg']='avg',
-                        **kwargs):
-    self.plot1D(None, 'innercore_radius_' + comp, 'time', None, None, **kwargs)
+def innercore_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                 projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_radius_panel(self, 'innercore_radius', projection, rad, **kwargs)
 
 @fig_window_open
-def PNS_nucleus_radius(self, comp:Literal['all', 'min', 'max',
-                                            'avg']='avg', **kwargs):
-    self.plot1D(None, 'PNS_nucleus_radius_' + comp, 'time', None, None,
-                **kwargs)
+def PNS_nucleus_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                 projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_radius_panel(self, 'PNS_nucleus_radius', projection, rad,
+                            **kwargs)
     
 ## ENERGIES
 @fig_window_open
-def explosion(self, comp: Literal['all', 'mass', 'ene', 'kin', 'mag'],
-                **kwargs):
-    if comp == 'all':
-        qt = ['mass', 'ene', 'kin', 'mag']
-    else:
-        qt = [comp]
-    for q in qt:
-        self.plot1D(None, 'explosion_' + q, 'time', None, None, **kwargs)
+def explosion(self, projection:Literal['1D', '2D']='1D',
+              comp:Literal['mass', 'tot', 'kin', 'mag', 'ratio']='mass',
+              **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'explosion_mass_ene', None, projection, 'time',
+                     **kwargs)
 
 @fig_window_open
-def gain(self, comp: Literal['all', 'mass', 'ene'], **kwargs):
-    if comp == 'all':
-        qt = ['mass', 'ene']
-    else:
-        qt = [comp]
-    for q in qt:
-        self.plot1D(None, 'gain_' + q, 'time', None, None, **kwargs)
+def gain(self,  projection:Literal['1D', '2D']='1D',
+         comp: Literal['mass', 'nu_heath']='mass', **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'gain_mass_nu_heat', None, projection, 'time',
+                     **kwargs)
+    
 
 @fig_window_open
-def innercore(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
-                                    'grav', 'T/W'], **kwargs):
-    self.plot1D(None, 'innercore_' + comp, 'time', None, None, **kwargs)
+def innercore(self,  projection:Literal['1D', '2D']='1D',
+              comp:Literal['mass', 'kin', 'mag', 'rot', 'grav', 'tot', 'T/W']='mass',
+              **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'innercore_mass_ene', None, projection, 'time',
+                     **kwargs)
 
 @fig_window_open
-def PNS_nucleus(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot',
-                                    'grav', 'T/W'], **kwargs):
-    self.plot1D(None, 'PNS_core_' + comp, 'time', None, None, **kwargs)
+def PNS_nucleus(self,  projection:Literal['1D', '2D']='1D',
+                comp: Literal['mass', 'ene', 'kin', 'mag',
+                              'rot', 'grav', 'T/W']='mass', **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'PNS_core_mass_ene', None, projection, 'time',
+                     **kwargs)
 
 @fig_window_open
-def PNS(self, comp: Literal['mass', 'ene', 'kin', 'mag', 'rot', 'grav',
-                            'conv'], **kwargs):
-    self.plot1D(None, 'PNS_' + comp, 'time', None, None, **kwargs)
+def PNS(self, projection:Literal['1D', '2D']='1D',
+        comp:Literal['mass', 'kin', 'mag', 'rot',
+                                    'conv', 'grav', 'tot', 'T/W']='mass',
+        **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'PNS_mass_ene', None, projection, 'time',
+                     **kwargs)
 
 ## MASSES, ACCRETION AND VELOCITIES
 
 @fig_window_open
-def kick_velocity(self,
-                    comp:Literal['modulus', 'nu', 'hydro', 'all']='all',
-                    **kwargs):
-    plot_qt(self, None, 'kick_velocity_'+comp, '1D', None, None, 'time')
+def kick_velocity(self, projection:Literal['1D', '2D']='1D',
+                 comp:Literal['x', 'y', 'z', 'tot']='tot',
+                 flavour:Literal['hydro', 'nu', 'nue', 'nua', 'nux', 'all']='all',
+                 **kwargs):
+    kwargs['comp'] = comp
+    kwargs['flavour'] = flavour
+    AeViz_plot_panel(self, 'PNS_kick_velocity', None, projection, 'time',
+                     **kwargs)
 
 @fig_window_open
-def PNS_angular_mom(self, comp: Literal['all', 'Lx', 'Ly', 'Lz', 'Ltot'],
+def PNS_angular_mom(self, projection:Literal['1D', '2D']='1D',
+                    comp: Literal['Lx', 'Ly', 'Lz', 'Ltot']='Ltot',
                     **kwargs):
-    
-    self.plot1D(None, 'PNS_angular_mom_' + comp, 'time', None, None,
-                **kwargs)
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'PNS_angular_mom', None, projection, 'time',
+                     **kwargs)
 
 @fig_window_open
-def mass_accretion(self, **kwargs):
-    self.plot1D(None, 'mass_accretion_500km', 'time', None, None, **kwargs)
+def PNS_angular_mom_nu(self, projection:Literal['1D', '2D']='1D',
+                    comp: Literal['Lx', 'Ly', 'Lz', 'Ltot']='Ltot',
+                    flavour:Literal['nue', 'nua', 'nux']='nue',
+                    **kwargs):
+    kwargs['comp'] = comp
+    kwargs['flavour'] = flavour
+    AeViz_plot_panel(self, 'PNS_angular_momentum_neutrinos', None, projection,
+                     'time', **kwargs)
+
+@fig_window_open
+def mass_accretion(self, projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_panel(self, 'mass_accretion_500km', None, projection, 'time',
+                     **kwargs)
 
 
 

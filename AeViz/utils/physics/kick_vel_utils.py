@@ -13,43 +13,43 @@ def integrate_momenta(time, PNS_mass, hydro_v, nue_v, nua_v, nux_v):
     dt[0] = dt[1]
     dt = dt * time.unit
     hydro = {key: hydro_v[key] / PNS_mass for key in hydro_v.keys()}
-    [hd.set(log=False, limits=[0, 750], name='kick_vel_hydro_'+key,
+    [hd.set(log=False, limits=[0, 7.5e7], name='kick_vel_hydro_'+key,
             label=r'$v_\mathrm{kick h,'+key+r'}$') for (key, hd) in
             hydro.items()]
     nue = {key: np.cumsum(comp * dt) / PNS_mass for (key, comp) in nue_v.items()}
-    [nu.set(log=False, limits=[0, 750], name='kick_vel_nue_'+key,
+    [nu.set(log=False, limits=[0, 7.5e7], name='kick_vel_nue_'+key,
             label=r'$v_{\mathrm{kick} \nu_\mathrm{e},'+key+r'}$') for (key, nu)
             in nue.items()]
     nua = {key: np.cumsum(comp * dt) / PNS_mass for (key, comp) in nua_v.items()}
-    [nu.set(log=False, limits=[0, 750], name='kick_vel_nua_'+key,
+    [nu.set(log=False, limits=[0, 7.5e7], name='kick_vel_nua_'+key,
             label=r'$v_{\mathrm{kick} \overline{\nu}_\mathrm{e},'+key+r'}$') 
             for (key, nu) in nua.items()]
     nux ={key: np.cumsum(comp * dt) / PNS_mass for (key, comp) in nux_v.items()}
-    [nu.set(log=False, limits=[0, 750], name='kick_vel_nux_'+key,
+    [nu.set(log=False, limits=[0, 7.5e7], name='kick_vel_nux_'+key,
             label=r'$v_{\mathrm{kick} \nu_\mathrm{x},'+key+r'}$') for (key, nu)
             in nux.items()]
     vhydro_tot = np.sqrt(hydro['x'] ** 2 + hydro['y'] ** 2 + hydro['z'] ** 2)
-    vhydro_tot.set(log=False, limits=[0, 750], name='kick_vel_hydro_tot',
+    vhydro_tot.set(log=False, limits=[0, 7.5e7], name='kick_vel_hydro_tot',
                    label=r'$v_\mathrm{kick h,tot}$')
     vnue_tot = np.sqrt(nue['x'] ** 2 + nue['y'] ** 2 + nue['z'] ** 2)
-    vnue_tot.set(log=False, limits=[0, 750], name='kick_vel_nue_tot',
+    vnue_tot.set(log=False, limits=[0, 7.5e7], name='kick_vel_nue_tot',
                     label=r'$v_{\mathrm{kick} \nu_\mathrm{e},tot}$')
     vnua_tot = np.sqrt(nua['x'] ** 2 + nua['y'] ** 2 + nua['z'] ** 2)
-    vnua_tot.set(log=False, limits=[0, 750], name='kick_vel_nua_tot',
+    vnua_tot.set(log=False, limits=[0, 7.5e7], name='kick_vel_nua_tot',
                     label=r'$v_{\mathrm{kick} \overline{\nu}_\mathrm{e},tot}$')
     vnux_tot = np.sqrt(nux['x'] ** 2 + nux['y'] ** 2 + nux['z'] ** 2)
-    vnux_tot.set(log=False, limits=[0, 750], name='kick_vel_nux_tot',
+    vnux_tot.set(log=False, limits=[0, 7.5e7], name='kick_vel_nux_tot',
                     label=r'$v_{\mathrm{kick} \nu_\mathrm{x},tot}$')
     vnu_tot = np.sqrt((nue['x'] + nua['x'] + nux['x']) ** 2 + 
                       (nue['y'] + nua['y'] + nux['y']) ** 2 + 
                       (nue['z'] + nua['z'] + nux['z']) ** 2)
-    vnu_tot.set(log=False, limits=[0, 750], name='kick_vel_nu_tot',
+    vnu_tot.set(log=False, limits=[0, 7.5e7], name='kick_vel_nu_tot',
                     label=r'$v_{\mathrm{kick} \nu,tot}$')
     vtot = np.sqrt((hydro['x'] + nue['x'] + nua['x'] + nux['x']) ** 2 +
                    (hydro['y'] + nue['y'] + nua['y'] + nux['y']) ** 2 +
                    (hydro['z'] + nue['z'] + nua['z'] + nux['z']) ** 2)
-    vtot.set(log=False, limits=[0, 750], name='kick_vel_tot',
-                    label=r'$v_\mathrm{kick tot}$')
+    vtot.set(log=False, limits=[0, 7.5e7], name='kick_vel_tot',
+                    label=r'$v_\mathrm{kick,tot}$')
     return create_series(time, hydro, nue, nua, nux, vhydro_tot, vnue_tot,
                          vnua_tot, vnux_tot, vnu_tot, vtot)
     
