@@ -192,37 +192,6 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 data = post_data[:, index1, index2]
     return data
 
-def get_plane_indices(sim, plane):
-    """
-    Get the indices associated to the plane. In particular, for 3D
-    simulations, in the xz and yz planes, we need to extend the grid
-    by taking the opposite slice.
-    """
-    ## Get the indices associated to the plane
-    if plane not in ['xy', 'xz', 'yz']:
-        plane = 'xz'
-    if sim.sim_dim == 1:
-        index_phi = None
-        index_theta = None
-    elif sim.sim_dim == 2:
-        if plane == 'xy':
-            index_theta = len(sim.cell.theta(sim.ghost)) // 2
-        else:
-            index_theta = None
-        index_phi = None
-    elif plane == 'xy':
-        index_phi = None
-        index_theta = len(sim.cell.theta(sim.ghost)) // 2
-    elif plane == 'xz':
-        index_phi = len(sim.cell.phi(sim.ghost)) // 2
-        index_theta = None
-    elif plane == 'yz':
-        index_theta = None
-        index_phi = (len(sim.cell.phi(sim.ghost)) - (2 * \
-            sim.ghost.ghost - sim.ghost.p_l - sim.ghost.p_r)) // 4 + \
-                sim.ghost.ghost - sim.ghost.p_l
-    return plane, index_theta, index_phi
-
 def show_figure():
     """
     Show the figure if the module is imported from the terminal.
@@ -271,6 +240,7 @@ def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
         kwargs['plane'] = plane
     data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
     plotting_object._PlottingUtils__update_params(
+                                            file=file,
                                             ax_letter=letter,
                                             plane=plane,
                                             data=data,
@@ -302,7 +272,7 @@ def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
     else:
         lab = labels[quantity]['label']
     """
-    plotting_object._PlottingUtils__update_params( 
+    plotting_object._PlottingUtils__update_params(
                                                   ax_letter=letter,
                                                   plane=('time', 'radius'),
                                                   data=data,

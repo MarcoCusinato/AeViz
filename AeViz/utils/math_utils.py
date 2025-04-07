@@ -229,6 +229,22 @@ In this particular case we are interested in calculating the streamlines
 of the magnetic field.
 """
 def strfunction2D(b1, b2, ax, ay, az, lx, ly, lz, plane):
+    if isinstance(b1, aerray):
+        b1 = b1.value
+    if isinstance(b2, aerray):
+        b2 = b2.value
+    if isinstance(ax, aerray):
+        ax = ax.value
+    if isinstance(ay, aerray):
+        ay = ay.value
+    if isinstance(az, aerray):
+        az = az.value
+    if isinstance(lx, aerray):
+        lx = lx.value
+    if isinstance(ly, aerray):
+        ly = ly.value
+    if isinstance(lz, aerray):
+        lz = lz.value
     if plane == 'yz':
         dF1 = np.zeros(b1.shape)
         dF2 = np.zeros(b1.shape)
@@ -315,6 +331,8 @@ def strfct2D(b, cell, ghost, plane):
 
     b1, b2, ax, ay, az, lx, ly, lz = get_stream_quantities(b1, b2, ax, ay, az,
                                                            lx, ly, lz, plane)
+
+        
     if type(b1) == list:
         F = np.concatenate((np.flip(
             strfunction2D(b1[0], b2[0], ax[0], ay[0], az[0], lx[0], ly[0],

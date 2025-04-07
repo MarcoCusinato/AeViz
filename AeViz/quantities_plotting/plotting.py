@@ -9,11 +9,11 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars_profile,
                                                         setup_cbars_spectrogram,
                                                         setup_cbars_HHT,
-                                                        get_plane_indices,
                                                         show_figure,
                                                         plot_panel,
                                                         plot_profile_panel,
                                                         remove_labelling)
+from AeViz.utils.decorators.grid import _get_plane_indices
 import cv2
 
 class Plotting(PlottingUtils, Data):
@@ -60,6 +60,7 @@ class Plotting(PlottingUtils, Data):
                 legend = [label]
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
             self._PlottingUtils__update_params(
+                                                file=file,
                                                 ax_letter=axd_letters[number],
                                                 plane=plane,
                                                 data=data,
@@ -85,6 +86,7 @@ class Plotting(PlottingUtils, Data):
             if ax_letter not in self.axd:
                 ax_letter = 'A'
             self._PlottingUtils__update_params(
+                                                file=file,
                                                 ax_letter=ax_letter,
                                                 plane=plane,
                                                 data=data,
@@ -489,7 +491,7 @@ class Plotting(PlottingUtils, Data):
         self.ylim(data.Y.limits, plot)
         show_figure()
 
-    def add_2Dfield(self, file, axd_letter, comp, plane):
+    def add_2Dfield(self, axd_letter, comp):
         """
         Adds a 2D field to the figure.
         """
@@ -497,11 +499,14 @@ class Plotting(PlottingUtils, Data):
             raise ValueError('The axis letter is not in the figure.')
         if 2 not in self.plot_dim[axd_letter]:
             raise ValueError('The axis letter is not a 2D plot.')
+        number = self.plot_dim[axd_letter].index(2)
+        file = self.file[axd_letter][number]
+        plane = self.plane[axd_letter][number]
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         if comp == 'velocity':
-            self.__addVelocity_field(file, axd_letter, plane)
+            self.__addVelocity_field(file, axd_letter, plane, number)
         elif comp == 'Bfield':
-            self.__addBfield(file, axd_letter, plane)
+            self.__addBfield(file, axd_letter, plane, number)
     
     def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
               plane='xz', start_time=None, end_time=None,
@@ -597,17 +602,17 @@ class Plotting(PlottingUtils, Data):
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()
 
-    def __addVelocity_field(self, file, axd_letter, plane):
+    def __addVelocity_field(self, file, axd_letter, plane, grid_number):
         """
         Plots the 2D velocity field in the plane specified by the user.
         """
         ## Get the plane indices
-        plane, index_theta, index_phi = get_plane_indices(self, plane)
+        index_theta, index_phi = _get_plane_indices(self, plane)
         vr = self._Data__get_data_from_name('radial_velocity', file)
-        vr = self._Data__plane_cut(vr, index_theta, index_phi)
+        vr = self.__plane_cut(self.sim_dim, vr, index_theta, index_phi)
         if self.sim_dim == 2:
             va = self._Data__get_data_from_name('theta_velocity', file)
-            va = self._Data__plane_cut(va, index_theta, index_phi)
+            va = self.__plane_cut(self.sim_dim, va, index_theta, index_phi)
             angle = self.cell.theta(self.ghost)
             vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
             vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
@@ -615,9 +620,9 @@ class Plotting(PlottingUtils, Data):
             theta = self.cell.theta(self.ghost)
             phi = self.cell.phi(self.ghost)
             vtheta = self._Data__get_data_from_name('theta_velocity', file)
-            vtheta = self._Data__plane_cut(vtheta, index_theta, index_phi)
+            vtheta = self.__plane_cut(self.sim_dim, vtheta, index_theta, index_phi)
             vphi = self._Data__get_data_from_name('phi_velocity', file)
-            vphi = self._Data__plane_cut(vphi, index_theta, index_phi)
+            vphi = self.__plane_cut(self.sim_dim, vphi, index_theta, index_phi)
             
             if plane == 'xy':
                 theta = theta[index_theta]
@@ -651,16 +656,16 @@ class Plotting(PlottingUtils, Data):
                 vy = vr * np.cos(theta)[:, None] - \
                       vtheta * np.sin(theta)[:, None]
         self._PlottingUtils__update_fields_params(axd_letter, (vx, vy), 'v')
-        self._PlottingUtils__plot2Dfield(axd_letter)
+        self._PlottingUtils__plot2Dfield(axd_letter, grid_number)
 
-    def __addBfield(self, file, axd_letter, plane):
+    def __addBfield(self, file, axd_letter, plane, grid_number):
         """
         Plots the 2D magnetic field in the plane specified by the user.
         """
-        streamlines = self.loaded_data.stream_function(file, plane)
+        streamlines = self.loaded_data.stream_function(file, plane.lower())
         self._PlottingUtils__update_fields_params(axd_letter,
                                                   streamlines, 'B')
-        self._PlottingUtils__plot2Dfield(axd_letter)
+        self._PlottingUtils__plot2Dfield(axd_letter, grid_number)
              
     def __check_axd_1D(self, qt, xaxis):
         """
@@ -697,3 +702,22 @@ class Plotting(PlottingUtils, Data):
             self.number = number
             self._PlottingUtils__redo_plot()
         return number - 1
+    
+    def __plane_cut(self, dim, data, indextheta=None, indexphi=None):
+        if dim == 1:
+            return np.tile(data, (64, 1))
+        elif dim == 2:
+            if (indexphi == None and indextheta == None):
+                return data
+            elif indextheta is not None:
+                return np.tile(data[data.shape[0] // 2, :], (64, 1))
+        elif dim == 3:
+            if indexphi is not None:
+                return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
+                                    data[(indexphi + data.shape[0] // 2) % 
+                                            data.shape[0], :, :]], axis=0)
+            elif indextheta is not None:
+                
+                return data[:, indextheta, :]
+        else:
+            raise ValueError('The simulation dimension is not supported.')

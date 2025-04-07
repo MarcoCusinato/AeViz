@@ -179,7 +179,7 @@ class PlottingUtils(PlotCreation):
                     self.legend[axd_letter][ll])
             self.axd[axd_letter].legend(loc='upper right')
 
-    def __update_params(self, ax_letter=None, plane=None, data=None,
+    def __update_params(self, file=None, ax_letter=None, plane=None, data=None,
                         cbar_position=None, dim=None, sim_dim=None,
                         **kwargs):
         """
@@ -200,6 +200,8 @@ class PlottingUtils(PlotCreation):
         else:
             grid = getattr(data, plane)
         if ax_letter not in self.plot_dim:
+            self.file[ax_letter] = [file]
+            self.plane[ax_letter] = [plane]
             self.grid[ax_letter] = [grid]
             self.data[ax_letter] = [data.data]
             self.plot_dim[ax_letter] = [dim]
@@ -223,6 +225,8 @@ class PlottingUtils(PlotCreation):
             else:
                 self.lw[ax_letter] = [None]
         else:
+            self.file[ax_letter].append(file)
+            self.plane[ax_letter].append(plane)
             self.grid[ax_letter].append(grid)
             self.data[ax_letter].append([data.data])
             self.plot_dim[ax_letter].append(dim)
@@ -252,14 +256,21 @@ class PlottingUtils(PlotCreation):
         If we want to plot field lines or arrows, we need to have the
         saved in the corresponding dictionary.
         """
-        self.field[ax_letter] = field
-        self.field_type[ax_letter] = field_type
+        if ax_letter not in self.field:
+            self.field[ax_letter] = [field]
+            self.field_type[ax_letter] = [field_type]
+        else:
+            self.field[ax_letter].append(field)
+            self.field_type[ax_letter].append(field_type)
     
     def __copy_param_key(self, ax_letter_in, ax_letter_out):
         """
         Clears the dictionaries containing the plot parameters.
         """
-        keys = [self.plot_dim,
+        keys = [
+                self.file,
+                self.plane,
+                self.plot_dim,
                 self.grid,
                 self.data,
                 self.sim_dimension,
@@ -288,7 +299,10 @@ class PlottingUtils(PlotCreation):
         """
         Clears the dictionaries containing the plot parameters.
         """
-        keys = [self.plot_dim,
+        keys = [
+                self.file,
+                self.plane,
+                self.plot_dim,
                 self.grid,
                 self.data,
                 self.sim_dimension,
@@ -318,6 +332,8 @@ class PlottingUtils(PlotCreation):
         Initializes the dictionaries containing the plot parameters. Or
         clears them.
         """
+        self.file = {}
+        self.plane = {}
         self.plot_dim = {}
         self.grid = {}
         self.data = {}
@@ -424,27 +440,28 @@ class PlottingUtils(PlotCreation):
                                      self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
         
-    def __plot2Dfield(self, ax_letter):
+    def __plot2Dfield(self, ax_letter, grid_number):
         """
         Add a 2D field to the plot. It can be a velocity field or a
         magnetic field.
         """
-        if self.field_type[ax_letter] == 'v':
-            skip = (slice(None, None, 5), slice(None, None, 5))
-            self.axd[ax_letter].quiver(self.grid[ax_letter][0][skip],
-                                      self.grid[ax_letter][1][skip],
-                                      self.field[ax_letter][0][skip],
-                                      self.field[ax_letter][1][skip],
-                                      linewidths=0.01,
-                                      color='black',
-                                      angles='xy'
-                                      )
-        elif self.field_type[ax_letter] == 'B':
-            self.axd[ax_letter].contour(self.grid[ax_letter][0],
-                                        self.grid[ax_letter][1],
-                                        self.field[ax_letter], 45,
-                                        colors = 'black',
-                                        linewidths=0.2)
+        for i in range(len(self.field_type[ax_letter])):
+            if self.field_type[ax_letter][i] == 'v':
+                skip = (slice(None, None, 5), slice(None, None, 5))
+                self.axd[ax_letter].quiver(self.grid[ax_letter][i][0][skip],
+                                        self.grid[ax_letter][i][1][skip],
+                                        self.field[ax_letter][i][0][skip].value,
+                                        self.field[ax_letter][i][1][skip].value,
+                                        linewidths=0.01,
+                                        color='black',
+                                        angles='xy'
+                                        )
+            elif self.field_type[ax_letter][i] == 'B':
+                self.axd[ax_letter].contour(self.grid[ax_letter][grid_number][0],
+                                            self.grid[ax_letter][grid_number][1],
+                                            self.field[ax_letter][i], 45,
+                                            colors = 'black',
+                                            linewidths=0.2)
 
     def __plot2D(self, ax_letter):
         """

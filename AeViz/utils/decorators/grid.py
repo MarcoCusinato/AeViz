@@ -61,6 +61,8 @@ def _get_plane_indices(sim, plane):
     by taking the opposite slice.
     """
     ## Get the indices associated to the plane
+    if type(sim).__name__ == 'AeViz':
+        sim = sim.loaded_data
     if sim.dim == 1:
         index_phi = None
         index_theta = None
