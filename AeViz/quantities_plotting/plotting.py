@@ -458,23 +458,22 @@ class Plotting(PlottingUtils, Data):
             self.Close()
         self._PlotCreation__setup_axd(1, 4)
         plot, cbars = setup_cbars_HHT(1)
-        t, Y, data = self._Data__get_data_from_name('data_for_barcode', **kwargs)
-        if kwargs['msum']:
-            self.labels('t-t$_b$ [s]', 'l', plot)
-        else:
-            self.labels('t-t$_b$ [s]', 'lm', plot)
-        limits = max(np.abs(data.max()), np.abs(data.min())) * 0.8
-        if kwargs['zero_norm']:
-            cbar_label = r'$\tilde{\rho}/\tilde{\rho}_{00}$'
-        self._PlottingUtils__update_params(plot, (t, Y),
-                                           data, cbars[plot], False, 
-                                           (-limits, limits),
-                                           -3, 'seismic',
-                                           cbar_label,
-                                           self.sim_dim)
-        self.Xscale('linear', plot)
-        self.Yscale('linear', plot)
-        self._PlottingUtils__plot2Dmesh(plot, **kwargs) 
+        data = self._Data__get_data_from_name('data_for_barcode', **kwargs)
+        self._PlottingUtils__update_params(
+                                    ax_letter=plot,
+                                    plane=('time', 'Y'),
+                                    data=data,
+                                    cbar_position=cbars[plot],
+                                    dim=-3,
+                                    sim_dim=self.sim_dim,
+                                    **kwargs
+                                    )
+               
+        self._PlottingUtils__plot2Dmesh(plot, **kwargs)
+        self.Xscale(data.time.log, plot)
+        self.Yscale(data.Y.log, plot)
+        self.xlim(data.time.limits, plot)
+        self.ylim(data.Y.limits, plot)
         show_figure()
 
     def add_2Dfield(self, file, axd_letter, comp, plane):

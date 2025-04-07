@@ -14,12 +14,16 @@ imported into the AeViz class.
 
 @fig_window_open
 def rho_decomposition(self, l=0, m=None, correct_zero=True, **kwargs):
-    loc = locals()
-    for q in loc.keys():
-        if q not in ['self', 'kwargs']:
-            kwargs[q] = loc[q]
-    qt = 'rho_spherical_harmonics'
-    self.plotProfile(qt, **kwargs)
+    kwargs['l'] = l
+    kwargs['m'] = m
+    kwargs['correct_zero'] = correct_zero
+    if any(cc in kwargs for cc in ['rhomin', 'rhomax', 'r']):
+        projection = '1D'
+    else:
+        projection = '2D'
+    AeViz_plot_panel(self, 'rho_spherical_harmonics', None, projection, 'time',
+                     **kwargs)
+    
 
 @fig_window_open
 def rho_decomposition_barcode(self, lmin=None, lmax=None, msum=False,

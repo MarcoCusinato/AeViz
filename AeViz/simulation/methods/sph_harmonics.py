@@ -54,7 +54,7 @@ def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
                  limits=[-0.005, time.max()])
         rlm = aerray(rlm, u.dimensionless_unscaled, 'rho_sph_harmonics',
                      lb, 'YlGn',
-                     [rlm.min * 1.1, rlm.max() * 0.9], False)
+                     [rlm.min() * 1.1, rlm.max() * 0.9], False)
         return aeseries(rlm, time=time)
 
 def data_for_barcode(self, lmin=None, lmax=None, msum=False,
