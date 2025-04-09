@@ -238,7 +238,7 @@ def interpol_2D(shock_radius, Theta, Phi):
     shock_radius = np.ma.masked_invalid(shock_radius)
     shock_radius[shock_radius.mask] = \
         griddata((Phi.value[~shock_radius.mask], Theta.value[~shock_radius.mask]),
-                 shock_radius.value[~shock_radius.mask].ravel(),
+                 shock_radius[~shock_radius.mask].ravel(),
                  (Phi.value[shock_radius.mask], Theta.value[shock_radius.mask]),
                     method='linear', fill_value=median)
     return shock_radius
