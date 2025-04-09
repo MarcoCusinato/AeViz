@@ -1,10 +1,12 @@
 from AeViz.plot_utils.plot_creation import PlotCreation
+import astropy.units
 from matplotlib import ticker
 import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
+from AeViz.units.units import units
 
 
 class PlottingUtils(PlotCreation):
@@ -20,7 +22,72 @@ class PlottingUtils(PlotCreation):
         containing the plot parameters.
         """
         self.__reset_params()
-        PlotCreation.__init__(self)     
+        PlotCreation.__init__(self)
+        
+    def to(self, unit, plot='A', axis=None):
+        """
+        change the units of the selected plot either of the main data or axis.add()
+        unit: the unit to change to
+        plot:the letter of the plot
+        axis: the axis to target, if None, would target the main data
+        """
+        if axis is None:
+            for i in range(len(self.data[plot])):
+                try:
+                    old_units = self.data[plot][i].unit
+                    self.data[plot][i] = self.data[plot][i].to(unit)
+                    if type(self.cbar_lv[plot]) == tuple:
+                        self.cbar_lv[plot] = list(self.cbar_lv[plot])
+                    for lv in range(len(self.cbar_lv[plot])):
+                        self.cbar_lv[plot][lv] = self.cbar_lv[plot][lv] * \
+                            old_units.to(unit)
+                except:
+                    pass
+        else:
+            if any([a == 2 for a in self.plot_dim[plot]]):
+                axis = 'xy'
+            if axis == 'x':
+                for i in range(len(self.data[plot])):
+                    try:
+                        if type(self.grid[plot][i]) == tuple:
+                            self.grid[plot][i] = list(self.grid[plot][i])
+                        if (self.grid[plot][i]) == list:
+                            old_units = self.grid[plot][i][0].unit
+                            self.grid[plot][i][0] = self.grid[plot][i][0].to(unit)
+                        else:
+                            old_units = self.grid[plot][i].unit
+                            self.grid[plot][i] = self.grid[plot][i].to(unit)
+                    except:
+                        pass
+            elif axis == 'y':
+                for i in range(len(self.data[plot])):
+                    try:
+                        if self.plot_dim[plot][i] == 1:
+                            old_units = self.data[plot][i].unit
+                            self.data[plot][i] = self.data[plot][i].to(unit)
+                        else:
+                            if type(self.grid[plot][i]) == tuple:
+                                self.grid[plot][i] = list(self.grid[plot][i])
+                            old_units = self.grid[plot][i][1].unit
+                            self.grid[plot][i][1] = self.grid[plot][i][1].to(unit)
+                    except:
+                        pass
+            elif axis in ['xy', 'yx']:
+                for i in range(len(self.data[plot])):
+                    try:
+                        if self.plot_dim[plot][i] == 1:
+                            old_units = self.data[plot][i].unit
+                            self.data[plot][i] = self.data[plot][i].to(unit)
+                            self.grid[plot][i] = self.grid[plot][i].to(unit)
+                        else:
+                            if type(self.grid[plot][i]) == tuple:
+                                self.grid[plot][i] = list(self.grid[plot][i])
+                            old_units = self.grid[plot][i][0].unit
+                            self.grid[plot][i][1] = self.grid[plot][i][1].to(unit)
+                            self.grid[plot][i][0] = self.grid[plot][i][0].to(unit)                    
+                    except:
+                        pass 
+        self.__redo_plot()
 
     def xlim(self, xlim, axd_letter="A"):
         """

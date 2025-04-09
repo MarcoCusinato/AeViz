@@ -123,9 +123,9 @@ def global_neutrino_mean_energies(self, tob_corrected=True,
     nu_num = self.global_neutrino_number_luminosity(tob_corrected)
     mean_ene = [(nu_lum[i] / nu_num[i]).to(u.MeV) for i in range(len(nu_lum))]
     for me, nm, lb in zip(mean_ene, ['Enue', 'Enua', 'Enux'],
-                          [r'$\langle E_{\nu_e}\rangle$',
-                           r'$\langle E_{\overline{\nu}_e}\rangle$',
-                           r'$\langle E_{\nu_x}\rangle$']):
+                          [r'$\langle E_{\nu_\mathrm{e}}\rangle$',
+                           r'$\langle E_{\overline{\nu}_\mathrm{e}}\rangle$',
+                           r'$\langle E_{\nu_\mathrm{x}}\rangle$']):
         me.data.set(name=nm, limits=[0,30], label=lb)
     if comp == 'all': 
         return mean_ene
