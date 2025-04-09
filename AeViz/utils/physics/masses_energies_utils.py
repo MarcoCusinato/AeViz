@@ -74,6 +74,7 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
                                                       simulation.dim,
                                                   **gcells)[..., None])
     rho = simulation.rho(file_name) * dV
+    rho = simulation.rho(file_name) * dV
     ene_grav = np.sum(simulation.gravitational_energy(file_name)[mask] \
         * dV[mask])
     if simulation.dim == 1:
