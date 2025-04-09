@@ -1,6 +1,8 @@
 
 from AeViz.units import u
-from AeViz.utils.file_utils import save_hdf
+from AeViz.units.aeseries import aerray, aeseries
+from AeViz.units.constants import constants as c
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.utils.math_utils import function_average
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
 from scipy.interpolate import Akima1DInterpolator
@@ -15,6 +17,36 @@ https://doi.org/10.1103/PhysRevD.81.123016
 In particular, equation (12) for the linearized metric, equation (14)
 for the Love number.
 """
+
+def to_cactus_len(x):
+    """
+    Convert the radius to cactus units
+    """
+    return x / c.G / c.Msol * c.c ** 2
+
+def to_cactus_time(x):
+    """
+    Convert the time to cactus units
+    """
+    return x / c.G / c.Msol * c.c ** 3
+
+def to_cactus_dens(x):
+    """
+    Convert the density to cactus units
+    """
+    return x / c.Msol * c.G ** 3  * c.Msol ** 3 / c.c ** 6
+
+def to_cactus_vel(x):
+    """
+    Convert the velocity to cactus units
+    """
+    return x / c.c
+
+def to_cactus_pres(x):
+    """
+    Convert the pressure to cactus units
+    """
+    return to_cactus_dens(x) / c.c ** 2
 
 def linearized_metric(r, y, p, m, cs, rho):
     dH_dr, H = y
@@ -74,7 +106,22 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
         time, pns, core, processed_hdf = \
             read_tidal(simulation)
         if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return time, pns, core
+            time = aerray(time, u.s, name='time', label=r'$t-t_\mathrm{b}$',
+                          limits=[-0.05, time[-1]])
+            lambda_pns = aerray(pns['lambda'], u.dimensionless_unscaled,
+                                name='lambda_pns',  limits=[0, 10000], log=True,
+                                label=r'$\Lambda_\mathrm{PNS}$')
+            kappa_pns = aerray(pns['kappa2'], u.dimensionless_unscaled,
+                               name='kappa_pns', limits=[0, 0.002],
+                               label=r'$\kappa_2^\mathrm{PNS}$')
+            lambda_core = aerray(core['lambda'], u.dimensionless_unscaled,
+                                name='lambda_core', limits=[0, 10000], log=True,
+                                label=r'$\Lambda_\mathrm{core}$')
+            kappa_core = aerray(core['kappa2'], u.dimensionless_unscaled,
+                               name='kappa_core', limits=[0, 0.002],
+                               label=r'$\kappa_2^\mathrm{core}$')
+            return create_series(time, lambda_pns, kappa_pns, lambda_core,
+                                  kappa_core)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -83,24 +130,25 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
     else:
         start_point = 0
         processed_hdf = []
-        print('No checkpoint found for the mass and energy file, starting' \
+        print('No checkpoint found for the tidal deformablity file, starting' \
               ' from the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
     else:
         checkpoint = checkpoints[simulation.dim]
     ## Get the radii
-    t, _, _, _, PNS_radius, _ = simulation.PNS_radius()
-    _, _, _, _, core_radius, _ = simulation.PNS_radius()
+    PNS_radius = simulation.PNS_radius(rad='avg')
+    core_radius = simulation.PNS_radius(rad='avg')
     ## Get the calculated profiles
-    _, radius, rho_prof = simulation.radial_profile('rho')
-    _, _, pgas_prof = simulation.radial_profile('gas_pressure')
+    rho_prof = simulation.radial_profile('rho')
+    pgas_prof = simulation.radial_profile('gas_pressure')
     ## Convert to cactus units
-    radius = u.convert_to_cactus_lenght(radius)
-    rho_prof = u.convert_to_cactus_rho(rho_prof)
-    pgas_prof = u.convert_to_cactus_pressure(pgas_prof)
-    PNS_radius = u.convert_to_cactus_lenght(PNS_radius)
-    core_radius = u.convert_to_cactus_lenght(core_radius)
+    t = PNS_radius.time
+    radius = to_cactus_len(rho_prof.radius)
+    rho_prof = to_cactus_dens(rho_prof.data)
+    pgas_prof = to_cactus_pres(pgas_prof.data)
+    PNS_radius = to_cactus_len(PNS_radius.data)
+    core_radius = to_cactus_len(core_radius.data)
     dOmega = simulation.cell.dOmega(simulation.ghost)
     dV = simulation.cell.dVolume_integration(simulation.ghost)
     ## Indices
@@ -115,13 +163,12 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
             love_core, love_pns = 0, 0
         else:
             ##compute the speed of sound profile
-            csound = u.convert_from_cactus_velocity(
+            csound = to_cactus_vel(
                 function_average(simulation.soundspeed(file), simulation.dim,
                                 'Omega', dOmega))
             ##compute the mass profile
-            mass = u.convert_to_solar_masses(np.cumsum(
-                        np.sum(simulation.rho(file) * dV,
-                            axis=tuple(range(simulation.dim - 1)))))
+            mass = np.cumsum(np.sum(simulation.rho(file) * dV,
+                            axis=tuple(range(simulation.dim - 1))).to(u.M_sun)) / u.M_sun
             ## compute the core and PNS radius indices
             core_index = np.argmax(radius > core_radius[findex])
             pns_index = np.argmax(radius > PNS_radius[findex])
@@ -143,7 +190,7 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
             pns['lambda'] = np.concatenate((pns['lambda'], [tidal_pns]))
             core['kappa2'] = np.concatenate((core['kappa2'], [love_core]))
             core['lambda'] = np.concatenate((core['lambda'], [tidal_core]))
-        except:
+        except Exception as e:
             time = np.array([t[findex]])
             pns = {'kappa2': np.array([love_pns]),
                    'lambda': np.array([tidal_pns])}
@@ -164,7 +211,22 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
     save_hdf(os.path.join(simulation.storage_path, 'tidal.h5'),
                      ['time', 'PNS', 'PNS_core', 'processed'], 
                      [time, pns, core, processed_hdf])
-    return time, pns, core
+    time = aerray(time, u.s, name='time', label=r'$t-t_\mathrm{b}$',
+                  limits=[-0.05, time[-1]])
+    lambda_pns = aerray(pns['lambda'], u.dimensionless_unscaled,
+                        name='lambda_pns',  limits=[0, 10000], log=True,
+                        label=r'$\Lambda_\mathrm{PNS}$')
+    kappa_pns = aerray(pns['kappa2'], u.dimensionless_unscaled,
+                       name='kappa_pns', limits=[0, 0.002],
+                        label=r'$\kappa_2^\mathrm{PNS}$')
+    lambda_core = aerray(core['lambda'], u.dimensionless_unscaled,
+                        name='lambda_core', limits=[0, 10000], log=True,
+                        label=r'$\Lambda_\mathrm{core}$')
+    kappa_core = aerray(core['kappa2'], u.dimensionless_unscaled,
+                        name='kappa_core', limits=[0, 0.002],
+                        label=r'$\kappa_2^\mathrm{core}$')
+    return create_series(time, lambda_pns, kappa_pns, lambda_core,
+                            kappa_core)
 
 def read_tidal(simulation):
     """

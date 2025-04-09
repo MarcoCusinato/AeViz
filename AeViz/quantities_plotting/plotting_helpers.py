@@ -192,37 +192,6 @@ def get_data_to_plot(index1, index2, post_data, xaxis, dV):
                 data = post_data[:, index1, index2]
     return data
 
-def get_plane_indices(sim, plane):
-    """
-    Get the indices associated to the plane. In particular, for 3D
-    simulations, in the xz and yz planes, we need to extend the grid
-    by taking the opposite slice.
-    """
-    ## Get the indices associated to the plane
-    if plane not in ['xy', 'xz', 'yz']:
-        plane = 'xz'
-    if sim.sim_dim == 1:
-        index_phi = None
-        index_theta = None
-    elif sim.sim_dim == 2:
-        if plane == 'xy':
-            index_theta = len(sim.cell.theta(sim.ghost)) // 2
-        else:
-            index_theta = None
-        index_phi = None
-    elif plane == 'xy':
-        index_phi = None
-        index_theta = len(sim.cell.theta(sim.ghost)) // 2
-    elif plane == 'xz':
-        index_phi = len(sim.cell.phi(sim.ghost)) // 2
-        index_theta = None
-    elif plane == 'yz':
-        index_theta = None
-        index_phi = (len(sim.cell.phi(sim.ghost)) - (2 * \
-            sim.ghost.ghost - sim.ghost.p_l - sim.ghost.p_r)) // 4 + \
-                sim.ghost.ghost - sim.ghost.p_l
-    return plane, index_theta, index_phi
-
 def show_figure():
     """
     Show the figure if the module is imported from the terminal.
@@ -230,6 +199,8 @@ def show_figure():
     if TERMINAL:
         plt.ion()
         plt.show()
+    else:
+        plt.ioff()
 
 def get_qt_for_label(qt, **kwargs):
     """
@@ -248,8 +219,8 @@ def get_qt_for_label(qt, **kwargs):
     else:
         return qt
 
-def plot_panel(plotting_object, letter, file, quantity, grid,
-               indices, cbars, labels, plane, **kwargs):
+def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
+               **kwargs):
     """
     Single panel plotting for contourf plots.
     Inputs:
@@ -265,38 +236,33 @@ def plot_panel(plotting_object, letter, file, quantity, grid,
     - **kwargs: additional arguments.
     """
     ## GET THE DATA
+    if not 'plane' in kwargs:
+        kwargs['plane'] = plane
     data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
-    ## GET THE PLANE CUT
-    data = plotting_object._Data__plane_cut(data, indices[0], indices[1])
-    qt_label = get_qt_for_label(quantity, **kwargs)
-    plotting_object._PlottingUtils__update_params(letter, grid,
-                                            data,
-                                            cbars[letter],
-                                            labels[qt_label]['log'],
-                                            labels[qt_label]['lim'], 2, 
-                                            labels[qt_label]['cmap'], 
-                                            labels[qt_label]['label'],
-                                            plotting_object.sim_dim)
-    ## SET THE PLANE LABELS
-    if plane == 'xy':
-        plotting_object.labels('X [km]', 'Y [km]', letter)
-    elif plane == 'xz':
-        plotting_object.labels('X [km]', 'Z [km]', letter)
-    elif plane == 'yz':
-        plotting_object.labels('Y [km]', 'Z [km]', letter)
+    plotting_object._PlottingUtils__update_params(
+                                            file=file,
+                                            ax_letter=letter,
+                                            plane=plane,
+                                            data=data,
+                                            cbar_position=cbars[letter],
+                                            dim=2,
+                                            sim_dim=plotting_object.sim_dim)
     ## MAKE THE PLOT
     plotting_object._PlottingUtils__plot2D(letter)
-    plotting_object.Xscale('linear', letter)
-    plotting_object.Yscale('linear', letter)
-    
-def plot_profile_panel(plotting_object, letter, quantity,
-                       cbars, labels, **kwargs):
-    time, r, prof = plotting_object._Data__get_profile(quantity, **kwargs)
-    X, Y = np.meshgrid(time, u.convert_to_km(r))
-    if hasattr(labels[quantity]['lim'], '__call__'):
-        lim = labels[quantity]['lim'](prof)
-    else:
-        lim = labels[quantity]['lim']
+    plot_number = plotting_object.plot_dim[letter].index(2)
+    plotting_object.xlim(tuple(
+        plotting_object.grid[letter][plotting_object.plot_dim['A'].index(2)][0].limits),
+                         letter)
+    plotting_object.Xscale(plotting_object.grid[letter][plot_number][0].log,
+                           letter)
+    plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
+                           letter)
+    plotting_object._PlottingUtils__save_labels(letter)
+
+def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
+    kwargs["mesh"] = True
+    data = plotting_object._Data__get_profile(quantity, **kwargs)
+    """
     if 'rho_spherical_harmonics' in quantity:
         lab = labels[quantity]['label'].replace('XX', str(kwargs['l']))
         if kwargs['m'] is not None:
@@ -305,14 +271,44 @@ def plot_profile_panel(plotting_object, letter, quantity,
             lab = lab.replace('YY', '')
     else:
         lab = labels[quantity]['label']
-    plotting_object._PlottingUtils__update_params(letter, (X, Y), prof,
-                                    cbars[letter], labels[quantity]['log'],
-                                    lim, -1, 
-                                    labels[quantity]['cmap'], 
-                                    lab,
-                                    plotting_object.sim_dim)
-    plotting_object.labels('t-t$_b$ [s]', 'R [km]', letter)
+    """
+    plotting_object._PlottingUtils__update_params(
+                                                  ax_letter=letter,
+                                                  plane=('time', 'radius'),
+                                                  data=data,
+                                                  cbar_position=cbars[letter],
+                                                  dim=-1,
+                                                  sim_dim=plotting_object.sim_dim)
     plotting_object._PlottingUtils__plot2D(letter)
-    plotting_object.xlim((-0.005, time.max()), letter)
-    plotting_object.Yscale('log', letter)
-    plotting_object.Xscale('linear', letter)
+    plot_number = plotting_object.plot_dim[letter].index(-1)
+    plotting_object.xlim(tuple(
+        plotting_object.grid[letter][plot_number][0].limits), letter)
+    plotting_object.ylim(tuple(
+        plotting_object.grid[letter][plot_number][1].limits), letter)
+    plotting_object.Xscale(plotting_object.grid[letter][plot_number][0].log,
+                           letter)
+    plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
+                           letter)
+    
+def remove_labelling(data, no_nu):
+    label = data.data.label
+    new_label = label
+    remove_symbols = [r'\mathrm{max}', r'\mathrm{min}', r'\mathrm{avg}',
+                      r'\mathrm{tot}',
+                       ',max', ',min', ',avg', ',tot', ', max', ', min', ', avg',
+                       ', tot', ',x', ',y', ',z', ', x', ', y', ', z']
+    for symb in remove_symbols:
+        new_label = new_label.replace(symb, '')
+
+    data.data.set(label=new_label)
+    if no_nu:
+        return data, label
+    
+    replace_nu = [
+         r'\mathrm{\nu_e}', r'\mathrm{\nu_x}', r'\mathrm{\overline{\nu}_e}',
+         r'\nu_\mathrm{e}', r'\nu_\mathrm{x}', r'\overline{\nu}_\mathrm{e}',
+                 ]
+    for nu  in replace_nu:
+        new_label = new_label.replace(nu, r'\nu')
+    data.data.set(label=new_label)
+    return data, label  

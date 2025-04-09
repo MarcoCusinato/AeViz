@@ -1,6 +1,7 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.profiles import calculate_profile
-from AeViz.utils.tidal_love import solve_tidal_love_profile
+from AeViz.utils.physics.profiles import calculate_profile
+from AeViz.utils.physics.tidal_love import solve_tidal_love_profile
+from AeViz.utils.decorators.grid import profile_grid
 from typing import Literal
 
 """
@@ -16,6 +17,7 @@ imported into the Simulation class.
 
 @smooth
 @derive
+@sum_tob
 def tidal_deformability(self, tob_corrected=True, save_checkpoints=True,
                         comp:Literal['PNS_core', 'PNS']='PNS', **kwargs):
     """
@@ -25,16 +27,16 @@ def tidal_deformability(self, tob_corrected=True, save_checkpoints=True,
     during the calculation.
     Returns: time, tidal deformability
     """
+    lambda_pns, _, lambda_core, _ = solve_tidal_love_profile(self,
+                                                             save_checkpoints)
     if comp == 'PNS_core':
-        time, _, data = solve_tidal_love_profile(self, save_checkpoints)
+        return lambda_core
     else:
-        time, data, _ = solve_tidal_love_profile(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['lambda']]
+        return lambda_pns
 
 @smooth
 @derive
+@sum_tob
 def love_number(self, tob_corrected=True, save_checkpoints=True,
                 comp:Literal['PNS_core', 'PNS']='PNS', **kwargs):
     """
@@ -44,20 +46,22 @@ def love_number(self, tob_corrected=True, save_checkpoints=True,
     during the calculation.
     Returns: time, Love number
     """
+    kappa_pns, _, kappa_core, _ = solve_tidal_love_profile(self,
+                                                             save_checkpoints)
     if comp == 'PNS_core':
-        time, _, data = solve_tidal_love_profile(self, save_checkpoints)
+        return kappa_core
     else:
-        time, data, _ = solve_tidal_love_profile(self, save_checkpoints)
-    if not tob_corrected:
-        time += self.tob
-    return [time, data['kappa2']]
-
+        return kappa_pns
 
 ## -----------------------------------------------------------------
 ## PROFILES
 ## -----------------------------------------------------------------
 
-def radial_profile(self, quantity, save_checkpoints=True, **kwargs):
+@profile_grid
+@derive
+@sum_tob
+def radial_profile(self, quantity, tob_corrected=True,
+                   save_checkpoints=True, **kwargs):
     """
     Calucaltes the radial profile of the selected quantity. Name of
     the quantity must be the same as the one of the simulation

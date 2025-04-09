@@ -1,14 +1,16 @@
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 import numpy as np
+import scipy.special as sp
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.files.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
+from AeViz.units import u
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
     rho = simulation.rho(file_name)
-    out_array = np.zeros((np.math.factorial(lmax) + 1, rho.shape[-1]))
+    out_array = np.zeros((int(sp.factorial(lmax)) + 1, rho.shape[-1]))
     harm_index = 0
     for l in range( lmax + 1 ):
         for m in range( -l, l + 1 ):
@@ -81,7 +83,7 @@ def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
             time = np.concatenate((time, simulation.time(file)))
             decomposition = np.concatenate((decomposition, in_data[..., None]),
                                            axis=-1)
-        except:
+        except Exception as e:
             time = simulation.time(file)
             decomposition = in_data[..., None]
         processed_hdf.append(file)
@@ -98,7 +100,6 @@ def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
     save_decomposition(simulation, decomposition, time, processed_hdf, lmax,
                        msum)
     return True
-
 
 def save_decomposition(simulation, decomposition, time, processed_hdf, lmax, msum):
     keys = ['time']
@@ -129,11 +130,11 @@ def read_rho_decomposition(simulation, lmax, msum):
         data_dim = lmax + 1
     else:
         fname = 'rho_decomposition_SpH.h5'
-        data_dim = np.math.factorial(lmax) + 1
+        data_dim = int(sp.factorial(lmax)) + 1
     decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
                                             fname), 'r')
     data = [
-        decomposition_data['time'][...]
+        (decomposition_data['time'][...] * u.s)
     ]
 
     dec_data = np.zeros((data_dim,
@@ -169,7 +170,6 @@ def get_sph_profile(simulation, l, m=None):
     decomposition_data.close()
     return time, data
 
-
 def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
                        rhomin=None, rhomax=None, r=None):
     rr = [rhomin, rhomax, r]
@@ -204,7 +204,7 @@ def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
     if lmin is None:
         lmin = 0
     if not msum:
-        Yscale = np.arange(lmin, np.math.factorial(lmax) + 1)
+        Yscale = np.arange(lmin, int(sp.factorial(lmax)) + 1)
     else:
         Yscale = np.arange(lmin, lmax + 1)
     if msum:

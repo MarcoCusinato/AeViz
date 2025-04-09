@@ -1,4 +1,6 @@
 import numpy as np
+from AeViz.units import u
+from  AeViz.units.aerray import aerray
 
 #radius methods
 def radius_left(self, ghost):
@@ -10,8 +12,10 @@ def radius_left(self, ghost):
     Results:
         left radius coordinates: (numpy array)
     """
-    return ghost.remove_ghost_cells(self._cell__radius_file[:, 0], self.dim,
+    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 0], self.dim,
                                     'radius')
+    return aerray(radius, u.cm, name='radius_left', label=r'$r_\mathrm{l}$',
+                  log=True)
 
 def radius_right(self, ghost):
     """
@@ -22,8 +26,10 @@ def radius_right(self, ghost):
     Results:
         right radius coordinates: (numpy array)
     """
-    return ghost.remove_ghost_cells(self._cell__radius_file[:, 2], self.dim,
+    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 2], self.dim,
                                     'radius')
+    return aerray(radius, u.cm, name='radius_right', label=r'$r_\mathrm{r}$',
+                  log=True)
 
 def radius(self, ghost):
     """
@@ -34,8 +40,10 @@ def radius(self, ghost):
     Results:
         center radius coordinates: (numpy array)
     """
-    return ghost.remove_ghost_cells(self._cell__radius_file[:, 1], self.dim,
+    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 1], self.dim,
                                     'radius')
+    return aerray(radius, u.cm, name='radius', label=r'$r$', log=True,
+                  limits=[radius.min(), radius.max()])
 
 def dr(self, ghost):
     """
@@ -45,7 +53,10 @@ def dr(self, ghost):
     Results:
         radial lenght of a cell: (numpy array)
     """
-    return self.radius_right(ghost) - self.radius_left(ghost)
+    dr = self.radius_right(ghost) - self.radius_left(ghost)
+    dr.set(label=r'$\mathrm{d}r$', name='dr')
+    return dr
+    
 
 #theta angle methods
 def theta_left(self, ghost):
@@ -58,10 +69,11 @@ def theta_left(self, ghost):
         left theta coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__theta_file[:, 0],
+        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 0],
                                         self.dim, 'theta')
     except:
-        return self._cell__theta_file[0]
+        theta = self._cell__theta_file[0]
+    return aerray(theta, u.radian, name='theta_l', label=r'$\theta_\mathrm{l}$')
 
 def theta_right(self, ghost):
     """
@@ -73,10 +85,12 @@ def theta_right(self, ghost):
         right theta coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__theta_file[:, 2],
+        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 2],
                                         self.dim, 'theta')
     except:
-        return self._cell__theta_file[2]
+        theta = self._cell__theta_file[2]
+    return aerray(theta, u.radian, name='theta_r', label=r'$\theta_\mathrm{r}$')
+ 
 
 def theta(self, ghost):
     """
@@ -88,10 +102,12 @@ def theta(self, ghost):
         central theta coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__theta_file[:, 1],
+        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 1],
                                         self.dim, 'theta')
     except:
-        return self._cell__theta_file[1]
+        theta = self._cell__theta_file[1]
+    
+    return aerray(theta, u.radian, name='theta', label=r'$\theta$', limits=[0, 3.14])
 
 def dtheta(self, ghost):
     """
@@ -102,7 +118,9 @@ def dtheta(self, ghost):
     Results:
         angular (theta) lenght of a cell: (numpy array)
     """
-    return self.theta_right(ghost) - self.theta_left(ghost)
+    theta = self.theta_right(ghost) - self.theta_left(ghost)
+    theta.set(label=r'$\mathrm{d}\theta$', name='dtheta')
+    return theta
 
     #phi angle methods
 def phi_left(self, ghost):
@@ -115,10 +133,11 @@ def phi_left(self, ghost):
         left phi coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__phi_file[:, 0],
+        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 0],
                                         self.dim, 'phi')
     except:
-        return self._cell__phi_file[0]
+        phi = self._cell__phi_file[0]
+    return aerray(phi, u.radian, name='phi_l', label=r'$\phi_\mathrm{l}$')
 
 def phi_right(self, ghost):
     """
@@ -130,10 +149,11 @@ def phi_right(self, ghost):
         right phi coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__phi_file[:, 2],
+        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 2],
                                         self.dim, 'phi')
     except:
-        return self._cell__phi_file[2]
+        phi = self._cell__phi_file[2]
+    return aerray(phi, u.radian, name='phi_r', label=r'$\phi_\mathrm{r}$')
 
 def phi(self, ghost):
     """
@@ -145,10 +165,11 @@ def phi(self, ghost):
         central phi coordinates: (numpy array)
     """
     try:
-        return ghost.remove_ghost_cells(self._cell__phi_file[:, 1], self.dim,
+        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 1], self.dim,
                                         'phi')
     except:
-        return self._cell__phi_file[1]
+        phi = self._cell__phi_file[1]
+    return aerray(phi, u.radian, name='phi', label=r'$\phi$')
 
 def dphi(self, ghost):
     """
@@ -160,8 +181,11 @@ def dphi(self, ghost):
         dtheta for integration: (numpy array)
     """
     if self.dim != 3:
-        return 2 * np.pi
-    return self.phi_right(ghost) - self.phi_left(ghost)
+        return aerray(2 * np.pi, u.radian, name='dphi',
+                      label=r'$\mathrm{d}\phi$')
+    dp = self.phi_right(ghost) - self.phi_left(ghost)
+    dp.set(name='dphi', label=r'$\mathrm{d}\phi$')
+    return dp
 
 #lenght methods
 def lx(self, ghost):
@@ -278,10 +302,13 @@ def dVolume_integration(self, ghost):
     dtheta = self.dtheta_integration(ghost)
     dphi = self.dphi(ghost)
     if self.dim == 1:
-        return dr*dtheta*dphi
-    if self.dim == 2:
-        return dphi * dtheta[:, None] * dr[None, :]
-    return dphi[:, None, None] * dtheta[None, :, None] * dr[None, None, :]
+        dV = dr*dtheta*dphi
+    elif self.dim == 2:
+        dV = dphi * dtheta[:, None] * dr[None, :]
+    else:
+        dV = dphi[:, None, None] * dtheta[None, :, None] * dr[None, None, :]
+    dV.set(label=r'$\mathrm{d}V$', name='dV')
+    return dV
 
 def dVolume_sum(self, ghost):
     r = self.radius(ghost) ** 2
@@ -301,7 +328,9 @@ def dr_integration(self, ghost):
     Results:
         dr for integration: (numpy array)
     """
-    return (self.radius_right(ghost)**3 - self.radius_left(ghost)**3) / 3
+    dr_ = (self.radius_right(ghost)**3 - self.radius_left(ghost)**3) / 3
+    dr_.set(name='dr_int', label=r'$r^2\mathrm{d}r$')
+    return dr_
 
 def dtheta_integration(self, ghost):
     """
@@ -313,8 +342,11 @@ def dtheta_integration(self, ghost):
         dtheta for integration: (numpy array)
     """
     if self.dim < 2:
-        return 2
-    return np.cos(self.theta_left(ghost)) - np.cos(self.theta_right(ghost))
+        return aerray(2, u.dimensionless_unscaled, name='dcostheta',
+                      label=r'$\mathrm{d}\cos\theta$')
+    dc = np.cos(self.theta_left(ghost)) - np.cos(self.theta_right(ghost))
+    dc.set(name='dcostheta', label=r'$\mathrm{d}\cos\theta$')
+    return dc
 
 def dOmega(self, ghost):
     """
@@ -325,9 +357,11 @@ def dOmega(self, ghost):
         dOmega: (numpy array)
     """
     if self.dim == 1:
-        return 4 * np.pi
+        dO = aerray(4 * np.pi, unit=u.dimensionless_unscaled)
     elif self.dim == 2:
-        return self.dtheta_integration(ghost) * self.dphi(ghost)
+        dO = self.dtheta_integration(ghost) * self.dphi(ghost)
     else:
-        return self.dtheta_integration(ghost)[None, :] \
+        dO = self.dtheta_integration(ghost)[None, :] \
             * self.dphi(ghost)[:, None]
+    dO.set(name='dOmega', label=r'$\mathrm{d}\Omega$')
+    return dO

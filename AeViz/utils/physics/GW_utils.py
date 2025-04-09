@@ -1,37 +1,42 @@
 import numpy as np
-from AeViz.units.units import units
 from AeViz.utils.math_utils import IDL_derivative, gradient
-from scipy.signal import stft
+from AeViz.utils.files.string_utils import merge_strings
 from numpy.fft import fft, fftfreq
 import os, h5py
 from AeViz.utils.utils import check_existence, progressBar, checkpoints
-from AeViz.utils.file_utils import save_hdf
+from AeViz.utils.files.file_utils import save_hdf, create_series
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
+from AeViz.units.aeseries import aeseries, aerray
+from AeViz.units import u
+from AeViz.units.constants import constants as c
 
-u = units()
 
 ## ---------------------------------------------------------------------
 ## GW strain
 ## ---------------------------------------------------------------------
 
-def GW_strain(sim_dim, column_change, data, index):
+def GW_strain(sim_dim, column_change, data, index, distance):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
+    if distance:
+        if not isinstance(distance, aerray):
+            distance = distance * u.cm
     if sim_dim == 1:
         return GW_strain_1D(data)
     elif sim_dim == 2:
-        return correct_zero(2, GW_strain_2D(data), index)
+        return correct_zero(2, GW_strain_2D(data, distance), index)
     else:
-        GWs = GW_strain_3D(data)
+        GWs = GW_strain_3D(data, distance)
         if column_change is not None:
-            GWs[:column_change, 1] = GW_strain_2D(data)[:column_change, 1]
-            GWs[:column_change,2:] = 0
+            GWs[0].data[:column_change] = GW_strain_2D(data, distance).data[:column_change]
+            for hh in range(1, len(GWs)):
+                GWs[hh].data.value[:column_change] = np.zeros(column_change)
         return correct_zero(3, GWs, index)
 
 def GW_strain_1D(data):
     print("No GW for you :'(")
     return None
 
-def GW_strain_2D(data):
+def GW_strain_2D(data, distance):
     """
         GWs amplitudes calculated as the first partial time derivative
         of NE_220 and not with the second partial time derivative of 
@@ -39,22 +44,52 @@ def GW_strain_2D(data):
         amplitude, being the main contribution to it.
     """
     const = -0.125 *  np.sqrt(15/np.pi)
-    return np.stack((data[:, 2], const * IDL_derivative(data[:,2], data[:,5])),
-              axis = 1)
+    GWs = aeseries(
+        aerray(const * IDL_derivative(data[:,2], data[:,5]), u.cm, 'h+eq',
+               r'$\mathcal{D}h_{+,eq}$', 'Spectral_r', [-150, 150]),
+        time=aerray(data[:, 2], u.s, 'time', r'$t$', None, [0, data[-1, 2]])
+    )
+    if distance:
+        lb, cm, lm, nm = GWs.data.label, GWs.data.cmap, \
+            GWs.data.limits, GWs.data.name
+        GWs /= distance
+        GWs.data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
+                     limits=lm)
+    return GWs
 
-def GW_strain_3D(data):
+def GW_strain_3D(data, distance):
+    time = aerray(data[:, 2], u.s, 'time', r'$t$', None, [0, data[-1, 2]])
     const = 1 #8 * np.sqrt(np.pi / 15)
     hD_pl_p = 2. * ( data[:,9] - data[:,13] )
     hD_pl_e = 2. * ( data[:,17] - data[:,13] )
     hD_cr_p = 2. * ( data[:,10] + data[:,12] )
     hD_cr_e = 2. * ( - data[:,14] - data[:,16] )
 
-    hD_pl_p = const * IDL_derivative( data[:,2], hD_pl_p )
-    hD_cr_p = const * IDL_derivative( data[:,2], hD_cr_p )
-    hD_pl_e = const * IDL_derivative( data[:,2], hD_pl_e )
-    hD_cr_e = const * IDL_derivative( data[:,2], hD_cr_e )
-
-    return np.stack((data[:,2], hD_pl_e, hD_pl_p, hD_cr_e, hD_cr_p), axis = -1)
+    hD_pl_e = aeseries(
+        aerray(const * IDL_derivative( data[:,2], hD_pl_e ), u.cm, 'h+eq',
+               r'$\mathcal{D}h_{+,eq}$', 'Spectral_r', [-150, 150]),
+        time=time)
+    hD_pl_p = aeseries(
+        aerray(const * IDL_derivative( data[:,2], hD_pl_p ), u.cm, 'h+pol',
+               r'$\mathcal{D}h_{+,pol}$', 'Spectral_r', [-150, 150]),
+        time=time.copy())
+    hD_cr_e = aeseries(
+        aerray(const * IDL_derivative( data[:,2], hD_cr_e ), u.cm, 'hxeq',
+               r'$\mathcal{D}h_{x,eq}$', 'Spectral_r', [-150, 150]),
+        time=time.copy())
+    hD_cr_p = aeseries(
+        aerray(const * IDL_derivative( data[:,2], hD_cr_p ), u.cm, 'hxpol',
+               r'$\mathcal{D}h_{x,pol}$', 'Spectral_r', [-150, 150]),
+        time=time.copy())
+    GWs = [hD_pl_e, hD_pl_p, hD_cr_e, hD_cr_p]
+    if distance:
+        for hh in range(len(GWs)):
+            lb, cm, lm, nm = GWs[hh].data.label, GWs[hh].data.cmap, \
+                GWs[hh].data.limits, GWs[hh].data.name
+            GWs[hh] /= distance
+            GWs[hh].data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
+                        limits=lm)
+    return GWs
 
 def correct_zero(sim_dim, GWs, index):
     if sim_dim == 1:
@@ -62,8 +97,11 @@ def correct_zero(sim_dim, GWs, index):
     else:
         if index is None:
             return GWs
-        for i in range(1, GWs.shape[1]):
-            GWs[:, i] -= GWs[:index, i].mean()
+        if sim_dim == 2:
+            GWs -= GWs.data[:index].mean()
+        else:
+            for i in range(len(GWs)):
+                GWs[i] -= GWs[i].data[:index].mean()
         return GWs
 
 ## ---------------------------------------------------------------------
@@ -77,7 +115,7 @@ def GWs_energy(GWs, sim_dim):
     elif sim_dim == 2:
         return GWs_energy_2D(GWs)
     else:
-        return GW_strain_3D(GWs)
+        return GWs_energy_3D(GWs)
 
 def GWs_energy_1D(GWs):
     print("No GW for you :'(")
@@ -87,64 +125,44 @@ def GWs_energy_2D(GWs):
     """
     Calculates the energy of the GWs in 2D
     """
-    const = -0.125 *  np.sqrt(15/np.pi)
-    GWs[:, 1] = (IDL_derivative(GWs[:, 0], GWs[:, 1]) / const) ** 2 * \
-        (u.speed_light ** 3 / (u.G * 32 * np.pi))
-    return GWs
+    const = c.c ** 3 / (c.G * 32 * np.pi) / (-0.125 *  np.sqrt(15/np.pi)) ** 2
+    ene = aeseries(
+        IDL_derivative(GWs.time, GWs.data) ** 2 * const,
+        time = GWs.time
+    )
+    ene.data.set(name='EGWs', label=r'$E_\mathrm{GW}$', cmap='Spectral',
+                 limits=[1e45, 1e48], log=True)
+    return ene.to(u.erg / u.s)
 
 def GWs_energy_3D(GWs):
     """
     Calculates the energy of the GWs in 3D
     """
-    time = GWs[:, 0]
-    const = 8 / 15 * u.speed_light ** 3 / (16 * np.pi * u.G)
-    return const * (IDL_derivative(time, GWs[:, 1]) ** 2 + 
-                    IDL_derivative(time, GWs[:, 2]) ** 2 +
-                    IDL_derivative(time, GWs[:, 3]) ** 2 +
-                    IDL_derivative(time, GWs[:, 4]) ** 2)  
+    const = 8 / 15 * c.c ** 3 / (16 * np.pi * c.G)
+    ene = aeseries(IDL_derivative(GWs[0].time, GWs[0].data) ** 2,
+                   time=GWs[0].time)
+    for h in GWs[1:]:
+        ene += IDL_derivative(h.time, h.data) ** 2
+    ene *= const
+    ene.data.set(name='EGWs', label=r'$E_\mathrm{GW}$', cmap='Spectral',
+            limits=[1e45, 1e48], log=True)
+    return ene.to(u.erg / u.s)
     
 ## ---------------------------------------------------------------------
 ## GW spectrogram
 ## ---------------------------------------------------------------------
 
-
-def GWs_spectrogram(sim_dim, GWs, window_size):
+def GWs_spectrogram(sim_dim, GWs, window_size, scale_to, **kwargs):
+    print(kwargs)
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if sim_dim == 1:
-        return GW_spectrogram_1D(GWs)
+        print("And also no spectrogram for you :'(\nごめんなさい")
+        return None
     elif sim_dim == 2:
-        return GW_spectrogram_2D(GWs, window_size)
+        return GWs.stft(window_size=window_size, scale_to=scale_to, **kwargs)
     else:
-        return GW_spectrogram_3D(GWs, window_size)
-
-def GW_spectrogram_1D(GWs):
-    print("And also no spectrogram for you :'(\nごめんなさい")
-    return None
-
-def GW_spectrogram_2D(GWs, window_size):
-    """
-        
-    """
-    fs = (GWs[1, 0] - GWs[0, 0]) ** (-1)
-    frequency, time, Zxx = stft(GWs[:,1], fs = fs, nperseg=window_size)
-    time = time / time[-1] * GWs[-1, 0]
-    return time, frequency, np.abs(Zxx)
-
-def GW_spectrogram_3D(GWs, window_size):
-    fs = (GWs[1, 0] - GWs[0, 0]) ** (-1)
-    freq_pl_e, time_pl_e, Zxx_pl_e = stft(GWs[:,1], fs=fs, nperseg=window_size)
-    time_pl_e = time_pl_e / time_pl_e[-1] * GWs[-1, 0]
-    freq_pl_p, time_pl_p, Zxx_pl_p = stft(GWs[:,2], fs=fs, nperseg=window_size)
-    time_pl_p = time_pl_p / time_pl_p[-1] * GWs[-1, 0]
-    freq_cr_e, time_cr_e, Zxx_cr_e = stft(GWs[:,3], fs=fs, nperseg=window_size)
-    time_cr_e = time_cr_e / time_cr_e[-1] * GWs[-1, 0]
-    freq_cr_p, time_cr_p, Zxx_cr_p = stft(GWs[:,4], fs=fs, nperseg=window_size)
-    time_cr_p = time_cr_p / time_cr_p[-1] * GWs[-1, 0]
-    
-    return np.stack((time_pl_e, time_pl_p, time_cr_e, time_cr_p), axis=-1), \
-           np.stack((freq_pl_e, freq_pl_p, freq_cr_e, freq_cr_p), axis=-1), \
-           np.stack((np.abs(Zxx_pl_e), np.abs(Zxx_pl_p), np.abs(Zxx_cr_e),
-                     np.abs(Zxx_cr_p)), axis=-1)
+        return [h.stft(window_size=window_size, scale_to=scale_to, **kwargs)
+                for h in GWs]
 
 ## ---------------------------------------------------------------------
 ## GWs peaks
@@ -319,8 +337,10 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
             read_NE220(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
-                                     conv_NE220, outer_NE220)
+            return calculate_strain_2D(D, time,
+                                       simulation.cell.radius(simulation.ghost),
+                                       NE220, full_NE220, nuc_NE220,
+                                       conv_NE220, outer_NE220)
         else:
             start_point = len(time)
             print("Checkpoint found." \
@@ -334,11 +354,12 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     progress_index = 0
     dV = -simulation.cell.dVolume_integration(simulation.ghost)
     ctheta = np.cos(simulation.cell.theta(simulation.ghost))[:, None]
-    _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
-    _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
-    
-    
-    
+    inner_rad, igcells = simulation.innercore_radius(rad='full')
+    nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
+
+    inner_rad = inner_rad.data
+    nuc_rad = nuc_rad.data
+
     for file in simulation.hdf_file_list[start_point:]:
         fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
             file, dV, ctheta, inner_rad[..., findex], igcells,
@@ -346,17 +367,18 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         try:
             time = np.concatenate((time, simulation.time(file)))
             NE220 = np.concatenate((NE220, fNE220[..., None]), axis=-1)
-            full_NE220 = np.concatenate((full_NE220, np.array([ffull])))
-            nuc_NE220 = np.concatenate((nuc_NE220, np.array([fnuc])))
-            conv_NE220 = np.concatenate((conv_NE220, np.array([finner])))
-            outer_NE220 = np.concatenate((outer_NE220, np.array([fouter])))
-        except:
+            full_NE220 = np.concatenate((full_NE220, ffull))
+            nuc_NE220 = np.concatenate((nuc_NE220, fnuc))
+            conv_NE220 = np.concatenate((conv_NE220, finner))
+            outer_NE220 = np.concatenate((outer_NE220, fouter))
+        except Exception as e:
+            print(e)
             time = simulation.time(file)
             NE220 = fNE220[..., None]
-            full_NE220 = np.array([ffull])
-            nuc_NE220 = np.array([fnuc])
-            conv_NE220 = np.array([finner])
-            outer_NE220 = np.array([fouter])
+            full_NE220 = ffull
+            nuc_NE220 = fnuc
+            conv_NE220 = finner
+            outer_NE220 = fouter
         if save_checkpoints and check_index == checkpoint:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
@@ -375,8 +397,9 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
                       'convection_NE220', 'outer_NE220'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
                       outer_NE220])
-    return calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220,
-                                        conv_NE220, outer_NE220)
+    return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
+                               NE220, full_NE220, nuc_NE220, conv_NE220,
+                               outer_NE220)
 
 def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
           nuc_rad, ngcells):
@@ -393,7 +416,7 @@ def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
                                                     **ngcells)[..., None]
     mask_inner = (simulation.cell.radius(simulation.ghost) <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
-                                             **igcells)[..., None] + 2e6) & \
+                                             **igcells)[..., None] + (20 * u.km)) & \
         (np.logical_not(mask_nuc))
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner), \
@@ -404,27 +427,50 @@ def read_NE220(simulation):
     Reads the NE220 from a checkpoint file.
     """
     data = h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r')
-    time = data['time'][...]
-    NE220 = data['NE220'][...]
-    full_NE220 = data['full_NE220'][...]
-    nuc_NE220 = data['nucleus_NE220'][...]
-    conv_NE220 = data['convection_NE220'][...]
-    outer_NE220 = data['outer_NE220'][...]
+    time = data['time'][...] * u.s
+    NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
+    full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
+    nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
+    conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
+    outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
     data.close()
     return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220
 
-def calculate_strain_2D(D, time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                     outer_NE220):
+def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
+                        conv_NE220, outer_NE220):
     """
     Derives ancd fixes the constants of the strain.
     """
     const =  -0.125 *  np.sqrt(15/np.pi) * \
-        (u.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * D * u.speed_light ** 4))
-    return time, const * IDL_derivative(time, NE220), const * \
-        IDL_derivative(time, full_NE220), const * \
-        IDL_derivative(time, nuc_NE220), const * \
-        IDL_derivative(time, conv_NE220), const * \
-        IDL_derivative(time, outer_NE220)
+        (c.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * c.c ** 4))
+    if D is not None:
+        if not isinstance(D, aerray):
+            D = D * u.cm
+        const /= D
+        add_lb = r''
+    else:
+        add_lb = r'$\mathcal{D}$'
+        D = 1 * u.cm
+    time.set(name='time', label=r'$t-t_\mathrm{b}$',
+             cmap=None, limits=[-0.005, time[-1]])
+    NE220 = const * IDL_derivative(time, NE220)
+    NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
+              cmap='Spectral_r', limits=[-3 / D.value, 3 / D.value])
+    full_NE220 = const * IDL_derivative(time, full_NE220)
+    full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
+                   cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value])
+    nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
+    nuc_NE220.set(name='nuc_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+                  label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
+    conv_NE220 = const * IDL_derivative(time, conv_NE220)
+    conv_NE220.set(name='conv_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+                   label=merge_strings(add_lb,r'$h_{+,\mathrm{eq,conv}}$'))
+    outer_NE220 = const * IDL_derivative(time, outer_NE220)
+    outer_NE220.set(name='outer_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+                    label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
+    T, R = np.meshgrid(time, radius)
+    return aeseries(NE220, time=T, radius=R),\
+            create_series(time, full_NE220, nuc_NE220, conv_NE220, outer_NE220)
 
 ## 3D
 
@@ -453,9 +499,12 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     check_index = 0
     progress_index = 0
     dV = simulation.cell.dVolume_integration(simulation.ghost)
-    _, inner_rad, _, _, _, igcells = simulation.innercore_radius()
-    _, nuc_rad, _, _, _, ngcells = simulation.PNS_nucleus_radius()
-    
+    inner_rad, igcells = simulation.innercore_radius(rad='full')
+    nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
+
+    inner_rad = inner_rad.data
+    nuc_rad = nuc_rad.data
+        
     grad = spherical_harmonics_gradient(
                                     simulation.cell.radius(simulation.ghost),
                                     simulation.cell.theta(simulation.ghost),

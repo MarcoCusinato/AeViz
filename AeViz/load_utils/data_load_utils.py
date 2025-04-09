@@ -1,4 +1,4 @@
-from AeViz.utils.parfiles import (get_indices_from_parfile,
+from AeViz.utils.files.parfiles import (get_indices_from_parfile,
                                   get_stencils,
                                   get_simulation_info)
 from AeViz.simulation.simulation import Simulation
@@ -13,7 +13,7 @@ from AeViz.load_utils.utils import (check_file_to_load, return_index,
                                     return_integrated_neutrinos,
                                     return_angular_momentum,
                                     return_PNS_kick)
-from AeViz.utils.path_utils import local_storage_folder
+from AeViz.utils.files.path_utils import local_storage_folder
 from AeViz.grid.grid import grid
 
 u = units()
@@ -47,7 +47,6 @@ class Data(object):
         elif self.data_type == 'sim':
             return self.loaded_data.storage_path
 
-    
     def __load_hdf(self, path):
         """
         Load an hdf5 file into the memory using its path. 
@@ -76,8 +75,6 @@ class Data(object):
                                 self.loaded_data['Z']['znr'][...]), axis=-1),
                 dim=dim, geom=geom, neu=qts['neudim'])
         self.sim_dim = self.cell.dim
-        
-    
 
     def is_open(self):
         if self.loaded_data is None:
@@ -122,185 +119,5 @@ class Data(object):
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
             if file is not None:
-                if name == 'BX':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_fields')(file, **kwargs)[..., 0]
-                elif name == 'BY':
-                    out = getattr(self.loaded_data, 'magnetic_fields')(file)\
-                        [..., 1]
-                elif name == 'BZ':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_fields')(file, **kwargs)[..., 2]
-                elif name == 'total_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[0]
-                elif name == 'poloidal_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[1]
-                elif name == 'toroidal_magnetic_energy':
-                    out = getattr(self.loaded_data,
-                                  'magnetic_energy')(file, **kwargs)[2]
-                elif 'nu' in name and 'moment' in name:
-                    out = return_neutrino_flux(self.loaded_data, name, file,
-                                               **kwargs)
-                elif 'nue_mean_ene' == name or 'nua_mean_ene' == name or \
-                    'nux_mean_ene' == name:
-                    out = return_neutrino_mean_ene(self.loaded_data,
-                                                   name, file, **kwargs)
-                else:
-                    out = getattr(self.loaded_data, name)(file, **kwargs)
-                return out
-            else:
-                if ('explosion' in name) or ('gain' in name) or \
-                    ('innercore' in name) or \
-                    ('PNS' in name and 'radius' not in name):
-                    return self.__get_energy_data(name, **kwargs)
-                elif 'nu_integrated_' in name:
-                    return  return_integrated_neutrinos(self.loaded_data, name,
-                                                        **kwargs)
-                elif 'kick_velocity_' in name:
-                    return return_PNS_kick(self.loaded_data, name)
-                    
-                return getattr(self.loaded_data, name)(**kwargs)
-    
-    def __plane_cut(self, data, indextheta = None, indexphi = None):
-        
-        
-        if self.sim_dim == 1:
-            gr = grid(self.sim_dim, self.cell.radius(self.ghost))
-            return gr.map_1D_to_2D(data, 64)
-        elif self.sim_dim == 2:
-            if (indexphi == None and indextheta == None):
-                return data
-            elif indextheta is not None:
-                gr = grid(self.sim_dim, self.cell.radius(self.ghost),
-                          self.cell.theta(self.ghost))
-                return gr.map_1D_to_2D(data, 64)
-        elif self.sim_dim == 3:
-            if indexphi is not None:
-                return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
-                                    data[(indexphi + data.shape[0] // 2) % 
-                                            data.shape[0], :, :]], axis=0)
-            elif indextheta is not None:
-                
-                return data[:, indextheta, :]
-        else:
-            raise ValueError('The simulation dimension is not supported.')
-
-    
-    def __get_GW_decomposition_data(self, name, **kwargs):
-        if self.sim_dim == 2:
-            _, t, AE220, f_h, nuc_h, conv_h, out_h = \
-                self.loaded_data.hydro_strain(**kwargs)
-            return t, AE220, f_h, nuc_h, conv_h, out_h
-        elif self.sim_dim == 3:
-            PHI = 0
-            if 'eq' in name:
-                THETA = np.pi * 0.5
-            else:
-                THETA = 0
-            _, t, AE220, f_h, nuc_h, conv_h, out_h = \
-                self.loaded_data.hydro_strain(phi=PHI, theta=THETA, **kwargs)
-            if '+' in name:
-                return t, AE220[0], f_h[0], nuc_h[0], conv_h[0], out_h[0]
-            else:
-                return t, AE220[1], f_h[1], nuc_h[1], conv_h[1], out_h[1]
-        else:
-            raise TypeError('Not implemented for 1D simulations.')
-    
-    def __get_energy_data(self, name, **kwargs):
-        qt = name.split('_')[-1]
-        if 'explosion' in name:
-            data = getattr(self.loaded_data, 'explosion_mass_ene')(**kwargs)
-            if qt == 'mass':
-                return data[0], data[1]
-            elif qt == 'ene':
-                return data[0], data[2]
-            elif qt == 'kin':
-                return data[0], data[3]
-            elif qt == 'mag':
-                return data[0], data[4]
-        elif 'gain' in name:
-            data = getattr(self.loaded_data, 'gain_mass_nu_heat')(**kwargs)
-            if qt == 'mass':
-                return data[0], data[1]
-            elif qt == 'ene':
-                return data[0], data[2]
-        elif 'innercore' in name:
-            data = getattr(self.loaded_data, 'innercore_mass_ene')(**kwargs)
-            if qt == 'mass':
-                return data[0], data[1]
-            elif qt == 'ene':
-                return data[0], data[6]
-            elif qt == 'kin':
-                return data[0], data[2]
-            elif qt == 'mag':
-                return data[0], data[3]
-            elif qt == 'rot':
-                return data[0], data[4]
-            elif qt == 'grav':
-                return data[0], data[5]
-            elif qt == 'T/W':
-                return data[0], data[7]
-        elif 'PNS_core' in name:
-            data = getattr(self.loaded_data, 'PNS_core_mass_ene')(**kwargs)
-            if qt == 'mass':
-                return data[0], data[1]
-            elif qt == 'ene':
-                return data[0], data[6]
-            elif qt == 'kin':
-                return data[0], data[2]
-            elif qt == 'mag':
-                return data[0], data[3]
-            elif qt == 'rot':
-                return data[0], data[4]
-            elif qt == 'grav':
-                return data[0], data[5]
-            elif qt == 'T/W':
-                return data[0], data[7]
-        elif 'PNS' in name:
-            if 'PNS_angular_mom' in name:
-                return return_angular_momentum(self.loaded_data, name,
-                                               **kwargs)
-            data = getattr(self.loaded_data, 'PNS_mass_ene')(**kwargs)
-            if qt == 'mass':
-                return data[0], data[1]
-            elif qt == 'ene':
-                return data[0], data[6]
-            elif qt == 'kin':
-                return data[0], data[2]
-            elif qt == 'mag':
-                return data[0], data[3]
-            elif qt == 'rot':
-                return data[0], data[4]
-            elif qt == 'grav':
-                return data[0], data[5]
-            elif qt == 'conv':
-                return data[0], data[7]
-            elif qt == 'T/W':
-                return data[0], data[8]
-
-    def __get_1D_radii_data(self, name, **kwargs):
-        name = name.split('_')
-        rad_type = name[-1]
-        if not 'neutrino' in name:
-            name = '_'.join(name[:-1])
-            flavour = None
-        else:
-            flavour = name[-2]
-            name = '_'.join(name[:-2])
-        time, _, max_r, min_r, avg_r, _ = getattr(self.loaded_data,
-                                                  name)(**kwargs)
-        if flavour:
-            max_r = max_r[flavour]
-            min_r = min_r[flavour]
-            avg_r = avg_r[flavour]
-        if rad_type == 'max':
-            return time, max_r
-        elif rad_type == 'min':
-            return time, min_r
-        elif rad_type == 'avg':
-            return time, avg_r
-        else:
-            return time, max_r, min_r, avg_r
-        
+                return getattr(self.loaded_data, name)(file, **kwargs)          
+            return getattr(self.loaded_data, name)(**kwargs)

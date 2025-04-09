@@ -1,7 +1,7 @@
 from AeViz.quantities_plotting.plotting import Plotting
 from typing import Literal
-from AeViz.utils.file_utils import list_module_functions
-from AeViz.utils.decorators import fig_window_open
+from AeViz.utils.files.file_utils import list_module_functions
+from AeViz.utils.decorators.figure import fig_window_open
 import os
 import types
 
@@ -86,8 +86,6 @@ class AeViz(Plotting):
             AeViz.AeVizMethods.instabilities))
         self.__supernova_methods.extend(list_module_functions(
             AeViz.AeVizMethods.GWs))
-
-
 
     def __delete_methods(self):
         for name in self.__loaded_methods:

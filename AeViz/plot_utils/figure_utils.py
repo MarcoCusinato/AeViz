@@ -18,24 +18,28 @@ def return_positioning(number, form_factor):
     the form factor of the figure. Only exception is the 5th figure,
     which is used to plot GWs spectra and strains.
     """
-    positioning = {1: {1: """A""",
+    positioning = {
+                    1: {
+                       1: """A""",
                        2: """A.a""",
                        4: """A.a""",
                        5:"""A..
                             B.b""",
                        6: """A.a"""
-                                },
-                   2: {1: """AB""",
-                       2: """a.AB.b""",
-                       3: """A
-                             B""",
-                       4: """A.a
-                             B.b""",
-                       5: """..A.C..
-                             b.B.D.d""",
-                       6: """a.A.B.b"""
-                       },
-                    3: {1:"""A
+                        },
+                    2: {
+                        1: """AB""",
+                        2: """a.AB.b""",
+                        3: """A
+                              B""",
+                        4: """A.a
+                              B.b""",
+                        5: """..A.C..
+                              b.B.D.d""",
+                        6: """a.A.B.b"""
+                        },
+                    3: {
+                        1:"""A
                              B
                              C""",
                         2:"""..AA..
@@ -49,8 +53,10 @@ def return_positioning(number, form_factor):
                               f.F....""",
                         6: """a.A.B.b
                               .......
-                              c.C...."""},
-                    4: {1:"""AB
+                              c.C...."""
+                        },
+                    4: {
+                        1:"""AB
                              CD""",
                         2:"""ac
                              ..
@@ -67,12 +73,16 @@ def return_positioning(number, form_factor):
                               f.F.H.h""",
                         6: """a.A.B.b
                               .......
-                              c.C.D.d"""},
-                    5: {1:"""A..
+                              c.C.D.d"""
+                        },
+                    5: {
+                        1:"""A..
                              B..
                              C..
                              D..
-                             E.e"""}}
+                             E.e"""
+                        }
+                    }
     
     width_ratio = {1: {1: [1],
                        2: [1.1, 0.4, 0.08],

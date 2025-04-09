@@ -2,6 +2,8 @@ import os, h5py
 import numpy as np
 import pandas as pd
 import inspect
+from AeViz.units.aeseries import aeseries
+from AeViz.units.aerray import aerray
 
 def list_module_functions(module):
     """
@@ -123,10 +125,48 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
                 if type(v) == dict:
                     subgroup = group.create_group(k)
                     for (kk, vv) in v.items():
-                        subgroup.create_dataset(kk, data = vv)
+                        if isinstance(vv, aerray):
+                            subgroup.create_dataset(kk, data = vv.value)
+                        else:
+                            subgroup.create_dataset(kk, data = vv)
                 else:
-                    group.create_dataset(k, data = v)
+                    if isinstance(v, aerray):
+                        group.create_dataset(k, data = v.value)
+                    else:
+                        group.create_dataset(k, data = v)
         else:
             file_out.create_dataset(key, data = value)
     file_out.close()
     
+def create_series(time, *args):
+    """
+    Creates as many aeseries as argument.
+    """
+    ghost_cells = False
+    if type(args[-1]) == dict:
+        if 'r_l' in args[-1]:
+            ghost_cells = args[-1]
+            args = args[:-1]
+    series = []
+    for arg in args:
+        if type(arg) == dict:
+            ddict = {}
+            for key in arg.keys():
+                if isinstance(arg[key], aerray):
+                    ddict[key] = aeseries(arg[key], time=time.copy())
+                elif type(arg[key]) == dict:
+                    dddict = {}
+                    for kk in arg[key].keys():
+                        dddict[kk] = aeseries(arg[key][kk], time=time.copy())
+                    ddict[key] = dddict                   
+            series.append(ddict)
+        elif type(arg) == list:
+            llist = []
+            for a in arg:
+                llist.append(aeseries(a, time=time.copy()))
+            series.append(llist)
+        else:
+            series.append(aeseries(arg, time=time.copy()))
+    if ghost_cells:
+        series.append(ghost_cells)
+    return series

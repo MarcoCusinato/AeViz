@@ -1,6 +1,4 @@
-import sys, os, h5py
-import numpy as np
-from AeViz.utils.file_utils import save_hdf
+import os
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
 checkpoints = {
@@ -13,6 +11,7 @@ def progressBar(count_value, total, suffix=''):
     """
     Display a progress bar in the terminal.
     """
+    import sys
     bar_length = 100
     filled_up_Length = int(round(bar_length * count_value / float(total)))
     percentage = round(100.0 * count_value/float(total),1)
@@ -35,9 +34,15 @@ def time_array(simulation):
     """
     Get the time array of the local simulation output.
     """
+    from AeViz.units.aerray import aerray
+    from AeViz.utils.files.file_utils import save_hdf
+    from AeViz.units import u
+    import numpy as np
+    import h5py
     if check_existence(simulation, 'time.h5'):
         data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
-        time_array = data['time'][...]
+        time_array = aerray(data['time'][...], u.s, 'time', r'$t$', None,
+                            [None, None])
         data.close()
         if len(time_array) == len(simulation.hdf_file_list):
             return time_array
@@ -56,7 +61,6 @@ def time_array(simulation):
         progressBar(progress_index, total_index, 'Storing timeseries')
         progress_index += 1
     save_hdf(os.path.join(simulation.storage_path, 'time.h5'),
-             ['time'], [time_array])
+             ['time'], [time_array.value])
+    time_array.set('time', r'$t$', None, [None, None])
     return time_array
-        
-        

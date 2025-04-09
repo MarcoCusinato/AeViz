@@ -3,119 +3,44 @@ import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
-from AeViz.grid.grid import grid
 from AeViz.units import u
 from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars,
                                                         setup_cbars_profile,
                                                         setup_cbars_spectrogram,
                                                         setup_cbars_HHT,
-                                                        normalize_indices,
-                                                        get_data_to_plot,
-                                                        get_plane_indices,
                                                         show_figure,
-                                                        get_qt_for_label,
                                                         plot_panel,
-                                                        plot_profile_panel)
-from AeViz.plot_utils.utils import plot_labels, xaxis_labels, GW_limit
+                                                        plot_profile_panel,
+                                                        remove_labelling)
+from AeViz.utils.decorators.grid import _get_plane_indices
 import cv2
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
         PlottingUtils.__init__(self)
         Data.__init__(self)
+        self.__simple_labelling = False
+        self.__no_nu = False
+        
+    def set_simple_labelling(self, no_nu=False):
+        if self.__simple_labelling:
+            self.__simple_labelling = False
+        else:
+            self.__simple_labelling = True
+        self.__no_nu = no_nu
     
-    def plot1D(self, file, qt, xaxis, index1, index2, **kwargs):
+    def plot1D(self, file, qt, plane, **kwargs):
         """
         Plots a line for the quantity in the xaxis. This can be either a
         radial average, angular or a single radius.
         """
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
-
-        ## GET THE DATA
-        if 'radius' not in qt and 'spheres' not in qt:
-            if 'GW' in qt:
-                post_data = self._Data__get_data_from_name(
-                    "_".join(qt.split('_')[:-1]), file, **kwargs)
-            else:
-                post_data = self._Data__get_data_from_name(qt, file, **kwargs)
-            if 'nu_integrated'in qt and 'all' in qt:
-                legend = [r'$\nu_e$', r'$\overline{\nu}_e$', r'$\nu_x$']
-            if 'nu_integrated_lum' in qt:
-                post_data[:, 1:] *= 1e-53
-            if 'PNS_angular_mom_all' == qt:
-                legend = ['L$_x$', 'L$_y$', 'L$_z$', r'L$_\mathrm{tot}$']
-            if 'kick_velocity' in qt and 'all' in qt:
-                legend = ['tot',  'hydro', r'$\nu$']
-        else:
-            post_data = list(self._Data__get_1D_radii_data(qt, **kwargs))
-            if 'all' in qt:
-                legend = ['max', 'min', 'avg']
-            qt = "_".join(qt.split('_')[:-1])
-            for i in range(1, len(post_data)):
-                post_data[i] = u.convert_to_km(post_data[i])
-        
-        ##POSTPROCESS THE DATA
-        if xaxis != 'time':
-            index1, index2 = normalize_indices(index1, index2)
-            data = get_data_to_plot(index1, index2, post_data, xaxis,
-                                    (self.cell.dr_integration(self.ghost), 
-                                    self.cell.dtheta_integration(self.ghost),
-                                    self.cell.dphi(self.ghost)))
-        elif qt == 'PNS_angular_mom_all' or 'radius' in qt or \
-            'kick_velocity_all' in qt:
-            data = post_data[1:]
-        elif 'GW' in qt:
-            if self.sim_dim == 2:
-                data = post_data[:, 1:]
-            else:
-                if qt.endswith('h+eq'):
-                    data = post_data[:,1]
-                elif qt.endswith('h+pol'):
-                    data = post_data[:,2]
-                elif qt.endswith('hxeq'):
-                    data = post_data[:,3]
-                elif qt.endswith('hxpol'):
-                    data = post_data[:,4]
-        elif type(post_data) == list or type(post_data) == tuple:
-            data = post_data[1]
-        elif 'radius' not in qt and 'spheres' not in qt and \
-            'nu_integrated' not in qt:
-            data = post_data[:, 1]
-        else:
-            data = post_data[:, 1:]
-        
-        ## CHECK THE XAXIS IS CORRECT AND GET THE GRID
-        if xaxis == 'radius':
-            grid = u.convert_to_km(self.cell.radius(self.ghost))
-            xlabel = 'R [km]'
-            scale = 'log'
-        elif xaxis == 'theta':
-            if self.sim_dim == 1:
-                raise ValueError('Cannot plot theta in 1D.')
-            grid = self.cell.theta(self.ghost)
-            xlabel = r'$\theta$ [rad]'
-            scale = 'linear'
-        elif xaxis == 'phi':
-            if self.sim_dim == 1 or self.sim_dim == 2:
-                raise ValueError('Cannot plot phi in 1D or 2D.')
-            grid = self.cell.phi(self.ghost)
-            xlabel = '$\phi$ [rad]'
-            scale = 'linear'
-        elif xaxis == 'time':
-            if 'radius' in qt or 'spheres' in qt :
-                grid = post_data[0]
-            elif type(post_data) == list or type(post_data) == tuple:
-                grid = post_data[0]
-            else:
-                grid = post_data[:, 0]
-            xlabel = 't [s]'
-            scale = 'linear'
-        else:
-            raise ValueError('xaxis must be radius, theta, phi or time.')
-        xlim = (np.nanmin(grid), np.nanmax(grid))
-
+        d_kwargs = kwargs.copy()
+        if plane != 'time':
+            d_kwargs['plane'] = plane
+        data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
         if self.axd is not None:
@@ -127,33 +52,31 @@ class Plotting(PlottingUtils, Data):
                     break
         if not overplot:
         ##PLOT CREATION
-            ylabel_qt = get_qt_for_label(qt, **kwargs)
-            number = self.__check_axd_1D(ylabel_qt, xaxis)
-
-            self._PlottingUtils__update_params(axd_letters[number], grid, data,
-                                            None, plot_labels[ylabel_qt]['log'],
-                                            None, 1, None, None, self.sim_dim,
-                                            **kwargs)
+            if type(plane) == tuple:
+                if plane[0] is None or type(plane[0]) == int:
+                    plane = data.return_axis_names()[0]
+            if self.__simple_labelling:
+                data, label = remove_labelling(data, self.__no_nu)
+                legend = [label]
+            number = self.__check_axd_1D(data.data.label, getattr(data, plane))
+            self._PlottingUtils__update_params(
+                                                file=file,
+                                                ax_letter=axd_letters[number],
+                                                plane=plane,
+                                                data=data,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
             self._PlottingUtils__plot1D(axd_letters[number])
-            
             ## SET THE LIMITS
-            
-            if 'GW' not in qt:
-                self.ylim(plot_labels[ylabel_qt]['lim'], axd_letters[number])
-            else:
-                self.ylim(plot_labels[ylabel_qt]['lim'](data), axd_letters[number])
-            if xaxis == 'time':
-                xlim = (-0.005, np.nanmax(grid))
-            else:
-                xlim = (np.nanmin(grid), np.nanmax(grid))
-            self.xlim(xlim, axd_letters[number])
-            ## SET THE LABELS
-            self.labels(xlabel, plot_labels[ylabel_qt]['label'],
-                        axd_letters[number])
-            ## SET THE SCALES
-            self.Xscale(scale, axd_letters[number])
-            self.Yscale(plot_labels[ylabel_qt]['log'], axd_letters[number])
-            ## SET THE LEGEND        
+            if axd_letters[number] not in self.xlims:
+                self.xlim(getattr(data, plane).limits, axd_letters[number])
+                self.ylim(data.data.limits, axd_letters[number])
+            self._PlottingUtils__save_labels(axd_letters[number])
+            self.Xscale(getattr(data, plane).log, axd_letters[number])
+            self.Yscale(data.data.log, axd_letters[number])
             self.update_legend(legend, axd_letters[number])
         else:
             if 'plot' in kwargs:
@@ -162,10 +85,16 @@ class Plotting(PlottingUtils, Data):
                 ax_letter = 'A'
             if ax_letter not in self.axd:
                 ax_letter = 'A'
-            self._PlottingUtils__update_params(ax_letter, grid, data,
-                                            None, None, None, 1, None,
-                                            None, self.sim_dim,
-                                            **kwargs)
+            self._PlottingUtils__update_params(
+                                                file=file,
+                                                ax_letter=ax_letter,
+                                                plane=plane,
+                                                data=data,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
             self._PlottingUtils__plot1D(ax_letter)
  
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
@@ -175,15 +104,9 @@ class Plotting(PlottingUtils, Data):
         """
         ## Set the ghost cells
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
-        ## Set the grid
-        gr = grid(self.sim_dim, u.convert_to_km(self.cell.radius(self.ghost)),
-                  self.cell.theta(self.ghost), self.cell.phi(self.ghost))
-        X, Y = gr.cartesian_grid_2D(plane, 64)
         ## Get the number of quantities to plot
         qt1, qt2, qt3, qt4 = recognize_quantity(qt1, qt2, qt3, qt4, True)
         number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
-        ## Get the indices associated to the plane
-        plane, index_theta, index_phi = get_plane_indices(self, plane)
         ## Create the plot
         redo = False
         if self.axd is not None:
@@ -241,26 +164,17 @@ class Plotting(PlottingUtils, Data):
         self._PlotCreation__setup_axd(number, form_factor)
         
         if qt1 is not None:
-            plot_panel(self, 'A', file, qt1, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
-            ## Default limits
-            self.xlim((0, 100), "A")
+            plot_panel(self, 'A', file, qt1, cbars, plane, **kwargs)
         if qt2 is not None:
-            plot_panel(self, 'B', file, qt2, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'B', file, qt2, cbars, plane, **kwargs)
         if qt3 is not None and qt4 is None:
-            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
-            plot_panel(self, 'D', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'C', file, qt3, cbars, plane, **kwargs)
+            plot_panel(self, 'D', file, qt3, cbars, plane, **kwargs)
         elif qt3 is not None:
-            plot_panel(self, 'C', file, qt3, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'C', file, qt3, cbars, plane, **kwargs)
         if qt4 is not None:
-            plot_panel(self, 'D', file, qt4, (X, Y), (index_theta, index_phi),
-                       cbars, plot_labels, plane, **kwargs)
+            plot_panel(self, 'D', file, qt4, cbars, plane, **kwargs)
         self.ghost.restore_default()
-        self.xlim(self.xlims["A"], "A")
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
@@ -327,13 +241,13 @@ class Plotting(PlottingUtils, Data):
                                                              qt4)
         self._PlotCreation__setup_axd(number, form_factor)
         if qt1 is not None:
-            plot_profile_panel(self, 'A', qt1, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'A', qt1, cbars, **kwargs)
         if qt2 is not None:
-            plot_profile_panel(self, 'B', qt2, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'B', qt2, cbars, **kwargs)
         if qt3 is not None:
-            plot_profile_panel(self, 'C', qt3, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'C', qt3, cbars, **kwargs)
         if qt4 is not None:
-            plot_profile_panel(self, 'D', qt4, cbars, plot_labels, **kwargs)
+            plot_profile_panel(self, 'D', qt4, cbars, **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
@@ -349,77 +263,78 @@ class Plotting(PlottingUtils, Data):
         """
         self.Close()
         self._PlotCreation__setup_axd(5, 1)
-        self.Xscale('linear', 'A')
-        self.Yscale('log', 'E')
-        t, AE220, f_h, nuc_h, conv_h, out_h  = \
-            self._Data__get_GW_decomposition_data(qt, **kwargs)
-        if qt == 'h+eq':
-            y_strain = r'$h_{+}^{eq}$ [cm]'
-        elif qt == 'h+pol':
-            y_strain = r'$h_{+}^{pol}$ [cm]'
-        elif qt == 'hxeq':
-            y_strain = r'$h_{\times}^{eq}$ [cm]'
-        elif qt == 'hxpol':
-            y_strain = r'$h_{\times}^{pol}$ [cm]'
-        ylim = GW_limit(f_h)
-        if self.sim_dim == 2:
-            dec_label = r'$A^{E2}_{20}(r, t)$ [cm]'
-        else:
-            dec_label = y_strain.split(' ')
-            dec_label[0] = dec_label[0][:-1]
-            dec_label[0] += '(r)$'
-            dec_label = (' ').join(dec_label)
-        if 'D' not in kwargs:
-            dec_label = r'$\mathcal{D}' + dec_label[1:]
-            y_strain = r'$\mathcal{D}' + y_strain[1:]
-            D = 1
-        else:
-            D = kwargs['D']
-        _, convect_radius = \
-            self._Data__get_1D_radii_data('innercore_radius_avg')
-        _, nuc_radius = \
-            self._Data__get_1D_radii_data('PNS_nucleus_radius_avg')
-        self._PlottingUtils__update_params('A', t, f_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('B', t, nuc_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('C', t, conv_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        self._PlottingUtils__update_params('D', t, out_h,
-                                           None, False, None,
-                                           1, None, None, self.sim_dim)
-        color = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        for (axd_letter, label, c) in zip(['A', 'B', 'C', 'D'],
-                                       [r'$h_f$', r'$h_{nuc}$', r'$h_{conv}$',
-                                        r'$h_{out}$'],
-                                       color[:4]):
+        AE220, oth  = self._Data__get_data_from_name(qt, **kwargs)
+        f_h, nuc_h, conv_h, out_h = oth
+        kwargs['color'] = 'C0'
+        self._PlottingUtils__update_params(
+                                            ax_letter='A',
+                                            plane='time',
+                                            data=f_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C1'
+        self._PlottingUtils__update_params(
+                                            ax_letter='B',
+                                            plane='time',
+                                            data=nuc_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C2'
+        self._PlottingUtils__update_params(
+                                            ax_letter='C',
+                                            plane='time',
+                                            data=conv_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs['color'] = 'C3'
+        self._PlottingUtils__update_params(
+                                            ax_letter='D',
+                                            plane='time',
+                                            data=out_h,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        kwargs.pop('color')
+        for (axd_letter, dd) in zip(['A', 'B', 'C', 'D'],
+                                       [f_h, nuc_h, conv_h, out_h]
+                                       ):
             self._PlottingUtils__plot1D(axd_letter)
-            self.axd[axd_letter].get_lines()[0].set_color(c)
-            self.update_legend([label], axd_letter)
-            self.ylim(ylim, axd_letter)
-        X, Y = np.meshgrid(t, u.convert_to_km(self.cell.radius(self.ghost)))
-        self._PlottingUtils__update_params('E', (X, Y),
-                                            AE220,
-                                            'R', False,
-                                            (-3/D, 3/D), 2, 
-                                            'seismic',
-                                            dec_label,
-                                            self.sim_dim)
-        self.axd['E'].plot(t, u.convert_to_km(convect_radius), ls='dashed',
-                           color='black', lw=0.75)
-        self.axd['E'].plot(t, u.convert_to_km(nuc_radius),
-                           color='black', lw=0.75)
-        self.fig.text(0.04, 0.685, y_strain, va="center", rotation='vertical')
-        self.labels('t-t$_b$ [s]', 'R [km]', 'E')
+            self.update_legend([dd.data.label], axd_letter)
+            self.ylim(dd.data.limits, axd_letter)
+            self.Yscale(dd.data.log, axd_letter)
+            self.Xscale(dd.time.log, axd_letter)
+        self._PlottingUtils__update_params(
+                                            ax_letter='E',
+                                            plane=('time', 'radius'),
+                                            data=AE220,
+                                            cbar_position='R',
+                                            dim=-1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
         self._PlottingUtils__plot2D('E')
-        self.xlim((-0.005, t.max()), 'A')
-        
+        self.Xscale(AE220.time.log, 'E')
+        self.Yscale(AE220.radius.log, 'E')
+        self.xlim(AE220.time.limits, 'E')
+        self.ylim(AE220.radius.limits, 'E')
+        self.plot1D(None, 'innercore_radius', 'time', rad='avg', plot='E',
+                    color='black', ls='dashed', lw=0.75)
+        self.plot1D(None, 'PNS_nucleus_radius', 'time', rad='avg', plot='E',
+                    color='black', lw=0.75)        
         show_figure()
 
-    def plotGWspectrogram(self, qt):
+    def plotSpectrogram(self, qt, **kwargs):
         """
         Plots the GW spectrogram and the GW signal.
         """
@@ -428,71 +343,54 @@ class Plotting(PlottingUtils, Data):
             number_spect = sum([-2 in self.plot_dim[ax_letter] 
                                  for ax_letter in self.axd if ax_letter 
                                  in self.plot_dim])
-            number_GW = sum([((1 in self.plot_dim[ax_letter]) and 
+            number_curve = sum([((1 in self.plot_dim[ax_letter]) and 
                              (-2 not in self.plot_dim[ax_letter]))
                              for ax_letter in self.axd if ax_letter in 
                              self.plot_dim])
-            if number_spect != number_GW:
+            if number_spect != number_curve:
                 self.Close()
                 number = 1
             else:
-                number = number_GW + 1
+                number = number_curve + 1
                 redo = True
         else:
             number = 1
         cbars, plots = setup_cbars_spectrogram(number)
         self._PlotCreation__setup_axd(number, 5)
-        post_data_GWs = self._Data__get_data_from_name(
-                    'GW_Amplitudes')
-        post_data_spect = self._Data__get_data_from_name(
-                    'GW_spectrogram', 3.086e+22)
-        
-        if self.sim_dim == 2:
-            dataGWs = post_data_GWs[:, 1:]
-            t, f, Zxx = post_data_spect[0], post_data_spect[1], \
-                post_data_spect[2]
-        else:
-            if qt == 'h+eq':
-                dataGWs = post_data_GWs[:,1]
-                t, f, Zxx = post_data_spect[0][:, 0], \
-                    post_data_spect[1][..., 0], post_data_spect[2][..., 0]
-            elif qt == 'h+pol':
-                dataGWs = post_data_GWs[:,2]
-                t, f, Zxx = post_data_spect[0][:, 1], \
-                    post_data_spect[1][..., 1], post_data_spect[2][..., 1]
-            elif qt == 'hxeq':
-                dataGWs = post_data_GWs[:,3]
-                t, f, Zxx = post_data_spect[0][:,2], \
-                    post_data_spect[1][..., 2], post_data_spect[2][..., 2]
-            elif qt == 'hxpol':
-                dataGWs = post_data_GWs[:,4]
-                t, f, Zxx = post_data_spect[0][:, 3], \
-                    post_data_spect[1][..., 3], post_data_spect[2][..., 3]
-        f /= 1e3
+        data = self._Data__get_data_from_name(qt, **kwargs)
+        keep_kwargs = {}
+        for nm in ['window_size', 'check_spacing', 'time_range', 'scale_to',
+                   'windowing', 'overlap']:
+            if nm in kwargs:
+                keep_kwargs[nm] = kwargs[nm]
+        spectrogram = data.stft(**keep_kwargs)
+    
         ## 1D plot of GWs
-        self._PlottingUtils__update_params(plots[0], post_data_GWs[:,0],
-                                           dataGWs, None, False, None,
-                                           1, None, None, self.sim_dim)
-        
-        self.labels(None, plot_labels['GW_Amplitudes_'+qt]['label'], plots[0])
-        self.ylim(plot_labels['GW_Amplitudes_'+qt]['lim'](dataGWs), plots[0])
-        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[0])
-        self.Xscale('linear', plots[0])
-        self.Yscale('linear', plots[0])
+        self._PlottingUtils__update_params(ax_letter=plots[0],
+                                           plane='time',
+                                           data=data,
+                                           cbar_position=None,
+                                           dim=1,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot1D(plots[0])
+        self.Xscale(data.time.log, plots[0])
+        self.Yscale(data.data.log, plots[0])
+        self.xlim(data.time.limits, plots[0])
+        self.ylim(data.data.limits, plots[0])
         ## 2D plot of spectrogram
-        self._PlottingUtils__update_params(plots[1], (t, f),
-                                           Zxx, cbars[plots[1]], True, 
-                                           (1e-24, 1e-20),
-                                           -2, 'magma',
-                r'$\frac{\mathrm{dE_{GW}}}{\mathrm{df}}$ [B$\cdot$HZ$^{-1}$]',
-                                           self.sim_dim)
-        self.labels('t-t$_b$ [s]', '$f$ [kHz]', plots[1])
+        self._PlottingUtils__update_params(ax_letter=plots[1],
+                                           plane=('time', 'frequency'),
+                                           data=spectrogram,
+                                           cbar_position=cbars[plots[1]],
+                                           dim=-2,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot2Dmesh(plots[1])
-        self.ylim((0, 2), plots[1])
-        self.Xscale('linear', plots[1])
-        self.Yscale('linear', plots[1])
-        self.xlim((-0.005, post_data_GWs[:,0].max()), plots[1])
+        self.Xscale(spectrogram.time.log, plots[1])
+        self.Yscale(spectrogram.frequency.log, plots[1])
+        self.xlim(spectrogram.time.limits, plots[1])
+        self.ylim(spectrogram.frequency.limits, plots[1])
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower() or -2 not in self.plot_dim[ax_letter]:
@@ -575,38 +473,40 @@ class Plotting(PlottingUtils, Data):
             self.Close()
         self._PlotCreation__setup_axd(1, 4)
         plot, cbars = setup_cbars_HHT(1)
-        t, Y, data = self._Data__get_data_from_name('data_for_barcode', **kwargs)
-        if kwargs['msum']:
-            self.labels('t-t$_b$ [s]', 'l', plot)
-        else:
-            self.labels('t-t$_b$ [s]', 'lm', plot)
-        limits = max(np.abs(data.max()), np.abs(data.min())) * 0.8
-        if kwargs['zero_norm']:
-            cbar_label = r'$\tilde{\rho}/\tilde{\rho}_{00}$'
-        self._PlottingUtils__update_params(plot, (t, Y),
-                                           data, cbars[plot], False, 
-                                           (-limits, limits),
-                                           -3, 'seismic',
-                                           cbar_label,
-                                           self.sim_dim)
-        self.Xscale('linear', plot)
-        self.Yscale('linear', plot)
-        self._PlottingUtils__plot2Dmesh(plot, **kwargs) 
+        data = self._Data__get_data_from_name('data_for_barcode', **kwargs)
+        self._PlottingUtils__update_params(
+                                    ax_letter=plot,
+                                    plane=('time', 'Y'),
+                                    data=data,
+                                    cbar_position=cbars[plot],
+                                    dim=-3,
+                                    sim_dim=self.sim_dim,
+                                    **kwargs
+                                    )
+               
+        self._PlottingUtils__plot2Dmesh(plot, **kwargs)
+        self.Xscale(data.time.log, plot)
+        self.Yscale(data.Y.log, plot)
+        self.xlim(data.time.limits, plot)
+        self.ylim(data.Y.limits, plot)
         show_figure()
 
-    def add_2Dfield(self, file, axd_letter, comp, plane):
+    def add_2Dfield(self, axd_letter, comp):
         """
         Adds a 2D field to the figure.
         """
         if axd_letter not in self.axd:
             raise ValueError('The axis letter is not in the figure.')
-        if self.plot_dim[axd_letter] != 2:
+        if 2 not in self.plot_dim[axd_letter]:
             raise ValueError('The axis letter is not a 2D plot.')
+        number = self.plot_dim[axd_letter].index(2)
+        file = self.file[axd_letter][number]
+        plane = self.plane[axd_letter][number]
         self.ghost.update_ghost_cells(t_l=3, t_r=3, p_l=3, p_r=3)
         if comp == 'velocity':
-            self.__addVelocity_field(file, axd_letter, plane)
+            self.__addVelocity_field(file, axd_letter, plane, number)
         elif comp == 'Bfield':
-            self.__addBfield(file, axd_letter, plane)
+            self.__addBfield(file, axd_letter, plane, number)
     
     def make_movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top=None,
               plane='xz', start_time=None, end_time=None,
@@ -702,17 +602,17 @@ class Plotting(PlottingUtils, Data):
         self._PlotCreation__close_figure()
         self._PlottingUtils__reset_params()
 
-    def __addVelocity_field(self, file, axd_letter, plane):
+    def __addVelocity_field(self, file, axd_letter, plane, grid_number):
         """
         Plots the 2D velocity field in the plane specified by the user.
         """
         ## Get the plane indices
-        plane, index_theta, index_phi = get_plane_indices(self, plane)
+        index_theta, index_phi = _get_plane_indices(self, plane)
         vr = self._Data__get_data_from_name('radial_velocity', file)
-        vr = self._Data__plane_cut(vr, index_theta, index_phi)
+        vr = self.__plane_cut(self.sim_dim, vr, index_theta, index_phi)
         if self.sim_dim == 2:
             va = self._Data__get_data_from_name('theta_velocity', file)
-            va = self._Data__plane_cut(va, index_theta, index_phi)
+            va = self.__plane_cut(self.sim_dim, va, index_theta, index_phi)
             angle = self.cell.theta(self.ghost)
             vx  = (vr * np.sin(angle)[:, None] +  va * np.cos(angle)[:, None])
             vy = (vr * np.cos(angle)[:, None] -  va * np.sin(angle)[:, None])
@@ -720,9 +620,9 @@ class Plotting(PlottingUtils, Data):
             theta = self.cell.theta(self.ghost)
             phi = self.cell.phi(self.ghost)
             vtheta = self._Data__get_data_from_name('theta_velocity', file)
-            vtheta = self._Data__plane_cut(vtheta, index_theta, index_phi)
+            vtheta = self.__plane_cut(self.sim_dim, vtheta, index_theta, index_phi)
             vphi = self._Data__get_data_from_name('phi_velocity', file)
-            vphi = self._Data__plane_cut(vphi, index_theta, index_phi)
+            vphi = self.__plane_cut(self.sim_dim, vphi, index_theta, index_phi)
             
             if plane == 'xy':
                 theta = theta[index_theta]
@@ -756,16 +656,16 @@ class Plotting(PlottingUtils, Data):
                 vy = vr * np.cos(theta)[:, None] - \
                       vtheta * np.sin(theta)[:, None]
         self._PlottingUtils__update_fields_params(axd_letter, (vx, vy), 'v')
-        self._PlottingUtils__plot2Dfield(axd_letter)
+        self._PlottingUtils__plot2Dfield(axd_letter, grid_number)
 
-    def __addBfield(self, file, axd_letter, plane):
+    def __addBfield(self, file, axd_letter, plane, grid_number):
         """
         Plots the 2D magnetic field in the plane specified by the user.
         """
-        streamlines = self.loaded_data.stream_function(file, plane)
+        streamlines = self.loaded_data.stream_function(file, plane.lower())
         self._PlottingUtils__update_fields_params(axd_letter,
                                                   streamlines, 'B')
-        self._PlottingUtils__plot2Dfield(axd_letter)
+        self._PlottingUtils__plot2Dfield(axd_letter, grid_number)
              
     def __check_axd_1D(self, qt, xaxis):
         """
@@ -781,50 +681,20 @@ class Plotting(PlottingUtils, Data):
             self._PlotCreation__setup_axd(number, 1)
         elif self.number == 2 and self.form_factor == 2:
             self.number = 3
-            self.plot_dim['C'], self.grid['C'], self.data['C'] = self.plot_dim['B'], \
-                self.grid['B'], self.data['B']
-            self.cbar_lv['C'], self.cbar_position['C'], self.cbar_log['C'] = \
-                self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B']
-            self.cmap_color['C'], self.cbar_label['C'] = self.cmap_color['B'], \
-                self.cbar_label['B']
-            self.xlims['C'], self.ylims['C'] = self.xlims['B'], self.ylims['B']
-            self.logX['C'], self.logY['C'] = self.logX['B'], self.logY['B']
-            self.xlabels['C'], self.ylabels['C'] = self.xlabels['B'], \
-                self.ylabels['B']
-            
-            self.plot_dim['B'], self.grid['B'], self.data['B'] = self.plot_dim['A'], \
-                self.grid['A'], self.data['A']
-            self.cbar_lv['B'], self.cbar_position['B'], self.cbar_log['B'] = \
-                self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A']
-            self.cmap_color['B'], self.cbar_label['B'] = self.cmap_color['A'],\
-                self.cbar_label['A']
-            self.xlims['B'], self.ylims['B'] = self.xlims['A'], self.ylims['A']
-            self.logX['B'], self.logY['B'] = self.logX['A'], self.logY['A']
-            self.xlabels['B'], self.ylabels['B'] = self.xlabels['A'],\
-                self.ylabels['A']
-
-            self.plot_dim['A'], self.grid['A'], self.data['A'] = None, None, None
-            self.cbar_lv['A'], self.cbar_position['A'], self.cbar_log['A'] = \
-                None, None, None
-            self.cmap_color['A'], self.cbar_label['A'] = None, None
-            self.xlims['A'], self.ylims['A'] = None, None
-            self.logX['A'], self.logY['A'] = None, None
-            self.xlabels['A'], self.ylabels['A'] = None, None
+            self._PlottingUtils__copy_param_key('C', 'B')
+            self._PlottingUtils__copy_param_key('B', 'A')
+            self._PlottingUtils__clear_param_key('A')
             self._PlottingUtils__redo_plot()
             return number - 1
         elif self.number == 3 and self.form_factor == 2:
-            if (plot_labels[qt]['label'] != self.axd['A'].get_ylabel()) or \
-                        (xaxis_labels[xaxis] != self.axd['A'].get_xlabel()):
+            if (qt != self.ylabels['A']) or (xaxis.label != self.xlabels['A']):
                 self.Close()
                 show_figure()
                 self._PlotCreation__setup_axd(number, 1)
         else:
-            number = 1
             for axd_letter in self.axd:
-                if (plot_labels[qt]['label'] == \
-                    self.axd[axd_letter].get_ylabel()) and \
-                        (xaxis_labels[xaxis] == \
-                            self.axd[axd_letter].get_xlabel()):
+                if (qt == self.ylabels[axd_letter]) and \
+                    (xaxis.label == self.xlabels[axd_letter]):
                     return number - 1
                 number += 1
             if number > 4:
@@ -832,3 +702,22 @@ class Plotting(PlottingUtils, Data):
             self.number = number
             self._PlottingUtils__redo_plot()
         return number - 1
+    
+    def __plane_cut(self, dim, data, indextheta=None, indexphi=None):
+        if dim == 1:
+            return np.tile(data, (64, 1))
+        elif dim == 2:
+            if (indexphi == None and indextheta == None):
+                return data
+            elif indextheta is not None:
+                return np.tile(data[data.shape[0] // 2, :], (64, 1))
+        elif dim == 3:
+            if indexphi is not None:
+                return np.concatenate([np.flip(data[indexphi, :, :], axis=0),
+                                    data[(indexphi + data.shape[0] // 2) % 
+                                            data.shape[0], :, :]], axis=0)
+            elif indextheta is not None:
+                
+                return data[:, indextheta, :]
+        else:
+            raise ValueError('The simulation dimension is not supported.')

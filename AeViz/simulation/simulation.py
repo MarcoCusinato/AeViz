@@ -1,15 +1,16 @@
 from AeViz.cell.cell import cell
 from AeViz.cell.ghost import ghost
 from AeViz.units import u
-from AeViz.utils.parfiles import (load_parfile,
+from AeViz.units.aerray import aerray
+from AeViz.utils.files.parfiles import (load_parfile,
                                   get_stencils,
                                   get_indices_from_parfile,
                                   get_simulation_info,
                                   get_initial_parameters)
-from AeViz.utils.path_utils import (pltf, simulation_local_storage_folder, 
+from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder, 
                                     find_simulation)
-from AeViz.utils.decorators import hdf_isopen
-from AeViz.utils.file_utils import list_module_functions
+from AeViz.utils.decorators.simulation import hdf_isopen
+from AeViz.utils.files.file_utils import list_module_functions
 from AeViz.utils.utils import time_array
 import numpy as np
 import types, os
@@ -60,6 +61,8 @@ class Simulation:
         self.__rho_max_path = 'rho.dat'
         self.__grw_path = 'grw.dat'
         self.__mag_data = 'mag.dat'
+        self.__erg_data = 'erg.dat'
+        self.__vel_data = 'vel.dat'
         ## Opened file name
         self.__data_h5 = None
         self.__opened_hdf_file = ''
@@ -98,16 +101,17 @@ class Simulation:
         file_list.sort()
         return file_list
 
-    def find_file_from_time(self, time_to_find, time_in_ms=True, 
-                            return_index=False, tob_corrected=True):
+    def find_file_from_time(self, time_to_find, return_index=False,
+                            tob_corrected=True):
         """
         Returns the name of the file corresponding to the given time. If
         return_index is True, returns the index of the file in the 
         hdf_file_list. If time_in_ms is True, the time to giveis in ms,
         otherwise is in s.
         """
-        if time_in_ms:
-            time_to_find = u.convert_to_s(time_to_find)
+        if not isinstance(time_to_find, aerray):
+            time_to_find = aerray(time_to_find, u.s)
+        time_to_find = time_to_find.to(u.s)
         
         file_list = self.hdf_file_list
         time = time_array(self)
@@ -121,10 +125,12 @@ class Simulation:
     ## ERROR
     @hdf_isopen
     def error(self, file_name, **kwargs):
-        return self.ghost.remove_ghost_cells(np.squeeze(
+        data = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
-    
+        return aerray(data, u.dimensionless_unscaled, 'error', '$Error$',
+                      cmap='seismic', limits=[0, 1], log=False)
+
     ## TIME
     @hdf_isopen
     def time(self, file_name, tob_corrected=True):
@@ -132,9 +138,11 @@ class Simulation:
         Time of the simulation. If tob_corrected is True, the time is 
         corrected for the time of bounce.
         """
+        data = aerray(self.__data_h5['Parameters/t'][0], u.s, 'time', '$t$')
         if tob_corrected:
-            return np.array(self.__data_h5['Parameters/t']) - self.tob
-        return np.array(self.__data_h5['Parameters/t'])
+            data -= self.tob
+            data.set('time', r'$t-t_\mathrm{b}$')
+        return data
     
     def __load_hydro_methods(self):
         import AeViz.simulation.methods.hydro
