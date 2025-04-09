@@ -170,7 +170,7 @@ def shock_radius_3D(simulation, file_name):
                                                                  ir+10)]):
                     shock_r[ip, it] = simulation.cell.radius(simulation.ghost)[ir]
                     break
-    return shock_r
+    return shock_r * simulation.cell.radius(simulation.ghost).unit
     
 def shock_radius_3D_OLD(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
@@ -231,9 +231,13 @@ def interpol_1D(shock_radius, theta):
     return shock_radius
 
 def interpol_2D(shock_radius, Theta, Phi):
+    unit = shock_radius.unit
+    shock_radius = shock_radius.value
     mask = np.isnan(shock_radius)
     if mask.sum() == 0:
-        return shock_radius
+        return shock_radius * unit
+    if np.all(mask):
+        return np.zeros_like(shock_radius) * unit
     median = np.nanmedian(shock_radius)
     shock_radius = np.ma.masked_invalid(shock_radius)
     shock_radius[shock_radius.mask] = \
@@ -241,5 +245,5 @@ def interpol_2D(shock_radius, Theta, Phi):
                  shock_radius[~shock_radius.mask].ravel(),
                  (Phi.value[shock_radius.mask], Theta.value[shock_radius.mask]),
                     method='linear', fill_value=median)
-    return shock_radius
+    return shock_radius * unit
     
