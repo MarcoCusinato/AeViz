@@ -64,6 +64,20 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
     GWs = GW_strain(self.dim, column_change, data, index, distance)
     if GWs is None:
         return None
+    if self.dim > 2:
+        if 'comp' in kwargs:
+            if kwargs['comp'] == 'all':
+                pass
+            elif kwargs['comp'] == 'h+eq':
+                return GWs[0]
+            elif kwargs['comp'] == 'h+pol':
+                return GWs[1]
+            elif kwargs['comp'] == 'hxeq':
+                return GWs[2]
+            elif kwargs['comp'] == 'hxpol':
+                return GWs[3]
+            else:
+                raise TypeError("GW component not recognized")
     return GWs
 
 
