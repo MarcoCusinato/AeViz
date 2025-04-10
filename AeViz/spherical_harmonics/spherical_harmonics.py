@@ -124,7 +124,7 @@ class SphericalHarmonics(AssociatedLegendrePolynomials):
         for n in range(0, l - s + 1):
             summ += np.nan_to_num((-1) ** (n) * binom(l - s, n) * \
                 binom(l + s, n + s - m) * (np.cos(0.5 * theta) / \
-                                     np.sin(0.5 * theta)) ** (2 * n + s - m), 
-                                       False,  0)
+                                     np.sin(0.5 * theta)) ** (2 * n + s - m),
+                True,  0)
         return norm * summ
         

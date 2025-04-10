@@ -452,7 +452,7 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
         add_lb = r''
     else:
         add_lb = r'$\mathcal{D}$'
-        D = 1 * u.cm
+        D = 1 * u.dimensionless_unscaled
     time.set(name='time', label=r'$t-t_\mathrm{b}$',
              cmap=None, limits=[-0.005, time[-1]])
     NE220 = const * IDL_derivative(time, NE220)
@@ -587,7 +587,7 @@ def calculate_Qdot(simulation, gradY, file_name, dV,
                                                     **ngcells)[..., None]
     mask_inner = (simulation.cell.radius(simulation.ghost) <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
-                                             **igcells)[..., None] + 2e6) & \
+                                             **igcells)[..., None] + (20*u.km)) & \
         (np.logical_not(mask_nuc))
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     
@@ -622,18 +622,25 @@ def read_Qdot(simulation):
     Reads the Qdot and masks from a checkpoint file.
     """
     with h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5')) as data:
-        time = data['time'][...]
-        Qdot_radial = data['Qdot_radial'][...]
-        Qdot_total = data['Qdot_total'][...]
-        Qdot_inner = data['Qdot_inner'][...]
-        Qdot_nucleus = data['Qdot_nucleus'][...]
-        Qdot_outer = data['Qdot_outer'][...]
+        time = data['time'][...] * u.s
+        Qdot_radial = data['Qdot_radial'][...] * u.g * u.cm ** 2 / u.s
+        Qdot_total = data['Qdot_total'][...] * u.g * u.cm ** 2 / u.s
+        Qdot_inner = data['Qdot_inner'][...] * u.g * u.cm ** 2 / u.s
+        Qdot_nucleus = data['Qdot_nucleus'][...] * u.g * u.cm ** 2 / u.s
+        Qdot_outer = data['Qdot_outer'][...] * u.g * u.cm ** 2 / u.s
     return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer
 
 def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
                         Qdot_inner, Qdot_nucleus, Qdot_outer):
+    if D is not None:
+        if not isinstance(D, aerray):
+            D = D * u.cm
+        const /= D
+        add_lb = r''
+    else:
+        add_lb = r'$\mathcal{D}$'
+        D = 1 * u.dimensionless_unscaled
     harmonics = SphericalHarmonics()
-
     for m in range(5):
         Y22m = harmonics.spin_weighted_Ylm(-2, m-2, 2, THETA, PHI)
         Qdot_radial[:, m, :] = IDL_derivative(time, Qdot_radial[:, m, :]) * \
@@ -642,15 +649,177 @@ def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
         Qdot_inner[m, :]= IDL_derivative(time, Qdot_inner[m, :]) * Y22m
         Qdot_nucleus[m, :]= IDL_derivative(time, Qdot_nucleus[m, :]) * Y22m
         Qdot_outer[m, :]= IDL_derivative(time, Qdot_outer[m, :]) * Y22m
-    const = np.sqrt(2/3) * 8 * np.pi * u.G / (D * u.speed_light ** 4)
+    const = np.sqrt(2/3) * 8 * np.pi * c.G / (D * c.c ** 4) / u.s ## last u.s accounts for the derivative
     Qdot_radial = const * Qdot_radial.sum(axis=1)
     Qdot_total = const * Qdot_total.sum(axis=0)
     Qdot_inner = const * Qdot_inner.sum(axis=0)
     Qdot_nucleus = const * Qdot_nucleus.sum(axis=0)
     Qdot_outer = const * Qdot_outer.sum(axis=0)
     
-    return time,  [Qdot_radial.real, -Qdot_radial.imag], \
-            [Qdot_total.real, -Qdot_total.imag], \
-            [Qdot_nucleus.real, -Qdot_nucleus.imag], \
-            [Qdot_inner.real, -Qdot_inner.imag], \
-            [Qdot_outer.real, -Qdot_outer.imag]
+    time.set(name='time', label=r'$t-t_\mathrm{b}$', cmap=None,
+             limits=[-0.005, time[-1]])
+    if np.isclose(THETA, np.pi, 0.05):
+        hplus_radial = Qdot_radial.real
+        hplus_radial.set(name='hpuls_radial_pol',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{+,pol}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hcross_radial = -Qdot_radial.imag
+        
+        hcross_radial.set(name='hcross_radial_pol',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{\times,pol}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hplus_tot = Qdot_total.real
+        hplus_tot.set(name='tot_hplus_pol',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,tot}}$'))
+        hcross_tot = -Qdot_total.imag
+        hcross_tot.set(name='tot_hcross_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,tot}}$'))
+        hplus_nuc = Qdot_nucleus.real
+        hplus_nuc.set(name='nuc_hplus_pol',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,core}}$'))
+        hcross_nuc = -Qdot_nucleus.imag
+        hcross_nuc.set(name='nuc_hcross_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,core}}$'))
+        hplus_inn = Qdot_inner.real
+        hplus_inn.set(name='inn_hplus_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,conv}}$'))
+        hcross_inn = -Qdot_inner.imag
+        hcross_inn.set(name='inn_hcross_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,conv}}$'))
+        hplus_out = Qdot_outer.real
+        hplus_out.set(name='out_hcross_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,out}}$'))
+        hcross_out = -Qdot_outer.imag
+        hcross_out.set(name='out_hcross_pol',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,out}}$'))
+    elif np.isclose(THETA, np.pi/2, 0.05):
+        hplus_radial = Qdot_radial.real
+        hplus_radial.set(name='hpuls_radial_eq',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{+,eq}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hcross_radial = -Qdot_radial.imag
+        
+        hcross_radial.set(name='hcross_radial_eq',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{\times,eq}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hplus_tot = Qdot_total.real
+        hplus_tot.set(name='tot_hplus_eq',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,tot}}$'))
+        hcross_tot = -Qdot_total.imag
+        hcross_tot.set(name='tot_hcross_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,tot}}$'))
+        hplus_nuc = Qdot_nucleus.real
+        hplus_nuc.set(name='nuc_hplus_eq',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
+        hcross_nuc = -Qdot_nucleus.imag
+        hcross_nuc.set(name='nuc_hcross_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,core}}$'))
+        hplus_inn = Qdot_inner.real
+        hplus_inn.set(name='inn_hplus_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,conv}}$'))
+        hcross_inn = -Qdot_inner.imag
+        hcross_inn.set(name='inn_hcross_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,conv}}$'))
+        hplus_out = Qdot_outer.real
+        hplus_out.set(name='out_hcross_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,out}}$'))
+        hcross_out = -Qdot_outer.imag
+        hcross_out.set(name='out_hcross_eq',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,out}}$'))
+    else:
+        hplus_radial = Qdot_radial.real
+        hplus_radial.set(name='hpuls_radial',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{+}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hcross_radial = -Qdot_radial.imag
+        
+        hcross_radial.set(name='hcross_radial',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{\times}(r)$'),
+                         cmap='Spectral_r',
+                         limits=[-3 / D.value, 3 / D.value])
+        hplus_tot = Qdot_total.real
+        hplus_tot.set(name='tot_hplus',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{tot}}$'))
+        hcross_tot = -Qdot_total.imag
+        hcross_tot.set(name='tot_hcross',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{tot}}$'))
+        hplus_nuc = Qdot_nucleus.real
+        hplus_nuc.set(name='nuc_hplus',
+                      cmap='Spectral_r',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{core}}$'))
+        hcross_nuc = -Qdot_nucleus.imag
+        hcross_nuc.set(name='nuc_hcross',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{core}}$'))
+        hplus_inn = Qdot_inner.real
+        hplus_inn.set(name='inn_hplus',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{conv}}$'))
+        hcross_inn = -Qdot_inner.imag
+        hcross_inn.set(name='inn_hcross',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{conv}}$'))
+        hplus_out = Qdot_outer.real
+        hplus_out.set(name='out_hcross',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{+,\mathrm{out}}$'))
+        hcross_out = -Qdot_outer.imag
+        hcross_out.set(name='out_hcross',
+                       cmap='Spectral_r',
+                       limits=[-70 / D.value, 70 / D.value],
+                       label=merge_strings(add_lb, r'$h_{\times,\mathrm{out}}$'))
+    
+    return create_series(time, hplus_radial, hplus_tot, hplus_nuc, hplus_inn, hplus_out,
+                         hcross_radial, hcross_tot, hcross_nuc, hcross_inn, hcross_out)
