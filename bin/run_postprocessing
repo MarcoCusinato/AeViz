@@ -36,6 +36,7 @@ sim.neutrino_spheres()
 sim.gain_radius()
 sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
+sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
     sim.radial_profile('Ye')
 if not args.noGWs and sim.dim > 1:

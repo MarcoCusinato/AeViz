@@ -99,14 +99,14 @@ def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
                             Omega for key in Fz.keys()}
     else:
         Omega = np.nansum(Omega[indices[0], indices[1], surface_indices])
-        Lx = {key: -np.sum(Fx[indices[0], indices[1], surface_indices] * 
+        Lx = {key: -np.sum(Fx[key][indices[0], indices[1], surface_indices] * 
                             PNS_surface ** 2, axis=(0, 1)) * 
                             PNS_avg_radius ** 2 * Omega for key in Fx.keys()}
-        Ly = {key: -np.sum(Fy[indices[0], indices[1], surface_indices] * 
-                            PNS_surface[..., None] ** 2, axis=(0, 1)) * 
+        Ly = {key: -np.sum(Fy[key][indices[0], indices[1], surface_indices] * 
+                            PNS_surface ** 2, axis=(0, 1)) * 
                             PNS_avg_radius ** 2 * Omega for key in Fy.keys()}
-        Lz = {key: -np.sum(Fz[indices[0], indices[1], surface_indices] * 
-                        PNS_surface[..., None] ** 2, axis=(0, 1)) * 
+        Lz = {key: -np.sum(Fz[key][indices[0], indices[1], surface_indices] * 
+                        PNS_surface ** 2, axis=(0, 1)) * 
                         PNS_avg_radius ** 2 * Omega for key in Fx.keys()}
     
     return Lx, Ly, Lz
