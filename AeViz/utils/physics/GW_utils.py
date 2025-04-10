@@ -486,7 +486,9 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
         time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer = \
             read_Qdot(simulation)
         if len(simulation.hdf_file_list) == len(time):
-            return calculate_strain_3D(D, THETA, PHI, time, Qdot_radial,
+            return calculate_strain_3D(D, THETA, PHI, time,
+                                       simulation.cell.radius(simulation.ghost),
+                                       Qdot_radial,
                                        Qdot_total, Qdot_inner, Qdot_nucleus,
                                        Qdot_outer)
         else:
@@ -557,7 +559,9 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
                       'Qdot_outer', 'Qdot_radial'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
                       Qdot_radial])
-    return calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
+    return calculate_strain_3D(D, THETA, PHI, time,
+                               simulation.cell.radius(simulation.ghost),
+                               Qdot_radial, Qdot_total,
                                Qdot_inner, Qdot_nucleus, Qdot_outer)
 
 def spherical_harmonics_gradient(radius, theta, phi):
@@ -630,7 +634,7 @@ def read_Qdot(simulation):
         Qdot_outer = data['Qdot_outer'][...] * u.g * u.cm ** 2 / u.s
     return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer
 
-def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
+def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
                         Qdot_inner, Qdot_nucleus, Qdot_outer):
     if D is not None:
         if not isinstance(D, aerray):
@@ -820,6 +824,8 @@ def calculate_strain_3D(D, THETA, PHI, time, Qdot_radial, Qdot_total,
                        cmap='Spectral_r',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{out}}$'))
-    
-    return create_series(time, hplus_radial, hplus_tot, hplus_nuc, hplus_inn, hplus_out,
-                         hcross_radial, hcross_tot, hcross_nuc, hcross_inn, hcross_out)
+    T, R = np.meshgrid(time, radius)
+    return aeseries(data=hplus_radial, time=T.copy(), radius=R.copy()), \
+           create_series(time, hplus_tot, hplus_nuc, hplus_inn, hplus_out), \
+           aeseries(data=hcross_radial, time=T.copy(), radius=R.copy()), \
+           create_series(time, hcross_tot, hcross_nuc, hcross_inn, hcross_out)

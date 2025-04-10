@@ -29,11 +29,17 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
         if comp == 'all':
             for cm in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
                 kwargs['comp'] = cm
-                AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
-                                 'time', **kwargs)
+                if decomposition:
+                    self.plotGWDecomposition('hydro_strain', **kwargs)
+                else:
+                    AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
+                                     'time', **kwargs)
         else:
             kwargs['comp'] = comp
-            AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
+            if decomposition:
+                self.plotGWDecomposition('hydro_strain', **kwargs)
+            else:
+                AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
                                  'time', **kwargs)
         
     kwargs['comp'] = comp

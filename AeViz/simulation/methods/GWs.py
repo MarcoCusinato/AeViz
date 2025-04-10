@@ -177,7 +177,8 @@ def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True):
 @smooth
 @sum_tob
 def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
-            save_checkpoints=True, **kwargs):
+                 comp:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']=None,
+                 save_checkpoints=True, **kwargs):
     """
     Calculates the gravitational wave strain from the hydro for a
     simulation
@@ -199,7 +200,18 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
             [h_+, h_x]_conv: len(time)
             [h_+, h_x]_out: len(time)
     """
-    GW_data = calculate_h(self, D, theta, phi, save_checkpoints)
-    if GW_data is None:
-        return None        
-    return GW_data
+    if self.dim == 1:
+        return None
+    elif self.dim == 2:
+        return calculate_h(self, D, theta, phi, save_checkpoints)
+    elif self.dim == 3:
+        if comp is None:
+            return calculate_h(self, D, theta, phi, save_checkpoints)
+        elif comp == 'h+eq':
+            return calculate_h(self, D, np.pi/2, 0, save_checkpoints)[0:2]
+        elif comp == 'hxeq':
+            return calculate_h(self, D, np.pi/2, 0, save_checkpoints)[2:]
+        elif comp == 'h+pol':
+            return calculate_h(self, D, np.pi, 0, save_checkpoints)[:2]
+        elif comp == 'hxpol':
+            return calculate_h(self, D, np.pi, 0, save_checkpoints)[2:]
