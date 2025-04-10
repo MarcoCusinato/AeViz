@@ -1,12 +1,11 @@
 from AeViz.plot_utils.plot_creation import PlotCreation
-import astropy.units
 from matplotlib import ticker
 import numpy as np
 from matplotlib.colors import LogNorm, SymLogNorm, Normalize
 from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
-from AeViz.units.units import units
+from AeViz.units import u
 
 
 class PlottingUtils(PlotCreation):
@@ -506,6 +505,7 @@ class PlottingUtils(PlotCreation):
                                  location=cbar_loaction(
                                      self.cbar_position[ax_letter]))
         cbar.set_label(self.cbar_label[ax_letter])
+        self.set_labels(ax_letter)
         
     def __plot2Dfield(self, ax_letter, grid_number):
         """
@@ -574,6 +574,7 @@ class PlottingUtils(PlotCreation):
         if self.axd[ax_letter].yaxis.get_units() is None:
             self.axd[ax_letter].yaxis.set_units((self.grid[ax_letter][indx][1].label,
                                                 self.grid[ax_letter][indx][1].unit))
+        self.set_labels(ax_letter)
 
     def __plot1D(self, ax_letter, redo=False):
         """
@@ -615,6 +616,7 @@ class PlottingUtils(PlotCreation):
                     self.axd[ax_letter].plot(self.grid[ax_letter][indx],
                                             self.data[ax_letter][indx],
                                             **kw)
+        self.set_labels(ax_letter)
 
     def __redo_plot(self):
         """
@@ -736,6 +738,48 @@ class PlottingUtils(PlotCreation):
             ylabel = self.axd[ax_letter].yaxis.get_units()[0]
             self.xlabels[ax_letter] = xlabel
             self.ylabels[ax_letter] = ylabel
+    
+    def set_labels(self, ax_letter=None):
+        if ax_letter is None:
+            for letter in self.axd:
+                try:
+                    un = self.axd[letter].xaxis.get_units()
+                    if un[1] == u.dimensionless_unscaled:
+                        lab = un[0]
+                    else:
+                        lab = un[0] + f'[{un[1]}]'
+                    self.axd[letter].set_xlabel(lab)
+                except:
+                    pass
+                try:
+                    un = self.axd[letter].yaxis.get_units()
+                    if un[1] == u.dimensionless_unscaled:
+                        lab = un[0]
+                    else:
+                        lab = un[0] + f'[{un[1]}]'
+                    self.axd[letter].set_ylabel(lab)
+                except:
+                    pass
+        else:
+            try:
+                un = self.axd[ax_letter].xaxis.get_units()
+                if un[1] == u.dimensionless_unscaled:
+                    lab = un[0]
+                else:
+                    lab = un[0] + f'[{un[1]}]'
+                self.axd[ax_letter].set_xlabel(lab)
+            except:
+                pass
+            try:
+                un = self.axd[ax_letter].yaxis.get_units()
+                if un[1] == u.dimensionless_unscaled:
+                    lab = un[0]
+                else:
+                    lab = un[0] + f'[{un[1]}]'
+                self.axd[ax_letter].set_ylabel(lab)
+            except:
+                pass
+                
 
     def __save_scale(self, ax_letter=None):
         """
