@@ -1,6 +1,6 @@
 from scipy.interpolate import (griddata, interp1d)
 import numpy as np
-from AeViz.units.aerray import aerray
+from AeViz.units import aerray, u
 
 class grid:
     """
@@ -204,16 +204,21 @@ class grid:
             X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
             Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
         elif plane in ['xz', 'zx']:
-            theta = np.concatenate([theta, theta + np.pi])
+            theta = np.concatenate([theta, theta + (np.pi * u.radian)])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
             X.set(name='X', label=r'$X$', log=False, limits=[-1.5e7, 1.5e7])
             Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         elif plane in ['yz', 'zy']:
-            theta = np.concatenate([theta, theta + np.pi])
+            theta = np.concatenate([theta, theta + (np.pi * u.radian)])
             X = radius[None, :] * np.sin(theta)[:, None]
             Y = radius[None, :] * np.cos(theta)[:, None]
             X.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
+            Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
+        elif plane in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
+            X = radius[None, :] * np.sin(theta)[:, None]
+            Y = radius[None, :] * np.cos(theta)[:, None]
+            X.set(name='X', label=r'$X$', log=False, limits=[0, 1.5e7])
             Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y
 

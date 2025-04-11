@@ -43,6 +43,15 @@ def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
                    label=merge_strings(r'$\langle $', qt.label, 
                                         r'$\rangle_\phi$'),
                    log=qt.log, limits=qt.limits)
+    elif av_type == 'only_phi':
+        if dim < 2:
+            return qt
+        av = np.nansum(qt * dV, axis=tuple([i for i in [indices['p']]
+                                         if i is not None])) / np.sum(dV)
+        av.set(name=merge_strings(qt.name, '_phi_avg'), 
+                   label=merge_strings(r'$\langle $', qt.label, 
+                                        r'$\rangle_\phi$'),
+                   log=qt.log, limits=qt.limits, cmap=qt.cmap)
     elif av_type == 'radius':
         av = np.nansum(qt * dV, axis=tuple([i for i in [indices['t'], 
                                                      indices['p']] 

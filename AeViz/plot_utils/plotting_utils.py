@@ -258,7 +258,10 @@ class PlottingUtils(PlotCreation):
                 grid = (getattr(data, plane[0]), getattr(data, plane[1]))
             else:
                 grid = getattr(data, data.return_axis_names()[0])
-        elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy']:
+        elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy',
+                        'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
+            if plane in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
+                plane = 'xz'
             if plane in ['yx', 'zx', 'zy']:
                 plane = plane[::-1]
             plane = plane.upper()

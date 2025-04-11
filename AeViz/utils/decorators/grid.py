@@ -44,8 +44,20 @@ def get_grid(func):
             index_theta, index_phi = _get_plane_indices(args[0],
                                                         kwargs['plane'])
             for dd in data:
-                outdata.append(aeseries(_plane_cut(args[0].dim, dd, gr, index_theta,
-                                     index_phi), **{X.name: X, Y.name: Y})) 
+                outdata.append(aeseries(_plane_cut(args[0].dim, dd, gr,
+                                                   index_theta, index_phi),
+                                                   **{X.name: X, Y.name: Y}))
+        elif kwargs['plane'] in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg',
+                                 'zy_phi_avg']:
+            gr = grid(args[0].dim, args[0].cell.radius(args[0].ghost),
+                                       args[0].cell.theta(args[0].ghost),
+                                       args[0].cell.phi(args[0].ghost))
+            X, Y = gr.cartesian_grid_2D(kwargs['plane'], 64)
+            for dd in data:
+                outdata.append(aeseries(
+                    function_average(dd, args[0].dim, 'only_phi', 
+                                     args[0].cell.dphi(args[0].ghost)[:, None, None]),
+                                     **{X.name: X, Y.name: Y}))
         else:
             raise TypeError(f'plane type {kwargs['plane']} not recognized')
         if len(outdata) == 1:
