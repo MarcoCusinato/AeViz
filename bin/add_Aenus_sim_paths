@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from AeViz.utils.path_utils import list_of_paths, add_paths, get_paths_dictionary
+from AeViz.utils.files.path_utils import list_of_paths, add_paths
 parser = argparse.ArgumentParser()
 parser.add_argument('--add-paths', nargs='+', type=str, 
                     help="Expected one or multiple paths in string format.")
