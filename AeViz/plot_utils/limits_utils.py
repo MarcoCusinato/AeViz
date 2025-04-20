@@ -53,8 +53,11 @@ def set2Dlims(ax, xlim, ylim, number, form_factor, sim_dim, plane):
             else:
                 set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
         elif sim_dim == 3:
-            ## Used for 3D simulations
-            set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
+            if plane == 'xz_phi_avg':
+                set2dlims2Dsim(ax, xlim, ylim, number, form_factor)
+            else:
+                ## Used for 3D simulations
+                set2Dlims3Dsim(ax, xlim, ylim, number, form_factor)
         else:
             raise ValueError("The simulation dimension is not supported.")
                 
@@ -95,11 +98,9 @@ def set2dlims2Dsim(ax, xlim, ylim, number, form_factor):
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 4 and form_factor == 2:
         ax["A"].set(xlim=(xlim[1], xlim[0]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]),
-                    aspect=1)
+        ax["B"].set(xlim=(xlim[1], xlim[0]), ylim=(-ylim[1], ylim[0]), aspect=1)
         ax["C"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]),
-                    aspect=1)
+        ax["D"].set(xlim=(xlim[0], xlim[1]), ylim=(-ylim[1], ylim[0]), aspect=1)
 
 def set2Dlims3Dsim(ax, xlim, ylim, number, form_factor):
     """
@@ -124,13 +125,13 @@ def set2Dlims3Dsim(ax, xlim, ylim, number, form_factor):
     if number == 1 and form_factor == 2:
         ax["A"].set(xlim=(xlim[0], xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 2 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["B"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["A"].set(xlim=(max(xlim), 0), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["B"].set(xlim=(0, max(xlim)), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 3 and form_factor == 2:
-        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], ylim[1]), aspect=1)
-        ax["C"].set(xlim=(0, xlim[1]), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["B"].set(xlim=(max(xlim), 0), ylim=(ylim[0], ylim[1]), aspect=1)
+        ax["C"].set(xlim=(0, max(xlim)), ylim=(ylim[0], ylim[1]), aspect=1)
     elif number == 4 and form_factor == 2:
-        ax["A"].set(xlim=(xlim[0], 0), ylim=(0, ylim[1]), aspect=1)
-        ax["B"].set(xlim=(xlim[0], 0), ylim=(ylim[0], 0), aspect=1)
+        ax["A"].set(xlim=(max(xlim), 0), ylim=(0, ylim[1]), aspect=1)
+        ax["B"].set(xlim=(max(xlim), 0), ylim=(ylim[0], 0), aspect=1)
         ax["C"].set(xlim=(0, xlim[1]), ylim=(0, ylim[1]), aspect=1)
         ax["D"].set(xlim=(0, xlim[1]), ylim=(ylim[0], 0), aspect=1)

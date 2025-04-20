@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 from AeViz.plot_utils.figure_utils import (return_positioning, return_fig_size,
                                            change_x_cbar_aspect,
                                            change_y_cbar_aspect,
-                                           change_x_aspect,
-                                           change_y_aspect)
+                                           change_x_aspect)
 
 class PlotCreation(object):
     """

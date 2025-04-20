@@ -102,16 +102,9 @@ class PlottingUtils(PlotCreation):
                 xlim[i] = xlim[i].to(self.axd[axd_letter].xaxis.get_units()[1])
         xlim = tuple(xlim)
         if 2 in self.plot_dim[axd_letter]:
-            for idx in range(len(self.plot_dim[axd_letter])):
-                if self.plot_dim[axd_letter][idx] == 2:
-                    sdim = self.sim_dimension[axd_letter][idx]
-                    grid = self.grid[axd_letter][idx][0]
-                    if np.isclose((np.abs(grid.max())).value,
-                                  (np.abs(grid.min()).value)):
-                        plane = "xy"
-                    else:
-                        plane = "xz"
-                    break
+            idx = self.plot_dim[axd_letter].index(2)
+            plane = self.plot_dim[axd_letter][idx]
+            sdim = self.sim_dimension[axd_letter][idx]
             set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
                       sdim, plane)
             self.__save_lims()
@@ -134,16 +127,9 @@ class PlottingUtils(PlotCreation):
                 ylim[i] = ylim[i].to(self.axd[axd_letter].yaxis.get_units()[1])
         ylim = tuple(ylim)
         if 2 in self.plot_dim[axd_letter]:
-            for idx in range(len(self.plot_dim[axd_letter])):
-                if self.plot_dim[axd_letter][idx] == 2:
-                    sdim = self.sim_dimension[axd_letter][idx]
-                    grid = self.grid[axd_letter][idx]
-                    if np.isclose((np.abs(grid.max())).value,
-                                  (np.abs(grid.min())).value):
-                        plane = "xy"
-                    else:
-                        plane = "xz"
-                    break
+            idx = self.plot_dim[axd_letter].index(2)
+            plane = self.plot_dim[axd_letter][idx]
+            sdim = self.sim_dimension[axd_letter][idx]
             set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
                       sdim, plane)
             self.__save_lims()
@@ -261,7 +247,7 @@ class PlottingUtils(PlotCreation):
         elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy',
                         'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
             if plane in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
-                plane = 'xz'
+                plane = 'xz_phi_avg'
             if plane in ['yx', 'zx', 'zy']:
                 plane = plane[::-1]
             plane = plane.upper()
