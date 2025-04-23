@@ -512,7 +512,7 @@ def mass_flux(self, file_name, **kwargs):
     vr = self.radial_velocity(file_name)
     mflux = -(rho * radius ** 2 * vr).to(u.M_sun / u.s)
     mflux.set(name='mass_flux', label=r'$\dot{M}$', limits=[-1, 1],
-             log=True, cmap='Spectral_r')
+             log=False, cmap='Spectral_r')
     return mflux
 
 ## -----------------------------------------------------------------
