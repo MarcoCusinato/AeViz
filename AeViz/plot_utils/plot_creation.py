@@ -54,11 +54,11 @@ class PlotCreation(object):
         if not self.fig_is_open():
             self.fig = plt.figure()
     
-    def __setup_axd(self, number=1, form_factor=1):
+    def __setup_axd(self, number=1, form_factor=1, **kwargs):
         """
         Most important method of the class.
         What it does:
-        - sets up the number of sybplot and their positioning
+        - sets up the number of subplot and their positioning
         - shares the axis if necessary
         - sets up the label position
         - sets up the aspect ratio
@@ -73,10 +73,16 @@ class PlotCreation(object):
         if not self.axd_is_open():
             position, width_ratio, height_ratio, gs_kw = \
                 return_positioning(self.number, self.form_factor)
+            if "prj" in kwargs:
+                per_subplot_kw={letter: {"projection": kwargs["prj"]}
+                                for letter in position if letter.isupper()}
+            else:
+                per_subplot_kw = {}
             self.axd = self.fig.subplot_mosaic(position,
                                                gridspec_kw=gs_kw,
                                                width_ratios=width_ratio, 
-                                               height_ratios=height_ratio)
+                                               height_ratios=height_ratio,
+                                               per_subplot_kw=per_subplot_kw)
             if self.number == 1:
                 if self.form_factor == 5:
                     self.__share_axis(self.axd["A"], [self.axd["B"]], True,

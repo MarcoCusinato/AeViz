@@ -12,6 +12,7 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         show_figure,
                                                         plot_panel,
                                                         plot_profile_panel,
+                                                        plot_hammer_panel,
                                                         remove_labelling)
 from AeViz.utils.decorators.grid import _get_plane_indices
 import cv2
@@ -184,7 +185,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         
         show_figure()
-    
+
     def plotProfile(self, qt1=None, qt2=None, qt3=None, qt4=None, **kwargs):
         """
         Plot the time profile of the quantity.
@@ -248,6 +249,75 @@ class Plotting(PlottingUtils, Data):
             plot_profile_panel(self, 'C', qt3, cbars, **kwargs)
         if qt4 is not None:
             plot_profile_panel(self, 'D', qt4, cbars, **kwargs)
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter.islower():
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        show_figure()
+
+    def plotHammer(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None, **kwargs):
+        number_of_quantities = sum(x is not None for x in [qt1, qt2, qt3, qt4])
+        redo = False
+        
+        if self.axd is not None:
+            redo = True            
+            if (number_of_quantities == 4) or \
+                (number_of_quantities == 3 and 'B' in self.axd) or \
+                (number_of_quantities == 2 and 'C' in self.axd) or \
+                (number_of_quantities == 1 and 'D' in self.axd) or \
+                (self.form_factor not in [None, 4]):
+                self.Close()
+                number, form_factor, cbars = setup_cbars_profile(qt1, qt2,
+                                                                 qt3, qt4)
+            elif number_of_quantities == 1:
+                if 'C' in self.axd:
+                    qt4 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True,
+                                                            True, True, qt4)
+                elif 'B' in self.axd:
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, True, qt3,
+                                                             qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                     qt3, qt4)
+                qt1 = None
+            elif number_of_quantities == 2:
+                if 'B' in self.axd:
+                    qt4 = qt2
+                    qt3 = qt1
+                    number, form_factor, cbars = setup_cbars_profile(True, 
+                                                                True, qt3, qt4)
+                elif 'A' in self.axd:
+                    qt2 = qt1
+                    qt3 = qt2
+                    number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                     qt3, qt4)
+                qt1 = None
+                qt2 = None
+            elif number_of_quantities == 3:
+                qt2 = qt1
+                qt3 = qt2
+                qt4 = qt3
+                number, form_factor, cbars = setup_cbars_profile(True, qt2,
+                                                                 qt3, qt4)
+                qt1 = None
+        else:
+            number, form_factor, cbars = setup_cbars_profile(qt1, qt2, qt3,
+                                                             qt4)
+        self._PlotCreation__setup_axd(number, form_factor, prj='hammer')
+        if qt1 is not None:
+            plot_hammer_panel(self, 'A', file, qt1, cbars, plane, **kwargs)
+        if qt2 is not None:
+            plot_hammer_panel(self, 'B', file, qt2, cbars, plane, **kwargs)
+        if qt3 is not None:
+            plot_hammer_panel(self, 'C', file, qt3, cbars, plane, **kwargs)
+        if qt4 is not None:
+            plot_hammer_panel(self, 'D', file, qt4, cbars, plane, **kwargs)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():

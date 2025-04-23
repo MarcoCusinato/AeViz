@@ -51,7 +51,12 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
             AeViz.plot1D(file, qt, plane, **kwargs)
     elif projection == '2D':
         if file is not None:
-            AeViz.plot2D(file, plane, qt, **kwargs)
+            if type(plane) == tuple:
+                plane = plane[0]
+            if type(plane) != str:
+                AeViz.plotHammer(file, plane, qt, **kwargs)
+            else:
+                AeViz.plot2D(file, plane, qt, **kwargs)
         elif plane == 'time':
             if kwargs['spectrogram']:
                 if hasattr(AeViz.loaded_data, 'global_' + qt):

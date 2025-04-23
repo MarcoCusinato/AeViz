@@ -94,6 +94,9 @@ class PlottingUtils(PlotCreation):
         plot. In case of 2D plots, it sets the limits of all the axes.
         The limits are saved in the xlims dictionary.
         """
+        if xlim is None:
+            self.xlims[axd_letter] = xlim
+            return
         xlim = list(xlim)
         for i, xl in enumerate(xlim):
             if not isinstance(xl, aerray):
@@ -119,6 +122,9 @@ class PlottingUtils(PlotCreation):
         plot. In case of 2D plots, it sets the limits of all the axes.
         The limits are saved in the ylims dictionary.
         """
+        if ylim is None:
+            self.ylims[axd_letter] = ylim
+            return
         ylim = list(ylim)
         for i, yl in enumerate(ylim):
             if not isinstance(yl, aerray):
@@ -144,6 +150,9 @@ class PlottingUtils(PlotCreation):
         If the scale is 'log' and the limits are negative, we use a 
         custom symlog scale. 
         """
+        if scale is None:
+            self.logX[ax_letter] = scale
+            return
         self.__save_lims(ax_letter)
         if scale == 'log' or scale == True:
             if self.xlims[ax_letter][0] < 0:
@@ -163,6 +172,9 @@ class PlottingUtils(PlotCreation):
         If the scale is 'log' and the limits are negative, we use a 
         custom symlog scale. 
         """
+        if scale is None:
+            self.logY[ax_letter] = scale
+            return
         self.__save_lims(ax_letter)
         if scale in ['log', 'symlog'] or scale == True:
             if self.ylims[ax_letter][0] < 0:
@@ -534,7 +546,6 @@ class PlottingUtils(PlotCreation):
             indx = self.plot_dim[ax_letter].index(2)
         except:
             indx = self.plot_dim[ax_letter].index(-1)
-        
         pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][indx][0],
                                             self.grid[ax_letter][indx][1],
                                             self.data[ax_letter][indx].value,
@@ -612,8 +623,13 @@ class PlottingUtils(PlotCreation):
         We replot everything in the figure. What is done depends on the
         type of plot we are dealing with.
         """
-        self._PlotCreation__close_figure()
-        self._PlotCreation__setup_axd(self.number, self.form_factor)
+        if any([ax.name == 'hammer' for ax in self.axd.values()]):
+            self._PlotCreation__close_figure()
+            self._PlotCreation__setup_axd(self.number, self.form_factor,
+                                          prj='hammer')
+        else:
+            self._PlotCreation__close_figure()
+            self._PlotCreation__setup_axd(self.number, self.form_factor)
         for ax_letter in self.axd:
             if ax_letter not in self.plot_dim.keys():
                 continue

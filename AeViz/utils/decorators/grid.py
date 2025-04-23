@@ -1,9 +1,8 @@
-from AeViz.units.aerray import aerray
-from . import wraps, np, aeseries
+from . import wraps, np, aeseries, aerray, u
 from AeViz.grid.grid import grid
 from AeViz.utils.math_utils import function_average
 import warnings
-
+from AeViz.utils.files.string_utils import split_number_and_unit
 
 def profile_grid(func):
     @wraps(func)
@@ -30,6 +29,14 @@ def get_grid(func):
         if type(data) != list:
             data = [data]
         outdata = []
+        if (type(kwargs['plane']) == aerray or \
+            isinstance(kwargs['plane'], (int, float)) or \
+            (type(kwargs['plane']) == str and \
+             kwargs['plane'] not in ['radius', 'r', 'theta', 'th', 'phi', 'ph',
+                                     'xy', 'yx', 'xz', 'zx', 'zy', 'yz',
+                                     'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg',
+                                     'zy_phi_avg'])) and args[0].dim == 3:
+            kwargs['plane'] = (kwargs['plane'], None, None)
         if kwargs['plane'] in ['radius', 'r', 'theta', 'th', 'phi', 'ph']:
             for dd in data:
                 outdata.append(_get_plane_avgs(args[0], dd, kwargs['plane']))
@@ -154,8 +161,8 @@ def _get_plane_avgs(sim, data, plane):
 
 def _get_indices(sim, data, plane):
     plane = tuple([list(pl) if type(pl) == range else pl for pl in plane])
-    assert all([pl is None or type(pl) in [list, int] for pl in plane]), \
-        "Indices must either be int, None, list or range."
+    assert all([pl is None or type(pl) in [list, int, float] for pl in plane]), \
+        "Indices must either be int, None, list, float or range."
     radius = sim.cell.radius(sim.ghost)
     theta = sim.cell.theta(sim.ghost)
     phi = sim.cell.phi(sim.ghost)
@@ -189,34 +196,42 @@ def _get_indices(sim, data, plane):
         else:
             raise TypeError("Not supported.")            
     else:
-        if len(plane) > 2:
+        if len(plane) > 3:
             warnings.warn("Too many indices, considering only the first three.")
             plane = tuple(list(plane[:3]))
+        if isinstance(plane[0], (aerray, float, str)) or \
+            (len(plane) == 1 and isinstance(plane[0], int)):
+            pl = plane[0]
+
+            if type(pl) == str:
+                pl = split_number_and_unit(pl)
+            idx = np.argmax(sim.cell.radius(sim.ghost) >= pl)
+            return aeseries(data[..., idx].T,
+                            phi=sim.cell.phi(sim.ghost),
+                            theta=sim.cell.theta(sim.ghost)-(np.pi/2 * u.radian))
         if plane[0] is None and plane[1] is None and plane[2] is None:
             raise TypeError("Three None are not supported.")
         elif plane[0] is None and plane[1] is None:
             if not type(plane[2]) == int:
-                raise TypeError("Olnly int index allowed with two None.")
+                raise TypeError("Only int index allowed with two None.")
             return [aeseries(data[plane[2], i, :], radius=radius) for i in
                     range(data.shape[1])]
         elif plane[0] is None and plane[2] is None:
             if not type(plane[1]) == int:
-                raise TypeError("Olnly int index allowed with two None.")
+                raise TypeError("Only int index allowed with two None.")
             return [aeseries(data[i, plane[1], :], radius=radius) for i in
                     range(data.shape[0])]
         elif plane[0] is None and plane[1] is None:
             if not type(plane[2]) == int:
-                raise TypeError("Olnly int index allowed with two None.")
+                raise TypeError("Only int index allowed with two None.")
             return [aeseries(data[plane[2], i, :], radius=radius) for i in
                     range(data.shape[1])]
         elif plane[1] is None and plane[2] is None:
             if not type(plane[0]) == int:
-                raise TypeError("Olnly int index allowed with two None.")
+                raise TypeError("Only int index allowed with two None.")
             return [aeseries(data[i, :, plane[0]], theta=theta) for i in
                     range(data.shape[0])]
         elif plane[0] is None:
-            if not type(plane[1]) != type(plane[2]):
-                raise TypeError("Must have at least a direction.")
             if type(plane[1]) == int:
                 if type(plane[2]) == list:
                     return [aeseries(data[i, plane[1], :], radius=radius) 
@@ -227,8 +242,6 @@ def _get_indices(sim, data, plane):
                 return [aeseries(data[plane[2], i, :], radius=radius) 
                         for i in plane[1]]
         elif plane[1] is None:
-            if not type(plane[0]) != type(plane[2]):
-                raise TypeError("Must have at least a direction.")
             if type(plane[0]) == int:
                 if type(plane[2]) == list:
                     return [aeseries(data[i, :, plane[0]], theta=theta) 
@@ -239,8 +252,6 @@ def _get_indices(sim, data, plane):
                 return [aeseries(data[plane[2], :, i], theta=theta) 
                         for i in plane[0]]
         elif plane[2] is None:
-            if not type(plane[1]) != type(plane[0]):
-                raise TypeError("Must have at least a direction.")
             if type(plane[1]) == int:
                 if type(plane[0]) == list:
                     return [aeseries(data[:, plane[1], i], phi=phi) 

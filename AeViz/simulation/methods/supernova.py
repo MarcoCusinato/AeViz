@@ -500,6 +500,21 @@ def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
     data, *_ = calculate_masses_energies(self, save_checkpoints)
     return data
 
+@get_grid
+@smooth
+@hdf_isopen
+def mass_flux(self, file_name, **kwargs):
+    """
+    Returns the radial mass flux at a given file.
+    """
+    rho = self.rho(file_name)
+    radius = self.cell.radius(self.ghost)
+    vr = self.radial_velocity(file_name)
+    mflux = -(rho * radius ** 2 * vr).to(u.M_sun / u.s)
+    mflux.set(name='mass_flux', label=r'$\dot{M}$', limits=[-1, 1],
+             log=True, cmap='Spectral_r')
+    return mflux
+
 ## -----------------------------------------------------------------
 ## VELOCITIES DATA
 ## -----------------------------------------------------------------

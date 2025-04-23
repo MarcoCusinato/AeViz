@@ -1,3 +1,3 @@
 from functools import wraps
 import numpy as np
-from AeViz.units import aeseries, aerray
+from AeViz.units import aeseries, aerray, u

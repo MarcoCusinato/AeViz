@@ -289,6 +289,24 @@ def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
                            letter)
     plotting_object.Yscale(plotting_object.grid[letter][plot_number][1].log,
                            letter)
+
+def plot_hammer_panel(plotting_object, letter, file, quantity, cbars, plane,
+                      **kwargs):
+    if not 'plane' in kwargs:
+        kwargs['plane'] = plane
+    data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
+    plotting_object._PlottingUtils__update_params(
+                                                  ax_letter=letter,
+                                                  plane=('phi', 'theta'),
+                                                  data=data,
+                                                  cbar_position=cbars[letter],
+                                                  dim=-2,
+                                                  sim_dim=plotting_object.sim_dim)
+    plotting_object._PlottingUtils__plot2Dmesh(letter)
+    plotting_object.xlim(None, letter)
+    plotting_object.ylim(None, letter)
+    plotting_object.Xscale(None, letter)
+    plotting_object.Yscale(None, letter)
     
 def remove_labelling(data, no_nu):
     label = data.data.label

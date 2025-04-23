@@ -122,6 +122,11 @@ def mass_accretion(self, projection:Literal['1D', '2D']='1D', **kwargs):
     AeViz_plot_panel(self, 'mass_accretion_500km', None, projection, 'time',
                      **kwargs)
 
+@fig_window_open
+def mass_flux(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
+        **kwargs):
+    AeViz_plot_panel(self, 'mass_flux', file, projection, plane, **kwargs)
+
 
 
 

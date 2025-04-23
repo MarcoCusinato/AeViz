@@ -1,4 +1,5 @@
 import re, numpy as np
+from AeViz.units import u
 
 def merge_strings(*args):
     """
@@ -43,3 +44,13 @@ def apply_symbol(latex_str: str, symbol: str = "\\tilde"):
     # Restore math mode if needed
     return f"${modified}$" if in_math_mode else modified
         
+import re
+
+def split_number_and_unit(s):
+    match = re.match(r'\s*([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)[ ]*([a-zA-Zµ°/%]*)\s*$', s)
+    if match:
+        number = match.group(1)
+        unit = match.group(2)
+        return (float(number) * u.Unit(unit))
+    else:
+        raise TypeError(f'String {s} not supported')
