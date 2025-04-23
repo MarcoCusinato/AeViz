@@ -505,8 +505,12 @@ class PlottingUtils(PlotCreation):
                                  format=ticker.FuncFormatter(fmt),
                                  location=cbar_loaction(
                                      self.cbar_position[ax_letter]))
+        if self.data[ax_letter][indx].unit == u.dimensionless_unscaled:
+            ulab = ''
+        else:
+            ulab = f' [{self.data[ax_letter][indx].unit.to_string(format='latex')}]'
         cbar.set_label(self.cbar_label[ax_letter])
-        self.set_labels(ax_letter)
+        self.set_labels(ax_letter + ulab)
         
     def __plot2Dfield(self, ax_letter, grid_number):
         """
@@ -559,8 +563,11 @@ class PlottingUtils(PlotCreation):
                                  format=ticker.FuncFormatter(fmt), 
                                 location=cbar_loaction(
                                     self.cbar_position[ax_letter]))
-        cbar.set_label(self.cbar_label[ax_letter] + 
-                       f' [{self.data[ax_letter][indx].unit.to_string(format='latex')}]')
+        if self.data[ax_letter][indx].unit == u.dimensionless_unscaled:
+            ulab = ''
+        else:
+            ulab = f' [{self.data[ax_letter][indx].unit.to_string(format='latex')}]'
+        cbar.set_label(self.cbar_label[ax_letter] + ulab)
         ## Moved the label to avoid overlapping with the cbar
         if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
             self.axd[ax_letter].yaxis.labelpad = -10

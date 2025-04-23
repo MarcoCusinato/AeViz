@@ -55,7 +55,10 @@ class Plotting(PlottingUtils, Data):
         ##PLOT CREATION
             if type(plane) == tuple:
                 if plane[0] is None or type(plane[0]) == int:
-                    plane = data.return_axis_names()[0]
+                    if isinstance(data, list):
+                        plane = data[0].return_axis_names()[0]
+                    else:
+                        plane = data.return_axis_names()[0]
             if self.__simple_labelling:
                 data, label = remove_labelling(data, self.__no_nu)
                 legend = [label]
