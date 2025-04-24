@@ -134,6 +134,9 @@ class PlotCreation(object):
                                                       self.axd["D"],
                                                       self.axd["E"]],
                                       True, False)
+            elif self.number == 6:
+                sharing = [self.axd[f'IMF{i}'] for i in range(1, form_factor+1)]
+                self.__share_axis(self.axd['full'], sharing, True, False)
             self.__setup_label_position()
             self.fig.set_size_inches(return_fig_size(self.number,
                                                      self.form_factor))
@@ -252,5 +255,15 @@ class PlotCreation(object):
                                       bottom=True, labelbottom=True,
                                       left=True, labelleft=True,
                                       right=False, labelright=False)
+        elif self.number == 6:
+            self.axd['full'].tick_params(top=False, labeltop=False,
+                                         bottom=False, labelbottom=False,
+                                         left=True, labelleft=True,
+                                         right=False, labelright=False)
+            for i in range(1, self.form_factor):
+                self.axd[f'IMF{i}'].tick_params(top=False, labeltop=False,
+                                                bottom=False, labelbottom=False,
+                                                left=True, labelleft=True,
+                                                right=False, labelright=False)
     
     

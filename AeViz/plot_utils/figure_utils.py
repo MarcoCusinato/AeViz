@@ -134,13 +134,25 @@ def return_positioning(number, form_factor):
     if form_factor == 4:
         gs_kw = {"wspace": 0,
                  "hspace": 0.2}
+    elif number == 6:
+        gs_kw = {"wspace": 0,
+                 "hspace": 0}
     elif '.' in positioning[number][form_factor]:
         gs_kw = {"wspace": 0,
                  "hspace": 0}
     else:
         gs_kw = {"wspace": 0.2,
                  "hspace": 0.2}
-    
+
+    if number == 6: ## IMFs 1D
+        positioning = [['full']]
+        width_ratio = [1]
+        height_ratio = [1]
+        for i in range(1, form_factor+1):
+            positioning.append([f'IMF{i}'])
+            height_ratio.append(1)
+        return positioning, width_ratio, height_ratio, gs_kw
+
     return positioning[number][form_factor], width_ratio[number][form_factor],\
             height_ratio[number][form_factor], gs_kw
 
@@ -171,6 +183,9 @@ def return_fig_size(number, form_factor):
                     5: (12, 12),
                     6: (8, 11.6)},
                 5: {1: (9, 16)}}
+    
+    if number == 6:
+        return (9, form_factor*4)
     
     return fig_size[number][form_factor]
 

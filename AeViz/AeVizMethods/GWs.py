@@ -45,15 +45,16 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
     kwargs['comp'] = comp
 
 @fig_window_open
-def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
-            mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
-            spectro=False, **kwargs):
+def IMFs(self, projection:Literal['1D', '2D']='1D',
+         strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
+         mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
+         spectrogram=False, **kwargs):
     loc = locals()
     for q in loc.keys():
         if q not in ['self', 'kwargs']:
             kwargs[q] = loc[q]
-    if spectro:
-        self.plotHHT(**kwargs)
+    if projection == '2D':
+        if spectrogram:
+            self.plotHHT(**kwargs)
     else:
-        raise NotImplementedError('IMFs plotting is not implemented yet.')
-        self.plotIMFs(**kwargs)
+        self.plotIMFs('IMFs', **kwargs)

@@ -3,7 +3,7 @@ import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
 import matplotlib.pyplot as plt
-from AeViz.units import u
+from AeViz.units import u, aeseries, aerray
 from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars,
                                                         setup_cbars_profile,
@@ -473,6 +473,42 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         show_figure()
     
+    ## IMFs Stuff
+    def plotIMFs(self, qt, **kwargs):
+        ## Plots the IMFs in a top down fashion
+        data = self._Data__get_data_from_name(qt, **kwargs)
+        self.Close()
+        self._PlotCreation__setup_axd(6, len(data))
+        full = aeseries(
+            aerray(np.zeros(len(data[0].data)), u.cm, 'full_h', label='GWs'),
+            time=data[0].time.copy()
+        )
+        for dd in data:
+            full += dd
+        full.data.set(name='full_h', label=r'GWs')
+        self._PlottingUtils__update_params(
+                                           ax_letter='full',
+                                           plane='time',
+                                           data=full,
+                                           cbar_position=None,
+                                           dim=1,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs
+                                           )
+        self._PlottingUtils__plot1D('full')
+        for i in range(len(data)):
+            self._PlottingUtils__update_params(
+                                               ax_letter=f'IMF{i+1}',
+                                               plane='time',
+                                               data=data[i],
+                                               cbar_position=None,
+                                               dim=1,
+                                               sim_dim=self.sim_dim,
+                                               **kwargs
+                                               )
+            self._PlottingUtils__plot1D(f'IMF{i+1}')
+        show_figure()
+
     def plotHHT(self, **kwargs):
         """
         Plots the Hilbert-Huang spectrum of the GW signal.

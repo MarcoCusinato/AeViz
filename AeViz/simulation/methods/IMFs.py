@@ -1,6 +1,9 @@
 from AeViz.utils.physics.EMD_utils import (get_IMFs, HHT_spectra,
                                     instantaneous_amplitude,
                                     instantaneous_frequency)
+from AeViz.simulation.methods import *
+from AeViz.utils.files.file_utils import create_series
+from AeViz.units import aerray, u
 import numpy as np
 from PyEMD import EMD
 from typing import Literal
@@ -17,10 +20,12 @@ imported into the Simulation class.
 ## -----------------------------------------------------------------
 ## IMFs
 ## -----------------------------------------------------------------
-
-def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
-            mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
-            start_time=-0.05, end_time=None, tob_corrected=True, **kwargs):
+@smooth
+@derive
+@sum_tob
+def IMFs(self, comp:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
+         mode:Literal['EMD', 'EEMD']='EMD', min_imfs=0, max_imfs=10,
+         start_time=-0.05, end_time=None, tob_corrected=True, **kwargs):
     """
     Returns the Intrinsic Mode Functions of the GWs strain.
     If mode is 'EEMD' the IMFs are calculated with the Ensemble
@@ -34,38 +39,42 @@ def IMFs(self, strain:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
         warnings.warn("No GWs in spherical symmetry.")
         return None, None, None
     elif self.dim == 2:
-        strain = 'h+eq'
+        comp = 'h+eq'
     if mode == 'EEMD':
-        time, IMFs, residue = get_IMFs(self.storage_path, strain)
-        if not tob_corrected:
-            time += self.tob
+        time, IMFs, residue = get_IMFs(self.storage_path, comp)
     else:
-        GWs = self.GW_Amplitudes(tob_corrected)
-        time = GWs[:, 0]
-        if strain == 'h+eq':
-            h = GWs[:, 1]
-        elif strain == 'h+pol':
-            h = GWs[:, 2]
-        elif strain == 'hxeq':
-            h = GWs[:, 3]
-        elif strain == 'hxpol':
-            h = GWs[:, 4]
+        GWs = self.GW_Amplitudes(comp=comp)
         if end_time is not None:
-            index_end = np.argmax(time >= end_time)
+            index_end = np.argmax(GWs.time >= end_time)
         else:
             index_end = -20
         if start_time is not None:
-            index_start = np.argmax(time >= start_time)
+            index_start = np.argmax(GWs.time >= start_time)
         else:
             index_start = 0
-        time = time[index_start:index_end]
-        h = h[index_start:index_end]
+        GWs = GWs[index_start:index_end]
         emd = EMD()
-        emd.emd(S=h, T=time, max_imf=max_imfs)
+        emd.emd(S=GWs.data.value, T=GWs.time.value, max_imf=max_imfs)
+        time = GWs.time.value
         IMFs, residue = emd.get_imfs_and_residue()
     if len(IMFs) < max_imfs:
         max_imfs = len(IMFs)
-    return time, IMFs[min_imfs:max_imfs, :], residue
+    IMFs = IMFs[min_imfs:max_imfs, :]
+   
+    time = aerray(time, u.s, 'time', r'$t-t_\mathrm{b}$', None, 
+                  [-0.005, time[-1]])
+    out_IMFs = []
+    i = 1
+    for IMF in IMFs:
+        out_IMFs.append(
+            aerray(IMF, u.cm, f'IMF_{i}', r'IMF$_{' + str(i) +r'}$', None, [-150, 150],
+                   False)
+        )
+        i += 1
+    residue = aerray(residue, u.cm, 'residue', r'Res', None, [-150, 150], False)
+    IMFs = create_series(time, out_IMFs)[0]
+    IMFs.append(create_series(time, residue)[0])
+    return IMFs
 
 def instantaneous_frequency(self, time=None, IMFs=None, 
                             strain:Literal['h+eq', 'hxeq', 'h+pol',
