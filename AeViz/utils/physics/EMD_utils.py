@@ -7,6 +7,7 @@ from scipy.signal import hilbert
 from scipy.signal import savgol_filter
 from sparse import COO
 from AeViz.utils.decorators.simulation import EMD_smooth
+from AeViz.units import aerray, aeseries, u
 
 
 def polish_signal(GWs, frequency_cut):
@@ -129,36 +130,31 @@ def HHT_hist_bins(time, scale='linear', mode='time', bins=None):
     return bin_edge, bin_centre
 
 @EMD_smooth
-def instantaneous_amplitude(IMF, **kwargs):
+def instant_ampl(IMFs, **kwargs):
     """
     Compute the istantaneous amplitude of the signal.
     """
-    if IMF.ndim == 2:
-        analytic_signal = np.zeros_like(IMF)
-        for i in range(IMF.shape[0]):
-            analytic_signal[i, :] = np.abs(hilbert(IMF[i, :]))
-    else:
-        analytic_signal = np.abs(hilbert(IMF))
-    return analytic_signal
+    iampl = np.zeros((len(IMFs[0].data), len(IMFs)))
+    for i, IMF in enumerate(IMFs):
+        iampl[:, i] = np.abs(hilbert(IMF.data.value))
+    iampl = np.squeeze(iampl)
+    return iampl
 
 @EMD_smooth
-def instantaneous_frequency(IMF, time, **kwargs):
+def instant_freq(IMFs, **kwargs):
     """
     Compute the istantaneous frequency of the signal.
     """
-    dt = time[1] - time[0]
-    sample_frequency = 1 / dt
-    if IMF.ndim == 2:
-        phase = np.zeros_like(IMF)
-        for i in range(IMF.shape[0]):
-            analytic_signal = hilbert(IMF[i, :])
-            iphase = np.unwrap(np.angle(analytic_signal), axis=0)
-            phase[i, :] = savgol_filter(iphase, 3, 1, deriv=1, axis=0)
-    else:
-        analytic_signal = hilbert(IMF)
-        phase = np.unwrap(np.angle(analytic_signal), axis=0)
-        phase = savgol_filter(phase, 3, 1, deriv=1, axis=0)
-    return phase / (2.0 * np.pi) * sample_frequency
+    dt = IMFs[0].time[1] - IMFs[0].time[0]
+    sample_frequency = 1 / dt.value
+    phase = np.zeros((len(IMFs[0].data), len(IMFs)))
+    for i, IMF in enumerate(IMFs):
+        analytic_signal = hilbert(IMF.data.value)
+        iphase = np.unwrap(np.angle(analytic_signal), axis=0)
+        phase[:, i] = savgol_filter(iphase, 3, 1, deriv=1, axis=0)
+    ifreq = phase / (2.0 * np.pi) * sample_frequency
+    ifreq = np.squeeze(ifreq)
+    return ifreq
 
 def HHT_spectra_single_if(IF, IA, frequency_edges):
     mask = ((IF >= frequency_edges[0]) & (IF < frequency_edges[-1]))
@@ -171,17 +167,18 @@ def HHT_spectra_single_if(IF, IA, frequency_edges):
     spectra = spectra.todense()
     return spectra
 
-def HHT_spectra(IMF, time, tbins=None, fbins=None, **kwargs):
+def HHT_spectra(IMFs, tbins=None, fbins=None, **kwargs):
     
-    IF = instantaneous_frequency(IMF, time, **kwargs)
-    IA = instantaneous_amplitude(IMF, **kwargs)
-    _, time_centre = HHT_hist_bins(time, mode='time',
+    IF = instant_freq(IMFs, **kwargs)
+    IA = instant_ampl(IMFs, **kwargs)
+    _, time_centre = HHT_hist_bins(IMFs[0].time.value, mode='time',
                                             bins=tbins)
-    freq_edges, freq_centre = HHT_hist_bins(time, mode='frequency',
+    freq_edges, freq_centre = HHT_hist_bins(IMFs[0].time.value, mode='frequency',
                                             bins=fbins)
-    if IMF.ndim == 2:
-        for i in range(IMF.shape[0]):
-            sp = HHT_spectra_single_if(IF[i, :], IA[i, :], freq_edges)
+    if len(IMFs) > 1:
+        spectra = HHT_spectra_single_if(IF[:, 0], IA[:, 0], freq_edges)
+        for i in range(1, len(IMFs)):
+            sp = HHT_spectra_single_if(IF[:, i], IA[:, i], freq_edges)
             if i == 0:
                 spectra = sp
             else:
@@ -190,8 +187,15 @@ def HHT_spectra(IMF, time, tbins=None, fbins=None, **kwargs):
         spectra = HHT_spectra_single_if(IF, IA, freq_edges)
     tinx = np.ones(time_centre.size, dtype=bool)
     finx = np.ones(freq_centre.size, dtype=bool)
-    return spectra[np.ix_(finx, tinx)], freq_centre[finx], \
-        time_centre[tinx]
+    return aeseries(
+        aerray(spectra[np.ix_(finx, tinx)], u.cm, 'Amplitude_spectrum',
+               r'Amplitude', 'magma', [0, spectra[np.ix_(finx, tinx)].max() * 0.45],
+               False),
+        time=aerray(time_centre[tinx], IMFs[0].time.unit, IMFs[0].time.name,
+                    IMFs[0].time.label, IMFs[0].time.cmap, IMFs[0].time.limits),
+        frequency=aerray(freq_centre[finx], u.Hz, 'frequency', r'$f$', None,
+                         [0, 2000])
+    )
 
 def get_IMFs(storage_path, strain):
     """
@@ -205,3 +209,39 @@ def get_IMFs(storage_path, strain):
         time = f['time'][...]
         res = f['Residue'][...]
     return time, IMFs, res
+
+def change_label(label, mode):
+    if mode == 'IF':
+        if 'IMF' in label:
+            return label.replace('IMF', 'IF')
+        elif 'Res' in label:
+            return r'IF$_{\mathrm{Res}}$'
+        else:
+            return r'IF$_{' + label + r'}$'
+    elif mode == 'IA':
+        if 'IMF' in label:
+            return label.replace('IMF', 'IA')
+        elif 'Res' in label:
+            return r'IA$_{\mathrm{Res}}$'
+        else:
+            return r'IA$_{' + label + r'}$'
+    else:
+        raise TypeError(f"{mode} mode not recognized")
+
+def change_name(name, mode):
+    if mode == 'IF':
+        if 'IMF' in name:
+            return name.replace('IMF', 'IF')
+        elif 'Res' in name:
+            return 'IFRes'
+        else:
+            return 'IF' + name
+    elif mode == 'IA':
+        if 'IMF' in name:
+            return name.replace('IMF', 'IA')
+        elif 'Res' in name:
+            return 'IARes'
+        else:
+            return 'IA' + name
+    else:
+        raise TypeError(f"{mode} mode not recognized")

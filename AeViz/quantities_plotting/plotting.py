@@ -509,7 +509,7 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot1D(f'IMF{i+1}')
         show_figure()
 
-    def plotHHT(self, **kwargs):
+    def plotHHT(self, qt, **kwargs):
         """
         Plots the Hilbert-Huang spectrum of the GW signal.
         """
@@ -535,39 +535,41 @@ class Plotting(PlottingUtils, Data):
             redo = True
         plot, cbars = setup_cbars_HHT(number)
         self._PlotCreation__setup_axd(number, 4)
-        Zxx, f, t = self._Data__get_data_from_name('HH_spectrum', **kwargs)
-        f /= 1e3
+        if kwargs['plot_f']:
+            kwargs['IMFs'] = self._Data__get_data_from_name('IMFs', **kwargs)
+            IFs = self._Data__get_data_from_name('instantaneous_frequency',
+                                                **kwargs)
+        spectrogram = self._Data__get_data_from_name(qt, **kwargs)
         ## 2D plot of spectrogram
-        strain = kwargs['strain'][1] + ',' + kwargs['strain'][2:]
-        label = r'$\frac{\mathrm{dE_{GW_{' + strain +  r'}}}}{\mathrm{df}}$ [B$\cdot$HZ$^{-1}$]'
-        self._PlottingUtils__update_params(plot, (t, f),
-                                           Zxx, cbars[plot], False, 
-                                           (0, Zxx.max() * 0.45),
-                                           -3, 'magma',
-                                            label,
-                                            self.sim_dim)
-        
-        self.labels('t-t$_b$ [s]', '$f$ [kHz]', plot)
+        self._PlottingUtils__update_params(ax_letter=plot,
+                                           plane=('time', 'frequency'),
+                                           data=spectrogram,
+                                           cbar_position=cbars[plot],
+                                           dim=-3,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
         self._PlottingUtils__plot2Dmesh(plot)
-        self.ylim((0, 2), plot)
-        self.Xscale('linear', plot)
-        self.Yscale('linear', plot)
-        self.xlim((-0.005, t.max()), plot)
-
+        self.Xscale(spectrogram.time.log, plot)
+        self.Yscale(spectrogram.frequency.log, plot)
+        self.xlim(spectrogram.time.limits, plot)
+        self.ylim(spectrogram.frequency.limits, plot)
+        
         ## Overplot the instantaneous frequency
-        if 'inst_freq' in kwargs:
+        if kwargs['plot_f']:
             if not 'alpha' in kwargs:
                 kwargs['alpha'] = 0.5
             if not 'color' in kwargs:
                 kwargs['color'] = 'gainsboro'
-            data = self._Data__get_data_from_name('instantaneous_frequency',
-                                                  **kwargs)
-            self._PlottingUtils__update_params(plot, data[0],
-                                               list(data[1] * 1e-3),
-                                               None, None,
-                                               None, 1, None, None,
-                                               self.sim_dim, lw=.5,
-                                               **kwargs)
+            for IF in IFs:
+                self._PlottingUtils__update_params(
+                                            ax_letter=plot,
+                                            plane='time',
+                                            data=IF,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():

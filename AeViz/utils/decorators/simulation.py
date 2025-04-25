@@ -165,20 +165,23 @@ def EMD_smooth(func):
             return data
         if 'smooth_window' in kwargs:
             window_points = kwargs['smooth_window']
+            if window_points % 2 == 0:
+                window_points += 1
         else:
             window_points = 5
         if kwargs['smooth'] == 'gauss':
-            x = np.linspace(-window_points // 2, window_points // 2,
-                            window_points)
-            window = np.exp(-(x**2) / (2 * 2 ** 2))
+            smooth_type = 'gauss'
         else:
-            window = np.ones(window_points) / window_points   
+            smooth_type = 'box'
+        if smooth_type == 'gauss':
+            kernel = Gaussian1DKernel(2, x_size = window_points)
+        elif smooth_type == 'box':
+            kernel = Box1DKernel(window_points)
         if data.ndim == 2:
-            for i in range(0, data.shape[0]):
-                data[i, :] = np.convolve(data[i, :], window, mode='same')
+            for i in range(data.shape[1]):
+                data[:, i] = convolve(data[:, i], kernel, boundary='extend')
         else:
-            data = np.convolve(data, window, mode='same')
-        
+            data = convolve(data, kernel, boundary='extend')
         return data
 
     return wrapper

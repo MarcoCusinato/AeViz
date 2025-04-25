@@ -53,8 +53,10 @@ def IMFs(self, projection:Literal['1D', '2D']='1D',
     for q in loc.keys():
         if q not in ['self', 'kwargs']:
             kwargs[q] = loc[q]
+    if 'plot_f' not in kwargs:
+        kwargs['plot_f'] = False
     if projection == '2D':
         if spectrogram:
-            self.plotHHT(**kwargs)
+            self.plotHHT('HH_spectrum', **kwargs)
     else:
         self.plotIMFs('IMFs', **kwargs)
