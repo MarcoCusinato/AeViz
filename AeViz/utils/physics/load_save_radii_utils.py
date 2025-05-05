@@ -122,32 +122,29 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                     rad_step[i], simulation.dim) for (key, i) in
                     zip(['nue', 'nua', 'nux'], range(3))}
                 max_radius = {key: np.concatenate((max_radius[key],
-                                                    np.array([np.nanmax(
-                                                        nog_rad_step[key])])))
+                                                   np.nanmax(nog_rad_step[key])))
                               for key in ['nue', 'nua', 'nux']}
-                min_radius = {key: np.concatenate((min_radius[key],
-                                                    np.array([np.nanmin(
-                                                        nog_rad_step[key])])))
+                min_radius = {key: np.concatenate((min_radius[key], np.nanmin(nog_rad_step[key])))
                               for key in ['nue', 'nua', 'nux']}
                 avg_radius = {key: np.concatenate((avg_radius[key],
-                                np.array([function_average_radii(
-                                    nog_rad_step[key], simulation.dim,
-                                    dOmega)]))) for key in
-                                ['nue', 'nua', 'nux']}
+                                function_average_radii(nog_rad_step[key],
+                                                       simulation.dim, dOmega)))
+                                for key in ['nue', 'nua', 'nux']}
             except Exception as e:
+                print(e)
                 time = simulation.time(file)
                 full_radius = {key: rad_step[i][..., None] for (key, i) in
                                zip(['nue', 'nua', 'nux'], range(3))}
                 nog_rad_step = {key: simulation.ghost.remove_ghost_cells_radii(
                     rad_step[i], simulation.dim) for (key, i) in
                     zip(['nue', 'nua', 'nux'], range(3))}
-                max_radius = {key: np.array([np.nanmax(nog_rad_step[key])])
+                max_radius = {key: np.nanmax(nog_rad_step[key])
                               for key in ['nue', 'nua', 'nux']}
-                min_radius = {key: np.array([np.nanmin(nog_rad_step[key])])
+                min_radius = {key: np.nanmin(nog_rad_step[key])
                               for key in ['nue', 'nua', 'nux']}
-                avg_radius = {key: np.array([function_average_radii(
+                avg_radius = {key: function_average_radii(
                                     nog_rad_step[key], simulation.dim,
-                                    dOmega)]) for key in
+                                    dOmega) for key in
                                 ['nue', 'nua', 'nux']}
         else:
             nog_rad_step = simulation.ghost.remove_ghost_cells_radii(rad_step,

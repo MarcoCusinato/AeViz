@@ -4,7 +4,8 @@ from AeViz.units.aerray import aerray
 from AeViz.utils.files.string_utils import merge_strings
 
 def function_average(qt, dim, av_type:Literal['Omega', 'theta', 'phi',
-                                              'radius', 'volume'], dV):
+                                              'only_phi', 'radius', 'volume'],
+                     dV):
     if dim == 1:
         indices = {'r': 0, 't': None, 'p': None}
     elif dim == 2:

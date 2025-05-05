@@ -95,6 +95,7 @@ def find_column_changing_line(path_folder, file_name):
     assert os.path.exists(path), "Selected file does not exists"
     number_of_colums = None
     line_number = 1
+    line_change = []
     with open(path, 'r') as f:
         for line in f:
             columns = len(line.strip().split())
@@ -102,8 +103,17 @@ def find_column_changing_line(path_folder, file_name):
                 number_of_colums = columns
             if number_of_colums != columns:
                 line_number += 1
-                break
+                number_of_colums = columns
+                line_change.append(line_number)
+                #break
             line_number += 1
+    if len(line_change) > 1:
+        line_number = line_change[-1]
+    else:
+        try:
+            line_number = line_change[0]
+        except:
+            pass
     if line_number < 3:
         line_number = None
     return line_number
