@@ -86,6 +86,7 @@ def bounce_compactness(self, mass = None):
 ## RADII DATA
 ## -----------------------------------------------------------------
 
+@get_radius
 @smooth
 @derive
 @sum_tob
@@ -116,6 +117,7 @@ def PNS_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
 @smooth
 @derive
 @sum_tob
@@ -143,6 +145,7 @@ def shock_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
 @smooth
 @derive
 @sum_tob
@@ -174,6 +177,7 @@ def neutrino_spheres(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
 @smooth
 @derive
 @sum_tob
@@ -201,6 +205,7 @@ def gain_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
 @smooth
 @derive
 @sum_tob
@@ -228,6 +233,7 @@ def PNS_nucleus_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=Non
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
 @smooth
 @derive
 @sum_tob

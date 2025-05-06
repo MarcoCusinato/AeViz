@@ -151,6 +151,8 @@ def smooth(func):
                                       dd.data.cmap, dd.data.limits, dd.data.log)
             else:
                 raise TypeError("Type not supported.")
+        if len(data) == 1:
+            data = data[0]
         return data
     return wrapper
 

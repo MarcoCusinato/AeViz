@@ -100,6 +100,27 @@ class Plotting(PlottingUtils, Data):
                                                 **kwargs
                                                 )
             self._PlottingUtils__plot1D(ax_letter)
+
+    def plot1D_2Dradius(self, qt, **kwargs):
+        ax_letter = kwargs['plot']
+        index = self.plot_dim[ax_letter].index(2)
+        plane = self.plane[ax_letter][index]
+        file = self.file[ax_letter][index]
+        d_kwargs = kwargs.copy()
+        d_kwargs['plane'] = plane
+        d_kwargs['time'] = file
+        data = self._Data__get_data_from_name(name=qt, file=None, **d_kwargs)
+        self._PlottingUtils__update_params(
+                                            file=file,
+                                            ax_letter=ax_letter,
+                                            plane='X',
+                                            data=data,
+                                            cbar_position=None,
+                                            dim=1,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        self._PlottingUtils__plot1D(ax_letter)
  
     def plot2D(self, file, plane, qt1=None, qt2=None, qt3=None, qt4=None,
                **kwargs):

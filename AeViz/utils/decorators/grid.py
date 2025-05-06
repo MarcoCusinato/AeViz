@@ -4,6 +4,8 @@ from AeViz.utils.math_utils import function_average
 import warnings
 from AeViz.utils.files.string_utils import split_number_and_unit
 
+## PROFILE GRID
+
 def profile_grid(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -15,6 +17,8 @@ def profile_grid(func):
         T, R = np.meshgrid(data.time, data.radius)
         return aeseries(data.data, time=T, radius=R)
     return wrapper
+
+## 2D PLOTS
 
 def get_grid(func):
     @wraps(func)
@@ -263,3 +267,38 @@ def _get_indices(sim, data, plane):
                         for i in plane[1]]
         else:
             raise TypeError("Not supported")
+
+## RADIUS IN 2D PLOTS
+
+def get_radius(func):
+    """
+    Returns an aeseries with the 2D slice of the selected radius.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        if 'plot' not in kwargs:
+            return data
+        if isinstance(kwargs['time'], str):
+            time = args[0].time(kwargs['time'])
+        else:
+            time = kwargs['time']
+        radius_index = np.argmax(data[0].time >= time)
+        rad = args[0].ghost.remove_ghost_cells_radii(data[0].data[..., radius_index],
+                                                     args[0].dim, **data[1])
+        if args[0].dim == 2:
+            if kwargs['plane'].casefold() == 'xy':
+                theta = np.linspace(0, 2 * np.pi, 64, True) * u.radian
+                rad = rad[len(rad) // 2]
+            else:
+                theta = args[0].cell.theta(args[0].ghost)
+            rad_x = np.sin(theta) * rad
+            rad_y = np.cos(theta) * rad
+            out_rad = aeseries(
+                rad_y, X=rad_x
+            )
+        return out_rad
+    return wrapper
+
+
+        
