@@ -55,7 +55,7 @@ class MplaerrayConverter(units.ConversionInterface):
         if un == u.dimensionless_unscaled:
             labl = qtlabel
         else:
-            labl = merge_strings(qtlabel, f' [{un.to_string(format='latex')}]')
+            labl = merge_strings(qtlabel, f' [{un:latex}]')
         if un == u.radian:
             return units.AxisInfo(
                 majloc=ticker.MultipleLocator(base=np.pi / 2),
