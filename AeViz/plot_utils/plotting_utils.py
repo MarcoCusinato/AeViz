@@ -772,7 +772,7 @@ class PlottingUtils(PlotCreation):
                     if un[1] == u.dimensionless_unscaled:
                         lab = un[0]
                     else:
-                        lab = un[0] + f'[{un[1]}]'
+                        lab = un[0] + f' [{un[1]:latex}]'
                     self.axd[letter].set_xlabel(lab)
                 except:
                     pass
@@ -781,7 +781,7 @@ class PlottingUtils(PlotCreation):
                     if un[1] == u.dimensionless_unscaled:
                         lab = un[0]
                     else:
-                        lab = un[0] + f'[{un[1]}]'
+                        lab = un[0] + f' [{un[1]:latex}]'
                     self.axd[letter].set_ylabel(lab)
                 except:
                     pass
@@ -791,7 +791,7 @@ class PlottingUtils(PlotCreation):
                 if un[1] == u.dimensionless_unscaled:
                     lab = un[0]
                 else:
-                    lab = un[0] + f'[{un[1]}]'
+                    lab = un[0] + f' [{un[1]:latex}]'
                 self.axd[ax_letter].set_xlabel(lab)
             except:
                 pass
@@ -800,7 +800,7 @@ class PlottingUtils(PlotCreation):
                 if un[1] == u.dimensionless_unscaled:
                     lab = un[0]
                 else:
-                    lab = un[0] + f'[{un[1]}]'
+                    lab = un[0] + f' [{un[1]:latex}]'
                 self.axd[ax_letter].set_ylabel(lab)
             except:
                 pass
