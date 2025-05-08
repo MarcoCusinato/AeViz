@@ -210,11 +210,11 @@ class PlottingUtils(PlotCreation):
         corresponding letter. For whatever reason...
         """
         if xlabel is not None:
-            unit = self.axd[axd_letter].xaxis.get_units()[1].to_string(format='latex')
-            self.axd[axd_letter].set_xlabel(xlabel + f' [{unit}]')
+            unit = self.axd[axd_letter].xaxis.get_units()[1]
+            self.axd[axd_letter].set_xlabel(xlabel + f' [{unit:latex}]')
         if ylabel is not None:
-            unit = self.axd[axd_letter].yaxis.get_units()[1].to_string(format='latex')
-            self.axd[axd_letter].set_ylabel(ylabel + f' [{unit}]')
+            unit = self.axd[axd_letter].yaxis.get_units()[1]
+            self.axd[axd_letter].set_ylabel(ylabel + f' [{unit:latex}]')
         self.__save_labels(axd_letter)
     
     def update_legend(self, legend, axd_letter="A"):
