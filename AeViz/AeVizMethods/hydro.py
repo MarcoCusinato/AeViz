@@ -21,6 +21,11 @@ def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
     AeViz_plot_panel(self, 'MHD_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
+def rotational_energy(self, file=None, projection:Literal['1D', '2D']='1D',
+                    plane='time', **kwargs):
+    AeViz_plot_panel(self, 'rotational_energy', file, projection, plane, **kwargs)
+
+@fig_window_open
 def radial_velocity(self, file=None, projection:Literal['1D', '2D']='1D',
                     plane='time', **kwargs):
     AeViz_plot_panel(self, 'radial_velocity', file, projection, plane, **kwargs)

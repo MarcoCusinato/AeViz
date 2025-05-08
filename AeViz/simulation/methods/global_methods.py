@@ -312,16 +312,16 @@ def global_theta_velocity(self, tob_corrected=True, **kwargs):
 @smooth
 @derive
 @subtract_tob
-def rotational_energy_total(self, tob_corrected=True, **kwargs):
+def global_rotational_energy(self, tob_corrected=True, **kwargs):
     """
     1: time
     2: total rotational energy
     """
-    en = load_file(self._Simulation__log_path, self._Simulation__mag_data)
+    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     return aeseries(
-        aerray(en[:, 3], u.dimensionless_unscaled, 'Erottot',
-               r'$E_\mathrm{rot,tot}$', None, [0, 1e53], False),
+        aerray(en[:, 10], u.erg, 'Erottot',
+               r'$E_\mathrm{rot,tot}$', None, [1e49, 1e53], True),
         time=time
     )
 

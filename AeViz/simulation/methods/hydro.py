@@ -33,6 +33,16 @@ def MHD_energy(self, file_name, **kwargs):
     return aerray(data, u.erg / u.cm**3, 'MHD_energy',
                   r'$E$', 'nipy_spectral', [1e24, 1e35], log=True)
 
+@get_grid
+@smooth
+@hdf_isopen
+def rotational_energy(self, file_name, **kwargs):
+    data = self.rho(file_name) * self.phi_velocity(file_name) ** 2 * 0.5
+    data.to(u.erg/u.cm**3)
+    data.set(name='rot_ene', label=r'$E_\mathrm{rot}$', cmap='viridis', log=True,
+             limits=[1e24, 1e35])
+    return data
+
 ## VELOCITY
 @get_grid
 @smooth
