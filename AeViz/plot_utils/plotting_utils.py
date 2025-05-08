@@ -291,6 +291,10 @@ class PlottingUtils(PlotCreation):
                 self.lw[ax_letter] = [kwargs['lw']]
             else:
                 self.lw[ax_letter] = [None]
+            if 'ls' in kwargs:
+                self.ls[ax_letter] = [kwargs['ls']]
+            else:
+                self.ls[ax_letter] = [None]
         else:
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
@@ -311,6 +315,10 @@ class PlottingUtils(PlotCreation):
                 self.lw[ax_letter].append(kwargs['lw'])
             else:
                 self.lw[ax_letter].append(None)
+            if 'ls' in kwargs:
+                self.ls[ax_letter].append(kwargs['ls'])
+            else:
+                self.ls[ax_letter].append(None)
          
     def __update_cbar_position(self, ax_letter, cbar_position):
         """
@@ -419,6 +427,7 @@ class PlottingUtils(PlotCreation):
         self.alpha = {}
         self.line_color = {}
         self.lw = {}
+        self.ls = {}
         self.field = {}
         self.field_type = {}
         self.sim_dimension = {}
@@ -597,6 +606,8 @@ class PlottingUtils(PlotCreation):
                     kw['lw'] = self.lw[ax_letter][indx]
                 if self.line_color[ax_letter][indx] is not None:
                     kw['color'] = self.line_color[ax_letter][indx]
+                if self.ls[ax_letter][indx] is not None:
+                    kw['ls'] = self.ls[ax_letter][indx]
                 if type(self.data[ax_letter][indx]) == list:
                     for data in self.data[ax_letter][indx]:
                         self.axd[ax_letter].plot(self.grid[ax_letter][indx],
@@ -615,6 +626,8 @@ class PlottingUtils(PlotCreation):
                     kw['lw'] = self.lw[ax_letter][indx]
                 if self.line_color[ax_letter][indx] is not None:
                     kw['color'] = self.line_color[ax_letter][indx]
+                if self.ls[ax_letter][indx] is not None:
+                    kw['ls'] = self.ls[ax_letter][indx]
                 if type(self.data[ax_letter][indx]) == list:
                     for data in self.data[ax_letter][indx]:
                         self.axd[ax_letter].plot(self.grid[ax_letter][indx],
