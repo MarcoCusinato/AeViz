@@ -575,7 +575,7 @@ class PlottingUtils(PlotCreation):
         if self.data[ax_letter][indx].unit == u.dimensionless_unscaled:
             ulab = ''
         else:
-            ulab = f' [{self.data[ax_letter][indx].unit:latex)}]'
+            ulab = f' [{self.data[ax_letter][indx].unit:latex}]'
         cbar.set_label(self.cbar_label[ax_letter] + ulab)
         ## Moved the label to avoid overlapping with the cbar
         if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
