@@ -40,7 +40,7 @@ After, this firts import a folder called `Aenus_simulation_postprocessing` will 
 During AeViz installation, two system-wide scripts have been installed, namely `add_Aenus_sim_paths` and `run_postprocessing`.<br/>
 First of all, let's use the former to save some simulation's path as
 ```
-add_Aenus_sim_paths --sim-name /path/to/parent/
+add_Aenus_sim_paths --add-paths /path/to/parent/
 ```
 This will scan the parent folder for simulations. Be careful that if you feed it the simulation path it will not recognize it.
 
