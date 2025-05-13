@@ -170,7 +170,7 @@ ae.rho(projection='2D', plane='time', spectrogram=True)
 ```
 This will generate two subplots, the top one with a simple line showing the time evolution, and the bottom one with the spectrogram.
 
-This is particularly of interest in the case of gravitational waves. To obtain such a figure use
+This is of particular interest in the case of gravitational waves. To obtain such a figure use
 ```
 ae.GWs(projection='2D', spectrogram=True)
 ```
