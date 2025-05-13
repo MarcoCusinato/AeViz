@@ -140,10 +140,12 @@ or, equivalently
 ```
 ae.cbar_levels([12.5, 20], axd_letter='B')
 ```
-where `'B'` refer to the second plot (the entrop one, in this case).
+where `'B'` refer to the second plot (the entropy one, in this case).
+
 **Note**: The colorbar associated to each plot is identified with the corresponding lowercase letter. So `'a'` will refer to the colorbar of plot `'A'`, `'b'` to plot `'B'`, and so on.
 
 You can zoom in and out with the `ae.xlim()` method introduced before.
+
 **Note**: Usually, the horizontal axis will entend in the domain [0, L], while the verical one is [-L,L].
 
 If you are interested to overplot given lines, such as the shock radius, you can do it with
