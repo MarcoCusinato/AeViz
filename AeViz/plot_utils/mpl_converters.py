@@ -8,13 +8,13 @@ def rad_fn(x, pos=None):
         if n == 0:
             return "0"
         elif n == 1:
-            return "$\pi$/2"
+            return r"$\pi$/2"
         elif n == 2:
-            return "$\pi$"
+            return r"$\pi$"
         elif n % 2 == 0:
-            return f"{n // 2}$\pi$"
+            return f"{n // 2}" + r"$\pi$"
         else:
-            return f"{n}$\pi$/2"
+            return f"{n}" + r"$\pi$/2"
 
 
 class MplaerrayConverter(units.ConversionInterface):

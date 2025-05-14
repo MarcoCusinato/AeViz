@@ -255,7 +255,7 @@ def GWs_fourier_transform(GWs, indices):
     find the domiunant frequency of a specific oscillation
     Returns
         positive frequency range
-        $\tilde{h} * \sqrt{freq}$
+        tilde{h} * sqrt{freq}
     """
     dt = np.abs(GWs[1, 0] - GWs[0, 0])
     ## Cut the GWs signal
@@ -583,7 +583,7 @@ def calculate_Qdot(simulation, gradY, file_name, dV,
                         inner_rad, igcells, nuc_rad, ngcells):
     """
     Calculates the Qdot for the different regions of the star.
-    \dot{Q} = dV ρ ∇(v Y*_2m)
+    dot{Q} = dV ρ ∇(v Y*_2m)
     """
     mask_nuc = simulation.cell.radius(simulation.ghost) <= \
         simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,

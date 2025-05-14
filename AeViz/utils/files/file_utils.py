@@ -54,7 +54,7 @@ def load_file(path_folder, file_name):
                 head = list(np.genfromtxt(path.replace('.dat', '.txt'),
                                           dtype=str, delimiter=',',
                                           skip_footer=1))
-                data_str = pd.read_table(path, dtype=str, sep='\s+',
+                data_str = pd.read_table(path, dtype=str, sep=r'\s+',
                                          names=head, usecols=range(col_number))
                 data_str = data_str.fillna('0')
                 data_str = data_str.to_numpy()
