@@ -529,8 +529,8 @@ class PlottingUtils(PlotCreation):
         for i in range(len(self.field_type[ax_letter])):
             if self.field_type[ax_letter][i] == 'v':
                 skip = (slice(None, None, 5), slice(None, None, 5))
-                self.axd[ax_letter].quiver(self.grid[ax_letter][i][0][skip],
-                                        self.grid[ax_letter][i][1][skip],
+                self.axd[ax_letter].quiver(self.grid[ax_letter][grid_number][0][skip],
+                                        self.grid[ax_letter][grid_number][1][skip],
                                         self.field[ax_letter][i][0][skip].value,
                                         self.field[ax_letter][i][1][skip].value,
                                         linewidths=0.01,
@@ -692,7 +692,8 @@ class PlottingUtils(PlotCreation):
             if ax_letter in self.legend:
                 self.update_legend(self.legend[ax_letter], ax_letter)
             if ax_letter in self.field:
-                self.__plot2Dfield(ax_letter)
+                number = self.plot_dim[ax_letter].index(2)
+                self.__plot2Dfield(ax_letter, number)
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
