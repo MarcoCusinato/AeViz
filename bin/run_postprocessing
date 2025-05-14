@@ -16,6 +16,9 @@ parser.add_argument('--noprofiles', action='store_true', default=False,
 parser.add_argument('--noGWs', action='store_true', default=False,
                     required=False, help="GWs postprocessing is not " \
                         "calculated.")
+parser.add_argument('--noNu', action='store_true', default=False,
+                    required=False, help="Neutrino postprocessing is not " \
+                        "calculated.")
 parser.add_argument('--plot', action='store_true', default=False,
                     required=False, help="Plots are created.")
 parser.add_argument('--tob', default=None, type=float, required=False,
@@ -32,7 +35,8 @@ if args.tob:
 time_array(sim)
 sim.PNS_radius()
 sim.shock_radius()
-sim.neutrino_spheres()
+if not args.noNu:
+    sim.neutrino_spheres()
 sim.gain_radius()
 sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
@@ -74,19 +78,20 @@ if args.plot:
     ae.Close()
     print("Gain summary plotted.")
     ## NEUTRINOS
-    ae.set_simple_labelling(no_nu=True)
-    ae.neutrino_spheres(comp='nue', rad='avg')
-    ae.neutrino_spheres(comp='nue', rad='min')
-    ae.neutrino_spheres(comp='nue', rad='max')
-    ae.neutrino_spheres(comp='nua', rad='avg')
-    ae.neutrino_spheres(comp='nua', rad='min')
-    ae.neutrino_spheres(comp='nua', rad='max')
-    ae.neutrino_spheres(comp='nux', rad='avg')
-    ae.neutrino_spheres(comp='nux', rad='min')
-    ae.neutrino_spheres(comp='nux', rad='max')
-    ae.set_simple_labelling()
-    ae.save_plot('neutrino_spheres')
-    ae.Close()
+    if not args.noNu:
+        ae.set_simple_labelling(no_nu=True)
+        ae.neutrino_spheres(comp='nue', rad='avg')
+        ae.neutrino_spheres(comp='nue', rad='min')
+        ae.neutrino_spheres(comp='nue', rad='max')
+        ae.neutrino_spheres(comp='nua', rad='avg')
+        ae.neutrino_spheres(comp='nua', rad='min')
+        ae.neutrino_spheres(comp='nua', rad='max')
+        ae.neutrino_spheres(comp='nux', rad='avg')
+        ae.neutrino_spheres(comp='nux', rad='min')
+        ae.neutrino_spheres(comp='nux', rad='max')
+        ae.set_simple_labelling()
+        ae.save_plot('neutrino_spheres')
+        ae.Close()
     ae.global_neutrino_luminosities(comp='all')
     ae.global_neutrino_mean_energies(comp='all')
     ae.save_plot('neutrinos')
