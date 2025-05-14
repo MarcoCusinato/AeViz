@@ -51,3 +51,126 @@ run_postprocessing --sim-name simulation_name --plot
 ```
 where the `simulation_name` is the name of the simulation folder folder.
 By doing this we will have created `h5` postprocessing files as well postprocessing plots insede the folder folder with the corresponding simulation name inside the `Aenus_simulation_postprocessing/DIMENSION` directory.
+
+### Plotting
+This is a brief guide on how to read and plot some results. It will refer to a live python session, but this can easily translated into scripts if needed.
+
+#### Time evolution
+
+**Note**: The zero of the time evolution will correspond to bounce time, so that the actual time will always be $t - t_b$.
+
+First of all, let's import what you need:
+```
+from AeViz import ae
+```
+This will import the methods.
+
+If you already add the path of your simulation thanks to `add_Aenus_sim_paths` script, you can load your data with
+```
+ae.Load('name-of-the-simulation')
+```
+If this is not the case, do not worry! You can always manually set the path when you load the simulation:
+```
+ae.Load('name-of-the-simulation', simulation_path='/path/to/the/simulation/')
+```
+
+In order to plot the time evolution of a quantity (for example, the entropy), just use
+```
+ae.entropy()
+```
+This will print the time evolution of the maximum value of the specified quantity. This works also for postprocessed quantities, such as the shock radius.
+The command
+```
+ae.shock_radius('avg') # 'avg' (default), 'min', 'max'
+```
+will plot the time evolution of the average shock radius. If you want the minimum of maximum radius, just use `'min'` or `'max'` options instead.
+Please note that if `run_postprocessing` was not previously run, this will compute and store the postprocessed quantity.
+
+The limits of the x and y axes are modified with, respectively
+```
+ae.xlim([0.1,0.3])
+```
+and
+```
+ae.ylim([1e6, 5e8])
+```
+
+It is possible to plot also the time evolution of a quantity for each radius, obtaining 2D colormaps. In order to obtain this kind of plots, you just have to specify it.
+```
+ae.entropy(projection='2D', plane='time')
+```
+It is also possible to overplot lines, by simply using the same command as before. For example, for the average shock radius use `ae.shock_radius()`.
+
+Say, that, for example, we want to plot the average shock radius with a while solid line, and the maximum shock radius with a yellow dashed line. You will write
+```
+ae.shock_radius('avg', color='white', ls='-')
+ae.shock_radius('max', color='yellow', ls='--')
+```
+You can also show the legend for these two new lines, giving the labels that you want
+```
+ae.update_legend(['average', 'maximum'])
+```
+Please note that the length of the list must be equal to the number of lines.
+
+#### 2D slicing
+Moreover, for a given timestep, you can plot a 2D slice for a given plane. Using the density as example, the code is
+```
+ae.rho(0.6, projection='2D', plane='xz')
+```
+This will plot a 2D slice of the xz-plane at 0.6 seconds after bounce. You can modify the levels of the colorbar with
+```
+ae.cbar_levels([1e6, 1e13])
+```
+This will restrict the values of the colorbar between $10^6$ and $10^{13}$.
+
+With this last plot active, you can add a second one. For example, let's add the 2D slice of the entropy.
+```
+ae.entropy(0.6, projection='2D', plane='xz')
+```
+AeViz is able to store the previous data for the plot of the density (with all the changes) and it will create a new splitted plot with
+density on one side (or, in general, the quantity that was already plotted) and entropy (the new quantity) on the other. All the information
+on the density plot are kept.
+
+All the subplots are identified by an uppercase letter, `'A'`, '`B`', '`C`', and so on. So if now you want to change the settings of the colorbar
+for the entropy, the line of code will be
+```
+ae.cbar_levels([12.5, 20], 'B')
+```
+or, equivalently
+```
+ae.cbar_levels([12.5, 20], axd_letter='B')
+```
+where `'B'` refer to the second plot (the entropy one, in this case).
+
+**Note**: The colorbar associated to each plot is identified with the corresponding lowercase letter. So `'a'` will refer to the colorbar of plot `'A'`, `'b'` to plot `'B'`, and so on.
+
+You can zoom in and out with the `ae.xlim()` method introduced before.
+
+**Note**: Usually, the horizontal axis will entend in the domain [0, L], while the verical one is [-L,L].
+
+If you are interested to overplot given lines, such as the shock radius, you can do it with
+```
+ae.shock_radius('full', plot='B')
+```
+This will plot the shock radius contour (ray-by-ray) on plot `'B'`.
+
+It is possible to also plot fields. Useful ones can be the magnetic filed
+```
+ae.add_field(comp='Bfield', plot='A')
+```
+or the (radial) velocity field
+```
+ae.add_field(comp='velocity', plot='B')
+```
+
+#### Spectrogram
+Every quantity with a `'time'` plane can be shown with the associated spectrogram. This only needs one line of code.
+```
+ae.rho(projection='2D', plane='time', spectrogram=True)
+```
+This will generate two subplots, the top one with a simple line showing the time evolution, and the bottom one with the spectrogram.
+
+This is of particular interest in the case of gravitational waves. To obtain such a figure use
+```
+ae.GWs(projection='2D', spectrogram=True)
+```
