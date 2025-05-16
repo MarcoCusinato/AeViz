@@ -112,6 +112,18 @@ ae.update_legend(['average', 'maximum'])
 ```
 Please note that the length of the list must be equal to the number of lines.
 
+It is possible to plot the radial profile of the different quantities. For example, for the density
+```
+ae.rho(1.6, plane='radius')
+```
+This would plot the radial porofile of the density at 1.6 seconds after bounce. In multi-D (2D or 3D), this same syntax would plot the average over the angles. If you want the radial profile
+at a given angular coordinate, you should pass a touple in the following way:
+```
+ae.rho(1.6, plane=(None, theta_idx, phi_idx))
+```
+where `theta_idx` and `phi_idx` are the indices for theta and phi at which you want the profile. If you want the angular profile, just keep free (i.e. `None`) the coordinate over which
+you want to plot.
+
 #### 2D slicing
 Moreover, for a given timestep, you can plot a 2D slice for a given plane. Using the density as example, the code is
 ```
@@ -162,6 +174,12 @@ or the (radial) velocity field
 ```
 ae.add_field(comp='velocity', plot='B')
 ```
+
+It is possible to obtain Hammer projection by selectine the 2D projection and specifying the radius
+```
+ae.rho(0.6, projection='2D', plane=2e6)
+```
+This will produce the Hammer projection at 0.6 seconds after bounce at a radius of 20 km (2e6 cm).
 
 #### Spectrogram
 Every quantity with a `'time'` plane can be shown with the associated spectrogram. This only needs one line of code.

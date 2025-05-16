@@ -83,7 +83,7 @@ def PNS_mass_energy(simulation, file_name, PNS_radius, gcells, dV, grid, gr):
             simulation.radial_velocity(file_name)[mask] ** 2)
         ene_mag = 0 * u.erg
         conv_ene = 0 * u.erg
-        Lx, Ly, Lz = 0*u.erg*u.s, 00*u.erg*u.s, 00*u.erg*u.s
+        Lx, Ly, Lz = 0*u.erg*u.s, 0.0*u.erg*u.s, 0.0*u.erg*u.s
         L_tot = 0*u.erg*u.s
     else:
         vr = simulation.radial_velocity(file_name)

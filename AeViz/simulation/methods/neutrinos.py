@@ -73,8 +73,8 @@ def neutrino_momenta(self, file_name, **kwargs):
 def neutrino_momenta_opacities(self, file_name, **kwargs):
     nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
-    if self.dim == 1:
-        nu_opac = nu_opac[..., None]
+    #if self.dim == 1:
+    #    nu_opac = nu_opac[..., None]
     
     if self.dim == 1:
         return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',

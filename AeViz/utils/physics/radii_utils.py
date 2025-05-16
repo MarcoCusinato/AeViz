@@ -57,8 +57,12 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    k = [np.nansum(mom * ka, axis=(-1, simulation.dim)) /
-          np.nansum(mom, axis=(-1, simulation.dim)) for (mom, ka) in
+    if simulation.dim==1:
+        axis = -1
+    else:
+        axis = (-1, simulation.dim)
+    k = [np.nansum(mom * ka, axis=axis) /
+          np.nansum(mom, axis=axis) for (mom, ka) in
           zip(momenta, kappa)] 
     dr = simulation.cell.dr(simulation.ghost)
     while dr.ndim < k[0].ndim:
@@ -86,7 +90,7 @@ def shock_radius(simulation, file_name):
     """
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
-            return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
+            return 0.0 * simulation.cell.radius(simulation.ghost).unit
         return np.zeros(simulation.cell.dVolume_integration(
             simulation.ghost).shape[:-1]) * \
                 simulation.cell.radius(simulation.ghost).unit
@@ -114,8 +118,8 @@ def shock_radius_1D(simulation, file_name):
                              np.abs(simulation.radial_velocity(file_name))
     for ir in range(len(dP) - 1):
         if (dP[ir] < 10) and np.any(dvr[ir-5:ir+6] < -20):
-            return np.array([simulation.cell.radius(simulation.ghost)[ir]])
-    return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
+            return simulation.cell.radius(simulation.ghost)[ir]
+    return 0.0 * simulation.cell.radius(simulation.ghost).unit
 
 def shock_radius_2D(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
