@@ -114,8 +114,8 @@ def shock_radius_1D(simulation, file_name):
                              np.abs(simulation.radial_velocity(file_name))
     for ir in range(len(dP) - 1):
         if (dP[ir] < 10) and np.any(dvr[ir-5:ir+6] < -20):
-            return np.array([simulation.cell.radius(simulation.ghost)[ir]])
-    return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
+            return simulation.cell.radius(simulation.ghost)[ir]
+    return 0.0 * simulation.cell.radius(simulation.ghost).unit
 
 def shock_radius_2D(simulation, file_name):
     dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
