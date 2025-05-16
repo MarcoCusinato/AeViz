@@ -119,7 +119,7 @@ def unbound_mass_energy(simulation, file_name, dV):
     if simulation.dim == 1:
         ej_kin = np.sum(0.5 * rho[mask] * \
             simulation.radial_velocity(file_name)[mask] ** 2)
-        ej_mag = 0
+        ej_mag = 0 * u.erg
     else:
         ej_kin = np.sum(0.5 * dV[mask] * rho[mask] * \
             (simulation.radial_velocity(file_name)[mask] ** 2 + \

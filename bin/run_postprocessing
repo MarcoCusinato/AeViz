@@ -40,7 +40,8 @@ if not args.noNu:
 sim.gain_radius()
 sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
-sim.PNS_angular_momentum_neutrinos()
+if sim.dim > 1:
+    sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
     sim.radial_profile('Ye')
 if not args.noGWs and sim.dim > 1:
@@ -112,10 +113,11 @@ if args.plot:
     ae.PNS(comp='kin')
     ae.save_plot('PNS_energy')
     ae.Close()
-    ae.PNS_angular_mom(comp='Ltot')
-    ae.PNS_angular_mom_nu(comp='Ltot')
-    ae.save_plot('PNS_L')
-    ae.Close()
+    if sim.dim > 1:
+        ae.PNS_angular_mom(comp='Ltot')
+        ae.PNS_angular_mom_nu(comp='Ltot')
+        ae.save_plot('PNS_L')
+        ae.Close()
     print("PNS summary plotted.")
     ## INNERCORE
     ae.set_simple_labelling()
