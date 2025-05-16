@@ -90,7 +90,7 @@ def shock_radius(simulation, file_name):
     """
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
-            return np.array([0]) * simulation.cell.radius(simulation.ghost).unit
+            return 0.0 * simulation.cell.radius(simulation.ghost).unit
         return np.zeros(simulation.cell.dVolume_integration(
             simulation.ghost).shape[:-1]) * \
                 simulation.cell.radius(simulation.ghost).unit
