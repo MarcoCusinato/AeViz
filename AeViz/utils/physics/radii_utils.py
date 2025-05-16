@@ -57,8 +57,12 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    k = [np.nansum(mom * ka, axis=(-1, simulation.dim)) /
-          np.nansum(mom, axis=(-1, simulation.dim)) for (mom, ka) in
+    if simulation.dim==1:
+        axis = -1
+    else:
+        axis = (-1, simulation.dim)
+    k = [np.nansum(mom * ka, axis=axis) /
+          np.nansum(mom, axis=axis) for (mom, ka) in
           zip(momenta, kappa)] 
     dr = simulation.cell.dr(simulation.ghost)
     while dr.ndim < k[0].ndim:

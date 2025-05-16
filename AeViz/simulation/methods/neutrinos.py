@@ -73,16 +73,16 @@ def neutrino_momenta(self, file_name, **kwargs):
 def neutrino_momenta_opacities(self, file_name, **kwargs):
     nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
-    if self.dim == 1:
-        nu_opac = nu_opac[..., None]
+    #if self.dim == 1:
+    #    nu_opac = nu_opac[..., None]
     
     if self.dim == 1:
-        return (aerray(nu_opac[..., 0, :], u.erg / u.s / u.cm ** 3, 'nue_kappa',
+        return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
                   r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
-                aerray(nu_opac[..., 1, :], u.erg / u.s / u.cm ** 3, 'nua_fdens',
+                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
                   r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
                   [-1e40, 1e40], True),
-                aerray(nu_opac[..., 2, :], u.erg / u.s / u.cm ** 3, 'nux_kappa',
+                aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
                   r'$\kappa_{\nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
                 )
     return (aerray(nu_opac[..., 0, :], u.erg / u.s / u.cm ** 3, 'nue_kappa',
