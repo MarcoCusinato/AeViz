@@ -173,6 +173,7 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
             unb_me['magnetic_ene'] = np.concatenate((unb_me['magnetic_ene'],
                                                 unb_data[3]))
         except Exception as e:
+            print(e)
             time = simulation.time(file)
             mdot = mass_flux(simulation, file, dOmega, radius_index)
             inner_me = {
