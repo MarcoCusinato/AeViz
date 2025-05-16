@@ -354,6 +354,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     check_index = 0
     progress_index = 0
     dV = -simulation.cell.dVolume_integration(simulation.ghost)
+    dOmega = simulation.cell.dOmega(simulation.ghost)
     ctheta = np.cos(simulation.cell.theta(simulation.ghost))[:, None]
     inner_rad, igcells = simulation.innercore_radius(rad='full')
     nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
@@ -363,7 +364,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
 
     for file in simulation.hdf_file_list[start_point:]:
         fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
-            file, dV, ctheta, inner_rad[..., findex], igcells,
+            file, dV, dOmega, ctheta, inner_rad[..., findex], igcells,
             nuc_rad[..., findex], ngcells)
         try:
             time = np.concatenate((time, simulation.time(file)))
@@ -402,26 +403,57 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
                                NE220, full_NE220, nuc_NE220, conv_NE220,
                                outer_NE220)
 
-def NE220_2D(simulation, file_name, dV, ctheta, inner_rad, igcells,
+def Zha_correction_2D(dOmega, ctheta, r1_ind, r2_ind, r, rho, vr):
+    """
+    Computes the Zha correction into the strains computed on spherica shells
+    """
+    P2 = 0.5 * (3 * ctheta ** 2 - 1) * dOmega[:, None]
+    
+    prod = r[None, :] ** 4 * rho * vr * P2
+    if r1_ind is None:
+        r1 = 0 * prod.unit
+    else:
+        r1 = prod[np.arange(prod.shape[0]), r1_ind]
+        r1 = r1.sum()
+    if r2_ind is None:
+        r2 = 0 * prod.unit
+    else:
+        r2 = prod[np.arange(prod.shape[0]), r2_ind]
+        r2 = r2.sum()
+    return r2-r1
+    
+def NE220_2D(simulation, file_name, dV, dOmega, ctheta, inner_rad, igcells,
           nuc_rad, ngcells):
     """
     Calculates the NE220 from density and velocities for for as single
     timestep. SAme process is employed in
     """
-    NE220 = dV * simulation.cell.radius(simulation.ghost) * \
-        simulation.rho(file_name) * (simulation.radial_velocity(file_name) * \
-        (3 * ctheta ** 2 - 1) - 3 * simulation.theta_velocity(file_name) * \
-        ctheta * np.sqrt(1 - ctheta ** 2))
-    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
+    radius = simulation.cell.radius(simulation.ghost)
+    rho = simulation.rho(file_name)
+    vr = simulation.radial_velocity(file_name)
+    vt = simulation.theta_velocity(file_name)
+    NE220 = dV * radius * rho * (vr * (3 * ctheta ** 2 - 1) - \
+        3 * vt * ctheta * np.sqrt(1 - ctheta ** 2))
+    mask_nuc = radius <= \
         simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
                                                     **ngcells)[..., None]
-    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
+    r_nuc_ind = np.argmax(radius[None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
+                                                    **ngcells)[..., None], axis=-1)
+    mask_inner = (radius <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
-                                             **igcells)[..., None] + (20 * u.km)) & \
+                                             **igcells)[..., None] + (2e6 * u.cm)) & \
         (np.logical_not(mask_nuc))
+    r_inner_ind = np.argmax(radius[None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim,
+                                                    **ngcells)[..., None]+ (2e6 * u.cm), axis=-1)
+    r_outer_ind = -np.ones(vt.shape[0], dtype=int)
     mask_outer = np.logical_not(mask_inner + mask_nuc)
-    return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner), \
-        np.sum(NE220 * mask_nuc), np.sum(NE220 * mask_outer)
+    nuc_corr = Zha_correction_2D(dOmega, ctheta, None, r_nuc_ind, radius, rho, vr)
+    inn_corr = Zha_correction_2D(dOmega, ctheta, r_nuc_ind+1, r_inner_ind, radius, rho, vr)
+    out_corr = Zha_correction_2D(dOmega, ctheta, r_inner_ind+1, r_outer_ind, radius, rho, vr)
+    return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner) + nuc_corr, \
+        np.sum(NE220 * mask_nuc)+inn_corr, np.sum(NE220 * mask_outer)+out_corr
            
 def read_NE220(simulation):
     """

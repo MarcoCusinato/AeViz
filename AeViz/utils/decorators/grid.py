@@ -279,6 +279,8 @@ def get_radius(func):
         data = func(*args, **kwargs)
         if 'plot' not in kwargs:
             return data
+        if kwargs['rad'] != 'full':
+            return data
         if isinstance(kwargs['time'], str):
             time = args[0].time(kwargs['time'])
         else:

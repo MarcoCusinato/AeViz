@@ -357,7 +357,7 @@ class Plotting(PlottingUtils, Data):
         """
         self.Close()
         self._PlotCreation__setup_axd(5, 1)
-        AE220, oth  = self._Data__get_data_from_name(qt, **kwargs)
+        AE220, oth  = self._Data__get_data_from_name(name=qt, file=None, **kwargs)
         f_h, nuc_h, conv_h, out_h = oth
         kwargs['color'] = 'C0'
         self._PlottingUtils__update_params(
