@@ -237,7 +237,7 @@ def global_entropy(self, tob_corrected=True, comp:Literal['max', 'min',
     if comp == 'max':
         return aeseries(
             aerray(T[:, -4], u.kBol / u.bry, 'entropymax',
-                   r'$s_\mathrm{max}$', None, [0, 1e3], True),
+                   r'$s_\mathrm{max}$', None, [0, 100], False),
             time = time
         )
     elif comp == 'min':
