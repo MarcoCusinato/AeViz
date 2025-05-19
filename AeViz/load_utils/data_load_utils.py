@@ -119,5 +119,5 @@ class Data(object):
             return self.ghost.remove_ghost_cells(data, self.sim_dim)
         elif self.data_type == 'sim':
             if file is not None:
-                return getattr(self.loaded_data, name)(file, **kwargs)          
+                return getattr(self.loaded_data, name)(file, **kwargs)
             return getattr(self.loaded_data, name)(**kwargs)
