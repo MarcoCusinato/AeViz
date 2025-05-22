@@ -117,7 +117,7 @@ def unbound_mass_energy(simulation, file_name, dV):
     ej_mass = np.sum(rho[mask] * dV[mask]).to(u.M_sun)
     expl_ene = np.sum(mhd_ene[mask] * dV[mask])
     if simulation.dim == 1:
-        ej_kin = np.sum(0.5 * rho[mask] * \
+        ej_kin = np.sum(0.5 * rho[mask] * dV[mask] * \
             simulation.radial_velocity(file_name)[mask] ** 2)
         ej_mag = 0 * u.erg
     else:
