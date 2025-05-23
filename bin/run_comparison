@@ -67,5 +67,6 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
     att = getattr(ae, q)
     # Let's plot
     att(projection='2D')
-  ae.save_plot('%s' % q)
+    ae.title(sim)
+  ae.save_plot('%s' % q, savedir=args.savedir)
   ae.Close()
