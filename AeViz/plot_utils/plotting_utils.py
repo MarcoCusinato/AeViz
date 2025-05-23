@@ -706,6 +706,7 @@ class PlottingUtils(PlotCreation):
             if ax_letter in self.field:
                 number = self.plot_dim[ax_letter].index(2)
                 self.__plot2Dfield(ax_letter, number)
+            self.title(self.titles[ax_letter], ax_letter)
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
