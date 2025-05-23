@@ -45,7 +45,7 @@ class AeViz(Plotting):
 
     @fig_window_open
     def save_plot(self, name, **kwargs):
-        savedir = kwargs.pop(savedir, self.save_path)
+        savedir = kwargs.pop('savedir', self.save_path)
         if name.endswith('.png') or name.endswith('.pdf') or \
             name.endswith('.jpg'):
             self.fig.savefig(os.path.join(savedir, name))
