@@ -10,8 +10,8 @@ parser.add_argument('--sim-name', type=str, required=True, nargs='+', \
                     help="Name of the simulations to compare.")
 parser.add_argument('--sim-path', type=str, default=None, required=False,
                     nargs='+', help="Path of the simulations.")
-parser.add_argument('--savedir', required=True, type='str', \
-                    help='Where to save the comparison plots')
+#parser.add_argument('--savedir', required=True, type='str', \
+#                    help='Where to save the comparison plots')
 
 args = parser.parse_args()
 sims = args.sim_name
@@ -45,5 +45,7 @@ for q in ['shock_radius', 'explosion', 'gain_radius']:
 
     att = getattr(ae, q)
     # Let's plot
-    ae.set_simple_labelling()
-    att(label=sim)
+    att()
+  ae.update_legend(sims)
+  ae.save_plot('%s.pdf' % q)
+  ae.Close()
