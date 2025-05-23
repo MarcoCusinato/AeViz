@@ -32,8 +32,7 @@ else:
     raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
 
 COLOURS = ['black', 'red', 'blue', 'cyan']
-for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius', \
-          'PNS_mass']:
+for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius']:
   for (i_s, sim) in enumerate(sims):
     ae.Load(sim, path[i_s])
     if not os.path.isdir(ae.save_path):
