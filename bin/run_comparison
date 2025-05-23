@@ -19,6 +19,9 @@ if len(sims) > 4:
   raise ValueError('Careful, no more than 4 simulations at once!')
 path = args.sim_path
 
+if not os.path.isdir(args.savedir):
+  os.mkdir(args.savedir)
+
 # Check that the path is reasonable
 if path == None:
   path = [None] * len(sims)
