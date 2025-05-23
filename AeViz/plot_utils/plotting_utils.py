@@ -369,7 +369,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
-                self.title,
+                self.titles,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -402,7 +402,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
-                self.title,
+                self.titles,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -434,7 +434,7 @@ class PlottingUtils(PlotCreation):
         self.logY = {}
         self.xlabels = {}
         self.ylabels = {}
-        self.title = {}
+        self.titles = {}
         self.legend = {}
         self.alpha = {}
         self.line_color = {}
@@ -784,10 +784,10 @@ class PlottingUtils(PlotCreation):
         if ax_letter is None:
             for ax_letter in self.axd:
                 title = self.axd[ax_letter].get_title()
-                self.title[ax_letter] = title
+                self.titles[ax_letter] = title
         else:
             title = self.axd[ax_letter].get_title()
-            self.title[ax_letter] = title
+            self.titles[ax_letter] = title
     
     def set_labels(self, ax_letter=None):
         if ax_letter is None:
