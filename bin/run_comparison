@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+import argparse
+from AeViz import ae
+from AeViz.simulation.simulation import Simulation
+import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--sim-name', type=str, required=True, nargs='+', \
+                    help="Name of the simulations to compare.")
+parser.add_argument('--sim-path', type=str, default=None, required=False,
+                    nargs='+', help="Path of the simulations.")
+parser.add_argument('--savedir', required=True, type='str', \
+                    help='Where to save the comparison plots')
+
+args = parser.parse_args()
+sims = args.sim_name
+if len(sims) > 4:
+  raise ValueError('Careful, no more than 4 simulations at once!')
+path = args.sim_path
+
+print(sims, path)
+
+# Check that the path is reasonable
+if path == None:
+  path = [None] * len(sims)
+  print(path)
+else:
+  if len(path) == 1:
+    print('The simulations are all in %s' % path[0])
+    path = path * len(sims)
+  elif len(path) > 1 and len(path) < len(sims):
+    raise ValueError('Check the lenghts of simulations and paths')
+  elif len(path) > len(sims):
+    raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
+
+for q in ['shock_radius', 'explosion', 'gain_radius']:
+  for (i_s, sim) in enumerate(sims):
+    ae.Load(sim, path[i_s])
+    if not os.path.isdir(ae.save_path):
+      print('Run postprocessing for %s' % sim)
+      os.system('run_postprocessing --sim-name %s --sim-path %s > post.out' % \
+                (sim, path[i_s]))
+      os.remove('post.out')
+
+    att = getattr(ae, q)
+    # Let's plot
+    ae.set_simple_labelling()
+    att(label=sim)
