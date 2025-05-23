@@ -2,7 +2,7 @@
 
 import argparse
 from AeViz.simulation.simulation import Simulation
-from AeViz.utils.utils import time_array
+from AeViz.utils.utils import time_array, restart_from
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sim-name', type=str, required=True,
@@ -24,6 +24,8 @@ parser.add_argument('--plot', action='store_true', default=False,
 parser.add_argument('--tob', default=None, type=float, required=False,
                     help="Sets the time of bounce manually and stores it into \
                         a file")
+parser.add_argument('--restart-from', type=str, default=None, required=False,
+                    help="The postprocessing will restart from the selected file.")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -32,6 +34,11 @@ if args.tob:
     import os
     sim.tob = args.tob
     np.savetxt(os.path.join(sim.storage_path, 'tob.dat'), np.array([args.tob]))
+if args.restart_from is not None:
+    if not args.restart_from.endswith('.h5'):
+        args.restart_from += '.h5'
+    print(f'Postprocessing restarting from {args.restart_from}')
+    restart_from(sim, args.restart_from)
 time_array(sim)
 sim.PNS_radius()
 sim.shock_radius()

@@ -1,3 +1,4 @@
+import h5py
 import os
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
@@ -75,3 +76,35 @@ def time_array(simulation):
              ['time', 'processed'], [time_array.value, processed_hdf])
     time_array.set('time', r'$t$', None, [None, None])
     return time_array
+
+def restart_from(simulation, file_name):
+    def cut_and_replace_dset(group, key, index):
+        truncated_data = group[key][..., :index]
+        del group[key]
+        group.create_dataset(key, data=truncated_data)
+
+    def cut_recursively(group, index):
+        keys = list(group.keys())  # Make a copy of keys to avoid iteration issues
+        for key in keys:
+            if key == 'gcells':
+                continue
+            if isinstance(group[key], h5py.Dataset):
+                cut_and_replace_dset(group, key, index)
+            elif isinstance(group[key], h5py.Group):
+                cut_recursively(group[key], index)
+
+    flist = os.listdir(simulation.storage_path)
+    flist = [fl for fl in flist if fl.endswith('h5')]
+    hdf_flist = simulation.hdf_file_list
+    for fl in flist:
+        data = h5py.File(os.path.join(simulation.storage_path, fl), 'a')
+        if not 'processed' in data.keys():
+            data.create_dataset('processed',
+                                data=hdf_flist[:len(data['time'][...])])
+        processed_hdf = [ff.decode("utf-8") for ff in data['processed'][...]]
+        if file_name not in processed_hdf:
+            data.close()
+            raise ValueError(f"{file_name} has nevere being processed. R u sure?")
+        index_hdf = processed_hdf.index(file_name)
+        cut_recursively(data, index_hdf)    
+        data.close()     
