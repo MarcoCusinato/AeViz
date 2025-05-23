@@ -44,12 +44,13 @@ class AeViz(Plotting):
               end_time=end_time, vfield=vf, Bfield=bf, top_time=True)
 
     @fig_window_open
-    def save_plot(self, name):
+    def save_plot(self, name, **kwargs):
+        savedir = kwargs.pop(savedir, self.save_path)
         if name.endswith('.png') or name.endswith('.pdf') or \
             name.endswith('.jpg'):
-            self.fig.savefig(os.path.join(self.save_path, name))
+            self.fig.savefig(os.path.join(savedir, name))
         else:
-            self.fig.savefig(os.path.join(self.save_path, name + '.png'))
+            self.fig.savefig(os.path.join(savedir, name + '.png'))
     
     def get_loaded_methods(self):
         return self.__loaded_methods
