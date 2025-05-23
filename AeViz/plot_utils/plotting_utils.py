@@ -203,10 +203,19 @@ class PlottingUtils(PlotCreation):
         """
         self.cbar_lv[axd_letter] = cbar_levels
         self.__redo_plot()
+
+    def title(self, title, axd_letter='A'):
+        """
+        Set the title for the axes corresonding to the axd_letter plot.
+        It is then saved in the titles dictionary.
+        """
+        if title is not None:
+            self.axd[axd_letter].set_title(title)
+        self.__save_title(axd_letter)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
-        Let's the user change the default labels of the plot at the
+        Let the user change the default labels of the plot at the
         corresponding letter. For whatever reason...
         """
         if xlabel is not None:
@@ -360,6 +369,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
+                self.title,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -392,6 +402,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
+                self.title,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -423,6 +434,7 @@ class PlottingUtils(PlotCreation):
         self.logY = {}
         self.xlabels = {}
         self.ylabels = {}
+        self.title = {}
         self.legend = {}
         self.alpha = {}
         self.line_color = {}
@@ -764,6 +776,18 @@ class PlottingUtils(PlotCreation):
             ylabel = self.axd[ax_letter].yaxis.get_units()[0]
             self.xlabels[ax_letter] = xlabel
             self.ylabels[ax_letter] = ylabel
+
+    def __save_title(self, ax_letter=None):
+        """
+        Save the title
+        """
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                title = self.axd[ax_letter].get_title()
+                self.title[ax_letter] = title
+        else:
+            title = self.axd[ax_letter].get_title()
+            self.title[ax_letter] = title
     
     def set_labels(self, ax_letter=None):
         if ax_letter is None:

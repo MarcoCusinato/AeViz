@@ -19,12 +19,9 @@ if len(sims) > 4:
   raise ValueError('Careful, no more than 4 simulations at once!')
 path = args.sim_path
 
-print(sims, path)
-
 # Check that the path is reasonable
 if path == None:
   path = [None] * len(sims)
-  print(path)
 else:
   if len(path) == 1:
     print('The simulations are all in %s' % path[0])
@@ -34,7 +31,9 @@ else:
   elif len(path) > len(sims):
     raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
 
-for q in ['shock_radius', 'explosion', 'gain_radius']:
+COLOURS = ['black', 'red', 'blue', 'cyan']
+for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius', \
+          'PNS_mass']:
   for (i_s, sim) in enumerate(sims):
     ae.Load(sim, path[i_s])
     if not os.path.isdir(ae.save_path):
@@ -45,7 +44,28 @@ for q in ['shock_radius', 'explosion', 'gain_radius']:
 
     att = getattr(ae, q)
     # Let's plot
-    att()
+    if q == 'neutrino_spheres':
+      att(comp='nue', ls='-', color=COLOURS[i_s])
+      att(comp='nua', ls='--', color=COLOURS[i_s])
+      att(comp='nux', ls=':', color=COLOURS[i_s])
+    else:
+      att(color=COLOURS[i_s])
   ae.update_legend(sims)
   ae.save_plot('%s.pdf' % q, savedir=args.savedir)
+  ae.Close()
+
+# 2D plots - Time
+for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
+  for (i_s, sim) in enumerate(sims):
+    ae.Load(sim, path[i_s])
+    if not os.path.isdir(ae.save_path):
+      print('Run postprocessing for %s' % sim)
+      os.system('run_postprocessing --sim-name %s --sim-path %s > post.out' % \
+                (sim, path[i_s]))
+      os.remove('post.out')
+
+    att = getattr(ae, q)
+    # Let's plot
+    att(projection='2D')
+  ae.save_plot('%s' % q)
   ae.Close()
