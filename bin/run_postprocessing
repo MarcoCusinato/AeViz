@@ -26,6 +26,8 @@ parser.add_argument('--tob', default=None, type=float, required=False,
                         a file")
 parser.add_argument('--restart-from', type=str, default=None, required=False,
                     help="The postprocessing will restart from the selected file.")
+parser.add_argument('--rmax', type=float, default=None, required=False,
+                    help="Maximum limit for the shock detection")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -41,7 +43,7 @@ if args.restart_from is not None:
     restart_from(sim, args.restart_from)
 time_array(sim)
 sim.PNS_radius()
-sim.shock_radius()
+sim.shock_radius(rmax=args.rmax)
 if not args.noNu:
     sim.neutrino_spheres()
 sim.gain_radius()

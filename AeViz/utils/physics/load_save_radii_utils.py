@@ -31,7 +31,7 @@ save_names = {
 
 def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus'],
-                     save_checkpoints=True):
+                     save_checkpoints=True, rmax=None):
     """
     Calculates the selected radius for each timestep of the simulation.
     In case of neutrinos, since in some cases are not saved for each
@@ -99,7 +99,10 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                                          PNS_rad.data[..., check_index])   
         else:
             try:
-                rad_step = functions[radius](simulation, file)
+                if rmax is None:
+                    rad_step = functions[radius](simulation, file)
+                else:
+                    rad_step = functions[radius](simulation, file, rmax)
             except KeyError:
                 print('Missing dataset in file ' + file + \
                     ', skipping but adding as processed...')
