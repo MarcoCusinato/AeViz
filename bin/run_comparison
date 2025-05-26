@@ -72,7 +72,7 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
 
     att = getattr(ae, q)
     # Let's plot
-    att(args.tr, plane='radius')
+    att(args.tr, plane='radius', color=COLOURS[i_s])
 
   ae.update_legend(sims)
   ae.title('Time = %.1f s' % args.tr)
