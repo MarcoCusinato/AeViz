@@ -196,9 +196,11 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
         mask = (r00 >= rhomin) & (r00 <= rhomax)
         rlm[~mask] = np.nan
         ## Average over the selected region
-        dV = simulation.cell.dr_integration(simulation.ghost)
-        rlm *= dV
-        rlm = np.nansum(rlm, axis=0) / np.nansum(dV, axis=0)
+        dr = simulation.cell.dr_integration(simulation.ghost)[:, None] * \
+            np.ones(rlm.shape)
+        rlm = rlm * dr
+        dr[~mask] = np.nan
+        rlm = np.nansum(rlm, axis=0) / np.nansum(dr, axis=0)
         rlm = np.nan_to_num(rlm)
         return time, rlm
     
