@@ -122,7 +122,8 @@ def PNS_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
 @derive
 @sum_tob
 def shock_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
-                 tob_corrected=True, save_checkpoints=True, **kwargs):
+                 tob_corrected=True, save_checkpoints=True, rmax=None,
+                 **kwargs):
     """
     Returns the shock radius at every timestep.
     If tob_corrected is True, the time is corrected for the time of
@@ -131,7 +132,7 @@ def shock_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     Returns: time, radius(phi, theta), max_radius, min_radius,
                 average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'shock', save_checkpoints)
+    data = calculate_radius(self, 'shock', save_checkpoints, rmax)
     if rad is None:
         return data
     if rad == 'full':

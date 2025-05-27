@@ -32,7 +32,16 @@ def read_profile(simulation, profile, save_checkpoints):
     """
     if check_existence(simulation, 'profiles.h5'):
         data = h5py.File(os.path.join(simulation.storage_path, 'profiles.h5'), 'r')
-        if len(data['time'][...])  == len(simulation.hdf_file_list):
+        if not 'processed' in data.keys():
+            data.close()
+            data = h5py.File(os.path.join(simulation.storage_path,
+                                          'profiles.h5'), 'r+')
+            data.create_dataset('processed',
+                                data=simulation.hdf_file_list[:len(data['time'][...])])
+            data.close()
+            data = h5py.File(os.path.join(simulation.storage_path,
+                                          'profiles.h5'), 'r')
+        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             t, pr = data['time'][...], data['profiles/' + profile][...]
             data.close()
             return make_series(t, simulation.cell.radius(simulation.ghost), pr,
@@ -102,9 +111,11 @@ def derive_profiles(simulation, data, save_checkpoints):
     """
     if data is None:
         start_point = 0
+        processed_hdf = []
     else:
         time = data['time'][...] * u.s
-        start_point = len(time)
+        start_point = len(data['processed'][...])
+        processed_hdf = [ff.decode("utf-8") for ff in data['processed'][...]]
         print('Checkpoint found. Starting from timestep', start_point)
         profiles = {'BV_frequency': data['profiles/BV_frequency'][...] * u.s ** (-2),
                     'Rossby_number': data['profiles/Rossby_number'][...] * \
@@ -180,17 +191,20 @@ def derive_profiles(simulation, data, save_checkpoints):
                 'convective_flux': Fc_av,
                 'gas_pressure': P_av
             }
+        processed_hdf.append(file)
         if checkpoint_index >= checkpoint:
             checkpoint_index = 0
             print('Saving checkpoint...')
             save_hdf(os.path.join(simulation.storage_path, 'profiles.h5'),
-                     ['time', 'profiles'],  [time, profiles])
+                     ['time', 'profiles', 'processed'],
+                     [time, profiles, processed_hdf])
         
         progressBar(progress_index, total_points, 'Calculating profiles...')
         progress_index += 1
         checkpoint_index += 1
     save_hdf(os.path.join(simulation.storage_path, 'profiles.h5'),
-             ['time', 'profiles'],  [time, profiles])
+             ['time', 'profiles', 'processed'],  [time, profiles,
+                                                  processed_hdf])
     print('Profiles saved.')
     
 def make_series(time, radius, prof, name):

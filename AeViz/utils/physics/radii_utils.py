@@ -82,12 +82,14 @@ def PNS_nucleus(simulation, file_name):
     S4Kb = np.argmax(s >= (4 * u.kBol / u.bry), axis=-1)
     return radius[S4Kb]
 
-def shock_radius(simulation, file_name):
+def shock_radius(simulation, file_name, rmax=None):
     """
     Calculates the shock radius for each timestep.
     Employed method: first jump in pressure and radial velocity after
                     the bounce, considered from infinite to the centre.
     """
+    if rmax is None:
+        rmax = simulation.cell.radius(simulation.ghost)[-1]
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
             return 0.0 * simulation.cell.radius(simulation.ghost).unit
@@ -95,55 +97,56 @@ def shock_radius(simulation, file_name):
             simulation.ghost).shape[:-1]) * \
                 simulation.cell.radius(simulation.ghost).unit
     if simulation.dim == 1:
-        return shock_radius_1D(simulation, file_name)
+        return shock_radius_1D(simulation, file_name, rmax)
     elif simulation.dim == 2:
         return interpol_1D(hampel_filter(
-            shock_radius_2D(simulation, file_name)),
+            shock_radius_2D(simulation, file_name, rmax)),
                            simulation.cell.theta(simulation.ghost))
     elif simulation.dim == 3:
         Theta, Phi = np.meshgrid(simulation.cell.theta(simulation.ghost), 
                                  simulation.cell.phi(simulation.ghost))
-        return interpol_2D(shock_radius_3D(simulation, file_name), Theta, Phi)
+        return interpol_2D(shock_radius_3D(simulation, file_name, rmax),
+                           Theta, Phi)
     else:
         raise ValueError("Invalid dimension")
    
-def shock_radius_1D(simulation, file_name):
-    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                        simulation.entropy(file_name)) * \
-                            simulation.cell.radius(simulation.ghost) / \
-                            simulation.entropy(file_name)
-    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                         simulation.radial_velocity(file_name)) * \
-                             simulation.cell.radius(simulation.ghost) / \
-                             np.abs(simulation.radial_velocity(file_name))
+def shock_radius_1D(simulation, file_name, rmax):
+    r = simulation.cell.radius(simulation.ghost)
+    vr = simulation.radial_velocity(file_name)
+    s = simulation.entropy(file_name)
+    dP = IDL_derivative(r, s) * r / s
+    dvr = IDL_derivative(r, vr) * r / np.abs(vr)
     for ir in range(len(dP) - 1):
+        if r[ir] > rmax:
+            continue
         if (dP[ir] < -5) and np.any(dvr[ir-5:ir+6] < -20):
-            return simulation.cell.radius(simulation.ghost)[ir]
-    return 0.0 * simulation.cell.radius(simulation.ghost).unit
+            return r[ir]
+    return 0.0 * r.unit
 
-def shock_radius_2D(simulation, file_name):
-    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                        simulation.gas_pressure(file_name)) * \
-                            simulation.cell.radius(simulation.ghost) / \
-                            simulation.gas_pressure(file_name)
-    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                         simulation.radial_velocity(file_name)) * \
-                             simulation.cell.radius(simulation.ghost) / \
-                             np.abs(simulation.radial_velocity(file_name))
+def shock_radius_2D(simulation, file_name, rmax):
+    vr = simulation.radial_velocity(file_name)
+    r = simulation.cell.radius(simulation.ghost)
+    p = simulation.gas_pressure(file_name)
+    dP = IDL_derivative(r, p) * r / p
+    dvr = IDL_derivative(r, vr) * r / np.abs(vr)
+    s = simulation.entropy(file_name)
     shock_r = np.empty(dP.shape[0])
     shock_r.fill(np.nan)
     for it in range(dP.shape[0]):
         for ir in reversed(range(dP.shape[1] - 1)):
+            if r[ir] > rmax:
+                continue
             if (dP[it, ir] < -10) and \
-                (np.any(dvr[it, max(0,ir-5):min(ir+6, dP.shape[1]-1)] < -20)):
-                shock_r[it] = simulation.cell.radius(simulation.ghost)[ir]
+                (np.any(dvr[it, max(0,ir-5):min(ir+6, dP.shape[1]-1)] < -20)) \
+                and (np.abs(vr[it, ir]) > 1e8) and s[it, ir] < 400 :
+                shock_r[it] = r[ir]
                 break
     ## COPY over the gcells
     if np.isnan(shock_r).all():
-        return np.zeros(dP.shape[0]) * simulation.cell.radius(simulation.ghost).unit
-    return shock_r * simulation.cell.radius(simulation.ghost).unit
+        return np.zeros(dP.shape[0]) * r.unit
+    return shock_r * r.unit
 
-def shock_radius_3D(simulation, file_name):
+def shock_radius_3D(simulation, file_name, rmax):
     """
     Copied from Martin's IDL script.
     """
@@ -159,6 +162,8 @@ def shock_radius_3D(simulation, file_name):
     for ip in range(dP.shape[0]):
         for it in range(dP.shape[1]):
             for ir in range(dP.shape[2] - 1):
+                if r[ir] > rmax:
+                    continue
                 if (ds[ip, it, ir] < -0.15) and \
                     (vr[ip, it, ir] >= 1) and \
                     (dvr[ip, it, ir] <= -0.7) and \

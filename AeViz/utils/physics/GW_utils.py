@@ -335,19 +335,29 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'NE220.h5'):
-        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220 = \
+        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
             read_NE220(simulation)
-        if len(simulation.hdf_file_list) == len(time):
+        if processed_hdf is None:
+            save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
+                     ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
+                      'convection_NE220', 'outer_NE220', 'processed'],
+                     [time, NE220, full_NE220, nuc_NE220, conv_NE220,
+                      outer_NE220, simulation.hdf_file_list[:len(time)]])
+            time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
+            read_NE220(simulation)
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return calculate_strain_2D(D, time,
                                        simulation.cell.radius(simulation.ghost),
                                        NE220, full_NE220, nuc_NE220,
                                        conv_NE220, outer_NE220)
         else:
-            start_point = len(time)
+            start_point = len(processed_hdf)
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print("Checkpoint found." \
                 "Starting from step {}".format(start_point))
     else:
         start_point = 0
+        processed_hdf = []
         print("No checkpoint found. Starting from step 0")
     checkpoint = checkpoints[simulation.dim]
     findex = start_point
@@ -381,12 +391,13 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
             nuc_NE220 = fnuc
             conv_NE220 = finner
             outer_NE220 = fouter
+        processed_hdf.append(file)
         if save_checkpoints and check_index == checkpoint:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220'],
+                      'convection_NE220', 'outer_NE220', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220])
+                      outer_NE220, processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -396,9 +407,9 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220'],
+                      'convection_NE220', 'outer_NE220', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220])
+                      outer_NE220, processed_hdf])
     return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
                                NE220, full_NE220, nuc_NE220, conv_NE220,
                                outer_NE220)
@@ -466,8 +477,12 @@ def read_NE220(simulation):
     nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
     conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
     outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
+    if 'processed' in data.keys():
+        processed = data['processed'][...]
+    else:
+        processed = None
     data.close()
-    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220
+    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed
 
 def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
                         conv_NE220, outer_NE220):
@@ -488,18 +503,18 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
              cmap=None, limits=[-0.005, time[-1]])
     NE220 = const * IDL_derivative(time, NE220)
     NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
-              cmap='Spectral_r', limits=[-3 / D.value, 3 / D.value])
+              cmap='seismic', limits=[-3 / D.value, 3 / D.value])
     full_NE220 = const * IDL_derivative(time, full_NE220)
     full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
-                   cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value])
+                   cmap='seismic', limits=[-70 / D.value, 70 / D.value])
     nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
-    nuc_NE220.set(name='nuc_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+    nuc_NE220.set(name='nuc_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                   label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
     conv_NE220 = const * IDL_derivative(time, conv_NE220)
-    conv_NE220.set(name='conv_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+    conv_NE220.set(name='conv_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                    label=merge_strings(add_lb,r'$h_{+,\mathrm{eq,conv}}$'))
     outer_NE220 = const * IDL_derivative(time, outer_NE220)
-    outer_NE220.set(name='outer_NE220', cmap='Spectral_r', limits=[-70 / D.value, 70 / D.value],
+    outer_NE220.set(name='outer_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                     label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
     T, R = np.meshgrid(time, radius)
     return aeseries(NE220, time=T, radius=R),\
@@ -514,20 +529,30 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'Qdot.h5'):
-        time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer = \
+        time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
             read_Qdot(simulation)
-        if len(simulation.hdf_file_list) == len(time):
+        if processed_hdf is None:
+            save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
+                     ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
+                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                     [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
+                      Qdot_radial, simulation.hdf_file_list[:len(time)]])
+            time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
+            read_Qdot(simulation)
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return calculate_strain_3D(D, THETA, PHI, time,
                                        simulation.cell.radius(simulation.ghost),
                                        Qdot_radial,
                                        Qdot_total, Qdot_inner, Qdot_nucleus,
                                        Qdot_outer)
         else:
-            start_point = len(time)
+            start_point = len(processed_hdf)
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print("Checkpoint found." \
                 "Starting from step {}".format(start_point))
     else:
         start_point = 0
+        processed_hdf = []
         print("No checkpoint found. Starting from step 0")
     checkpoint = checkpoints[simulation.dim]
     findex = start_point
@@ -568,15 +593,16 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
             Qdot_inner = Qinner[..., None]
             Qdot_nucleus = Qnuc[..., None]
             Qdot_outer = Qouter[..., None]
+        processed_hdf.append(file)
             
             
         if save_checkpoints and check_index == checkpoint:
             print("Checkpoint reached. Saving...")
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial'],
+                      'Qdot_outer', 'Qdot_radial', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial])
+                      Qdot_radial, processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -587,9 +613,9 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial'],
+                      'Qdot_outer', 'Qdot_radial', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial])
+                      Qdot_radial, processed_hdf])
     return calculate_strain_3D(D, THETA, PHI, time,
                                simulation.cell.radius(simulation.ghost),
                                Qdot_radial, Qdot_total,
@@ -663,7 +689,11 @@ def read_Qdot(simulation):
         Qdot_inner = data['Qdot_inner'][...] * u.g * u.cm ** 2 / u.s
         Qdot_nucleus = data['Qdot_nucleus'][...] * u.g * u.cm ** 2 / u.s
         Qdot_outer = data['Qdot_outer'][...] * u.g * u.cm ** 2 / u.s
-    return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer
+        if 'processed' in data.keys():
+            processed_hdf = data['processed'][...]
+        else:
+            processed_hdf = None
+    return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
 
 def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
                         Qdot_inner, Qdot_nucleus, Qdot_outer):
@@ -698,53 +728,53 @@ def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
         hplus_radial.set(name='hpuls_radial_pol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,pol}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hcross_radial = -Qdot_radial.imag
         
         hcross_radial.set(name='hcross_radial_pol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,pol}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus_pol',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,tot}}$'))
         hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,tot}}$'))
         hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus_pol',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,core}}$'))
         hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,core}}$'))
         hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,conv}}$'))
         hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,conv}}$'))
         hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,out}}$'))
         hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross_pol',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,out}}$'))
     elif np.isclose(THETA, np.pi/2, 0.05):
@@ -752,53 +782,53 @@ def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
         hplus_radial.set(name='hpuls_radial_eq',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,eq}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hcross_radial = -Qdot_radial.imag
         
         hcross_radial.set(name='hcross_radial_eq',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,eq}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus_eq',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,tot}}$'))
         hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,tot}}$'))
         hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus_eq',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
         hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,core}}$'))
         hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,conv}}$'))
         hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,conv}}$'))
         hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,out}}$'))
         hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross_eq',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,out}}$'))
     else:
@@ -806,53 +836,53 @@ def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
         hplus_radial.set(name='hpuls_radial',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hcross_radial = -Qdot_radial.imag
         
         hcross_radial.set(name='hcross_radial',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times}(r)$'),
-                         cmap='Spectral_r',
+                         cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
         hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{tot}}$'))
         hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{tot}}$'))
         hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus',
-                      cmap='Spectral_r',
+                      cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{core}}$'))
         hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{core}}$'))
         hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{conv}}$'))
         hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{conv}}$'))
         hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{out}}$'))
         hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross',
-                       cmap='Spectral_r',
+                       cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{out}}$'))
     T, R = np.meshgrid(time, radius)

@@ -1,3 +1,4 @@
+import h5py
 import os
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
@@ -43,13 +44,23 @@ def time_array(simulation):
         data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
         time_array = aerray(data['time'][...], u.s, 'time', r'$t$', None,
                             [None, None])
-        data.close()
-        if len(time_array) == len(simulation.hdf_file_list):
+        if 'processed' in data.keys():
+            processed_hdf = data['processed'][...]
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
+            data.close()
+        else:
+            processed_hdf = simulation.hdf_file_list[:len(time_array)]
+            data.close()
+            save_hdf(os.path.join(simulation.storage_path, 'time.h5'),
+                    ['time', 'processed'], [time_array.value, processed_hdf])
+        
+        if processed_hdf[-1] == simulation.hdf_file_list[-1]:
             return time_array
         else:
-            start_time = len(time_array)
+            start_time = len(processed_hdf)
     else:
         start_time = 0
+        processed_hdf = []
     progress_index = 0
     total_index = len(simulation.hdf_file_list[start_time:])
     for file_name in simulation.hdf_file_list[start_time:]:
@@ -60,7 +71,40 @@ def time_array(simulation):
             time_array = simulation.time(file_name)
         progressBar(progress_index, total_index, 'Storing timeseries')
         progress_index += 1
+        processed_hdf.append(file_name)
     save_hdf(os.path.join(simulation.storage_path, 'time.h5'),
-             ['time'], [time_array.value])
+             ['time', 'processed'], [time_array.value, processed_hdf])
     time_array.set('time', r'$t$', None, [None, None])
     return time_array
+
+def restart_from(simulation, file_name):
+    def cut_and_replace_dset(group, key, index):
+        truncated_data = group[key][..., :index]
+        del group[key]
+        group.create_dataset(key, data=truncated_data)
+
+    def cut_recursively(group, index):
+        keys = list(group.keys())  # Make a copy of keys to avoid iteration issues
+        for key in keys:
+            if key == 'gcells':
+                continue
+            if isinstance(group[key], h5py.Dataset):
+                cut_and_replace_dset(group, key, index)
+            elif isinstance(group[key], h5py.Group):
+                cut_recursively(group[key], index)
+
+    flist = os.listdir(simulation.storage_path)
+    flist = [fl for fl in flist if fl.endswith('h5')]
+    hdf_flist = simulation.hdf_file_list
+    for fl in flist:
+        data = h5py.File(os.path.join(simulation.storage_path, fl), 'a')
+        if not 'processed' in data.keys():
+            data.create_dataset('processed',
+                                data=hdf_flist[:len(data['time'][...])])
+        processed_hdf = [ff.decode("utf-8") for ff in data['processed'][...]]
+        if file_name not in processed_hdf:
+            data.close()
+            raise ValueError(f"{file_name} has nevere being processed. R u sure?")
+        index_hdf = processed_hdf.index(file_name)
+        cut_recursively(data, index_hdf)    
+        data.close()     
