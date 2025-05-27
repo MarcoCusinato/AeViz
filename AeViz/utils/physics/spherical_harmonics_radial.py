@@ -6,7 +6,7 @@ from AeViz.utils.files.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
 from AeViz.units import u
-from AeViz.cell.cell_methods.spherical_methods import dVolume_integration
+from AeViz.cell.cell_methods.spherical_methods import dr_integration, dVolume_integration
 from AeViz.cell.ghost import ghost
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
@@ -196,7 +196,7 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
         mask = (r00 >= rhomin) & (r00 <= rhomax)
         rlm[~mask] = np.nan
         ## Average over the selected region
-        dV = simulation.cell.dVolume_integration(simulation.ghost)
+        dV = simulation.cell.dr_integration(simulation.ghost)
         rlm *= dV
         rlm = np.nansum(rlm, axis=0) / np.nansum(dV, axis=0)
         rlm = np.nan_to_num(rlm)
