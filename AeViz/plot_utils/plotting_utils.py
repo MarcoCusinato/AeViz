@@ -203,10 +203,33 @@ class PlottingUtils(PlotCreation):
         """
         self.cbar_lv[axd_letter] = cbar_levels
         self.__redo_plot()
+
+    def title(self, title, axd_letter='A'):
+        """
+        Set the title for the axes corresonding to the axd_letter plot.
+        It is then saved in the titles dictionary.
+        """
+        if title is not None:
+            self.axd[axd_letter].set_title(title)
+        self.__save_title(axd_letter)
+
+    def text(self, xt, yt, text, axd_letter='A', axes_bound=False, \
+             color='black'):
+        """
+        Write text on the plot corresponding to axd_letter.
+        """
+        
+        if text is not None:
+            if axes_bound:
+                self.axd[axd_letter].text(xt, yt, text, color=color, \
+                    transform=self.axd[axd_letter].transAxes)
+            else:
+                self.axd[axd_letter].text(xt, yt, text, color=color)
+        self.__save_text(xt, yt, text, axes_bound, color, axd_letter)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
-        Let's the user change the default labels of the plot at the
+        Let the user change the default labels of the plot at the
         corresponding letter. For whatever reason...
         """
         if xlabel is not None:
@@ -360,6 +383,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
+                self.titles,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -392,6 +416,7 @@ class PlottingUtils(PlotCreation):
                 self.logY,
                 self.xlabels,
                 self.ylabels,
+                self.titles,
                 self.legend,
                 self.alpha,
                 self.line_color,
@@ -423,6 +448,8 @@ class PlottingUtils(PlotCreation):
         self.logY = {}
         self.xlabels = {}
         self.ylabels = {}
+        self.titles = {}
+        self.texts = {}
         self.legend = {}
         self.alpha = {}
         self.line_color = {}
@@ -694,6 +721,19 @@ class PlottingUtils(PlotCreation):
             if ax_letter in self.field:
                 number = self.plot_dim[ax_letter].index(2)
                 self.__plot2Dfield(ax_letter, number)
+            if ax_letter in self.titles:
+                self.title(self.titles[ax_letter], ax_letter)
+            if ax_letter in self.texts:
+                if isinstance(self.texts[ax_letter], list):
+                    # Loop on the texts
+                    for i in range(len(self.texts[ax_letter])):
+                        self.text(self.texts[ax_letter][i][0], \
+                                self.texts[ax_letter][i][1], \
+                                self.texts[ax_letter][i][2], \
+                                axes_bound=self.texts[ax_letter][i][3], 
+                                color=self.texts[ax_letter][i][4])
+                else:
+                    pass
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
@@ -764,6 +804,28 @@ class PlottingUtils(PlotCreation):
             ylabel = self.axd[ax_letter].yaxis.get_units()[0]
             self.xlabels[ax_letter] = xlabel
             self.ylabels[ax_letter] = ylabel
+
+    def __save_title(self, ax_letter=None):
+        """
+        Save the title
+        """
+        if ax_letter is None:
+            for ax_letter in self.axd:
+                title = self.axd[ax_letter].get_title()
+                self.titles[ax_letter] = title
+        else:
+            title = self.axd[ax_letter].get_title()
+            self.titles[ax_letter] = title
+
+    def __save_text(self, xt, yt, text, bound, color, ax_letter):
+        """
+        Save the custom texts
+        """
+        if ax_letter in self.texts:
+            self.texts[ax_letter].append((xt, yt, text, bound, color))
+        else:
+            self.texts[ax_letter] = [(xt, yt, text, bound, color)]
+        
     
     def set_labels(self, ax_letter=None):
         if ax_letter is None:

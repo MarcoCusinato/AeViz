@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+
+import argparse
+from AeViz import ae
+from AeViz.simulation.simulation import Simulation
+import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--sim-name', type=str, required=True, nargs='+', \
+                    help="Name of the simulations to compare.")
+parser.add_argument('--sim-path', type=str, default=None, required=False,
+                    nargs='+', help="Path of the simulations.")
+parser.add_argument('--savedir', required=True, type=str, \
+                    help='Where to save the comparison plots')
+parser.add_argument('-tr', default=1.0, required=False, \
+                    help='Time at which to plot the radial profile, in seconds (default = 1.0)')
+
+args = parser.parse_args()
+sims = args.sim_name
+if len(sims) > 4:
+  raise ValueError('Careful, no more than 4 simulations at once!')
+path = args.sim_path
+
+if not os.path.isdir(args.savedir):
+  os.mkdir(args.savedir)
+
+# Check that the path is reasonable
+if path == None:
+  path = [None] * len(sims)
+else:
+  if len(path) == 1:
+    print('The simulations are all in %s' % path[0])
+    path = path * len(sims)
+  elif len(path) > 1 and len(path) < len(sims):
+    raise ValueError('Check the lenghts of simulations and paths')
+  elif len(path) > len(sims):
+    raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
+
+COLOURS = ['black', 'red', 'blue', 'cyan']
+LETTERS = ['A', 'B', 'C', 'D']
+
+for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius']:
+  for (i_s, sim) in enumerate(sims):
+    ae.Load(sim, path[i_s])
+    if not os.path.isdir(ae.save_path):
+      print('Run postprocessing for %s' % sim)
+      os.system('run_postprocessing --sim-name %s --sim-path %s > post.out' % \
+                (sim, path[i_s]))
+      os.remove('post.out')
+
+    att = getattr(ae, q)
+    # Let's plot
+    if q == 'neutrino_spheres':
+      att(comp='nue', ls='-', color=COLOURS[i_s])
+      att(comp='nua', ls='--', color=COLOURS[i_s])
+      att(comp='nux', ls=':', color=COLOURS[i_s])
+    else:
+      att(color=COLOURS[i_s])
+  ae.update_legend(sims)
+  ae.save_plot('%s.pdf' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
+  ae.Close()
+
+# Radial profiles
+for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
+  for (i_s, sim) in enumerate(sims):
+    ae.Load(sim, path[i_s])
+    if not os.path.isdir(ae.save_path):
+      print('Run postprocessing for %s' % sim)
+      os.system('run_postprocessing --sim-name %s --sim-path %s > post.out' % \
+                (sim, path[i_s]))
+      os.remove('post.out')
+
+    att = getattr(ae, q)
+    # Let's plot
+    att(args.tr, plane='radius', color=COLOURS[i_s])
+
+  ae.update_legend(sims)
+  ae.title('Time = %.1f s' % args.tr)
+  ae.save_plot('%s_r.pdf' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
+  ae.Close()
+
+# 2D plots - Time
+for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
+  for (i_s, sim) in enumerate(sims):
+    ae.Load(sim, path[i_s])
+    if not os.path.isdir(ae.save_path):
+      print('Run postprocessing for %s' % sim)
+      os.system('run_postprocessing --sim-name %s --sim-path %s > post.out' % \
+                (sim, path[i_s]))
+      os.remove('post.out')
+
+    att = getattr(ae, q)
+    # Let's plot
+    att(projection='2D')
+    ae.text(0.75, 0.9, sim, axd_letter=LETTERS[i_s], axes_bound=True)
+  ae.save_plot('%s' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
+  ae.Close()
