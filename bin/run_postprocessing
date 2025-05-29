@@ -28,6 +28,9 @@ parser.add_argument('--restart-from', type=str, default=None, required=False,
                     help="The postprocessing will restart from the selected file.")
 parser.add_argument('--rmax', type=float, default=None, required=False,
                     help="Maximum limit for the shock detection")
+parser.add_argument('--column-index', type=int, default=None, required=False,
+                    help="The index to use to indicate the line change in the GWs. "
+                    "Typically between 0 and 3")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -195,10 +198,11 @@ if args.plot:
         print("Profiles plotted.")
     ## GWs
     if sim.dim > 1:
-        ae.GWs(comp='all')
+        ae.GWs(comp='all', column_index=args.column_index)
         ae.save_plot('GWs')
         ae.Close()
-        ae.GWs(comp='all', projection='2D', spectrogram=True)
+        ae.GWs(comp='all', projection='2D', spectrogram=True, 
+               column_index=args.column_index)
         ae.save_plot('GWs_spectrogram')
         ae.Close()
         print("GWs summary plotted.")

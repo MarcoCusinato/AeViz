@@ -55,8 +55,14 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
             n += 1
         data = data[::n, :]
     
+    if 'column_index' in kwargs:
+        col = kwargs['column_index']
+    else:
+        col = None
+    
     column_change = find_column_changing_line(self._Simulation__log_path,
-                                                self._Simulation__grw_path)
+                                                self._Simulation__grw_path,
+                                                col)
     if zero_correction:
         index = np.argmax((data[:, 2] - self.tob) >= -0.01)
     else:

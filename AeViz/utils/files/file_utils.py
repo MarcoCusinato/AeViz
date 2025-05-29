@@ -86,11 +86,14 @@ def load_file(path_folder, file_name):
                         
     return data
 
-def find_column_changing_line(path_folder, file_name):
+def find_column_changing_line(path_folder, file_name, column=None):
     """
     Loads a data file and returns the number of the line at which
     there is a numbero of columns change.
     """
+    default_column = 0
+    if column is None:
+        column = default_column
     path = os.path.join(path_folder, file_name)
     assert os.path.exists(path), "Selected file does not exists"
     number_of_colums = None
@@ -108,12 +111,7 @@ def find_column_changing_line(path_folder, file_name):
                 #break
             line_number += 1
     if len(line_change) > 1:
-        line_number = line_change[-1]
-    else:
-        try:
-            line_number = line_change[0]
-        except:
-            pass
+        line_number = line_change[column]
     if line_number < 3:
         line_number = None
     return line_number
