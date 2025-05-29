@@ -724,12 +724,16 @@ class PlottingUtils(PlotCreation):
             if ax_letter in self.titles:
                 self.title(self.titles[ax_letter], ax_letter)
             if ax_letter in self.texts:
-                for i in len(self.texts[ax_letter]):
-                    self.text(self.texts[ax_letter][i][0], \
-                              self.texts[ax_letter][i][1], \
-                              self.texts[ax_letter][i][2], \
-                              axes_bound=self.texts[ax_letter][i][3], 
-                              color=self.texts[ax_letter][i][4])
+                if isinstance(self.texts[ax_letter], list):
+                    # Loop on the texts
+                    for i in len(self.texts[ax_letter]):
+                        self.text(self.texts[ax_letter][i][0], \
+                                self.texts[ax_letter][i][1], \
+                                self.texts[ax_letter][i][2], \
+                                axes_bound=self.texts[ax_letter][i][3], 
+                                color=self.texts[ax_letter][i][4])
+                else:
+                    pass
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
