@@ -213,18 +213,19 @@ class PlottingUtils(PlotCreation):
             self.axd[axd_letter].set_title(title)
         self.__save_title(axd_letter)
 
-    def text(self, xt, yt, text, axd_letter='A', axes_bound=False):
+    def text(self, xt, yt, text, axd_letter='A', axes_bound=False, \
+             color='black'):
         """
         Write text on the plot corresponding to axd_letter.
         """
         
         if text is not None:
             if axes_bound:
-                self.axd[axd_letter].text(xt, yt, text, \
+                self.axd[axd_letter].text(xt, yt, text, color=color, \
                     transform=self.axd[axd_letter].transAxes)
             else:
-                self.axd[axd_letter].text(xt, yt, text)
-        self.__save_text(xt, yt, text, axes_bound, axd_letter)
+                self.axd[axd_letter].text(xt, yt, text, color=color)
+        self.__save_text(xt, yt, text, axes_bound, color, axd_letter)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
@@ -723,9 +724,12 @@ class PlottingUtils(PlotCreation):
             if ax_letter in self.titles:
                 self.title(self.titles[ax_letter], ax_letter)
             if ax_letter in self.texts:
-                self.text(self.texts[ax_letter][0], self.texts[ax_letter][1], \
-                          self.texts[ax_letter][2], \
-                          axes_bound=self.texts[ax_letter][3])
+                for i in len(self.texts[ax_letter]):
+                    self.text(self.texts[ax_letter][i][0], \
+                              self.texts[ax_letter][i][1], \
+                              self.texts[ax_letter][i][2], \
+                              axes_bound=self.texts[ax_letter][i][3], 
+                              color=self.texts[ax_letter][i][4])
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
@@ -809,11 +813,14 @@ class PlottingUtils(PlotCreation):
             title = self.axd[ax_letter].get_title()
             self.titles[ax_letter] = title
 
-    def __save_text(self, xt, yt, text, bound, ax_letter):
+    def __save_text(self, xt, yt, text, bound, color, ax_letter):
         """
         Save the custom texts
         """
-        self.texts[ax_letter] = (xt, yt, text, bound)
+        if ax_letter in self.texts:
+            self.texts[ax_letter].append((xt, yt, text, bound, color))
+        else:
+            self.texts[ax_letter] = [(xt, yt, text, bound, color)]
         
     
     def set_labels(self, ax_letter=None):
