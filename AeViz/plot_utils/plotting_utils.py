@@ -212,6 +212,14 @@ class PlottingUtils(PlotCreation):
         if title is not None:
             self.axd[axd_letter].set_title(title)
         self.__save_title(axd_letter)
+
+    def text(self, xt, yt, text, axd_letter='A', **kwargs):
+        """
+        Write text on the plot corresponding to axd_letter.
+        """
+        if text is not None:
+            self.axd[axd_letter].text(xt, yt, text, **kwargs)
+        self.__save_text(xt, yt, text, axd_letter, **kwargs)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
@@ -435,6 +443,7 @@ class PlottingUtils(PlotCreation):
         self.xlabels = {}
         self.ylabels = {}
         self.titles = {}
+        self.texts = {}
         self.legend = {}
         self.alpha = {}
         self.line_color = {}
@@ -708,6 +717,9 @@ class PlottingUtils(PlotCreation):
                 self.__plot2Dfield(ax_letter, number)
             if ax_letter in self.titles:
                 self.title(self.titles[ax_letter], ax_letter)
+            if ax_letter in self.texts:
+                self.text(self.texts[ax_letter][0], self.texts[ax_letter][1], \
+                          self.texts[ax_letter][2])
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
@@ -790,6 +802,13 @@ class PlottingUtils(PlotCreation):
         else:
             title = self.axd[ax_letter].get_title()
             self.titles[ax_letter] = title
+
+    def __save_text(self, xt, yt, text, ax_letter, **kwargs):
+        """
+        Save the custom texts
+        """
+        self.texts[ax_letter] = (xt, yt, text)
+        
     
     def set_labels(self, ax_letter=None):
         if ax_letter is None:
