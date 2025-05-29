@@ -217,8 +217,13 @@ class PlottingUtils(PlotCreation):
         """
         Write text on the plot corresponding to axd_letter.
         """
+        axes_bound = kwargs.pop('axes_bound', False)
         if text is not None:
-            self.axd[axd_letter].text(xt, yt, text, **kwargs)
+            if axes_bound:
+                self.axd[axd_letter].text(xt, yt, text, \
+                    transform=self.axd[axd_letter].transAxes, **kwargs)
+            else:
+                self.axd[axd_letter].text(xt, yt, text, **kwargs)
         self.__save_text(xt, yt, text, axd_letter, **kwargs)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
@@ -719,7 +724,8 @@ class PlottingUtils(PlotCreation):
                 self.title(self.titles[ax_letter], ax_letter)
             if ax_letter in self.texts:
                 self.text(self.texts[ax_letter][0], self.texts[ax_letter][1], \
-                          self.texts[ax_letter][2])
+                          self.texts[ax_letter][2], \
+                          axes_bound=self.texts[ax_letter][3])
             #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
@@ -803,11 +809,11 @@ class PlottingUtils(PlotCreation):
             title = self.axd[ax_letter].get_title()
             self.titles[ax_letter] = title
 
-    def __save_text(self, xt, yt, text, ax_letter, **kwargs):
+    def __save_text(self, xt, yt, text, bound, ax_letter, **kwargs):
         """
         Save the custom texts
         """
-        self.texts[ax_letter] = (xt, yt, text)
+        self.texts[ax_letter] = (xt, yt, text, bound)
         
     
     def set_labels(self, ax_letter=None):
