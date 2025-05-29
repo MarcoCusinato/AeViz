@@ -6,6 +6,8 @@ from AeViz.utils.files.file_utils import save_hdf
 from AeViz.grid.grid import grid
 import os, h5py
 from AeViz.units import u
+from AeViz.cell.cell_methods.spherical_methods import dr_integration, dVolume_integration
+from AeViz.cell.ghost import ghost
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
@@ -191,9 +193,16 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
             rhomin = 0
         if rhomax is None:
             rhomax = r00.max()
-        mask = (r00 >= rhomin) & (r00 <= rhomax)
-        rlm[~mask] = 0
-        return time, rlm.mean(axis=0)
+        mask = (r00 >= rhomin) & (r00 <= rhomax)        
+        rlm[~mask] = np.nan
+        ## Average over the selected region
+        dr = simulation.cell.dr_integration(simulation.ghost).value[:, None] * \
+            np.ones(rlm.shape)
+        rlm = rlm * dr
+        dr[~mask] = np.nan
+        rlm = np.nansum(rlm, axis=0) / np.nansum(dr, axis=0)
+        rlm = np.nan_to_num(rlm)
+        return time, rlm
     
 def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
                          msum=False, rhomax=None, r=None, zero_norm=True):
