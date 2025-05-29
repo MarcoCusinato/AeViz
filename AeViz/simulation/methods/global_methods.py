@@ -336,3 +336,15 @@ def global_internal_energy(self, tob_corrected=True, **kwargs):
                   r'$E_{\mathrm{int,max}}$', 'nipy_spectral', [1e24, 1e35], log=True),
         time=time
     )
+
+@smooth
+@derive
+@subtract_tob
+def global_magnetic_energy(self, tob_corrected=True, **kwargs):
+    en = load_file(self._Simulation__log_path, self._Simulation__mag_data)
+    time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
+    return aeseries(
+        aerray(en[:, 3], u.erg, 'magnetic_energy',
+                  r'$E_{\mathrm{mag,tot}}$', 'nipy_spectral', [1e30, 1e51], log=True),
+        time=time
+    )
