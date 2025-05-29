@@ -43,6 +43,31 @@ def rotational_energy(self, file_name, **kwargs):
              limits=[1e24, 1e35])
     return data
 
+@get_grid
+@smooth
+@hdf_isopen
+def kinetic_energy(self, file_name, comp:Literal['tot', 'r', 'th', 'ph']='tot',
+                   **kwargs):
+    if comp == 'tot':
+        v = self.radial_velocity(file_name) ** 2 + \
+            self.theta_velocity(file_name) ** 2 + \
+                self.phi_velocity(file_name) ** 2
+        label=r'$E_\mathrm{kin,tot}$'
+    elif comp == 'r':
+        v = self.radial_velocity(file_name) ** 2
+        label=r'$E_{\mathrm{kin},r}$'
+    elif comp == 'th':
+        v =  self.theta_velocity(file_name) ** 2
+        label=r'$E_{\mathrm{kin},\theta}$'
+    elif comp == 'ph':
+        v = self.phi_velocity(file_name) ** 2
+        label=r'$E_{\mathrm{kin},\phi}$'
+    data = self.rho(file_name) * self._velocity(file_name) ** 2 * 0.5
+    data.to(u.erg / u.cm**3)
+    data.set(name='kin_ene', label=label, cmap='turbo', log=True,
+             limits=[1e24, 1e35])
+    return data
+
 ## VELOCITY
 @get_grid
 @smooth

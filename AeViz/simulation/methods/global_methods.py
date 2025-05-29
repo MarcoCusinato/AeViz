@@ -340,11 +340,86 @@ def global_internal_energy(self, tob_corrected=True, **kwargs):
 @smooth
 @derive
 @subtract_tob
-def global_magnetic_energy(self, tob_corrected=True, **kwargs):
+def global_magnetic_energy(self, comp: Literal['tot', 'pol', 'tor', 'r',
+                                               'th', 'ph']='tot',
+                           tob_corrected=True, **kwargs):
     en = load_file(self._Simulation__log_path, self._Simulation__mag_data)
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
-    return aeseries(
-        aerray(en[:, 3], u.erg, 'magnetic_energy',
-                  r'$E_{\mathrm{mag,tot}}$', 'nipy_spectral', [1e30, 1e51], log=True),
-        time=time
-    )
+    if comp == 'tot':
+        return aeseries(
+            aerray(en[:, 3], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag,tot}}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'pol':
+        return aeseries(
+            aerray(en[:, 4] + en[:, 5], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag,pol}}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'tor':
+        return aeseries(
+            aerray(en[:, 6], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag,tor}}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'r':
+        return aeseries(
+            aerray(en[:, 4], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag},r}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'th':
+        return aeseries(
+            aerray(en[:, 5], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag},\theta}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'ph':
+        return aeseries(
+            aerray(en[:, 6], u.erg, 'magnetic_energy',
+                    r'$E_{\mathrm{mag},\phi}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+        
+@smooth
+@derive
+@subtract_tob
+def global_kinetic_energy(self, comp: Literal['tot', 'r', 'th', 'ph']='tot',
+                           tob_corrected=True, **kwargs):
+    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
+    if comp == 'tot':
+        return aeseries(
+            aerray(en[:, 7], u.erg, 'kinetic_energy',
+                    r'$E_{\mathrm{kin,tot}}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'r':
+        return aeseries(
+            aerray(en[:, 8], u.erg, 'kinetic_energy',
+                    r'$E_{\mathrm{kin},r}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'th':
+        return aeseries(
+            aerray(en[:, 9], u.erg, 'kinetic_energy',
+                    r'$E_{\mathrm{kin},\theta}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )
+    elif comp == 'ph':
+        return aeseries(
+            aerray(en[:, 10], u.erg, 'kinetic_energy',
+                    r'$E_{\mathrm{kin},\phi}$', 'nipy_spectral', [1e30, 1e51],
+                    log=True),
+            time=time
+        )

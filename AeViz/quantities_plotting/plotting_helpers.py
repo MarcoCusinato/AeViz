@@ -314,7 +314,9 @@ def remove_labelling(data, no_nu):
     remove_symbols = [r'\mathrm{max}', r'\mathrm{min}', r'\mathrm{avg}',
                       r'\mathrm{tot}',
                        ',max', ',min', ',avg', ',tot', ', max', ', min', ', avg',
-                       ', tot', ',x', ',y', ',z', ', x', ', y', ', z']
+                       ', tot', ',x', ',y', ',z', ', x', ', y', ', z', ',r',
+                       r',\theta', r',\phi', r', \theta', r', \phi', ', r',
+                       ',pol', ',tor', ', pol', ', tor']
     for symb in remove_symbols:
         new_label = new_label.replace(symb, '')
 
