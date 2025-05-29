@@ -224,7 +224,7 @@ class PlottingUtils(PlotCreation):
                     transform=self.axd[axd_letter].transAxes, **kwargs)
             else:
                 self.axd[axd_letter].text(xt, yt, text, **kwargs)
-        self.__save_text(xt, yt, text, axd_letter, **kwargs)
+        self.__save_text(xt, yt, text, axes_bound, axd_letter, **kwargs)
     
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
