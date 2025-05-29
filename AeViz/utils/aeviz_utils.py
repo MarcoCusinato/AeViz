@@ -80,4 +80,7 @@ def AeViz_plot_radius_panel(AeViz, qt, projection, rad, **kwargs):
             raise TypeError('Cannot plot full radius in a non 2 dimensional plot.')
         AeViz.plot1D_2Dradius(qt, **kwargs)
     else: 
-        AeViz.plot1D(None, qt, 'time', **kwargs)
+        if kwargs['spectrogram'] and projection == '2D':
+            AeViz.plotSpectrogram(qt, **kwargs)
+        else:
+            AeViz.plot1D(None, qt, 'time', **kwargs)
