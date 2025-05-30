@@ -722,6 +722,8 @@ class PlottingUtils(PlotCreation):
                 if isinstance(self.texts[ax_letter], list):
                     # Loop on the texts
                     for i in range(len(self.texts[ax_letter])):
+                        if 'transform' in self.texts[ax_letter][i][3]:
+                            self.texts[ax_letter][i][3]['transform'] = self.axd[ax_letter].transAxes
                         self.text(self.texts[ax_letter][i][0], \
                                 self.texts[ax_letter][i][1], \
                                 self.texts[ax_letter][i][2], \
