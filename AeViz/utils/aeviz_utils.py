@@ -44,7 +44,9 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
     if projection == '1D':
         if plane == 'time':
             if hasattr(AeViz.loaded_data, 'global_' + qt):
-                AeViz.plot1D(None, 'global_' + qt, plane, **kwargs)
+                qt = 'global_' + qt
+            if kwargs['spectrogram']:
+                AeViz.plot1DSpectrogram(qt, **kwargs)
             else:
                 AeViz.plot1D(file, qt, plane, **kwargs)
         else:
@@ -82,5 +84,7 @@ def AeViz_plot_radius_panel(AeViz, qt, projection, rad, **kwargs):
     else: 
         if kwargs['spectrogram'] and projection == '2D':
             AeViz.plotSpectrogram(qt, **kwargs)
+        elif kwargs['spectrogram'] and projection == '1D':
+            AeViz.plot1DSpectrogram(qt, **kwargs)
         else:
             AeViz.plot1D(None, qt, 'time', **kwargs)
