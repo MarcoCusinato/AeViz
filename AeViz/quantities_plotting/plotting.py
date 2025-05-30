@@ -36,12 +36,20 @@ class Plotting(PlottingUtils, Data):
         Plots a line for the quantity in the xaxis. This can be either a
         radial average, angular or a single radius.
         """
+        a = kwargs.pop('a', 1.0)
+        exp = kwargs.pop('exp', 1.0)
         axd_letters = ['A', 'B', 'C', 'D']
         legend = None
         d_kwargs = kwargs.copy()
         if plane != 'time':
             d_kwargs['plane'] = plane
         data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
+        if a != 1.0 or exp != 1.0:
+            if a != 1.0:
+                data *= a
+            if exp != 1.0:
+                data = data ** exp
+        # Fix the label if a != 1.0 or exp != 1.0
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
         if self.axd is not None:
