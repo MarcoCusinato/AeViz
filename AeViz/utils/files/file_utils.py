@@ -2,8 +2,8 @@ import os, h5py
 import numpy as np
 import pandas as pd
 import inspect
-from AeViz.units.aeseries import aeseries
-from AeViz.units.aerray import aerray
+from AeViz.units import aeseries, aerray, u
+import requests
 
 def list_module_functions(module):
     """
@@ -17,7 +17,6 @@ def list_module_functions(module):
         (name, obj) for name, obj in inspect.getmembers(module, inspect.isfunction)
         if obj.__module__ == module.__name__ 
     ]
-
 
 def load_file(path_folder, file_name):
     """
@@ -178,3 +177,36 @@ def create_series(time, *args):
     if ghost_cells:
         series.append(ghost_cells)
     return series
+
+def load_asd(path, detector):
+    url = {
+        'LIGOO3H': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_H1.txt",
+        'LIGOO3L': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_L1.txt",
+        'LIGOO4': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4low.txt",
+        'LIGOO4High': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4high.txt",
+        'LIGO': "https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt",
+        'VirgoO3': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O3actual.txt",
+        'VirgoO4': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O4high_NEW.txt",
+        'Virgo': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
+        'VirgoO5High': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
+        'KAGRA': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt",
+        'KAGRA80': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_80Mpc.txt",
+        'ET': "https://apps.et-gw.eu/tds/?call_file=ET-0000A-18_ETDSensitivityCurveTxtFile.txt"
+    }
+    assert detector in url.keys(), f"The detector should be one of {list(url.keys())}"
+    file_path = os.path.join(path, 'psds', detector + '.txt')
+    if not os.path.exists(file_path):
+        if not os.path.exists(os.path.join(path, 'psds')):
+            os.mkdir(os.path.join(path, 'psds'))
+        resp = requests.get(url[detector])
+        with open(file_path, 'wb') as f:
+            f.write(resp.content)
+    psd = np.loadtxt(file_path)
+    frequency = aerray(psd[:, 0], u.Hz, 'frequency', r'$f$', None, True)
+    if detector == 'ET':
+        asd = aerray(psd[:, 3], (u.Hz**(-0.5)), detector, detector, None, True)
+    else:
+        asd = aerray(psd[:, 1], (u.Hz**(-0.5)), detector, detector, None, True)
+    
+    return aeseries(asd,
+                    frequency=frequency)
