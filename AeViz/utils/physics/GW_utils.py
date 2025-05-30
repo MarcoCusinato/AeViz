@@ -149,6 +149,117 @@ def GWs_energy_3D(GWs):
     ene.data.set(name='EGWs', label=r'$E_\mathrm{GW}$', cmap='Spectral',
             limits=[1e45, 1e48], log=True)
     return ene.to(u.erg / u.s)
+
+def GWs_energy_per_frequency(GWs, sim_dim, time_range=None, windowing='hanning'):
+    assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
+    if sim_dim == 1:
+        return GWs_energy_per_frequency_1D(GWs)
+    elif sim_dim == 2:
+        return GWs_energy_per_frequency_2D(GWs, time_range, windowing)
+    else:
+        return GWs_energy_per_frequency_3D(GWs, time_range, windowing)
+
+def GWs_energy_per_frequency_1D(GWs):
+    print("No GW for you :'(")
+    return None
+
+def GWs_energy_per_frequency_2D(GWs, time_range=None, windowing='hanning'):
+    const1 = 1/8 * np.sqrt(15 / np.pi)
+    const2 = c.c ** 3 / (16 * np.pi * c.G)
+    nm, lb, cm, lg = GWs.data.name, GWs.data.label, GWs.data.cmap, GWs.data.log  
+    GWs.data /= const1
+    GWs.data.set(name=nm, label=lb, cmap=cm, log=lg) 
+    spectro = GWs.rfft(norm='forward', time_range=time_range,
+                       windowing=windowing)
+    dE_df = const2 * (2 * np.pi * spectro.frequency) ** 2 * \
+        np.abs(spectro.data ** 2)
+    dE_df.set(name='dE_df_h', label=r'$\frac{\mathrm{d}E}{\mathrm{d}f}$',
+              log=True, cmap=None)
+    return aeseries(
+        dE_df,
+        frequency=spectro.frequency.copy()
+    )
+
+def GWs_energy_per_frequency_3D(GWs, time_range=None, windowing='hanning'):
+    dE_df = []
+    const = c.c ** 3 / (16 * np.pi * c.G)
+    names = ['dE_df_h+eq', 'dE_df_h+pol', 'dE_df_hxeq', 'dE_df_hxpol']
+    labels = [r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,eq}$',
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{x,pol}$']
+    for i, GW in enumerate(GWs):
+        spectro = GWs.rfft(norm='forward', time_range=time_range,
+                       windowing=windowing)
+        dedf = const * (2 * np.pi * spectro.frequency) ** 2 * \
+               np.abs(spectro.data ** 2)
+        dedf.set(name=names[i], label=labels[i], log=True)
+        dE_df.append(aeseries(dedf, frequency=spectro.frequency.copy()))
+    return dE_df
+
+## ---------------------------------------------------------------------
+## GW characteristic strain
+## ---------------------------------------------------------------------
+
+"""
+Taken from:
+Flanagan+98, https://journals.aps.org/prd/pdf/10.1103/PhysRevD.57.4535
+"""
+
+def characteristic_strain(GWs, sim_dim, time_range=None, windowing='hanning',
+                          distance=(10 * u.kpc), divide_by_frequency=True):
+    assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
+    if sim_dim == 1:
+        return characteristic_strain_1D(GWs)
+    elif sim_dim == 2:
+        return characteristic_strain_2D(GWs, time_range, windowing, distance,
+                                        divide_by_frequency)
+    else:
+        return characteristic_strain_3D(GWs, time_range, windowing, distance,
+                                        divide_by_frequency)
+    
+def characteristic_strain_1D(GWs):
+    print("No GW for you :'(")
+    return None
+
+def characteristic_strain_2D(GWs, time_range, windowing, distance,
+                             divide_by_frequency):
+    const = 1 / (distance.to(GWs.data.unit) * c.c * np.pi) * \
+        np.sqrt(2 * c.G / c.c)
+    dE_df = GWs_energy_per_frequency_2D(GWs, time_range, windowing)
+    hchar = const * np.sqrt(dE_df.data)
+    if divide_by_frequency:
+        hchar /= np.sqrt(dE_df.frequency)
+        hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}/\sqrt{f}$', log=True,
+              limits=[np.nanmin(hchar), np.nanmax(hchar)])
+    else:
+        hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}$', log=True,
+              limits=[np.nanmin(hchar), np.nanmax(hchar)])
+    dE_df.frequency.set(limits=[1, 4000], log=True)
+    return aeseries(hchar.to((u.Hz ** -0.5)), frequency=dE_df.frequency.copy())
+
+def characteristic_strain_3D(GWs, time_range, windowing, distance,
+                             divide_by_frequency):
+    const = 1 / (distance.to(GWs[0].data.unit) * c.c * np.pi) * np.sqrt(2 * c.G / c.c)
+    dE_df = GWs_energy_per_frequency_3D(GWs, time_range, windowing)
+    names = ['hchar+eq', 'hchar+pol', 'hcharxeq', 'hcharxpol']
+    labels = [r'$h_\mathrm{char,+,eq}$',
+              r'$h_\mathrm{char,+,pol}$',
+              r'$h_\mathrm{char,x,eq}$',
+              r'$h_\mathrm{char,x,pol}$']
+    if divide_by_frequency:
+        labels = [merge_strings(lb, r'$\sqrt{f}$') for lb in labels]
+    hchar = []
+    for i, dedf in enumerate(dE_df):
+        hhchar = const * np.sqrt(dedf.data)
+        if divide_by_frequency:
+            hhchar /= np.sqrt(dedf.frequency)
+        hhchar.set(name=names[i], label=labels[i], log=True,
+              limits=[np.nanmin(hhchar), np.nanmax(hhchar)])
+        dedf.frequency.set(limits=[1, 4000], log=True)
+        hchar.append(aeseries(hhchar.to((u.Hz ** -0.5)),
+                              frequency=dedf.frequency.copy()))
+    return hchar
     
 ## ---------------------------------------------------------------------
 ## GW spectrogram
