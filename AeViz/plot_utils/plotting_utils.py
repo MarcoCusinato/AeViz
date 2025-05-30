@@ -626,7 +626,7 @@ class PlottingUtils(PlotCreation):
         """
         if not redo:
             for indx in reversed(range(len(self.plot_dim[ax_letter]))):
-                if self.plot_dim[ax_letter][indx] != 1:
+                if self.plot_dim[ax_letter][indx] not in [1, -4]:
                     continue
                 kw = {'alpha': self.alpha[ax_letter][indx]}
                 if self.lw[ax_letter][indx] is not None:
@@ -646,7 +646,7 @@ class PlottingUtils(PlotCreation):
                 break
         else:
             for indx in range(len(self.plot_dim[ax_letter])):
-                if self.plot_dim[ax_letter][indx] != 1:
+                if self.plot_dim[ax_letter][indx] not in [1, -4]:
                     continue
                 kw = {'alpha': self.alpha[ax_letter][indx]}
                 if self.lw[ax_letter][indx] is not None:
@@ -707,6 +707,12 @@ class PlottingUtils(PlotCreation):
                 self.__plot2Dmesh(ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.ylim(self.ylims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
+            elif (-4 in dm):
+                self.__plot1D(ax_letter, redo=True)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
             if 1 in dm:
