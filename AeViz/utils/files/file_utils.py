@@ -202,11 +202,16 @@ def load_asd(path, detector):
         with open(file_path, 'wb') as f:
             f.write(resp.content)
     psd = np.loadtxt(file_path)
-    frequency = aerray(psd[:, 0], u.Hz, 'frequency', r'$f$', None, True)
+    frequency = aerray(psd[:, 0], u.Hz, 'frequency', r'$f$', None, [10, 4e3],
+                       True)
+    i10 = np.argmax(frequency >= 10)
+    i4000 = np.argmax(frequency >= 4000)
     if detector == 'ET':
-        asd = aerray(psd[:, 3], (u.Hz**(-0.5)), detector, detector, None, True)
+        asd = aerray(psd[:, 3], (u.Hz**(-0.5)), detector, detector, None,
+                     [psd[i10:i4000, 3].min(), psd[i10:i4000, 3].max()], True)
     else:
-        asd = aerray(psd[:, 1], (u.Hz**(-0.5)), detector, detector, None, True)
+        asd = aerray(psd[:, 1], (u.Hz**(-0.5)), detector, detector, None,
+                     [psd[i10:i4000, 1].min(), psd[i10:i4000, 1].max()], True)
     
     return aeseries(asd,
                     frequency=frequency)

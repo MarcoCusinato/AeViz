@@ -5,7 +5,8 @@ from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_frequency_peak_indices,
                                   characteristic_strain,
                                   GWs_energy_per_frequency)
-from AeViz.utils.files.file_utils import load_file, find_column_changing_line
+from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
+                                          load_asd)
 from typing import Literal
 
 """
@@ -281,3 +282,9 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
             return calculate_h(self, D, np.pi, 0, save_checkpoints)[:2]
         elif comp == 'hxpol':
             return calculate_h(self, D, np.pi, 0, save_checkpoints)[2:]
+
+def ASD(self, detector):
+    """
+    Return the theoretical ASD for the selected detector
+    """
+    return load_asd(self.utils_path, detector)
