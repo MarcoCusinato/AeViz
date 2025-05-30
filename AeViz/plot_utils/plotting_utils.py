@@ -723,7 +723,8 @@ class PlottingUtils(PlotCreation):
                     # Loop on the texts
                     for i in range(len(self.texts[ax_letter])):
                         if 'transform' in self.texts[ax_letter][i][3]:
-                            self.texts[ax_letter][i][3]['transform'] = self.axd[ax_letter].transAxes
+                            self.texts[ax_letter][i][3]['transform'] = \
+                                self.axd[ax_letter].transAxes
                         self.text(self.texts[ax_letter][i][0], \
                                 self.texts[ax_letter][i][1], \
                                 self.texts[ax_letter][i][2], \
@@ -817,10 +818,12 @@ class PlottingUtils(PlotCreation):
         """
         Save the custom texts
         """
+        t = ((xt, yt, text, kwargs))
         if ax_letter in self.texts:
-            self.texts[ax_letter].append((xt, yt, text, kwargs))
+            if not t in self.texts[ax_letter]:
+                self.texts[ax_letter].append(t)
         else:
-            self.texts[ax_letter] = [(xt, yt, text, kwargs)]
+            self.texts[ax_letter] = [t]
         
     
     def set_labels(self, ax_letter=None):
