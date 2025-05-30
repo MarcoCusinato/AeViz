@@ -728,6 +728,7 @@ class PlottingUtils(PlotCreation):
                         self.text(self.texts[ax_letter][i][0], \
                                 self.texts[ax_letter][i][1], \
                                 self.texts[ax_letter][i][2], \
+                                axd_letter=ax_letter, \
                                 kwargs_text=self.texts[ax_letter][i][3])
                 else:
                     pass
