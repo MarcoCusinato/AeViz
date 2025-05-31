@@ -191,7 +191,7 @@ def GWs_energy_per_frequency_3D(GWs, time_range=None, windowing='hanning'):
               r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
               r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{x,pol}$']
     for i, GW in enumerate(GWs):
-        spectro = GWs.rfft(norm='forward', time_range=time_range,
+        spectro = GW.rfft(norm='forward', time_range=time_range,
                        windowing=windowing)
         dedf = const * (2 * np.pi * spectro.frequency) ** 2 * \
                np.abs(spectro.data ** 2)
