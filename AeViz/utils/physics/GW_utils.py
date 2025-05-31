@@ -52,9 +52,9 @@ def GW_strain_2D(data, distance):
     if distance:
         lb, cm, lm, nm = GWs.data.label, GWs.data.cmap, \
             GWs.data.limits, GWs.data.name
-        GWs /= distance
         lm = [lm[0] / distance.to(GWs.data.unit).value,
               lm[1] / distance.to(GWs.data.unit).value]
+        GWs /= distance
         GWs.data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
                      limits=lm)
     return GWs
@@ -88,6 +88,8 @@ def GW_strain_3D(data, distance):
         for hh in range(len(GWs)):
             lb, cm, lm, nm = GWs[hh].data.label, GWs[hh].data.cmap, \
                 GWs[hh].data.limits, GWs[hh].data.name
+            lm = [lm[0] / distance.to(GWs[hh].data.unit).value,
+              lm[1] / distance.to(GWs[hh].data.unit).value]
             GWs[hh] /= distance
             GWs[hh].data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
                         limits=lm)
