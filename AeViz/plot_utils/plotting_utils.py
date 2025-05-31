@@ -247,7 +247,8 @@ class PlottingUtils(PlotCreation):
         lines in the plot.
         """
         if axd_letter in self.legend:
-            old_legend = legend.copy()
+            if legend is not None:
+                old_legend = legend.copy()
             legend = self.legend[axd_letter]
             if len(self.axd[axd_letter].lines) != len(legend):
                 if type(old_legend) == list:

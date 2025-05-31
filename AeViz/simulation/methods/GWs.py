@@ -283,7 +283,7 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
         elif comp == 'hxpol':
             return calculate_h(self, D, np.pi, 0, save_checkpoints)[2:]
 
-def ASD(self, detector):
+def ASD(self, detector, **kwargs):
     """
     Return the theoretical ASD for the selected detector
     """

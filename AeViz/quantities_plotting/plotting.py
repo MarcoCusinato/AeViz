@@ -44,14 +44,17 @@ class Plotting(PlottingUtils, Data):
             d_kwargs['plane'] = plane
         data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
         ## CHECK IF ALL THE PLOTS ARE 1D
-        overplot = False
-        if self.axd is not None:
-            for ax_letter in self.axd:
-                if ax_letter.islower():
-                    continue
-                if any([pdim != 1 for pdim in self.plot_dim[ax_letter]]):
-                    overplot = True
-                    break
+        if 'overplot' in kwargs:
+            overplot = kwargs['overplot']
+        else:
+            overplot = False
+            if self.axd is not None:
+                for ax_letter in self.axd:
+                    if ax_letter.islower():
+                        continue
+                    if any([pdim != 1 for pdim in self.plot_dim[ax_letter]]):
+                        overplot = True
+                        break
         if not overplot:
         ##PLOT CREATION
             if type(plane) == tuple:
@@ -87,9 +90,10 @@ class Plotting(PlottingUtils, Data):
             if 'plot' in kwargs:
                 ax_letter = kwargs['plot']
             else:
-                ax_letter = 'A'
+                # USE last active plot
+                ax_letter = list(self.axd.keys())[-1]
             if ax_letter not in self.axd:
-                ax_letter = 'A'
+                ax_letter = list(self.axd.keys())[-1]
             self._PlottingUtils__update_params(
                                                 file=file,
                                                 ax_letter=ax_letter,
