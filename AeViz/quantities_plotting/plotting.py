@@ -16,6 +16,7 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         remove_labelling)
 from AeViz.utils.decorators.grid import _get_plane_indices
 import cv2
+from AeViz.plot_utils.utils import xaxis_labels
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
@@ -43,14 +44,17 @@ class Plotting(PlottingUtils, Data):
             d_kwargs['plane'] = plane
         data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
         ## CHECK IF ALL THE PLOTS ARE 1D
-        overplot = False
-        if self.axd is not None:
-            for ax_letter in self.axd:
-                if ax_letter.islower():
-                    continue
-                if any([pdim != 1 for pdim in self.plot_dim[ax_letter]]):
-                    overplot = True
-                    break
+        if 'overplot' in kwargs:
+            overplot = kwargs['overplot']
+        else:
+            overplot = False
+            if self.axd is not None:
+                for ax_letter in self.axd:
+                    if ax_letter.islower():
+                        continue
+                    if any([pdim != 1 for pdim in self.plot_dim[ax_letter]]):
+                        overplot = True
+                        break
         if not overplot:
         ##PLOT CREATION
             if type(plane) == tuple:
@@ -86,9 +90,10 @@ class Plotting(PlottingUtils, Data):
             if 'plot' in kwargs:
                 ax_letter = kwargs['plot']
             else:
-                ax_letter = 'A'
+                # USE last active plot
+                ax_letter = list(self.axd.keys())[-1]
             if ax_letter not in self.axd:
-                ax_letter = 'A'
+                ax_letter = list(self.axd.keys())[-1]
             self._PlottingUtils__update_params(
                                                 file=file,
                                                 ax_letter=ax_letter,
@@ -494,6 +499,96 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__redo_plot()
         show_figure()
     
+    def plot1DSpectrogram(self, qt, **kwargs):
+        """
+        Plots the GW spectrogram and the GW signal.
+        """
+        redo = False
+        if self.axd is not None:
+            number_spect = sum([-4 in self.plot_dim[ax_letter] 
+                                 for ax_letter in self.axd if ax_letter 
+                                 in self.plot_dim])
+            number_curve = sum([((1 in self.plot_dim[ax_letter]) and 
+                             (-4 not in self.plot_dim[ax_letter]))
+                             for ax_letter in self.axd if ax_letter in 
+                             self.plot_dim])
+            if number_spect != number_curve:
+                self.Close()
+                number = 1
+            else:
+                number = number_curve + 1
+                redo = True
+        else:
+            number = 1
+        if number == 1:
+            plots = ["A", "B"]
+        elif number == 2:
+            plots = ["C", "D"]
+        elif number == 3:
+            plots = ["E", "F"]
+        elif number == 4:
+            plots = ["G", "H"]
+        
+        self._PlotCreation__setup_axd(number, 7)
+        data = self._Data__get_data_from_name(qt, **kwargs)
+        keep_kwargs = {}
+        for nm in ['norm', 'norm_by_max', 'time_range', 'windowing',
+                   'check_spacing', 'axis']:
+            if nm in kwargs:
+                keep_kwargs[nm] = kwargs[nm]
+        spectrogram = data.rfft(**keep_kwargs)
+
+        ## 1D plot of quantity
+        kwargs_1D = kwargs.copy()
+        kwargs_1D['color'] = 'gainsboro'
+        self._PlottingUtils__update_params(ax_letter=plots[0],
+                                           plane='time',
+                                           data=data,
+                                           cbar_position=None,
+                                           dim=1,
+                                           sim_dim=self.sim_dim,
+                                         **kwargs_1D)
+        self._PlottingUtils__plot1D(plots[0])
+        i_start = 0
+        i_end = len(data.time)
+        if 'time_range' in kwargs:
+            if len(kwargs['time_range']) == 2:
+                #cut the signal!!
+                i_start = np.argmax(data.time >= kwargs['time_range'][0])
+                i_end = np.argmax(data.time >= kwargs['time_range'][1])
+
+            
+        kwargs_1D['color'] = 'k'
+        self._PlottingUtils__update_params(ax_letter=plots[0],
+                                           plane='time',
+                                           data=data[i_start:i_end],
+                                           cbar_position=None,
+                                           dim=1,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs_1D)
+        
+        self._PlottingUtils__plot1D(plots[0])
+        self.Xscale(data.time.log, plots[0])
+        self.Yscale(data.data.log, plots[0])
+        self.xlim(data.time.limits, plots[0])
+        self.ylim(data.data.limits, plots[0])
+        ## 1D plot of spectrogram
+        self._PlottingUtils__update_params(ax_letter=plots[1],
+                                           plane='frequency',
+                                           data=spectrogram,
+                                           cbar_position=None,
+                                           dim=-4,
+                                           sim_dim=self.sim_dim,
+                                           **kwargs)
+        self._PlottingUtils__plot1D(plots[1])
+        self.Xscale(spectrogram.frequency.log, plots[1])
+        self.Yscale(spectrogram.data.log, plots[1])
+        self.xlim(spectrogram.frequency.limits, plots[1])
+        self.ylim(spectrogram.data.limits, plots[1])
+        if redo:
+            self._PlottingUtils__redo_plot()
+        show_figure()
+        
     ## IMFs Stuff
     def plotIMFs(self, qt, **kwargs):
         ## Plots the IMFs in a top down fashion

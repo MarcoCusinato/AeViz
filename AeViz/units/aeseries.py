@@ -489,7 +489,7 @@ class aeseries:
                                merge_strings('fft_', self.data.name),
                                apply_symbol(self.data.label, r'\tilde'),
                                self.data.cmap,
-                               [tilde_signal.max(), tilde_signal.min()],
+                               [tilde_signal.min(), tilde_signal.max()],
                                self.data.log)
         return aeseries(ttilde_signal, frequency=ffreq)
     
@@ -549,8 +549,8 @@ class aeseries:
                                merge_strings('fft_', self.data.name),
                                apply_symbol(self.data.label, r'\tilde'),
                                self.data.cmap,
-                               [tilde_signal.max(), tilde_signal.min()],
-                               self.data.log)
+                               [tilde_signal.min(), tilde_signal.max()],
+                               True)
         return aeseries(ttilde_signal, frequency=ffreq)
 
     def stft(self, window_size=aerray(10, u.ms), check_spacing=False,
