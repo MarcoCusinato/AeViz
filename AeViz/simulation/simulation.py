@@ -7,8 +7,9 @@ from AeViz.utils.files.parfiles import (load_parfile,
                                   get_indices_from_parfile,
                                   get_simulation_info,
                                   get_initial_parameters)
-from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder, 
-                                    find_simulation)
+from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder,
+                                          local_storage_folder, 
+                                          find_simulation)
 from AeViz.utils.decorators.simulation import hdf_isopen
 from AeViz.utils.files.file_utils import list_module_functions
 from AeViz.utils.utils import time_array
@@ -40,6 +41,7 @@ class Simulation:
         self.ghost = ghost(self.ghost_cells)
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)
+        self.utils_path = os.path.join(local_storage_folder(pltf()), '.utils')
         del parfile
         if self.GEOM == 2:
             # if in spherical symmetry we suppose we are simulating a
