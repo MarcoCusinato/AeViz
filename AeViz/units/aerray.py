@@ -417,7 +417,7 @@ class aerray(np.ndarray):
         """
         Handle NumPy functions like np.sin, np.exp.
         """
-        from AeViz.utils.files.string_utils import merge_strings
+        from AeViz.utils.files.string_utils import apply_symbol
         ## First check the comparison functions
         if ufunc in [np.greater, np.greater_equal, np.less, np.less_equal,
                      np.equal, np.not_equal]:
@@ -446,7 +446,7 @@ class aerray(np.ndarray):
             new_unit = u.dimensionless_unscaled
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            new_label = merge_strings(r'$\sqrt{$' + self.label + r'$}$')
+            new_label = apply_symbol(self.label, '\\sqrt')
             #new_label = r'$\sqrt{$%s}$' % self.label
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
