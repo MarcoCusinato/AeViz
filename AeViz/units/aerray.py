@@ -232,9 +232,10 @@ class aerray(np.ndarray):
                 new_label = r'%.1e $\cdot$ %s' % (other, self.label)
             else:
                 new_label = self.label
+            new_limits = [self.limits[0] * other, self.limits[1] * other]
             return aerray(self.value * other, unit=self.unit, name=self.name,
                           label=new_label, cmap=self.cmap, \
-                          limits=self.limits * other, log=self.log)
+                          limits=new_limits, log=self.log)
         elif type(other).__name__ == "aeseries":
             return other.__mul__(self)
         
@@ -300,6 +301,7 @@ class aerray(np.ndarray):
                 new_label = r'%s / %.1e' % (self.label, other)
             else:
                 new_label = self.label
+            new_limits = [self.limits[0] / other, self.limits[1] / other]
             return aerray(self.value / other, unit=self.unit, name=self.name,
                           label=new_label, cmap=self.cmap, \
                           log=self.log, limits=self.limits / other)
@@ -316,10 +318,17 @@ class aerray(np.ndarray):
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
         if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by aerray
+            if isinstance(other, int):
+                new_label = r'%d / %s' % (other, self.label)
+            elif isinstance(other, float):
+                new_label = r'%.1e / %s' % (other, self.label)
+            else:
+                new_label = self.label
+            new_limits = [other / self.limits[0], other / self.limits[1]]
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
-                          name=self.name, limits=self.limits / other, \
-                          label=self.label, cmap=self.cmap, \
+                          name=self.name, limits=new_limits, \
+                          label=new_label, cmap=self.cmap, \
                           log=self.log)
         return NotImplemented
 
@@ -366,9 +375,10 @@ class aerray(np.ndarray):
         new_value = self.value ** exponent
         new_unit = self.unit ** exponent  # Properly scale the unit
         new_label = r'%s$^{%d}$' % (self.label, exponent)
+        new_limits = [self.limits[0] ** exponent, self.limits[1] ** exponent]
 
         return aerray(new_value, unit=new_unit, label=new_label, log=self.log, \
-                      cmap=self.cmap, limits=self.limits**exponent)
+                      cmap=self.cmap, limits=new_limits)
     
     ## Operators redefinition
     def __eq__(self, other):
