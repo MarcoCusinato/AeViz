@@ -236,9 +236,22 @@ def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
     - **kwargs: additional arguments.
     """
     ## GET THE DATA
+    a = kwargs.pop('a', 1.0)
+    exp = kwargs.pop('exp', 1.0)
     if not 'plane' in kwargs:
         kwargs['plane'] = plane
     data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
+    if a != 1.0 or exp != 1.0:
+        if exp != 1.0:
+            # Handle some particular cases
+            if exp == 0.5:
+                data = np.sqrt(data)
+            elif exp == 1./3.:
+                data = np.cbrt(data)
+            else:
+                data = data ** exp
+        if a != 1.0:
+            data *= a
     plotting_object._PlottingUtils__update_params(
                                             file=file,
                                             ax_letter=letter,
@@ -260,8 +273,21 @@ def plot_panel(plotting_object, letter, file, quantity, cbars, plane,
     plotting_object._PlottingUtils__save_labels(letter)
 
 def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
+    a = kwargs.pop('a', 1.0)
+    exp = kwargs.pop('exp', 1.0)
     kwargs["mesh"] = True
     data = plotting_object._Data__get_profile(quantity, **kwargs)
+    if a != 1.0 or exp != 1.0:
+        if exp != 1.0:
+            # Handle some particular cases
+            if exp == 0.5:
+                data = np.sqrt(data)
+            elif exp == 1./3.:
+                data = np.cbrt(data)
+            else:
+                data = data ** exp
+        if a != 1.0:
+            data *= a
     """
     if 'rho_spherical_harmonics' in quantity:
         lab = labels[quantity]['label'].replace('XX', str(kwargs['l']))
@@ -292,9 +318,22 @@ def plot_profile_panel(plotting_object, letter, quantity, cbars, **kwargs):
 
 def plot_hammer_panel(plotting_object, letter, file, quantity, cbars, plane,
                       **kwargs):
+    a = kwargs.pop('a', 1.0)
+    exp = kwargs.pop('exp', 1.0)
     if not 'plane' in kwargs:
         kwargs['plane'] = plane
     data = plotting_object._Data__get_data_from_name(quantity, file, **kwargs)
+    if a != 1.0 or exp != 1.0:
+        if exp != 1.0:
+            # Handle some particular cases
+            if exp == 0.5:
+                data = np.sqrt(data)
+            elif exp == 1./3.:
+                data = np.cbrt(data)
+            else:
+                data = data ** exp
+        if a != 1.0:
+            data *= a
     plotting_object._PlottingUtils__update_params(
                                                   ax_letter=letter,
                                                   plane=('phi', 'theta'),

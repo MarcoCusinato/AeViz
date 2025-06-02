@@ -56,7 +56,6 @@ class Plotting(PlottingUtils, Data):
                     data = data ** exp
             if a != 1.0:
                 data *= a
-        # Fix the label if a != 1.0 or exp != 1.0
         ## CHECK IF ALL THE PLOTS ARE 1D
         if 'overplot' in kwargs:
             overplot = kwargs['overplot']
@@ -121,6 +120,8 @@ class Plotting(PlottingUtils, Data):
             self._PlottingUtils__plot1D(ax_letter)
 
     def plot1D_2Dradius(self, qt, **kwargs):
+        a = kwargs.pop('a', 1.0)
+        exp = kwargs.pop('exp', 1.0)
         ax_letter = kwargs['plot']
         index = self.plot_dim[ax_letter].index(2)
         plane = self.plane[ax_letter][index]
@@ -129,6 +130,17 @@ class Plotting(PlottingUtils, Data):
         d_kwargs['plane'] = plane
         d_kwargs['time'] = file
         data = self._Data__get_data_from_name(name=qt, file=None, **d_kwargs)
+        if a != 1.0 or exp != 1.0:
+            if exp != 1.0:
+                # Handle some particular cases
+                if exp == 0.5:
+                    data = np.sqrt(data)
+                elif exp == 1./3.:
+                    data = np.cbrt(data)
+                else:
+                    data = data ** exp
+            if a != 1.0:
+                data *= a
         self._PlottingUtils__update_params(
                                             file=file,
                                             ax_letter=ax_letter,
