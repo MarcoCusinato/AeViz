@@ -232,9 +232,8 @@ class aerray(np.ndarray):
                 new_label = r'%.1e $\cdot$ %s' % (other, self.label)
             else:
                 new_label = self.label
-            # Check that none of the limits is NaN
-            if self.limits[0] == self.limits[0] and \
-                self.limits[1] == self.limits[1]:
+            # Check that none of the limits is None
+            if self.limits is not None: 
                 new_limits = [self.limits[0] * other, self.limits[1] * other]
             else:
                 new_limits = self.limits
@@ -307,8 +306,7 @@ class aerray(np.ndarray):
             else:
                 new_label = self.label
             # Check that none of the limits is NaN
-            if self.limits[0] == self.limits[0] and \
-                self.limits[1] == self.limits[1]:
+            if self.limits is not None:
                 new_limits = [self.limits[0] / other, self.limits[1] / other]
             else:
                 new_limits = self.limits
@@ -335,8 +333,7 @@ class aerray(np.ndarray):
             else:
                 new_label = self.label
             # Check that none of the limits is NaN
-            if self.limits[0] == self.limits[0] and \
-                self.limits[1] == self.limits[1]:
+            if self.limits is not None:
                 new_limits = [other / self.limits[0], other / self.limits[1]]
             else:
                 new_limits = self.limits
@@ -391,8 +388,7 @@ class aerray(np.ndarray):
         new_unit = self.unit ** exponent  # Properly scale the unit
         new_label = r'%s$^{%d}$' % (self.label, exponent)
         # Check that none of the limits is NaN
-        if self.limits[0] == self.limits[0] and \
-            self.limits[1] == self.limits[1]:
+        if self.limits is not None:
             new_limits = [self.limits[0] ** exponent, \
                           self.limits[1] ** exponent]
         else:
@@ -467,8 +463,7 @@ class aerray(np.ndarray):
                 new_limits [-1, 1]
             elif ufunc == np.tan:
                 # Check that none of the limits is NaN
-                if self.limits[0] == self.limits[0] and \
-                    self.limits[1] == self.limits[1]:
+                if self.limits is not None:
                     new_limits = [np.tan(self.limits[0]), \
                                   np.tan(self.limits[1])]
                 else:
@@ -476,15 +471,13 @@ class aerray(np.ndarray):
         elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
             if ufunc == np.exp:
-                if self.limits[0] == self.limits[0] and \
-                    self.limits[1] == self.limits[1]:
+                if self.limits is not None:
                     new_limits = [np.exp(self.limits[0]), \
                                   np.exp(self.limits[1])]
                 else:
                     new_limits = self.limits
             elif ufunc == np.log:
-                if self.limits[0] == self.limits[0] and \
-                    self.limits[1] == self.limits[1]:
+                if self.limits is not None:
                     # Check existance conditions for log
                     if self.limits[0] <= 0.0:
                         lim0 = np.nanmin(result)
@@ -500,8 +493,7 @@ class aerray(np.ndarray):
                     new_limits = self.limits
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            if self.limits[0] == self.limits[0] and \
-                    self.limits[1] == self.limits[1]:
+            if self.limits is not None:
                 lim0 = np.sign(self.limits[0]) * np.sqrt(np.abs(self.limits[0]))
                 lim1 = np.sign(self.limits[1]) * np.sqrt(np.abs(self.limits[1]))
                 liminf = np.nanmin([lim0, lim1])
@@ -513,8 +505,7 @@ class aerray(np.ndarray):
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
             new_label = apply_symbol(self.label, r'\sqrt[3]')
-            if self.limits[0] == self.limits[0] and \
-                    self.limits[1] == self.limits[1]:
+            if self.limits is not None:
                 new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
             else:
                 new_limits = self.limits
