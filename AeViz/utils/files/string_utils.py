@@ -21,7 +21,7 @@ def merge_strings(*args):
             out_string += ar
     return out_string
 
-def apply_symbol(latex_str: str, symbol: str = "\\tilde"):
+def apply_symbol(latex_str: str, symbol: str = r"\tilde"):
     if latex_str is None:
         return None
     # Check if the string starts and ends with $

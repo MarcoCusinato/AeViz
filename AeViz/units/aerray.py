@@ -225,9 +225,21 @@ class aerray(np.ndarray):
                 pass
             return aerray(self.value * other.value, unit=self.unit * other.unit)
         elif isinstance(other, (int, float, np.ndarray)):
+            # Fixing labels
+            if isinstance(other, int):
+                new_label = r'%d $\cdot$ %s' % (other, self.label)
+            elif isinstance(other, float):
+                new_label = r'%.1e $\cdot$ %s' % (other, self.label)
+            else:
+                new_label = self.label
+            # Check that none of the limits is None
+            if self.limits is not None: 
+                new_limits = [self.limits[0] * other, self.limits[1] * other]
+            else:
+                new_limits = self.limits
             return aerray(self.value * other, unit=self.unit, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits,
-                          log=self.log)
+                          label=new_label, cmap=self.cmap, \
+                          limits=new_limits, log=self.log)
         elif type(other).__name__ == "aeseries":
             return other.__mul__(self)
         
@@ -286,8 +298,20 @@ class aerray(np.ndarray):
                 pass
             return aerray(self.value / other.value, unit=self.unit / other.unit)
         elif isinstance(other, (int, float, np.ndarray)):  # Scalar division
+            # Fixing labels
+            if isinstance(other, int):
+                new_label = r'%s / %d' % (self.label, other)
+            elif isinstance(other, float):
+                new_label = r'%s / %.1e' % (self.label, other)
+            else:
+                new_label = self.label
+            # Check that none of the limits is NaN
+            if self.limits is not None:
+                new_limits = [self.limits[0] / other, self.limits[1] / other]
+            else:
+                new_limits = self.limits
             return aerray(self.value / other, unit=self.unit, name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          label=new_label, cmap=self.cmap, limits=new_limits, \
                           log=self.log)
         elif type(other).__name__ == "aeseries":
             raise TypeError("Division does not work between aerray and aeseries.")
@@ -302,10 +326,21 @@ class aerray(np.ndarray):
                           label=self.label, cmap=self.cmap, limits=self.limits,
                           log=self.log)
         if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by aerray
+            if isinstance(other, int):
+                new_label = r'%d / %s' % (other, self.label)
+            elif isinstance(other, float):
+                new_label = r'%.1e / %s' % (other, self.label)
+            else:
+                new_label = self.label
+            # Check that none of the limits is NaN
+            if self.limits is not None:
+                new_limits = [other / self.limits[0], other / self.limits[1]]
+            else:
+                new_limits = self.limits
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
-                          name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          name=self.name, limits=new_limits, \
+                          label=new_label, cmap=self.cmap, \
                           log=self.log)
         return NotImplemented
 
@@ -351,8 +386,16 @@ class aerray(np.ndarray):
 
         new_value = self.value ** exponent
         new_unit = self.unit ** exponent  # Properly scale the unit
+        new_label = r'%s$^{%d}$' % (self.label, exponent)
+        # Check that none of the limits is NaN
+        if self.limits is not None:
+            new_limits = [self.limits[0] ** exponent, \
+                          self.limits[1] ** exponent]
+        else:
+            new_limits = self.limits
 
-        return aerray(new_value, new_unit)
+        return aerray(new_value, unit=new_unit, label=new_label, log=self.log, \
+                      cmap=self.cmap, limits=new_limits)
     
     ## Operators redefinition
     def __eq__(self, other):
@@ -391,6 +434,7 @@ class aerray(np.ndarray):
         """
         Handle NumPy functions like np.sin, np.exp.
         """
+        from AeViz.utils.files.string_utils import apply_symbol
         ## First check the comparison functions
         if ufunc in [np.greater, np.greater_equal, np.less, np.less_equal,
                      np.equal, np.not_equal]:
@@ -415,14 +459,63 @@ class aerray(np.ndarray):
 
         if ufunc in [np.sin, np.cos, np.tan]:
             new_unit = u.dimensionless_unscaled
+            if ufunc in [np.sin, np.cos]:
+                new_limits [-1, 1]
+            elif ufunc == np.tan:
+                # Check that none of the limits is NaN
+                if self.limits is not None:
+                    new_limits = [np.tan(self.limits[0]), \
+                                  np.tan(self.limits[1])]
+                else:
+                    new_limits = self.limits
         elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
+            if ufunc == np.exp:
+                if self.limits is not None:
+                    new_limits = [np.exp(self.limits[0]), \
+                                  np.exp(self.limits[1])]
+                else:
+                    new_limits = self.limits
+            elif ufunc == np.log:
+                if self.limits is not None:
+                    # Check existance conditions for log
+                    if self.limits[0] <= 0.0:
+                        lim0 = np.nanmin(result)
+                    else:
+                        lim0 = np.log(self.limits[0])
+
+                    if self.limits[1] <= 0.0:
+                        lim1 = np.nanmax(result)
+                    else:
+                        lim1 = np.log(self.limits[1])
+                    new_limits = [lim0, lim1]
+                else:
+                    new_limits = self.limits
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
+            if self.limits is not None:
+                lim0 = np.sign(self.limits[0]) * np.sqrt(np.abs(self.limits[0]))
+                lim1 = np.sign(self.limits[1]) * np.sqrt(np.abs(self.limits[1]))
+                liminf = np.nanmin([lim0, lim1])
+                limsup = np.nanmax([lim0, lim1])
+                new_limits = [liminf, limsup]
+            else:
+                new_limits = self.limits
+            new_label = apply_symbol(self.label, r'\sqrt')
+        elif ufunc == np.cbrt:
+            new_unit = old_unit ** (1.0 / 3.0)
+            new_label = apply_symbol(self.label, r'\sqrt[3]')
+            if self.limits is not None:
+                new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
+            else:
+                new_limits = self.limits
         else:
             new_unit = old_unit
+            new_label = self.label
+            new_limits = self.limits
         
-        return aerray(result, unit=new_unit)
+        return aerray(result, unit=new_unit, label=new_label, log=self.log, \
+                      cmap=self.cmap, limits=new_limits)
     
     def __array_function__(self, func, types, args, kwargs):
         """Intercept NumPy functions."""
