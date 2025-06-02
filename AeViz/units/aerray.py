@@ -365,8 +365,9 @@ class aerray(np.ndarray):
 
         new_value = self.value ** exponent
         new_unit = self.unit ** exponent  # Properly scale the unit
+        new_label = r'%s$^{%d}$' % (self.label, exponent)
 
-        return aerray(new_value, unit=new_unit)
+        return aerray(new_value, unit=new_unit, label=new_label)
     
     ## Operators redefinition
     def __eq__(self, other):
