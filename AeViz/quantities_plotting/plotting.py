@@ -45,10 +45,16 @@ class Plotting(PlottingUtils, Data):
             d_kwargs['plane'] = plane
         data = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
         if a != 1.0 or exp != 1.0:
+            if exp != 1.0:
+                # Handle some particular cases
+                if exp == 0.5:
+                    data = np.sqrt(data)
+                if exp == 1./3.:
+                    data = np.cbrt(data)
+                else:
+                    data = data ** exp
             if a != 1.0:
                 data *= a
-            if exp != 1.0:
-                data = data ** exp
         # Fix the label if a != 1.0 or exp != 1.0
         ## CHECK IF ALL THE PLOTS ARE 1D
         overplot = False
