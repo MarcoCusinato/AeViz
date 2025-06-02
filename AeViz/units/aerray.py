@@ -232,7 +232,12 @@ class aerray(np.ndarray):
                 new_label = r'%.1e $\cdot$ %s' % (other, self.label)
             else:
                 new_label = self.label
-            new_limits = [self.limits[0] * other, self.limits[1] * other]
+            # Check that none of the limits is NaN
+            if self.limits[0] == self.limits[0] and \
+                self.limits[1] == self.limits[1]:
+                new_limits = [self.limits[0] * other, self.limits[1] * other]
+            else:
+                new_limits = self.limits
             return aerray(self.value * other, unit=self.unit, name=self.name,
                           label=new_label, cmap=self.cmap, \
                           limits=new_limits, log=self.log)
@@ -301,10 +306,15 @@ class aerray(np.ndarray):
                 new_label = r'%s / %.1e' % (self.label, other)
             else:
                 new_label = self.label
-            new_limits = [self.limits[0] / other, self.limits[1] / other]
+            # Check that none of the limits is NaN
+            if self.limits[0] == self.limits[0] and \
+                self.limits[1] == self.limits[1]:
+                new_limits = [self.limits[0] / other, self.limits[1] / other]
+            else:
+                new_limits = self.limits
             return aerray(self.value / other, unit=self.unit, name=self.name,
-                          label=new_label, cmap=self.cmap, \
-                          log=self.log, limits=self.limits / other)
+                          label=new_label, cmap=self.cmap, limits=new_limits, \
+                          log=self.log)
         elif type(other).__name__ == "aeseries":
             raise TypeError("Division does not work between aerray and aeseries.")
         return NotImplemented
@@ -324,7 +334,12 @@ class aerray(np.ndarray):
                 new_label = r'%.1e / %s' % (other, self.label)
             else:
                 new_label = self.label
-            new_limits = [other / self.limits[0], other / self.limits[1]]
+            # Check that none of the limits is NaN
+            if self.limits[0] == self.limits[0] and \
+                self.limits[1] == self.limits[1]:
+                new_limits = [other / self.limits[0], other / self.limits[1]]
+            else:
+                new_limits = self.limits
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
                           name=self.name, limits=new_limits, \
@@ -375,7 +390,13 @@ class aerray(np.ndarray):
         new_value = self.value ** exponent
         new_unit = self.unit ** exponent  # Properly scale the unit
         new_label = r'%s$^{%d}$' % (self.label, exponent)
-        new_limits = [self.limits[0] ** exponent, self.limits[1] ** exponent]
+        # Check that none of the limits is NaN
+        if self.limits[0] == self.limits[0] and \
+            self.limits[1] == self.limits[1]:
+            new_limits = [self.limits[0] ** exponent, \
+                          self.limits[1] ** exponent]
+        else:
+            new_limits = self.limits
 
         return aerray(new_value, unit=new_unit, label=new_label, log=self.log, \
                       cmap=self.cmap, limits=new_limits)
@@ -445,35 +466,58 @@ class aerray(np.ndarray):
             if ufunc in [np.sin, np.cos]:
                 new_limits [-1, 1]
             elif ufunc == np.tan:
-                new_limits = [np.tan(self.limits[0]), np.tan(self.limits[1])]
+                # Check that none of the limits is NaN
+                if self.limits[0] == self.limits[0] and \
+                    self.limits[1] == self.limits[1]:
+                    new_limits = [np.tan(self.limits[0]), \
+                                  np.tan(self.limits[1])]
+                else:
+                    new_limits = self.limits
         elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
             if ufunc == np.exp:
-                new_limits = [np.exp(self.limits[0]), np.exp(self.limits[1])]
+                if self.limits[0] == self.limits[0] and \
+                    self.limits[1] == self.limits[1]:
+                    new_limits = [np.exp(self.limits[0]), \
+                                  np.exp(self.limits[1])]
+                else:
+                    new_limits = self.limits
             elif ufunc == np.log:
-                # Check existance conditions for log
-                if self.limits[0] <= 0.0:
-                    lim0 = np.nanmin(result)
-                else:
-                    lim0 = np.log(self.limits[0])
+                if self.limits[0] == self.limits[0] and \
+                    self.limits[1] == self.limits[1]:
+                    # Check existance conditions for log
+                    if self.limits[0] <= 0.0:
+                        lim0 = np.nanmin(result)
+                    else:
+                        lim0 = np.log(self.limits[0])
 
-                if self.limits[1] <= 0.0:
-                    lim1 = np.nanmax(result)
+                    if self.limits[1] <= 0.0:
+                        lim1 = np.nanmax(result)
+                    else:
+                        lim1 = np.log(self.limits[1])
+                    new_limits = [lim0, lim1]
                 else:
-                    lim1 = np.log(self.limits[1])
-                new_limits = [lim0, lim1]
+                    new_limits = self.limits
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            lim0 = np.sign(self.limits[0]) * np.sqrt(np.abs(self.limits[0]))
-            lim1 = np.sign(self.limits[1]) * np.sqrt(np.abs(self.limits[1]))
-            liminf = np.nanmin([lim0, lim1])
-            limsup = np.nanmax([lim0, lim1])
-            new_limits = [liminf, limsup]
+            if self.limits[0] == self.limits[0] and \
+                    self.limits[1] == self.limits[1]:
+                lim0 = np.sign(self.limits[0]) * np.sqrt(np.abs(self.limits[0]))
+                lim1 = np.sign(self.limits[1]) * np.sqrt(np.abs(self.limits[1]))
+                liminf = np.nanmin([lim0, lim1])
+                limsup = np.nanmax([lim0, lim1])
+                new_limits = [liminf, limsup]
+            else:
+                new_limits = self.limits
             new_label = apply_symbol(self.label, r'\sqrt')
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
             new_label = apply_symbol(self.label, r'\sqrt[3]')
-            new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
+            if self.limits[0] == self.limits[0] and \
+                    self.limits[1] == self.limits[1]:
+                new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
+            else:
+                new_limits = self.limits
         else:
             new_unit = old_unit
             new_label = self.label
