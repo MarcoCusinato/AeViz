@@ -59,7 +59,8 @@ def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
 
 def data_for_barcode(self, lmin=None, lmax=None, msum=False,
                         r=None, rhomin=None, rhomax=None, save_checkpoints=True,
-                        zero_norm=True, **kwargs):
+                        zero_norm=True, mode:Literal['radius', 'mass']='radius',
+                        **kwargs):
     """
     Returns the data for the barcode plot. The data is the spherical
     harmonics decomposition of the density.
@@ -67,7 +68,7 @@ def data_for_barcode(self, lmin=None, lmax=None, msum=False,
     calculate_rho_decomposition(self, save_checkpoints, msum=True)
     time, Y, data = get_data_for_barcode(self, lmax=lmax, lmin=lmin, msum=msum,
                                 r=r, rhomin=rhomin, rhomax=rhomax,
-                                zero_norm=zero_norm)
+                                zero_norm=zero_norm, mode=mode)
     time = aerray(time, u.s, name='time', label=r'$t-t_\mathrm{b}$',
                   cmap=None, log=False,
              limits=[-0.005, time.max()])

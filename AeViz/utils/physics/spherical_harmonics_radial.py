@@ -173,7 +173,7 @@ def get_sph_profile(simulation, l, m=None):
     return time, data
 
 def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
-                       rhomin=None, rhomax=None, r=None):
+                       rhomin=None, rhomax=None, r=None, mode='radius'):
     rr = [rhomin, rhomax, r]
     assert rr.count(None) < 3, "Please provide at least one of the three " \
         "arguments: rhomin, rhomax, r"
@@ -189,23 +189,31 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
         rindex = np.argmax(radius >= r)
         return time, rlm[rindex, ...]
     else:
+        rho = simulation.radial_profile('rho').data.value
         if rhomin is None:
             rhomin = 0
         if rhomax is None:
-            rhomax = r00.max()
-        mask = (r00 >= rhomin) & (r00 <= rhomax)        
+            rhomax = rho.max()
+        mask = (rho >= rhomin) & (rho <= rhomax)        
         rlm[~mask] = np.nan
         ## Average over the selected region
-        dr = simulation.cell.dr_integration(simulation.ghost).value[:, None] * \
-            np.ones(rlm.shape)
-        rlm = rlm * dr
-        dr[~mask] = np.nan
-        rlm = np.nansum(rlm, axis=0) / np.nansum(dr, axis=0)
-        rlm = np.nan_to_num(rlm)
+        if mode == 'radius':
+            dr = simulation.cell.dr_integration(simulation.ghost).value[:, None] * \
+                np.ones(rlm.shape)
+            rlm = rlm * dr
+            dr[~mask] = np.nan
+            rlm = np.nansum(rlm, axis=0) / np.nansum(dr, axis=0)
+            rlm = np.nan_to_num(rlm)
+        elif mode == 'mass':
+            rlm = rlm * rho
+            rho[~mask] = np.nan
+            rlm = np.nansum(rlm, axis=0) / np.nansum(rho, axis=0)
+            rlm = np.nan_to_num(rlm)
         return time, rlm
     
 def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
-                         msum=False, rhomax=None, r=None, zero_norm=True):
+                         msum=False, rhomax=None, r=None, zero_norm=True,
+                         mode='radius'):
     if lmax is None and msum:
         lmax = 40
     elif lmax is None:
@@ -218,8 +226,9 @@ def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
         Yscale = np.arange(lmin, lmax + 1)
     if msum:
         for l in range(lmin, lmax + 1):
-            time, rlm = get_sph_profiles_r(simulation, l=l, m=None, zero_norm=zero_norm,
-                                           rhomin=rhomin, rhomax=rhomax, r=r)
+            time, rlm = get_sph_profiles_r(simulation, l=l, m=None,
+                                           zero_norm=zero_norm, rhomin=rhomin,
+                                           rhomax=rhomax, r=r, mode=mode)
             if l == lmin:
                 data = rlm[None, ...]
             else:
@@ -227,8 +236,10 @@ def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
     else:
         for l in range(lmin, lmax + 1):
             for m in range(-l, l + 1):
-                time, rlm = get_sph_profiles_r(simulation, l=l, m=m, zero_norm=zero_norm,
-                                               rhomin=rhomin, rhomax=rhomax, r=r)
+                time, rlm = get_sph_profiles_r(simulation, l=l, m=m,
+                                               zero_norm=zero_norm,
+                                               rhomin=rhomin, rhomax=rhomax,
+                                               r=r, mode=mode)
                 if l == lmin and m == -l:
                     data = rlm[None, ...]
                 else:
