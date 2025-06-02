@@ -367,7 +367,8 @@ class aerray(np.ndarray):
         new_unit = self.unit ** exponent  # Properly scale the unit
         new_label = r'%s$^{%d}$' % (self.label, exponent)
 
-        return aerray(new_value, unit=new_unit, label=new_label)
+        return aerray(new_value, unit=new_unit, label=new_label, log=self.log, \
+                      cmap=self.cmap)
     
     ## Operators redefinition
     def __eq__(self, other):
@@ -435,10 +436,14 @@ class aerray(np.ndarray):
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
             new_label = r'$\sqrt{%s}$' % self.label
+        elif ufunc == np.cbrt:
+            new_unit = old_unit ** (1.0/3.0)
+            new_label = r'$\cbrt{%s}$' % self.label
         else:
             new_unit = old_unit
         
-        return aerray(result, unit=new_unit)
+        return aerray(result, unit=new_unit, label=new_label, log=self.log, \
+                      cmap=self.cmap)
     
     def __array_function__(self, func, types, args, kwargs):
         """Intercept NumPy functions."""
