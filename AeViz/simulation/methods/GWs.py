@@ -2,8 +2,11 @@ from AeViz.simulation.methods import *
 from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_spectrogram, GWs_peak_indices,
                                   GWs_fourier_transform,
-                                  GWs_frequency_peak_indices)
-from AeViz.utils.files.file_utils import load_file, find_column_changing_line
+                                  GWs_frequency_peak_indices,
+                                  characteristic_strain,
+                                  GWs_energy_per_frequency)
+from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
+                                          load_asd)
 from typing import Literal
 
 """
@@ -86,6 +89,64 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
                 raise TypeError("GW component not recognized")
     return GWs
 
+@smooth
+@derive
+def GWs_dE_df(self, tob_corrected=True, time_range=None, windowing='hanning',
+              **kwargs):
+    kw = {'zero_correction': True,
+          'lower_refinement': False}
+    if 'lower_refinement' in kwargs:
+        kw['lower_refinement'] = kwargs['lower_refinement']
+    if 'zero_correction' in kwargs:
+        kw['zero_correction'] = kwargs['zero_correction']
+    GW_strain = self.GW_Amplitudes(tob_corrected=tob_corrected, comp='all',
+                                   **kw)
+    dedf = GWs_energy_per_frequency(GW_strain, self.dim, time_range, windowing)
+    if self.dim > 2:
+        if 'comp' in kwargs:
+            if kwargs['comp'] == 'all':
+                pass
+            elif kwargs['comp'] == 'h+eq':
+                return dedf[0]
+            elif kwargs['comp'] == 'h+pol':
+                return dedf[1]
+            elif kwargs['comp'] == 'hxeq':
+                return dedf[2]
+            elif kwargs['comp'] == 'hxpol':
+                return dedf[3]
+            else:
+                raise TypeError("GW component not recognized")
+    return dedf
+
+@smooth
+@derive
+def hchar(self, tob_corrected=True, time_range=None, windowing='hanning',
+          distance=(10 * u.kpc), divide_by_frequency=True, **kwargs):
+    kw = {'zero_correction': True,
+          'lower_refinement': False}
+    if 'lower_refinement' in kwargs:
+        kw['lower_refinement'] = kwargs['lower_refinement']
+    if 'zero_correction' in kwargs:
+        kw['zero_correction'] = kwargs['zero_correction']
+    GW_strain = self.GW_Amplitudes(tob_corrected=tob_corrected, comp='all',
+                                   **kw)
+    hchar = characteristic_strain(GW_strain, self.dim, time_range, windowing,
+                                  distance, divide_by_frequency)
+    if self.dim > 2:
+        if 'comp' in kwargs:
+            if kwargs['comp'] == 'all':
+                pass
+            elif kwargs['comp'] == 'h+eq':
+                return hchar[0]
+            elif kwargs['comp'] == 'h+pol':
+                return hchar[1]
+            elif kwargs['comp'] == 'hxeq':
+                return hchar[2]
+            elif kwargs['comp'] == 'hxpol':
+                return hchar[3]
+            else:
+                raise TypeError("GW component not recognized")
+    return hchar
 
 def GW_spectrogram(self, distance=None, window_size=aerray(10, u.ms),
                    tob_corrected=True,
@@ -221,3 +282,9 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
             return calculate_h(self, D, np.pi, 0, save_checkpoints)[:2]
         elif comp == 'hxpol':
             return calculate_h(self, D, np.pi, 0, save_checkpoints)[2:]
+
+def ASD(self, detector, **kwargs):
+    """
+    Return the theoretical ASD for the selected detector
+    """
+    return load_asd(self.utils_path, detector)

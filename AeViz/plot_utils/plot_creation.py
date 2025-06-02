@@ -265,5 +265,13 @@ class PlotCreation(object):
                                                 bottom=False, labelbottom=False,
                                                 left=True, labelleft=True,
                                                 right=False, labelright=False)
-    
+        if self.form_factor == 7:
+            ## 1D spectrograms
+            for ax_letter in self.axd:
+                if ax_letter in ['A', 'C', 'E', 'G']:
+                    self.axd[ax_letter].tick_params(top=True, labeltop=True,
+                                          bottom=False, labelbottom=False,
+                                          left=True, labelleft=True,
+                                          right=False, labelright=False)
+                    self.axd[ax_letter].xaxis.set_label_position('top') 
     
