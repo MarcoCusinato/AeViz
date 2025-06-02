@@ -456,7 +456,7 @@ class aerray(np.ndarray):
                     lim0 = np.nanmin(result)
                 else:
                     lim0 = np.log(self.limits[0])
-                    
+
                 if self.limits[1] <= 0.0:
                     lim1 = np.nanmax(result)
                 else:
@@ -472,7 +472,8 @@ class aerray(np.ndarray):
             new_label = apply_symbol(self.label, r'\sqrt')
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
-            new_label = apply_symbol(self.label, r'\cbrt')
+            new_label = apply_symbol(self.label, \
+                            r'\sqrt[\leftroot{-1}\uproot{2}\scriptstyle 3]')
             new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
         else:
             new_unit = old_unit
