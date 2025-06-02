@@ -233,8 +233,8 @@ class aerray(np.ndarray):
             else:
                 new_label = self.label
             return aerray(self.value * other, unit=self.unit, name=self.name,
-                          label=new_label, cmap=self.cmap, limits=self.limits,
-                          log=self.log)
+                          label=new_label, cmap=self.cmap, \
+                          limits=self.limits * other, log=self.log)
         elif type(other).__name__ == "aeseries":
             return other.__mul__(self)
         
@@ -301,8 +301,8 @@ class aerray(np.ndarray):
             else:
                 new_label = self.label
             return aerray(self.value / other, unit=self.unit, name=self.name,
-                          label=new_label, cmap=self.cmap, limits=self.limits,
-                          log=self.log)
+                          label=new_label, cmap=self.cmap, \
+                          log=self.log, limits=self.limits / other)
         elif type(other).__name__ == "aeseries":
             raise TypeError("Division does not work between aerray and aeseries.")
         return NotImplemented
@@ -318,8 +318,8 @@ class aerray(np.ndarray):
         if isinstance(other, (int, float, np.ndarray)):  # Scalar divided by aerray
             return aerray(other / self.value,
                           unit=u.dimensionless_unscaled / self.unit,
-                          name=self.name,
-                          label=self.label, cmap=self.cmap, limits=self.limits,
+                          name=self.name, limits=self.limits / other, \
+                          label=self.label, cmap=self.cmap, \
                           log=self.log)
         return NotImplemented
 
@@ -368,7 +368,7 @@ class aerray(np.ndarray):
         new_label = r'%s$^{%d}$' % (self.label, exponent)
 
         return aerray(new_value, unit=new_unit, label=new_label, log=self.log, \
-                      cmap=self.cmap)
+                      cmap=self.cmap, limits=self.limits**exponent)
     
     ## Operators redefinition
     def __eq__(self, other):
@@ -407,6 +407,7 @@ class aerray(np.ndarray):
         """
         Handle NumPy functions like np.sin, np.exp.
         """
+        from AeViz.utils.files.string_utils import merge_strings
         ## First check the comparison functions
         if ufunc in [np.greater, np.greater_equal, np.less, np.less_equal,
                      np.equal, np.not_equal]:
@@ -435,9 +436,10 @@ class aerray(np.ndarray):
             new_unit = u.dimensionless_unscaled
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            new_label = r'$\sqrt{%s}$' % self.label
+            new_label = merge_strings(r'$\sqrt{$' + self.label + r'$}$')
+            #new_label = r'$\sqrt{$%s}$' % self.label
         elif ufunc == np.cbrt:
-            new_unit = old_unit ** (1.0/3.0)
+            new_unit = old_unit ** (1.0 / 3.0)
             new_label = r'$\cbrt{%s}$' % self.label
         else:
             new_unit = old_unit
