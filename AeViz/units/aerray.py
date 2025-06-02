@@ -476,6 +476,7 @@ class aerray(np.ndarray):
             new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
         else:
             new_unit = old_unit
+            new_label = self.label
         
         return aerray(result, unit=new_unit, label=new_label, log=self.log, \
                       cmap=self.cmap, limits=new_limits)
