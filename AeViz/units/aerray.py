@@ -442,17 +442,38 @@ class aerray(np.ndarray):
 
         if ufunc in [np.sin, np.cos, np.tan]:
             new_unit = u.dimensionless_unscaled
+            if ufunc in [np.sin, np.cos]:
+                new_limits [-1, 1]
+            elif ufunc == np.tan:
+                new_limits = [np.tan(self.limits[0]), np.tan(self.limits[1])]
         elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
+            if ufunc == np.exp:
+                new_limits = [np.exp(self.limits[0]), np.exp(self.limits[1])]
+            elif ufunc == np.log:
+                # Check existance conditions for log
+                if self.limits[0] <= 0.0:
+                    lim0 = np.nanmin(result)
+                else:
+                    lim0 = np.log(self.limits[0])
+                    
+                if self.limits[1] <= 0.0:
+                    lim1 = np.nanmax(result)
+                else:
+                    lim1 = np.log(self.limits[1])
+                new_limits = [lim0, lim1]
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            new_limits = [np.sqrt(self.limits[0]), np.sqrt(self.limits[1])]
-            new_label = apply_symbol(self.label, '\\sqrt')
-            #new_label = r'$\sqrt{$%s}$' % self.label
+            lim0 = np.sign(self.limits[0]) * np.sqrt(np.abs(self.limits[0]))
+            lim1 = np.sign(self.limits[1]) * np.sqrt(np.abs(self.limits[1]))
+            liminf = np.nanmin([lim0, lim1])
+            limsup = np.nanmax([lim0, lim1])
+            new_limits = [liminf, limsup]
+            new_label = apply_symbol(self.label, r'\sqrt')
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
-            new_label = apply_symbol(self.label, '\\cbrt')
-            #new_label = r'$\cbrt{%s}$' % self.label
+            new_label = apply_symbol(self.label, r'\cbrt')
+            new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
         else:
             new_unit = old_unit
         
