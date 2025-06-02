@@ -50,7 +50,7 @@ class Plotting(PlottingUtils, Data):
                 # Handle some particular cases
                 if exp == 0.5:
                     data = np.sqrt(data)
-                if exp == 1./3.:
+                elif exp == 1./3.:
                     data = np.cbrt(data)
                 else:
                     data = data ** exp
