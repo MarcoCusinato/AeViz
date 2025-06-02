@@ -92,6 +92,6 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
     att = getattr(ae, q)
     # Let's plot
     att(projection='2D')
-    ae.text(0.75, 0.9, sim, axd_letter=LETTERS[i_s], axes_bound=True)
+    ae.text(0.75, 0.9, sim, axd_letter=LETTERS[i_s], kwargs_text={'transform':ae.axd[LETTERS[i_s]].transAxes})
   ae.save_plot('%s' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
   ae.Close()
