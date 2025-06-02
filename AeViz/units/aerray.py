@@ -446,8 +446,8 @@ class aerray(np.ndarray):
             new_unit = u.dimensionless_unscaled
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            new_label = self.label
-            #new_label = apply_symbol(self.label, '\\sqrt')
+            new_limits = [np.sqrt(self.limits[0]), np.sqrt(self.limits[1])]
+            new_label = apply_symbol(self.label, '\\sqrt')
             #new_label = r'$\sqrt{$%s}$' % self.label
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
@@ -457,7 +457,7 @@ class aerray(np.ndarray):
             new_unit = old_unit
         
         return aerray(result, unit=new_unit, label=new_label, log=self.log, \
-                      cmap=self.cmap)
+                      cmap=self.cmap, limits=new_limits)
     
     def __array_function__(self, func, types, args, kwargs):
         """Intercept NumPy functions."""
