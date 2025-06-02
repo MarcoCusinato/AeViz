@@ -473,7 +473,7 @@ class aerray(np.ndarray):
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
             new_label = apply_symbol(self.label, \
-                            r'\sqrt[\leftroot{-1}\uproot{2}\scriptstyle 3]')
+                            r'\sqrt[3]')
             new_limits = [np.cbrt(self.limits[0]), np.cbrt(self.limits[1])]
         else:
             new_unit = old_unit
