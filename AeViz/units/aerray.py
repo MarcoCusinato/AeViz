@@ -446,11 +446,13 @@ class aerray(np.ndarray):
             new_unit = u.dimensionless_unscaled
         elif ufunc == np.sqrt:
             new_unit = old_unit ** 0.5
-            new_label = apply_symbol(self.label, '\\sqrt')
+            new_label = self.label
+            #new_label = apply_symbol(self.label, '\\sqrt')
             #new_label = r'$\sqrt{$%s}$' % self.label
         elif ufunc == np.cbrt:
             new_unit = old_unit ** (1.0 / 3.0)
-            new_label = r'$\cbrt{%s}$' % self.label
+            new_label = self.label
+            #new_label = r'$\cbrt{%s}$' % self.label
         else:
             new_unit = old_unit
         
