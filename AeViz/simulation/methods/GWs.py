@@ -4,7 +4,8 @@ from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_fourier_transform,
                                   GWs_frequency_peak_indices,
                                   characteristic_strain,
-                                  GWs_energy_per_frequency)
+                                  GWs_energy_per_frequency,
+                                  universal_modes_relation)
 from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
                                           load_asd)
 from typing import Literal
@@ -288,3 +289,14 @@ def ASD(self, detector, **kwargs):
     Return the theoretical ASD for the selected detector
     """
     return load_asd(self.utils_path, detector)
+
+@smooth
+@sum_tob
+def modes_universal_relations(self,
+                              mode: Literal['2f_torres', '2p1_torres',
+                                            '2p2_torres', '2p3_torres',
+                                            '2g1_torres'], tob_corrected=True,
+                              **kwargs):
+    radius = self.PNS_radius(rad='avg')
+    mass = self.PNS_mass_ene(comp='mass')
+    return universal_modes_relation(mass, radius, mode)

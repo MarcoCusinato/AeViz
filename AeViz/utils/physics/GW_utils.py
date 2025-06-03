@@ -9,6 +9,7 @@ from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units import u
 from AeViz.units.constants import constants as c
+from typing import Literal
 
 
 ## ---------------------------------------------------------------------
@@ -262,7 +263,42 @@ def characteristic_strain_3D(GWs, time_range, windowing, distance,
         hchar.append(aeseries(hhchar.to((u.Hz ** -0.5)),
                               frequency=dedf.frequency.copy()))
     return hchar
-    
+
+## ---------------------------------------------------------------------
+## GW spectrogram
+## ---------------------------------------------------------------------
+
+def universal_modes_relation(PNS_mass, PNS_radius,
+                             mode:Literal['2f_torres', '2p1_torres',
+                                          '2p2_torres', '2p3_torres', 
+                                          '2g1_torres', '2g1_torres']):
+    """
+    Universal relations coming from:
+        Torres-Forné+18 https://arxiv.org/pdf/1902.10048
+        Sotani+21
+    """
+    modes = {
+        '2f_torres':{'a': 0, 'b': 1.41e5, 'c': -4.23e6, 'd': 0,
+                     'mexp': 0.5, 'rexp': 3/2, 'nm':'2f', 'lb':r'$^2f$'},
+        '2p1_torres':{'a': 0, 'b': 2.205e5, 'c': 4.63e6, 'd': 0,
+                     'mexp': 0.5, 'rexp': 3/2, 'nm':'2p1', 'lb':r'$^2p_1$'},
+        '2p2_torres':{'a': 0, 'b': 4.02e5, 'c': 7.4e6, 'd': 0,
+                     'mexp': 0.5, 'rexp': 3/2, 'nm':'2p2', 'lb':r'$^2p_2$'},
+        '2p3_torres':{'a': 0, 'b': 6.21e5, 'c': -1.9e6, 'd': 0,
+                     'mexp': 0.5, 'rexp': 3/2, 'nm':'2p3', 'lb':r'$^2p_3$'},
+        '2g1_torres':{'a': 0, 'b': 8.67e5, 'c': -51.9e6, 'd':0,
+                     'mexp': 1, 'rexp': 2, 'nm':'2g1', 'lb':r'$^2g_1$'},
+        '2g2_torres':{'a': 0, 'b': 5.88e5, 'c': -86.2e6, 'd': 4.67e10,
+                     'mexp': 1, 'rexp': 2, 'nm':'2g2', 'lb':r'$^2g_2$'},          
+    }
+    md = modes[mode]
+    x = PNS_mass.data.to(u.Msun).value ** md['mexp'] / \
+        PNS_radius.data.to(u.km).value ** md['rexp']
+    val = md['a'] + md['b'] * x + md['c'] * x ** 2 + md['d'] * x ** 3
+    frequency = aerray(val, u.Hz, md['nm'], md['lb'], None,
+                       [val.min(), val.max()], False)
+    return aeseries(frequency, time=PNS_mass.time.copy())
+
 ## ---------------------------------------------------------------------
 ## GW spectrogram
 ## ---------------------------------------------------------------------
