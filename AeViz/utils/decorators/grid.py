@@ -320,6 +320,11 @@ def get_radius(func):
                                       rad[index_phi_2, :]))
                 rad_x = np.sin(theta) * rad
                 rad_y = np.cos(theta) * rad
+            elif kwargs['plane'].casefold() == 'xz_phi_avg':
+                theta = args[0].cell.theta(args[0].ghost)
+                rad = np.mean(rad, axis=0)
+                rad_x = np.sin(theta) * rad
+                rad_y = np.cos(theta) * rad
         return aeseries(
                 rad_y, X=rad_x
             )
