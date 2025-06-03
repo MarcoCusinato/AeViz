@@ -9,3 +9,4 @@ parser.add_argument('--simulations', nargs='+', type=str,
 
 args = parser.parse_args()
 clear_simulation_folder(args.simulations)
+print('Postprocessing for simulations ', args.simulations, ' deleted successfully.')
