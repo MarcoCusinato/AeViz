@@ -48,9 +48,9 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
             if kwargs['spectrogram']:
                 AeViz.plot1DSpectrogram(qt, **kwargs)
             else:
-                AeViz.plot1D(file, qt, plane, **kwargs)
+                return AeViz.plot1D(file, qt, plane, **kwargs)
         else:
-            AeViz.plot1D(file, qt, plane, **kwargs)
+            return AeViz.plot1D(file, qt, plane, **kwargs)
     elif projection == '2D':
         if file is not None:
             if type(plane) == tuple:

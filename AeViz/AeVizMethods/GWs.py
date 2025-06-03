@@ -25,20 +25,28 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
             self.plotGWDecomposition('hydro_strain', **kwargs)
         elif kwargs['mode'] is not None and spectrogram:
             kwargs['spectrogram'] = False
-            AeViz_plot_panel(self, 'hchar', None, '1D', 'frequency', **kwargs)
+            kwargs['return_letter'] = True
+            kwargs['min_legend_len'] = 2
+            kwargs['legend'] = [self.loaded_data.simulation_name]
+            letter = AeViz_plot_panel(self, 'hchar', None, '1D', 'frequency',
+                                      **kwargs)
+            leg = [self.loaded_data.simulation_name]
             if 'detectors' in kwargs:
-                leg = [self.loaded_data.simulation_name]
+                kwargs.pop('legend', None)
                 detectors = kwargs['detectors']
                 if not isinstance(detectors, list):
                     detectors = [detectors]
                 kwargs.pop('color', None)
                 kwargs.pop('c', None)
                 kwargs['overplot'] = True
+                kwargs['plot'] = letter
                 for det in detectors:
                     kwargs['detector'] = det
                     leg.append(det)
-                    AeViz_plot_panel(self, 'ASD', None, '1D', 'frequency', **kwargs)
-                self.update_legend(leg)
+                    AeViz_plot_panel(self, 'ASD', None, '1D', 'frequency',
+                                     **kwargs)
+                if letter in self.legend or len(leg) > 1:
+                    self.update_legend(leg, letter)
         else:
             AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 'time',
                              **kwargs)
@@ -50,8 +58,12 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                     self.plotGWDecomposition('hydro_strain', **kwargs)
                 elif kwargs['mode'] is not None and spectrogram:
                     kwargs['spectrogram'] = False
-                    AeViz_plot_panel(self, 'hchar', None, '1D', 'frequency',
-                                     **kwargs)
+                    kwargs['return_letter'] = True
+                    kwargs['min_legend_len'] = 2
+                    kwargs['legend'] = [self.loaded_data.simulation_name]
+                    letter = AeViz_plot_panel(self, 'hchar', None, '1D',
+                                              'frequency', **kwargs)
+                    leg = [self.loaded_data.simulation_name]
                     if 'detectors' in kwargs:
                         leg = [self.loaded_data.simulation_name]
                         detectors = kwargs['detectors']
@@ -60,12 +72,14 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                         kwargs.pop('color', None)
                         kwargs.pop('c', None)
                         kwargs['overplot'] = True
+                        kwargs['plot'] = letter
                         for det in detectors:
                             kwargs['detector'] = det
                             leg.append(det)
                             AeViz_plot_panel(self, 'ASD', None, '1D',
                                              'frequency', **kwargs)
-                        self.update_legend(leg)
+                        if letter in self.legend or len(leg) > 1:
+                            self.update_legend(leg, letter)
                 else:
                     AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
                                      'time', **kwargs)
@@ -75,8 +89,11 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                 self.plotGWDecomposition('hydro_strain', **kwargs)
             elif kwargs['mode'] is not None and spectrogram:
                 kwargs['spectrogram'] = False
-                AeViz_plot_panel(self, 'hchar', None, '1D', 'frequency',
-                                 **kwargs)
+                kwargs['return_letter'] = True
+                kwargs['min_legend_len'] = 2
+                kwargs['legend'] = [self.loaded_data.simulation_name]
+                letter = AeViz_plot_panel(self, 'hchar', None, '1D',
+                                            'frequency', **kwargs)
                 if 'detectors' in kwargs:
                     leg = [self.loaded_data.simulation_name]
                     detectors = kwargs['detectors']
@@ -85,12 +102,14 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                     kwargs.pop('color', None)
                     kwargs.pop('c', None)
                     kwargs['overplot'] = True
+                    kwargs['plot'] = letter
                     for det in detectors:
                         kwargs['detector'] = det
                         leg.append(det)
                         AeViz_plot_panel(self, 'ASD', None, '1D', 'frequency',
                                          **kwargs)
-                    self.update_legend(leg)
+                    if letter in self.legend or len(leg) > 1:
+                        self.update_legend(leg, letter)
             else:
                 AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
                                  'time', **kwargs)
