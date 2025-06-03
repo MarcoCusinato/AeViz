@@ -16,7 +16,6 @@ from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         remove_labelling)
 from AeViz.utils.decorators.grid import _get_plane_indices
 import cv2
-from AeViz.plot_utils.utils import xaxis_labels
 
 class Plotting(PlottingUtils, Data):
     def __init__(self):
@@ -40,7 +39,13 @@ class Plotting(PlottingUtils, Data):
         a = kwargs.pop('a', 1.0)
         exp = kwargs.pop('exp', 1.0)
         axd_letters = ['A', 'B', 'C', 'D']
-        legend = None
+        if 'legend' in kwargs:
+            if not isinstance(kwargs['legend'], list):
+                legend = [kwargs['legend']]
+            else:
+                legend = kwargs['legend']
+        else:
+            legend = None
         d_kwargs = kwargs.copy()
         if plane != 'time':
             d_kwargs['plane'] = plane
@@ -80,33 +85,7 @@ class Plotting(PlottingUtils, Data):
                 data, label = remove_labelling(data, self.__no_nu)
                 legend = [label]
             number = self.__check_axd_1D(data.data.label, getattr(data, plane))
-            self._PlottingUtils__update_params(
-                                                file=file,
-                                                ax_letter=axd_letters[number],
-                                                plane=plane,
-                                                data=data,
-                                                cbar_position=None,
-                                                dim=1,
-                                                sim_dim=self.sim_dim,
-                                                **kwargs
-                                                )
-            self._PlottingUtils__plot1D(axd_letters[number])
-            ## SET THE LIMITS
-            if axd_letters[number] not in self.xlims:
-                self.xlim(getattr(data, plane).limits, axd_letters[number])
-                self.ylim(data.data.limits, axd_letters[number])
-            self._PlottingUtils__save_labels(axd_letters[number])
-            self.Xscale(getattr(data, plane).log, axd_letters[number])
-            self.Yscale(data.data.log, axd_letters[number])
-            self.update_legend(legend, axd_letters[number])
-        else:
-            if 'plot' in kwargs:
-                ax_letter = kwargs['plot']
-            else:
-                # USE last active plot
-                ax_letter = list(self.axd.keys())[-1]
-            if ax_letter not in self.axd:
-                ax_letter = list(self.axd.keys())[-1]
+            ax_letter = axd_letters[number]
             self._PlottingUtils__update_params(
                                                 file=file,
                                                 ax_letter=ax_letter,
@@ -118,6 +97,57 @@ class Plotting(PlottingUtils, Data):
                                                 **kwargs
                                                 )
             self._PlottingUtils__plot1D(ax_letter)
+            ## SET THE LIMITS
+            if ax_letter not in self.xlims:
+                self.xlim(getattr(data, plane).limits, ax_letter)
+                self.ylim(data.data.limits, ax_letter)
+            self._PlottingUtils__save_labels(ax_letter)
+            self.Xscale(getattr(data, plane).log, ax_letter)
+            self.Yscale(data.data.log, ax_letter)
+            leg_len = 0
+            if 'min_legend_len' in kwargs:
+                if legend is not None:
+                    leg_len += len(legend)
+                if ax_letter in self.legend:
+                    leg_len += len(self.legend[ax_letter])
+                if leg_len >= kwargs['min_legend_len']:
+                    self.update_legend(legend, ax_letter)
+            else:
+                self.update_legend(legend, ax_letter)
+        else:
+            if 'plot' in kwargs:
+                ax_letter = kwargs['plot']
+            else:
+                # USE last active plot
+                ax_letter = list(self.axd.keys())[-1]
+            if ax_letter not in self.axd:
+                ax_letter = list(self.axd.keys())[-1]
+            if self.__simple_labelling:
+                data, label = remove_labelling(data, self.__no_nu)
+                legend = [label]
+            self._PlottingUtils__update_params(
+                                                file=file,
+                                                ax_letter=ax_letter,
+                                                plane=plane,
+                                                data=data,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
+            self._PlottingUtils__plot1D(ax_letter)
+            if 'min_legend_len' in kwargs:
+                if legend is not None:
+                    leg_len += len(legend)
+                if ax_letter in self.legend:
+                    leg_len += len(self.legend[ax_letter])
+                if leg_len >= kwargs['min_legend_len']:
+                    self.update_legend(legend, ax_letter)
+            else:
+                self.update_legend(legend, ax_letter)
+        if 'return_letter' in kwargs:
+            if kwargs['return_letter']:
+                return ax_letter
 
     def plot1D_2Dradius(self, qt, **kwargs):
         a = kwargs.pop('a', 1.0)
@@ -524,6 +554,10 @@ class Plotting(PlottingUtils, Data):
                                                           cbars[ax_letter]) 
             self._PlottingUtils__redo_plot()
         show_figure()
+        if 'return_letter' in kwargs:
+            if kwargs['return_letter']:
+                return plots[1]
+        
     
     def plot1DSpectrogram(self, qt, **kwargs):
         """
