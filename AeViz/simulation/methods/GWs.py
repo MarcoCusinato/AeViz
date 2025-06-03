@@ -295,7 +295,8 @@ def ASD(self, detector, **kwargs):
 def modes_universal_relations(self,
                               mode: Literal['2f_torres', '2p1_torres',
                                             '2p2_torres', '2p3_torres',
-                                            '2g1_torres'], tob_corrected=True):
-    mass = self.PNS_radius(rad='avg')
-    radius = self.PNS_mass_ene(comp='mass')
+                                            '2g1_torres'], tob_corrected=True,
+                              **kwargs):
+    radius = self.PNS_radius(rad='avg')
+    mass = self.PNS_mass_ene(comp='mass')
     return universal_modes_relation(mass, radius, mode)

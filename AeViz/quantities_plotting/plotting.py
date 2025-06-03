@@ -122,6 +122,9 @@ class Plotting(PlottingUtils, Data):
                 ax_letter = list(self.axd.keys())[-1]
             if ax_letter not in self.axd:
                 ax_letter = list(self.axd.keys())[-1]
+            if self.__simple_labelling:
+                data, label = remove_labelling(data, self.__no_nu)
+                legend = [label]
             self._PlottingUtils__update_params(
                                                 file=file,
                                                 ax_letter=ax_letter,
@@ -133,6 +136,15 @@ class Plotting(PlottingUtils, Data):
                                                 **kwargs
                                                 )
             self._PlottingUtils__plot1D(ax_letter)
+            if 'min_legend_len' in kwargs:
+                if legend is not None:
+                    leg_len += len(legend)
+                if ax_letter in self.legend:
+                    leg_len += len(self.legend[ax_letter])
+                if leg_len >= kwargs['min_legend_len']:
+                    self.update_legend(legend, ax_letter)
+            else:
+                self.update_legend(legend, ax_letter)
         if 'return_letter' in kwargs:
             if kwargs['return_letter']:
                 return ax_letter
@@ -542,6 +554,10 @@ class Plotting(PlottingUtils, Data):
                                                           cbars[ax_letter]) 
             self._PlottingUtils__redo_plot()
         show_figure()
+        if 'return_letter' in kwargs:
+            if kwargs['return_letter']:
+                return plots[1]
+        
     
     def plot1DSpectrogram(self, qt, **kwargs):
         """

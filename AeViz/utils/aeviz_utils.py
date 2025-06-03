@@ -62,9 +62,9 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
         elif plane == 'time':
             if kwargs['spectrogram']:
                 if hasattr(AeViz.loaded_data, 'global_' + qt):
-                    AeViz.plotSpectrogram('global_' + qt, **kwargs)
+                    return AeViz.plotSpectrogram('global_' + qt, **kwargs)
                 else:
-                    AeViz.plotSpectrogram(qt, **kwargs)
+                    return AeViz.plotSpectrogram(qt, **kwargs)
             else:
                 AeViz.plotProfile(qt, **kwargs)
         else:

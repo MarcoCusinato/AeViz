@@ -274,21 +274,21 @@ def universal_modes_relation(PNS_mass, PNS_radius,
                                           '2g1_torres', '2g1_torres']):
 
     modes = {
-        '2f_torres':{'a': 0, 'b': 2e5, 'c': -8.5e6, 'd': 0,
+        '2f_torres':{'a': 0, 'b': 1.41e5, 'c': -4.23e6, 'd': 0,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2f', 'lb':r'$^2f$'},
-        '2p1_torres':{'a': 0, 'b': 3.12e5, 'c': 9.3e6, 'd': 0,
+        '2p1_torres':{'a': 0, 'b': 2.205e5, 'c': 4.63e6, 'd': 0,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2p1', 'lb':r'$^2p_1$'},
-        '2p2_torres':{'a': 0, 'b': 5.68e5, 'c': 14.7e6, 'd': 0,
+        '2p2_torres':{'a': 0, 'b': 4.02e5, 'c': 7.4e6, 'd': 0,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2p2', 'lb':r'$^2p_2$'},
-        '2p3_torres':{'a': 0, 'b': 8.78e5, 'c': -4e6, 'd': 0,
+        '2p3_torres':{'a': 0, 'b': 6.21e5, 'c': -1.9e6, 'd': 0,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2p3', 'lb':r'$^2p_3$'},
-        '2g1_torres':{'a': 0, 'b': 18.3e5, 'c': -225e6, 'd':0,
+        '2g1_torres':{'a': 0, 'b': 8.67e5, 'c': -51.9e6, 'd':0,
                      'mexp': 1, 'rexp': 2, 'nm':'2g1', 'lb':r'$^2g_1$'},
-        '2g1_torres':{'a': 0, 'b': 12.4e5, 'c': -378e6, 'd': 4.24e10,
+        '2g1_torres':{'a': 0, 'b': 5.88e5, 'c': -86.2e6, 'd': 4.67e10,
                      'mexp': 1, 'rexp': 2, 'nm':'2g2', 'lb':r'$^2g_2$'},          
     }
     md = modes[mode]
-    x = PNS_mass.data.to(u.Msol).value ** md['mexp'] / \
+    x = PNS_mass.data.to(u.Msun).value ** md['mexp'] / \
         PNS_radius.data.to(u.km).value ** md['rexp']
     val = md['a'] + md['b'] * x + md['c'] * x ** 2 + md['d'] * x ** 3
     frequency = aerray(val, u.Hz, md['nm'], md['lb'], None,

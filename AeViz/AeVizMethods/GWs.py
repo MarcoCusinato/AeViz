@@ -1,5 +1,4 @@
 from AeViz.AeVizMethods import *
-from AeViz.simulation.methods.GWs import GW_Amplitudes
 
 ## ---------------------------------------------------------------------
 ## GRAVITATIONAL WAVES
@@ -11,14 +10,16 @@ These functions are not meant to be used standalone, but rather to be
 imported into the AeViz class.
 """
 
+
 @fig_window_open
 def GWs(self, projection:Literal['1D', '2D']='1D',
         comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
-        decomposition=False, spectrogram=False, **kwargs):
+        decomposition=False, spectrogram=False, **kwargs):  
     if self.sim_dim == 1:
         pass
     kwargs['spectrogram'] = spectrogram
     kwargs.setdefault('mode', None)
+    kwargs.setdefault('modes', None)
     if self.sim_dim == 2:
         kwargs['comp'] = 'h+eq'
         if decomposition:
@@ -48,8 +49,21 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                 if letter in self.legend or len(leg) > 1:
                     self.update_legend(leg, letter)
         else:
-            AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 'time',
-                             **kwargs)
+            kwargs['return_letter'] = True
+            letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
+                                      'time', **kwargs)
+            if 'modes' is not None and spectrogram and projection == '2D':
+                if not isinstance(kwargs['modes'], list):
+                    modes = [kwargs['modes']]
+                else:
+                    modes = kwargs['modes']
+                kwargs['plot'] = letter
+                self.set_simple_labelling()
+                for mod in modes:
+                    kwargs['mode'] = mod
+                    self.plot1D(None, 'modes_universal_relations', 'time',
+                                **kwargs)
+                self.set_simple_labelling()
     else:
         if comp == 'all':
             for cm in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
@@ -81,8 +95,21 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                         if letter in self.legend or len(leg) > 1:
                             self.update_legend(leg, letter)
                 else:
-                    AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
-                                     'time', **kwargs)
+                    kwargs['return_letter'] = True
+                    letter = AeViz_plot_panel(self, 'GW_Amplitudes', None,
+                                              projection, 'time', **kwargs)
+                    if 'modes' is not None and spectrogram and projection == '2D':
+                        if not isinstance(kwargs['modes'], list):
+                            modes = [kwargs['modes']]
+                        else:
+                            modes = kwargs['modes']
+                        kwargs['plot'] = letter
+                        self.set_simple_labelling()
+                        for mod in modes:
+                            kwargs['mode'] = mod
+                            self.plot1D(None, 'modes_universal_relations', 'time',
+                                        **kwargs)
+                        self.set_simple_labelling()
         else:
             kwargs['comp'] = comp
             if decomposition:
@@ -111,10 +138,21 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                     if letter in self.legend or len(leg) > 1:
                         self.update_legend(leg, letter)
             else:
-                AeViz_plot_panel(self, 'GW_Amplitudes', None, projection, 
-                                 'time', **kwargs)
-        
-    kwargs['comp'] = comp
+                kwargs['return_letter'] = True
+                letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
+                                        'time', **kwargs)
+                if 'modes' is not None and spectrogram and projection == '2D':
+                    if not isinstance(kwargs['modes'], list):
+                        modes = [kwargs['modes']]
+                    else:
+                        modes = kwargs['modes']
+                    kwargs['plot'] = letter
+                    self.set_simple_labelling()
+                    for mod in modes:
+                        kwargs['mode'] = mod
+                        self.plot1D(None, 'modes_universal_relations', 'time',
+                                    **kwargs)
+                    self.set_simple_labelling()
 
 @fig_window_open
 def IMFs(self, projection:Literal['1D', '2D']='1D',
