@@ -460,7 +460,7 @@ class aerray(np.ndarray):
         if ufunc in [np.sin, np.cos, np.tan]:
             new_unit = u.dimensionless_unscaled
             if ufunc in [np.sin, np.cos]:
-                new_limits [-1, 1]
+                new_limits = [-1, 1]
             elif ufunc == np.tan:
                 # Check that none of the limits is NaN
                 if self.limits is not None:
