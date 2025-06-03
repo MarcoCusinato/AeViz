@@ -296,10 +296,15 @@ def get_radius(func):
                 theta = args[0].cell.theta(args[0].ghost)
             rad_x = np.sin(theta) * rad
             rad_y = np.cos(theta) * rad
-            out_rad = aeseries(
+        elif args[0].dim == 3:
+            if kwargs['plane'].casefold() == 'xy':
+                rad = rad[:, rad.shape[1] // 2]
+                phi = args[0].cell.phi(args[0].ghost)
+                rad_x = np.cos(phi) * rad
+                rad_y = np.sin(phi) * rad
+        return aeseries(
                 rad_y, X=rad_x
             )
-        return out_rad
     return wrapper
 
 
