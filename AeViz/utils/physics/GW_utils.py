@@ -272,7 +272,11 @@ def universal_modes_relation(PNS_mass, PNS_radius,
                              mode:Literal['2f_torres', '2p1_torres',
                                           '2p2_torres', '2p3_torres', 
                                           '2g1_torres', '2g1_torres']):
-
+    """
+    Universal relations coming from:
+        Torres-Forné+18 https://arxiv.org/pdf/1902.10048
+        Sotani+21
+    """
     modes = {
         '2f_torres':{'a': 0, 'b': 1.41e5, 'c': -4.23e6, 'd': 0,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2f', 'lb':r'$^2f$'},
@@ -284,7 +288,7 @@ def universal_modes_relation(PNS_mass, PNS_radius,
                      'mexp': 0.5, 'rexp': 3/2, 'nm':'2p3', 'lb':r'$^2p_3$'},
         '2g1_torres':{'a': 0, 'b': 8.67e5, 'c': -51.9e6, 'd':0,
                      'mexp': 1, 'rexp': 2, 'nm':'2g1', 'lb':r'$^2g_1$'},
-        '2g1_torres':{'a': 0, 'b': 5.88e5, 'c': -86.2e6, 'd': 4.67e10,
+        '2g2_torres':{'a': 0, 'b': 5.88e5, 'c': -86.2e6, 'd': 4.67e10,
                      'mexp': 1, 'rexp': 2, 'nm':'2g2', 'lb':r'$^2g_2$'},          
     }
     md = modes[mode]

@@ -52,11 +52,14 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
             kwargs['return_letter'] = True
             letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
                                       'time', **kwargs)
-            if 'modes' is not None and spectrogram and projection == '2D':
+            if kwargs['modes'] is not None and spectrogram and projection == '2D':
                 if not isinstance(kwargs['modes'], list):
                     modes = [kwargs['modes']]
                 else:
                     modes = kwargs['modes']
+                kwargs.pop('color', None)
+                kwargs.pop('c', None)
+                kwargs['lw'] = 1
                 kwargs['plot'] = letter
                 self.set_simple_labelling()
                 for mod in modes:
@@ -98,11 +101,14 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                     kwargs['return_letter'] = True
                     letter = AeViz_plot_panel(self, 'GW_Amplitudes', None,
                                               projection, 'time', **kwargs)
-                    if 'modes' is not None and spectrogram and projection == '2D':
+                    if kwargs['modes'] is not None and spectrogram and projection == '2D':
                         if not isinstance(kwargs['modes'], list):
                             modes = [kwargs['modes']]
                         else:
                             modes = kwargs['modes']
+                        kwargs.pop('color', None)
+                        kwargs.pop('c', None)
+                        kwargs['lw'] = 1
                         kwargs['plot'] = letter
                         self.set_simple_labelling()
                         for mod in modes:
@@ -141,11 +147,15 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                 kwargs['return_letter'] = True
                 letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
                                         'time', **kwargs)
-                if 'modes' is not None and spectrogram and projection == '2D':
+                if kwargs['modes'] is not None and spectrogram and projection == '2D':
                     if not isinstance(kwargs['modes'], list):
                         modes = [kwargs['modes']]
                     else:
                         modes = kwargs['modes']
+                    kwargs['plot'] = letter
+                    kwargs.pop('color', None)
+                    kwargs.pop('c', None)
+                    kwargs['lw'] = 1
                     kwargs['plot'] = letter
                     self.set_simple_labelling()
                     for mod in modes:
