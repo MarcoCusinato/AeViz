@@ -461,8 +461,13 @@ class aerray(np.ndarray):
             new_unit = u.dimensionless_unscaled
             if ufunc in [np.sin, np.cos]:
                 new_limits = [-1, 1]
+                if ufunc == np.sin:
+                    new_label = apply_symbol(self.label, r'\sin')
+                elif ufunc == np.cos:
+                    new_label = apply_symbol(self.label, r'\cos')
             elif ufunc == np.tan:
                 # Check that none of the limits is NaN
+                new_label = apply_symbol(self.label, r'\tan')
                 if self.limits is not None:
                     new_limits = [np.tan(self.limits[0]), \
                                   np.tan(self.limits[1])]
@@ -471,12 +476,14 @@ class aerray(np.ndarray):
         elif ufunc in [np.exp, np.log]:
             new_unit = u.dimensionless_unscaled
             if ufunc == np.exp:
+                new_label = apply_symbol(self.label, r'\exp')
                 if self.limits is not None:
                     new_limits = [np.exp(self.limits[0]), \
                                   np.exp(self.limits[1])]
                 else:
                     new_limits = self.limits
             elif ufunc == np.log:
+                new_label = apply_symbol(self.label, r'\log')
                 if self.limits is not None:
                     # Check existance conditions for log
                     if self.limits[0] <= 0.0:
