@@ -103,6 +103,24 @@ def gravitational_energy(self, file_name, **kwargs):
              limits=[-1e22, -1e15], cmap='magma')
     return data
 
+@get_grid
+@smooth
+@derive
+def lapse_function(self, file_name, **kwargs):
+    if self.lapse_form == 1:
+        alpha = 1 + self.gravitational_potential(file_name) / c.c ** 2
+    elif self.lapse_form == 2:
+        alpha = np.exp(self.gravitational_potential(file_name) / c.c ** 2)
+    elif self.lapse_form == 3:
+        alpha = np.where(self.gravitational_potential(file_name) / c.c ** 2 >= -1,
+                         np.exp(-(self.gravitational_potential(file_name) / c.c ** 2)**2))
+    else:
+        alpha = aerray(np.ones_like(self.gravitational_potential(file_name)),
+                       u.dimensionless_unscaled)
+    alpha.set(name='lapse', label=r'$\alpha$', cmap='rainbow', limits=[-1, 1],
+              log=False)
+    return alpha
+    
 ## ENERGY
 @get_grid
 @smooth

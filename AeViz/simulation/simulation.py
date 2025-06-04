@@ -33,7 +33,7 @@ class Simulation:
                                     simulation_folder_path)
         parfile = load_parfile('start.pars', os.path.join(self.path, 'pars'))
         self.GEOM, self.dim, self.relativistic, \
-            self.evolved_qts = get_simulation_info(parfile)
+            self.evolved_qts, self.lapse_form = get_simulation_info(parfile)
         self.ghost_cells = get_stencils(parfile)
         self.hydroTHD_index = get_indices_from_parfile(parfile)
         self.cell = cell(self.path, self.dim, geom=self.GEOM,

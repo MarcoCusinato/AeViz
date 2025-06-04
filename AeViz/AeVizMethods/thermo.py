@@ -51,6 +51,11 @@ def gravitational_energy(self, file=None, projection:Literal['1D', '2D']='1D',
     AeViz_plot_panel(self, 'gravitational_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
+def lapse_function(self, file=None, projection:Literal['1D', '2D']='1D',
+                            plane='time', **kwargs):
+    AeViz_plot_panel(self, 'lapse_function', file, projection, plane, **kwargs)
+
+@fig_window_open
 def int_ene(self, file=None, projection:Literal['1D', '2D']='1D',
                             plane='time', **kwargs):
     AeViz_plot_panel(self, 'internal_energy', file, projection, plane, **kwargs)

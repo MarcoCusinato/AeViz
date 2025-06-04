@@ -127,12 +127,13 @@ def get_simulation_info(parfile):
     varspars = parfile["VARSPARS"]
     geometry = varspars["GEOMETRY"]
     dim = varspars["EVOLVE_X"] + varspars["EVOLVE_Y"] + varspars["EVOLVE_Z"]
+    lapse_form = int(parfile["GRAVPARS"]["LAPSE_FORM"])
     
     qts = {
         key.casefold(): varspars[key] for key in varspars.keys() if key not in
         ['geometry', 'evolve_x', 'evolve_y', 'evolve_z']
     }
-    return geometry, dim, parfile["PHYSSYST"]["RELATIVISTIC"], qts
+    return geometry, dim, parfile["PHYSSYST"]["RELATIVISTIC"], qts, lapse_form
 
 def get_initial_parameters(path_folder):
     initial_parameters = {"omgadd": 0.0,
