@@ -78,8 +78,10 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
 
   ae.update_legend(sims)
   ae.title('Time = %.1f s' % args.tr)
-  ae.save_plot('%s_r.pdf' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
-  ae.save_plot('%s_r.png' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
+  ae.save_plot('%s_r.pdf' % q, savedir=args.savedir, \
+               kwargs_savefig={'bbox_inches' : 'tight'})
+  ae.save_plot('%s_r.png' % q, savedir=args.savedir, \
+               kwargs_savefig={'bbox_inches' : 'tight'})
   ae.Close()
 
 # 2D plots - Time
