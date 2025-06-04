@@ -235,7 +235,7 @@ class PlottingUtils(PlotCreation):
             self.axd[axd_letter].set_ylabel(ylabel + f' [{unit:latex}]')
         self.__save_labels(axd_letter)
     
-    def update_legend(self, legend, axd_letter="A"):
+    def update_legend(self, legend, axd_letter="A", loc='upper right'):
         """
         Plot the legend of the plot at the corresponding letter. The
         number of legend entries must be the same as the number of
@@ -260,7 +260,7 @@ class PlottingUtils(PlotCreation):
             for ll in range(len(self.legend[axd_letter])):
                 self.axd[axd_letter].lines[ll].set_label(
                     self.legend[axd_letter][ll])
-            self.axd[axd_letter].legend(loc='upper right')
+            self.axd[axd_letter].legend(loc=loc)
 
     def __update_params(self, file=None, ax_letter=None, plane=None, data=None,
                         cbar_position=None, dim=None, sim_dim=None,
