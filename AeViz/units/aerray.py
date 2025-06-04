@@ -332,9 +332,19 @@ class aerray(np.ndarray):
                 new_label = r'%.1e / %s' % (other, self.label)
             else:
                 new_label = self.label
-            # Check that none of the limits is NaN
+            # Check that none of the limits is None
             if self.limits is not None:
-                new_limits = [other / self.limits[0], other / self.limits[1]]
+                # Avoid division by zero in limits
+                if self.limits[0] == 0.0:
+                    lim0 = self.limits[0]
+                else:
+                    lim0 = other / self.limits[0]
+                
+                if self.limits[1] == 0.0:
+                    lim1 = self.limits[1]
+                else:
+                    lim1 = other / self.limits[1]
+                new_limits = [lim0, lim1]
             else:
                 new_limits = self.limits
             return aerray(other / self.value,
