@@ -70,7 +70,7 @@ def get_grid(func):
                                      args[0].cell.dphi(args[0].ghost)[:, None, None]),
                                      **{X.name: X, Y.name: Y}))
         else:
-            raise TypeError(f'plane type {kwargs['plane']} not recognized')
+            raise TypeError(f"plane type {kwargs['plane']} not recognized")
         if len(outdata) == 1:
             return outdata[0]
         else:
