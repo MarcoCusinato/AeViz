@@ -296,10 +296,38 @@ def get_radius(func):
                 theta = args[0].cell.theta(args[0].ghost)
             rad_x = np.sin(theta) * rad
             rad_y = np.cos(theta) * rad
-            out_rad = aeseries(
+        elif args[0].dim == 3:
+            if kwargs['plane'].casefold() == 'xy':
+                rad = rad[:, rad.shape[1] // 2]
+                phi = args[0].cell.phi(args[0].ghost)
+                rad_x = np.cos(phi) * rad
+                rad_y = np.sin(phi) * rad
+            elif kwargs['plane'].casefold() == 'xz':
+                index_phi_1 = rad.shape[0] // 2
+                index_phi_2 = (index_phi_1 + rad.shape[0] // 2) % rad.shape[0]
+                theta = args[0].cell.theta(args[0].ghost)
+                theta = np.concatenate((theta, theta+np.pi * u.radian))
+                rad = np.concatenate((np.flip(rad[index_phi_1, :]),
+                                      rad[index_phi_2, :]))
+                rad_x = np.sin(theta) * rad
+                rad_y = np.cos(theta) * rad
+            elif kwargs['plane'].casefold() == 'yz':
+                index_phi_1 = rad.shape[0] // 4
+                index_phi_2 = (index_phi_1 + rad.shape[0] // 2) % rad.shape[0]
+                theta = args[0].cell.theta(args[0].ghost)
+                theta = np.concatenate((theta, theta+np.pi * u.radian))
+                rad = np.concatenate((np.flip(rad[index_phi_1, :]),
+                                      rad[index_phi_2, :]))
+                rad_x = np.sin(theta) * rad
+                rad_y = np.cos(theta) * rad
+            elif kwargs['plane'].casefold() == 'xz_phi_avg':
+                theta = args[0].cell.theta(args[0].ghost)
+                rad = np.mean(rad, axis=0)
+                rad_x = np.sin(theta) * rad
+                rad_y = np.cos(theta) * rad
+        return aeseries(
                 rad_y, X=rad_x
             )
-        return out_rad
     return wrapper
 
 
