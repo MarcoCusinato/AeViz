@@ -61,6 +61,12 @@ def int_ene(self, file=None, projection:Literal['1D', '2D']='1D',
     AeViz_plot_panel(self, 'internal_energy', file, projection, plane, **kwargs)
 
 @fig_window_open
+def int_ene_spec(self, file=None, projection:Literal['1D', '2D']='1D',
+                            plane='time', **kwargs):
+    AeViz_plot_panel(self, 'specific_internal_energy', file, projection, plane,
+                     **kwargs)
+
+@fig_window_open
 def nu_heat(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
             **kwargs):
     AeViz_plot_panel(self, 'nu_heat', file, projection, plane, **kwargs)

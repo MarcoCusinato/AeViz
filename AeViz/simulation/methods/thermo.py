@@ -136,6 +136,16 @@ def internal_energy(self, file_name, **kwargs):
 @get_grid
 @smooth
 @derive
+def specific_internal_energy(self, file_name, **kwargs):
+    data = self.internal_energy(file_name) / self.rho(file_name)
+    data.set(name='specific_internal_energy',
+             label=r'$\varepsilon_\mathrm{int}$', cmap='nipy_spectral',
+             limits=[1e16, 1e20], log=True)
+    return data
+
+@get_grid
+@smooth
+@derive
 @hdf_isopen
 def nu_heat(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
