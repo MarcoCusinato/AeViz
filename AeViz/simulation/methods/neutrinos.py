@@ -24,11 +24,11 @@ def neutrino_energy_density(self, file_name, **kwargs):
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['neutrino/e'][..., 0]), self.dim)
     except:
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+        self._Simulation__data_h5['notrino/notrino_e'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
         # (hopefully) not having to change a lot in the library
-        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['notrino/notrino_e'][:, :, :, None, :]), \
-            self.dim)
+        nu_ene = np.expand_dims(nu_ene, axis = -2)
     nu_ene[..., 2] /= 4
     return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
                   r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
@@ -53,12 +53,12 @@ def neutrino_momenta(self, file_name, **kwargs):
         nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
     except:
-        # Adding a fictitious to account for missing energy bin and thus
-        # (hopefully) not having to change a lot in the library
         notrino = True
         nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
-            self._Simulation__data_h5['notrino/notrino_f'][:, :, :, None, :]), 
-                self.dim)
+            self._Simulation__data_h5['notrino/notrino_f'][...]), self.dim)
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        nu_flux = np.expand_dims(nu_flux, axis = -2)
     ## Insert a new axis to be consistent with the other dimensions
     if self.dim == 1 or notrino:
         nu_flux[..., 2] /= 4
@@ -101,18 +101,18 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
     except:
-        # Adding a fictitious to account for missing energy bin and thus
-        # (hopefully) not having to change a lot in the library
         notrino = True
         #nu_opac_ae = self.ghost.remove_ghost_cells(np.squeeze(
         #    self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
-            self._Simulation__data_h5['notrino/notrino_ktr'][:, :, :, None, :]), 
-            self.dim)
+            self._Simulation__data_h5['notrino/notrino_ktr'][...]), self.dim)
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        nu_opac = np.expand_dims(nu_opac, axis = -2)
     #if self.dim == 1:
     #    nu_opac = nu_opac[..., None]
     
-    if self.dim == 1:
+    if self.dim == 1 or notrino:
         return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
                   r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
                 aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
@@ -145,8 +145,9 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
 def neutrino_number_density(self, file_name, **kwargs):
     if 'notrino/notrino_n' in self._Simulation__data_h5:
         ndens = self.ghost.remove_ghost_cells(np.squeeze(
-            self._Simulation__data_h5['notrino/notrino_n'][:, :, :, None, :]), 
+            self._Simulation__data_h5['notrino/notrino_n'][...]), 
             self.dim)
+        ndens = np.expand_dims(ndens, axis = -2)
         return (aerray(ndens[..., 0], u.cm ** (-3), 'Nnue',
                   r'$N_{\nu_\mathrm{e}}$', 'gnuplot', [1e33, 1e36], True),
                 aerray(ndens[..., 1], u.cm ** (-3), 'Nnua',
@@ -295,8 +296,8 @@ def neutrino_number_density_grey(self, file_name,
 @hdf_isopen
 def neutrino_number_density_BB(self, file_name, **kwargs):
     ndens = self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['notrino/notrino_nBB'][:, :, :, None, :]), 
-        self.dim)
+        self._Simulation__data_h5['notrino/notrino_nBB'][...]), self.dim)
+    ndens = np.expand_dims(ndens, axis = -2)
     return (aerray(ndens[..., 0], u.cm ** (-3), 'Nnue_BB',
                 r'$N_{\nu_\mathrm{e}}^\mathrm{BB}$', 'gnuplot', [1e33, 1e36], 
                 True),
@@ -317,8 +318,8 @@ def neutrino_energy_density_BB(self, file_name, **kwargs):
     Now with NOTRINO case!
     """
     nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
-    self._Simulation__data_h5['notrino/notrino_eBB'][:, :, :, None, :]), \
-        self.dim)
+    self._Simulation__data_h5['notrino/notrino_eBB'][...]), self.dim)
+    nu_ene = np.expand_dims(nu_ene, axis = -2)
     nu_ene[..., 2] /= 4
     return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens_BB',
                   r'$E_{\nu_\mathrm{e}}^\mathrm{BB}$', 'viridis', [1e28, 1e32], 
