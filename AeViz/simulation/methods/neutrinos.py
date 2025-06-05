@@ -16,8 +16,19 @@ imported into the Simulation class.
 @smooth
 @hdf_isopen
 def neutrino_energy_density(self, file_name, **kwargs):
-    nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+    """
+    Neutrino energy density.
+    Now with NOTRINO case!
+    """
+    try:
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['neutrino/e'][..., 0]), self.dim)
+    except:
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+        self._Simulation__data_h5['notrino/notrino_e'][:, :, :, None, :]), \
+            self.dim)
     nu_ene[..., 2] /= 4
     return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
                   r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
@@ -34,12 +45,22 @@ def neutrino_energy_density(self, file_name, **kwargs):
 def neutrino_momenta(self, file_name, **kwargs):
     """
     In the comoving rest frame of the fluid are equal to the
-    neutrino energy fluxes
+    neutrino energy fluxes.
+    Now with NOTRINO case!
     """
-    nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
+    notrino = False
+    try:
+        nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
+    except:
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        notrino = True
+        nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['notrino/notrino_f'][:, :, :, None, :]), 
+                self.dim)
     ## Insert a new axis to be consistent with the other dimensions
-    if self.dim == 1:
+    if self.dim == 1 or notrino:
         nu_flux[..., 2] /= 4
         return (aerray(nu_flux[..., 0], u.erg / u.s / u.cm ** 2, 'nue_fdens',
                   r'$F_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
@@ -71,8 +92,23 @@ def neutrino_momenta(self, file_name, **kwargs):
 @smooth
 @hdf_isopen
 def neutrino_momenta_opacities(self, file_name, **kwargs):
-    nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
+    """
+    Neutrino opacities.
+    Now with NOTRINO case!
+    """
+    notrino = False
+    try:
+        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
+    except:
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        notrino = True
+        #nu_opac_ae = self.ghost.remove_ghost_cells(np.squeeze(
+        #    self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
+        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['notrino/notrino_ktr'][:, :, :, None, :]), 
+            self.dim)
     #if self.dim == 1:
     #    nu_opac = nu_opac[..., None]
     
@@ -105,39 +141,32 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@hdf_isopen
 def neutrino_number_density(self, file_name, **kwargs):
-    edens = list(self.neutrino_energy_density(file_name))
-    de = self.cell.E_nu().to(u.erg)
-    edens = [ed / de for ed in edens]
-    [ed.set(label=s1, name=s2, limits=s3, cmap=s4, log=True) for (s1, s2, s3, s4) 
-             in zip([r'$N_{\nu_\mathrm{e}}$',
-                     r'$N_{\overline{\nu}_\mathrm{e}}$',
-                     r'$N_{\nu_\mathrm{x}}$'],
-                    ['Nnue', 'Nnua', 'Nnux'],
-                    [[1e33, 1e36], [1e31, 1e34], [1e32, 1e35]],
-                    ['gnuplot', 'gnuplot_2', 'CMRmap']) for ed in edens]
-    return tuple(edens)
-
-@get_grid
-@smooth
-def neutrino_number_density_grey(self, file_name,
-                                 comp:Literal['all', 'nue', 'nua', 'nux']='all',
-                                 **kwargs):
-    ndens = self.neutrino_number_density(file_name)
-    final_nd = []
-    for nd in ndens:
-        lm, lb, cm, nm, lg  = nd.limits, nd.label, nd.cmap, nd.name, nd.log
-        nnd = nd.sum(axis=-1)
-        nnd.set(limits=lm, label=lb, cmap=cm, name=nm, log=lg)
-        final_nd.append(nnd)
-    if comp == 'all':
-        return final_nd
-    elif comp == 'nue':
-        return final_nd[0]
-    elif comp == 'nua':
-        return final_nd[1]
-    elif comp == 'nux':
-        return final_nd[2]
+    if 'notrino/notrino_n' in self._Simulation__data_h5:
+        ndens = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['notrino/notrino_n'][:, :, :, None, :]), 
+            self.dim)
+        return (aerray(ndens[..., 0], u.cm ** (-3), 'Nnue',
+                  r'$N_{\nu_\mathrm{e}}$', 'gnuplot', [1e33, 1e36], True),
+                aerray(ndens[..., 1], u.cm ** (-3), 'Nnua',
+                  r'$N_{\overline{\nu}_\mathrm{e}}$', 'gnuplot_2',
+                  [1e31, 1e34], True),
+                aerray(ndens[..., 2], u.cm ** (-3), 'Nnux',
+                  r'$N_{\nu_\mathrm{x}}$', 'CMRmap', [1e32, 1e35], True)
+                )
+    else:
+        edens = list(self.neutrino_energy_density(file_name))
+        de = self.cell.E_nu().to(u.erg)
+        edens = [ed / de for ed in edens]
+        [ed.set(label=s1, name=s2, limits=s3, cmap=s4, log=True) for (s1, s2, s3, s4) 
+                in zip([r'$N_{\nu_\mathrm{e}}$',
+                        r'$N_{\overline{\nu}_\mathrm{e}}$',
+                        r'$N_{\nu_\mathrm{x}}$'],
+                        ['Nnue', 'Nnua', 'Nnux'],
+                        [[1e33, 1e36], [1e31, 1e34], [1e32, 1e35]],
+                        ['gnuplot', 'gnuplot_2', 'CMRmap']) for ed in edens]
+        return tuple(edens)
 
 @get_grid
 @smooth
@@ -236,4 +265,68 @@ def neutrino_momenta_grey(self, file_name, **kwargs):
                  r'$F_{\nu_\mathrm{x}, \phi}$'],
                 ['RdYlBu_r', 'RdYlGn_r', 'Spectral_r'],
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True)
+            )
+
+@get_grid
+@smooth
+def neutrino_number_density_grey(self, file_name,
+                                 comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                                 **kwargs):
+    ndens = self.neutrino_number_density(file_name)
+    final_nd = []
+    for nd in ndens:
+        lm, lb, cm, nm, lg  = nd.limits, nd.label, nd.cmap, nd.name, nd.log
+        nnd = nd.sum(axis=-1)
+        nnd.set(limits=lm, label=lb, cmap=cm, name=nm, log=lg)
+        final_nd.append(nnd)
+    if comp == 'all':
+        return final_nd
+    elif comp == 'nue':
+        return final_nd[0]
+    elif comp == 'nua':
+        return final_nd[1]
+    elif comp == 'nux':
+        return final_nd[2]
+    
+# BLACK BODY
+
+@get_grid
+@smooth
+@hdf_isopen
+def neutrino_number_density_BB(self, file_name, **kwargs):
+    ndens = self.ghost.remove_ghost_cells(np.squeeze(
+        self._Simulation__data_h5['notrino/notrino_nBB'][:, :, :, None, :]), 
+        self.dim)
+    return (aerray(ndens[..., 0], u.cm ** (-3), 'Nnue_BB',
+                r'$N_{\nu_\mathrm{e}}^\mathrm{BB}$', 'gnuplot', [1e33, 1e36], 
+                True),
+            aerray(ndens[..., 1], u.cm ** (-3), 'Nnua_BB',
+                r'$N_{\overline{\nu}_\mathrm{e}}^\mathrm{BB}$', 'gnuplot_2',
+                [1e31, 1e34], True),
+            aerray(ndens[..., 2], u.cm ** (-3), 'Nnux_BB',
+                r'$N_{\nu_\mathrm{x}}^\mathrm{BB}$', 'CMRmap', [1e32, 1e35], 
+                True)
+            )
+    
+@get_grid
+@smooth
+@hdf_isopen
+def neutrino_energy_density_BB(self, file_name, **kwargs):
+    """
+    Neutrino energy density, black body equivalent.
+    Now with NOTRINO case!
+    """
+    nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+    self._Simulation__data_h5['notrino/notrino_eBB'][:, :, :, None, :]), \
+        self.dim)
+    nu_ene[..., 2] /= 4
+    return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens_BB',
+                  r'$E_{\nu_\mathrm{e}}^\mathrm{BB}$', 'viridis', [1e28, 1e32], 
+                  True),
+            aerray(nu_ene[..., 1], u.erg / u.cm ** 3, 'nua_edens_BB',
+                  r'$E_{\overline{\nu}_\mathrm{e}}^\mathrm{BB}$', 'magma',
+                  [1e28, 1e32], True),
+            aerray(nu_ene[..., 2], u.erg / u.cm ** 3, 'nux_edens_BB',
+                  r'$E_{\nu_\mathrm{x}}^\mathrm{BB}$', 'plasma', [1e28, 1e32], 
+                  True)
             )
