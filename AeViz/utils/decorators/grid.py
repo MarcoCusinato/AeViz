@@ -90,18 +90,18 @@ def _get_plane_indices(sim, plane):
         index_phi = None
         index_theta = None
     elif sim.dim == 2:
-        if plane in ['xy', 'yx']:
+        if plane.casefold() in ['xy', 'yx']:
             index_theta = len(sim.cell.theta(sim.ghost)) // 2
         else:
             index_theta = None
         index_phi = None
-    elif plane in ['xy', 'yx']:
+    elif plane.casefold() in ['xy', 'yx']:
         index_phi = None
         index_theta = len(sim.cell.theta(sim.ghost)) // 2
-    elif plane in ['xz', 'zx']:
+    elif plane.casefold() in ['xz', 'zx']:
         index_phi = len(sim.cell.phi(sim.ghost)) // 2
         index_theta = None
-    elif plane in ['yz', 'zy']:
+    elif plane.casefold() in ['yz', 'zy']:
         index_theta = None
         index_phi = (len(sim.cell.phi(sim.ghost)) - (2 * \
             sim.ghost.ghost - sim.ghost.p_l - sim.ghost.p_r)) // 4 + \

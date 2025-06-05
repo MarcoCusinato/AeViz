@@ -911,7 +911,7 @@ class Plotting(PlottingUtils, Data):
             vphi = self._Data__get_data_from_name('phi_velocity', file)
             vphi = self.__plane_cut(self.sim_dim, vphi, index_theta, index_phi)
             
-            if plane == 'xy':
+            if plane.casefold() == 'xy':
                 theta = theta[index_theta]
                 vx = vr * np.sin(theta) * np.cos(phi)[:, None] + \
                      vtheta * np.cos(theta) * np.cos(phi)[:, None] - \
@@ -919,24 +919,24 @@ class Plotting(PlottingUtils, Data):
                 vy = vr * np.sin(theta) * np.sin(phi)[:, None] + \
                     vtheta * np.cos(theta) * np.sin(phi)[:, None] + \
                     vphi * np.cos(phi)[:, None]
-            elif plane == 'xz':
+            elif plane.casefold() == 'xz':
                 ## We drop vphi because it is moduled by sin(phi)
                 ## that is zero in the xz plane
                 phi = phi[index_phi]
                 ## Theta angle is wrong, but gives the correct
                 ## modulation of phi
-                theta = np.concatenate((theta, theta + np.pi))
+                theta = np.concatenate((theta, theta + np.pi * u.radian))
                 vx = vr * np.sin(theta)[:, None] * np.cos(phi) + \
                      vtheta * np.cos(theta)[:, None] * np.cos(phi)
                 vy = vr * np.cos(theta)[:, None] - \
                       vtheta * np.sin(theta)[:, None]
-            elif plane == 'yz':
+            elif plane.casefold() == 'yz':
                 ## We drop vphi because it is moduled by cos(phi)
                 ## that is zero in the yz plane
                 phi = phi[index_phi]
                 ## Theta angle is wrong, but gives the correct
                 ## modulation of phi
-                theta = np.concatenate((theta, theta + np.pi))
+                theta = np.concatenate((theta, theta + np.pi * u.radian))
                 ## Minus are necessary to get the correct result
                 vx = -vr * np.sin(theta)[:, None] * np.sin(phi) + \
                      -vtheta * np.cos(theta)[:, None] * np.sin(phi)
