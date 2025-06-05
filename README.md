@@ -43,6 +43,8 @@ First of all, let's use the former to save some simulation's path as
 add_Aenus_sim_paths --add-paths /path/to/parent/
 ```
 This will scan the parent folder for simulations. Be careful that if you feed it the simulation path it will not recognize it.
+The name of the simulations and the path to it are stored in the dictionary `simulations_dictionary.py` in the hidden folder `Aenus_simulation_postprocessing/.utils/`. 
+If you want to make any change related to names or paths, you can simply modify this file.
 
 After a simulation path has been saved you can access it by simply using the name of the simulation folder.<br/>
 Then we can run the second script with the additional keyword `--plot` as 
