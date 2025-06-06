@@ -170,7 +170,9 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
 @smooth
 @hdf_isopen
 def neutrino_number_density(self, file_name, **kwargs):
-    if 'notrino/notrino_n' in self._Simulation__data_h5:
+    # If notrino is used, the number density is returned in  the output,
+    # and there is no need to compute it.
+    try:
         ndens = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_n'][...]), 
             self.dim)
@@ -183,7 +185,7 @@ def neutrino_number_density(self, file_name, **kwargs):
                 aerray(ndens[..., 2], u.cm ** (-3), 'Nnux',
                   r'$N_{\nu_\mathrm{x}}$', 'CMRmap', [1e32, 1e35], True)
                 )
-    else:
+    except:
         edens = list(self.neutrino_energy_density(file_name))
         de = self.cell.E_nu().to(u.erg)
         edens = [ed / de for ed in edens]
@@ -224,7 +226,7 @@ def neutrino_mean_energy(self, file_name,
     elif comp == 'nua':
         return mean_ene[1]
     elif comp == 'nux':
-        return mean_ene[2]
+        return mean_ene[2]   
 
 ## GREY
 
