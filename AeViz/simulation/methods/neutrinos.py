@@ -142,7 +142,7 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
     if self.dim == 1 or notrino:
         return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
                   r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
-                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
+                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa',
                   r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
                   [-1e40, 1e40], True),
                 aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
