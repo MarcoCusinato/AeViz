@@ -25,14 +25,6 @@ args = parser.parse_args()
 
 TIMES = np.arange(args.time - 0.05, args.time + args.dt, args.dt, dtype=float)
 
-fig, ax = plt.subplots()
-ax.set_xlim([1e4, 1e7])
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_xlabel('Radius [cm]')
-ax.set_ylabel(r'$B_{\nu}$')
-ax.text(0.1, 0.9, '%.3f s' % args.time, transform = ax.transAxes)
-
 # Open the simulation
 m = Simulation(args.sim_name, args.sim_path)
 r = m.cell.radius(m.ghost) # Radius of the simulation
@@ -55,6 +47,14 @@ k_neu = {
   'nua' : 0,
   'nux' : 0
 }
+
+# Set up the figure
+fig, ax = plt.subplots()
+ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_xlabel('Radius [cm]')
+ax.set_ylabel(r'$B_{\nu}$')
+ax.text(0.1, 0.9, '%.3f s' % args.time, transform = ax.transAxes)
 
 for time in TIMES:
   time = float(time)
@@ -124,9 +124,12 @@ print('B1_e: %.3e' % B1[0])
 print('B1_a: %.3e' % B1[1])
 print('B1_x: %.3e' % B1[2])
 
-ax.hlines(B0, 1e4, np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+ax.set_xlim([r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+          neu_sph['nux'].data[it]])])
+
+ax.hlines(B0, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
           neu_sph['nux'].data[it]]), ls=':', colors = COLOURS)
-ax.hlines(B1, 1e4, np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+ax.hlines(B1, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
           neu_sph['nux'].data[it]]), ls='-.', colors = COLOURS)
 
 handles = [
