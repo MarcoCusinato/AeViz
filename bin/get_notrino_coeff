@@ -81,7 +81,7 @@ for time in TIMES:
     kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
                         m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
     
-    B1_loc = kt_mean[:k] / ((rho * 1.e-10) * (np.maximum(T[:k], T[k]) ** 2) * \
+    B1_loc = kt_mean[:k] / ((rho[:k] * 1.e-10) * (np.maximum(T[:k], T[k]) ** 2) * \
                             (Xn[:k] + Xp[:k]))
     
     if species == 'nux':
