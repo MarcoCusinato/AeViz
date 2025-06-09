@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from matplotlib.lines import Line2D
+import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
@@ -74,7 +75,7 @@ for time in TIMES:
     it = np.argwhere(neu_sph[species].time == m.time(time))[0][0]
     neu_sph_radius = neu_sph[species].data[it]
     # Getting the index corresponding to the position
-    k = np.argmin(np.abs(r - 0.7 * neu_sph_radius))
+    k = np.argmin(np.abs(r - 0.9 * neu_sph_radius))
     k_neu[species] = int(k)
 
     # Averaging the opacities over the energy bins
@@ -143,4 +144,9 @@ handles = [
 ]
 ax.legend(handles=handles)
 
+<<<<<<< HEAD
 plt.show()
+=======
+plt.savefig(os.path.join(m.storage_path, 'notrino_coeff.pdf'), \
+            bbox_inches='tight')
+>>>>>>> cc86507c1e1fe8367852c29410e631b607dc6180
