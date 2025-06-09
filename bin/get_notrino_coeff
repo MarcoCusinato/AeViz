@@ -128,4 +128,4 @@ ax.hlines(B0, 1e4, np.max(neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
 ax.hlines(B1, 1e4, np.max(neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
           neu_sph['nux'].data[it]), ls='.-', colors = COLOURS)
 
-ax.show()
+plt.show()
