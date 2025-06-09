@@ -97,8 +97,8 @@ for time in TIMES:
                   np.nansum((r[:k] ** 2) * dr[:k])
     B1_loc_ravg = np.nansum(B1_loc * (r[:k] ** 2) * dr[:k]) / \
                   np.nansum((r[:k] ** 2) * dr[:k])
-    B1[i_species][:k] += B1_loc_ravg
-    B0[i_species][:k] += B0_loc_ravg
+    B1[i_species] += B1_loc_ravg
+    B0[i_species] += B0_loc_ravg
     if (time == args.time):
       print(time)
 
