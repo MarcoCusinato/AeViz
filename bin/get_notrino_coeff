@@ -128,19 +128,19 @@ print('B1_x: %.3e' % B1[2])
 ax.set_xlim([r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
           neu_sph['nux'].data[it]])])
 
-ax.hlines(B0, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
-          neu_sph['nux'].data[it]]), ls=':', colors = COLOURS)
-ax.hlines(B1, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
-          neu_sph['nux'].data[it]]), ls='-.', colors = COLOURS)
+#ax.hlines(B0, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+#          neu_sph['nux'].data[it]]), ls=':', colors = COLOURS)
+#ax.hlines(B1, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+#          neu_sph['nux'].data[it]]), ls='-.', colors = COLOURS)
 
 handles = [
   Line2D([0], [0], color='red', ls='', marker='o', label=r'$\nu_\mathrm{e}$'), \
   Line2D([0], [0], color='blue', ls='', marker='o', label=r'$\bar{\nu}_\mathrm{e}$') , \
   Line2D([0], [0], color='black', ls='', marker='o', label=r'$\nu_\mathrm{x}$'), \
   Line2D([0], [0], color='grey', ls='-', label=r'$B_0$'),  \
-  Line2D([0], [0], color='grey', ls='--', label=r'$B_1$'), \
-  Line2D([0], [0], color='grey', ls=':', label=r'$\langle B_0 \rangle$'), \
-  Line2D([0], [0], color='grey', ls='-.', label=r'$\langle B_1 \rangle$')
+  Line2D([0], [0], color='grey', ls='--', label=r'$B_1$')#, \
+  #Line2D([0], [0], color='grey', ls=':', label=r'$\langle B_0 \rangle$'), \
+  #Line2D([0], [0], color='grey', ls='-.', label=r'$\langle B_1 \rangle$')
 ]
 ax.legend(handles=handles)
 
