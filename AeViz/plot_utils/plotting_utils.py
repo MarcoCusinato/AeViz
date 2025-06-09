@@ -523,7 +523,8 @@ class PlottingUtils(PlotCreation):
         except:
             indx = self.plot_dim[ax_letter].index(-3)
         norm, fmt, _ = self.__normalize_format_cbar(ax_letter)
-        if 'lmin' in kwargs:
+        if 'lmin' in kwargs or self.grid[ax_letter][indx][1].label in [r'$l$',
+                                                                    r'$2l+1$']:
             sh = 'auto'
         else:
             sh = 'gouraud'
