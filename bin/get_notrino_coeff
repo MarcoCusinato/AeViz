@@ -144,9 +144,5 @@ handles = [
 ]
 ax.legend(handles=handles)
 
-<<<<<<< HEAD
-plt.show()
-=======
 plt.savefig(os.path.join(m.storage_path, 'notrino_coeff.pdf'), \
             bbox_inches='tight')
->>>>>>> cc86507c1e1fe8367852c29410e631b607dc6180
