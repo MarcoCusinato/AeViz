@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from matplotlib.lines import Line2D
+import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
@@ -143,4 +144,5 @@ handles = [
 ]
 ax.legend(handles=handles)
 
-plt.show()
+plt.savefig(os.path.join(m.storage_path, 'notrino_coeff.pdf'), \
+            bbox_inches='tight')
