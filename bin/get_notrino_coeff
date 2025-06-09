@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import warnings
 
 SPECIES = ['nue', 'nua', 'nux']
+COLOURS = ['red', 'blue', 'black']
 
 warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
@@ -100,7 +101,8 @@ for time in TIMES:
     B1[i_species] += B1_loc_ravg
     B0[i_species] += B0_loc_ravg
     if (time == args.time):
-      print(time)
+      ax.plot(r.value[:k], B0_loc, color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k], B1_loc, color = COLOURS[i_species], ls='--')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutirnosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
@@ -120,3 +122,10 @@ print('B0_x: %.3e' % B0[2])
 print('B1_e: %.3e' % B1[0])
 print('B1_a: %.3e' % B1[1])
 print('B1_x: %.3e' % B1[2])
+
+ax.hlines(B0, 1e4, np.max(neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+          neu_sph['nux'].data[it]), ls=':', colors = COLOURS)
+ax.hlines(B1, 1e4, np.max(neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
+          neu_sph['nux'].data[it]), ls='.-', colors = COLOURS)
+
+ax.show()
