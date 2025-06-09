@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import argparse
+from AeViz.simulation import Simulation
+import numpy as np
+import matplotlib.pyplot as plt
+import warnings
+
+SPECIES = ['nue', 'nua', 'nux']
+
+warnings.filterwarnings("ignore")
+parser = argparse.ArgumentParser()
+parser.add_argument('--sim-name', required=True, type=str, \
+                    help ='Name of the simulation')
+parser.add_argument('--sim-path', type=str, default=None, required=False,
+                    help="Path of the simulation.")
+parser.add_argument('--time', required=True, type=float, \
+            help='Time at which you want to start using NOTRINO (in seconds)')
+parser.add_argument('--dt', type=float, required=True, \
+        help='Time Tipestep for saving the neutrino information (in seconds)')
+
+args = parser.parse_args()
+
+TIMES = np.arange(args.time - 0.05, args.time + args.dt, args.dt, dtype=float)
+
+fig, ax = plt.subplots()
+ax.set_xlim([1e4, 1e7])
+ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_xlabel('Radius [cm]')
+ax.set_ylabel(r'$B_{\nu}$')
+ax.text(0.1, 0.9, '%.3f s' % args.time, transform = ax.transAxes)
+
+# Open the simulation
+m = Simulation(args.sim_name, args.sim_path)
+r = m.cell.radius(m.ghost) # Radius of the simulation
+dr = m.cell.radius_right(m.ghost) - m.cell.radius_left(m.ghost)
+neu_sph = m.neutrino_spheres(rad='min')
+
+E_bin_sum = np.nansum(m.cell.E_nu() * m.cell.dE_nu())
+
+# Define arrays to store the data
+B0 = np.zeros(3)
+B1 = np.zeros(3)
+
+print('You will restart from file %s' % m.find_file_from_time(args.time))
+print('Averaging between %.3f s and %.3f s' % (args.time - 0.05, args.time))
+
+# Save the position of the neutirnospheres of the different flavours
+# for the remapping times
+k_neu = {
+  'nue' : 0,
+  'nua' : 0,
+  'nux' : 0
+}
+
+for time in TIMES:
+  time = float(time)
+  T = m.temperature(time)
+  rho = m.rho(time)
+  Xn = m.neutron_fraction(time)
+  Xp = m.proton_fraction(time)
+  Ye = m.Ye(time)
+  X = [Xn, Xp, Ye]
+
+  ka = m.neutrino_energy_opacity(time) # Absorption/emission opacity
+  kt = m.neutrino_momenta_opacities(time) # Transport opacity
+
+  for (i_species, species) in enumerate(SPECIES):
+    # Getting the position of the neutirnosphere at given time for the 
+    # given neutrino species
+    it = np.argwhere(neu_sph[species].time == m.time(time))[0][0]
+    neu_sph_radius = neu_sph[species].data[it]
+    # Getting the index corresponding to the position
+    k = np.argmin(np.abs(r - 0.9 * neu_sph_radius))
+    k_neu[species] = int(k)
+
+    # Averaging the opacities over the energy bins
+    ka_mean = np.nansum(ka[i_species] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
+    kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
+    
+    B1_loc = kt_mean[:k] / ((rho * 1.e-10) * (np.maximum(T[:k], T[k]) ** 2) * \
+                            (Xn[:k] + Xp[:k]))
+    
+    if species == 'nux':
+      # In this case, B0 is computed differently
+      B0_loc = ka_mean[:k] / (np.sqrt(rho[:k] * 1.e-10) * \
+                              (np.maximum(T[:k], T[k]) ** 3) * \
+                              X[i_species][:k])
+    else:
+      B0_loc = ka_mean[:k] / ((rho[:k] * 1e-10) * \
+                              (np.maximum(T[:k], T[k]) ** 2) * \
+                              X[i_species][:k])
+    B0_loc_ravg = np.nansum(B0_loc * (r[:k] ** 2) * dr[:k]) / \
+                  np.nansum((r[:k] ** 2) * dr[:k])
+    B1_loc_ravg = np.nansum(B1_loc * (r[:k] ** 2) * dr[:k]) / \
+                  np.nansum((r[:k] ** 2) * dr[:k])
+    B1[i_species][:k] += B1_loc_ravg
+    B0[i_species][:k] += B0_loc_ravg
+    if (time == args.time):
+      print(time)
+
+# Printing neutrino-spheres radii at the final time
+print('Neutirnosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
+print('Neutirnosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
+print('Neutirnosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
+
+B0[0] /= TIMES.shape[0]
+B0[1] /= TIMES.shape[0]
+B0[2] /= TIMES.shape[0]
+B1[0] /= TIMES.shape[0]
+B1[1] /= TIMES.shape[0]
+B1[2] /= TIMES.shape[0]
+
+print('B0_e: %.3e' % B0[0])
+print('B0_a: %.3e' % B0[1])
+print('B0_x: %.3e' % B0[2])
+print('B1_e: %.3e' % B1[0])
+print('B1_a: %.3e' % B1[1])
+print('B1_x: %.3e' % B1[2])
