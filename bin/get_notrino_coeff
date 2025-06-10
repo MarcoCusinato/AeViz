@@ -109,9 +109,9 @@ for time in TIMES:
       #ax.plot(r.value, kt_mean.value, color = COLOURS[i_species], ls='--')
 
 # Printing neutrino-spheres radii at the final time
-print('Neutirnosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
-print('Neutirnosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
-print('Neutirnosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
+print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
+print('Neutrinosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
+print('Neutrinosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
 
 B0[0] /= TIMES.shape[0]
 B0[1] /= TIMES.shape[0]
