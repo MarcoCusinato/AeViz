@@ -104,8 +104,8 @@ for time in TIMES:
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == args.time):
-      ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
-      ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
+      ax.plot(r.value, ka_mean.value, color = COLOURS[i_species], ls='-')
+      ax.plot(r.value, kt_mean.value, color = COLOURS[i_species], ls='--')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutirnosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
