@@ -21,6 +21,8 @@ parser.add_argument('--time', required=True, type=float, \
             help='Time at which you want to start using NOTRINO (in seconds)')
 parser.add_argument('--dt', type=float, required=True, \
         help='Time Tipestep for saving the neutrino information (in seconds)')
+parser.add_argument('--show', type=bool, default=False, \
+                    help='Pop out the plot?')
 
 args = parser.parse_args()
 
@@ -146,3 +148,6 @@ ax.legend(handles=handles)
 
 plt.savefig(os.path.join(m.storage_path, 'notrino_coeff.pdf'), \
             bbox_inches='tight')
+
+if args.show:
+    plt.show()
