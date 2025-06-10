@@ -10,6 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
+PERC_RNEU = 0.9
 
 warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
@@ -42,7 +43,8 @@ B0 = np.zeros(3)
 B1 = np.zeros(3)
 
 print('You will restart from file %s' % m.find_file_from_time(args.time))
-print('Averaging between %.3f s and %.3f s' % (args.time - 0.05, args.time))
+print('Radial average up to %.2f of neutrinosphere' % PERC_RNEU)
+print('Time average between %.3f s and %.3f s' % (args.time - 0.05, args.time))
 
 # Save the position of the neutirnospheres of the different flavours
 # for the remapping times
@@ -78,7 +80,7 @@ for time in TIMES:
     it = np.argwhere(neu_sph[species].time == m.time(time))[0][0]
     neu_sph_radius = neu_sph[species].data[it]
     # Getting the index corresponding to the position
-    k = np.argmin(np.abs(r - 0.9 * neu_sph_radius))
+    k = np.argmin(np.abs(r - PERC_RNEU * neu_sph_radius))
     k_neu[species] = int(k)
 
     # Averaging the opacities over the energy bins
@@ -104,9 +106,8 @@ for time in TIMES:
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == args.time):
-      tau = (ka_mean + kt_mean) * rho
-      ax.plot(r.value, tau.value, color = COLOURS[i_species], ls='-')
-      #ax.plot(r.value, kt_mean.value, color = COLOURS[i_species], ls='--')
+      ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
