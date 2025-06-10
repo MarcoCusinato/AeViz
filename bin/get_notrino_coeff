@@ -104,7 +104,7 @@ for time in TIMES:
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == args.time):
-      tau = (ka_mean + kt_mean) * m.rho
+      tau = (ka_mean + kt_mean) * rho
       ax.plot(r.value, tau.value, color = COLOURS[i_species], ls='-')
       #ax.plot(r.value, kt_mean.value, color = COLOURS[i_species], ls='--')
 
