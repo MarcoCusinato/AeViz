@@ -2,7 +2,6 @@
 
 import argparse
 from AeViz.simulation import Simulation
-from AeViz.utils.math_utils import function_average
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
