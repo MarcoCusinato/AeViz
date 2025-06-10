@@ -42,8 +42,10 @@ if args.last_cell == 'shock':
     rr = sim.shock_radius(rad='avg')
 elif args.last_cell == 'PNS':
     rr = sim.PNS_radius(rad='avg')
-elif args.last_cell == 'shock':
+elif args.last_cell == 'innercore':
     rr = sim.innercore_radius(rad='avg')
+else:
+    raise TypeError("Not recognized")
 
 indices = np.argmax(radius[:, None] >= rr[None, :], axis=0)
 path = os.path.join(sim.storage_path, 'GREAT_profiles.h5')

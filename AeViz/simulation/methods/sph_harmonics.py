@@ -76,7 +76,7 @@ def data_for_barcode(self, lmin=None, lmax=None, msum=False,
         Y = aerray(Y, u.dimensionless_unscaled, name='l', label=r'$l$',
                    cmap=None, log=False, limits=[Y.min(), Y.max()])
     else:
-        Y = aerray(Y, u.dimensionless_unscaled, name='lm', label=r'$m$',
+        Y = aerray(Y, u.dimensionless_unscaled, name='lm', label=r'$2l+1$',
                    cmap=None, log=False, limits=[Y.min(), Y.max()])
     if zero_norm:
         data = aerray(data, u.dimensionless_unscaled, name='rho_sph_harmonics',
