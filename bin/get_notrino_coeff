@@ -127,8 +127,9 @@ print('B1_e: %.3e' % B1[0])
 print('B1_a: %.3e' % B1[1])
 print('B1_x: %.3e' % B1[2])
 
-ax.set_xlim([r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
-          neu_sph['nux'].data[it]])])
+ax.set_xlim([r.value[0], 1.5 * np.max([neu_sph['nue'].data[it], \
+                                       neu_sph['nua'].data[it], \
+                                       neu_sph['nux'].data[it]])])
 
 #ax.hlines(B0, r.value[0], np.max([neu_sph['nue'].data[it], neu_sph['nua'].data[it], \
 #          neu_sph['nux'].data[it]]), ls=':', colors = COLOURS)
