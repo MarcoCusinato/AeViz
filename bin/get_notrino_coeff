@@ -10,7 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 0.9
+PERC_RNEU = 0.1
 
 warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
@@ -113,6 +113,7 @@ for time in TIMES:
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
 print('Neutrinosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
 print('Neutrinosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
+print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']])
 
 B0[0] /= TIMES.shape[0]
 B0[1] /= TIMES.shape[0]
@@ -121,12 +122,12 @@ B1[0] /= TIMES.shape[0]
 B1[1] /= TIMES.shape[0]
 B1[2] /= TIMES.shape[0]
 
-print('JANKA2001B_KAENUE_COEFF = %.15e' % B0[0])
-print('JANKA2001B_KAENUA_COEFF = %.15e' % B0[1])
-print('JANKA2001B_KAENUX_COEFF = %.15e' % B0[2])
-print('JANKA2001B_KSCNUE_COEFF = %.15e' % B1[0])
-print('JANKA2001B_KSCNUA_COEFF = %.15e' % B1[1])
-print('JANKA2001B_KSCNUX_COEFF = %.15e' % B1[2])
+print(' JANKA2001B_KAENUE_COEFF = %.15e' % B0[0])
+print(' JANKA2001B_KAENUA_COEFF = %.15e' % B0[1])
+print(' JANKA2001B_KAENUX_COEFF = %.15e' % B0[2])
+print(' JANKA2001B_KSCNUE_COEFF = %.15e' % B1[0])
+print(' JANKA2001B_KSCNUA_COEFF = %.15e' % B1[1])
+print(' JANKA2001B_KSCNUX_COEFF = %.15e' % B1[2])
 
 ax.set_xlim([r.value[0], 2.0 * np.max([neu_sph['nue'].data[it], \
                                        neu_sph['nua'].data[it], \
