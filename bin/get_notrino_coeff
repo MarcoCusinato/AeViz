@@ -2,6 +2,7 @@
 
 import argparse
 from AeViz.simulation import Simulation
+from AeViz.utils.math_utils import function_average
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
@@ -32,6 +33,7 @@ TIMES = np.arange(args.time - 0.05, args.time + args.dt, args.dt, dtype=float)
 m = Simulation(args.sim_name, args.sim_path)
 r = m.cell.radius(m.ghost) # Radius of the simulation
 dr = m.cell.radius_right(m.ghost) - m.cell.radius_left(m.ghost)
+dV = m.cell.dVolume_integration(m.ghost)
 neu_sph = m.neutrino_spheres(rad='min')
 
 E_bin_sum = np.nansum(m.cell.E_nu() * m.cell.dE_nu())
@@ -98,12 +100,10 @@ for time in TIMES:
       B0_loc = ka_mean[:k] / ((rho[:k] * 1e-10) * \
                               (np.maximum(T[:k], T[k]) ** 2) * \
                               X[i_species][:k])
-    B0_loc_ravg = np.nansum(B0_loc * (r[:k] ** 2) * dr[:k]) / \
-                  np.nansum((r[:k] ** 2) * dr[:k])
-    B1_loc_ravg = np.nansum(B1_loc * (r[:k] ** 2) * dr[:k]) / \
-                  np.nansum((r[:k] ** 2) * dr[:k])
-    B1[i_species] += B1_loc_ravg
-    B0[i_species] += B0_loc_ravg
+    B0_loc_avg = np.nansum(B0_loc * dV[:k,...]) / np.nansum(dV[:k,...])
+    B1_loc_avg = np.nansum(B1_loc * dV[:k, ...]) / np.nansum(dV[:k, ...])
+    B1[i_species] += B1_loc_avg
+    B0[i_species] += B0_loc_avg
     if (time == args.time):
       ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
       ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
