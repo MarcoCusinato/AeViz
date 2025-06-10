@@ -78,7 +78,7 @@ for time in TIMES:
     it = np.argwhere(neu_sph[species].time == m.time(time))[0][0]
     neu_sph_radius = neu_sph[species].data[it]
     # Getting the index corresponding to the position
-    k = np.argmin(np.abs(r - 0.9 * neu_sph_radius))
+    k = np.argmin(np.abs(r - 1e6))
     k_neu[species] = int(k)
 
     # Averaging the opacities over the energy bins
