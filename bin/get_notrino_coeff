@@ -121,7 +121,7 @@ print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']])
 B0 /= TIMES.shape[0]
 B1 /= TIMES.shape[0]
 
-# Print the whole namelist for NOTRINO
+print('\nPrint the whole namelist for NOTRINO ->')
 print(' &NOTRINOPARS')
 print(' NOTRINO_FLAG    = T,')
 print(' LAPSE = T,')
