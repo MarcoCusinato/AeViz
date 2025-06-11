@@ -32,6 +32,8 @@ TIMES = np.arange(args.time - TLIM, args.time + args.dt, args.dt, dtype=float)
 
 # Open the simulation
 m = Simulation(args.sim_name, args.sim_path)
+if args.time > m.time(-1).value:
+  raise ValueError('The choice of time as to be lower (Remember, remember, the postbounce time...)')
 r = m.cell.radius(m.ghost) # Radius of the simulation
 dr = m.cell.radius_right(m.ghost) - m.cell.radius_left(m.ghost)
 dV = m.cell.dVolume_integration(m.ghost)
@@ -106,7 +108,7 @@ for time in TIMES:
     B1_loc_avg = np.nansum(B1_loc * dV[:k, ...]) / np.nansum(dV[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
-    if (time == args.time):
+    if (time == TIMES[-1]):
       ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
       ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
 
@@ -123,12 +125,32 @@ B1[0] /= TIMES.shape[0]
 B1[1] /= TIMES.shape[0]
 B1[2] /= TIMES.shape[0]
 
-print(' JANKA2001B_KAENUE_COEFF = %.15e' % B0[0])
-print(' JANKA2001B_KAENUA_COEFF = %.15e' % B0[1])
-print(' JANKA2001B_KAENUX_COEFF = %.15e' % B0[2])
-print(' JANKA2001B_KSCNUE_COEFF = %.15e' % B1[0])
-print(' JANKA2001B_KSCNUA_COEFF = %.15e' % B1[1])
-print(' JANKA2001B_KSCNUX_COEFF = %.15e' % B1[2])
+# Print the whole namelist for NOTRINO
+print(' &NOTRINOPARS')
+print(' NOTRINO_FLAG    = T,')
+print(' LAPSE = T,')
+print(' LORENTZ = T,')
+print(' OPMOD   =           2,')
+print(' OPAC_MINDEN     =  0.000000000000000E+000,')
+print(' JANKA2001A_KAENUE_COEFF = %.15e,' % B0[0])
+print(' JANKA2001A_KAENUA_COEFF = %.15e,' % B0[1])
+print(' JANKA2001A_KAENUX_COEFF = %.15e,' % B0[2])
+print(' JANKA2001A_KSCNUE_COEFF = %.15e,' % B1[0])
+print(' JANKA2001A_KSCNUA_COEFF = %.15e,' % B1[1])
+print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
+print(' JANKA2001A_TMIN =   %.14f     ,' % T[k])
+print(' JANKA2001B_KAENUE_COEFF = %.15e,' % B0[0])
+print(' JANKA2001B_KAENUA_COEFF = %.15e,' % B0[1])
+print(' JANKA2001B_KAENUX_COEFF = %.15e,' % B0[2])
+print(' JANKA2001B_KSCNUE_COEFF = %.15e,' % B1[0])
+print(' JANKA2001B_KSCNUA_COEFF = %.15e,' % B1[1])
+print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
+print(' JANKA2001B_TMIN =   %.14f     ,' % T[k])
+print(' WGHMOD  =           2,')
+print(' WGH_TANH_TAU0   =  0.333333333333333     ,')
+print(' WGH_FD_DTAU     =   1.00000000000000     ,')
+print(' HF      =   1.00000000000000')
+print(' /')
 
 ax.set_xlim([r.value[0], 2.0 * np.max([neu_sph['nue'].data[it], \
                                        neu_sph['nua'].data[it], \
