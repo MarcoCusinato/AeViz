@@ -118,12 +118,8 @@ print('Neutrinosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
 print('Neutrinosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
 print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']])
 
-B0[0] /= TIMES.shape[0]
-B0[1] /= TIMES.shape[0]
-B0[2] /= TIMES.shape[0]
-B1[0] /= TIMES.shape[0]
-B1[1] /= TIMES.shape[0]
-B1[2] /= TIMES.shape[0]
+B0 /= TIMES.shape[0]
+B1 /= TIMES.shape[0]
 
 # Print the whole namelist for NOTRINO
 print(' &NOTRINOPARS')
@@ -138,14 +134,14 @@ print(' JANKA2001A_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001A_KSCNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001A_KSCNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001A_TMIN =   %.14f     ,' % T[k])
+print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']])
 print(' JANKA2001B_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001B_KAENUA_COEFF = %.15e,' % B0[1])
 print(' JANKA2001B_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001B_KSCNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001B_KSCNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001B_TMIN =   %.14f     ,' % T[k])
+print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']])
 print(' WGHMOD  =           2,')
 print(' WGH_TANH_TAU0   =  0.333333333333333     ,')
 print(' WGH_FD_DTAU     =   1.00000000000000     ,')
