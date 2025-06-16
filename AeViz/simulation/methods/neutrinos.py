@@ -91,9 +91,38 @@ def neutrino_momenta(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
+def neutrino_energy_opacity(self, file_name, **kwargs):
+    """
+    Neutrino opacity ("temporal" component of the four-vector)
+    Now with NOTRINO case!
+    """
+    notrino = False
+    try:
+        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['neutrino/oe'][..., 0]), self.dim)
+    except:
+        notrino = True
+        nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
+        # Adding a fictitious to account for missing energy bin and thus
+        # (hopefully) not having to change a lot in the library
+        nu_opac = np.expand_dims(nu_opac, axis = -2)
+    return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
+                r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
+            aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
+                r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
+                [-1e40, 1e40], True),
+            aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
+                r'$\kappa_{\nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
+            )
+    
+
+@get_grid
+@smooth
+@hdf_isopen
 def neutrino_momenta_opacities(self, file_name, **kwargs):
     """
-    Neutrino opacities.
+    Neutrino opacities ("spatial" components of the four-vector).
     Now with NOTRINO case!
     """
     notrino = False
@@ -102,8 +131,6 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
             self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
     except:
         notrino = True
-        #nu_opac_ae = self.ghost.remove_ghost_cells(np.squeeze(
-        #    self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_ktr'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
@@ -115,7 +142,7 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
     if self.dim == 1 or notrino:
         return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
                   r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
-                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
+                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa',
                   r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
                   [-1e40, 1e40], True),
                 aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
@@ -143,7 +170,9 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
 @smooth
 @hdf_isopen
 def neutrino_number_density(self, file_name, **kwargs):
-    if 'notrino/notrino_n' in self._Simulation__data_h5:
+    # If notrino is used, the number density is returned in  the output,
+    # and there is no need to compute it.
+    try:
         ndens = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_n'][...]), 
             self.dim)
@@ -156,7 +185,7 @@ def neutrino_number_density(self, file_name, **kwargs):
                 aerray(ndens[..., 2], u.cm ** (-3), 'Nnux',
                   r'$N_{\nu_\mathrm{x}}$', 'CMRmap', [1e32, 1e35], True)
                 )
-    else:
+    except:
         edens = list(self.neutrino_energy_density(file_name))
         de = self.cell.E_nu().to(u.erg)
         edens = [ed / de for ed in edens]
@@ -197,7 +226,7 @@ def neutrino_mean_energy(self, file_name,
     elif comp == 'nua':
         return mean_ene[1]
     elif comp == 'nux':
-        return mean_ene[2]
+        return mean_ene[2]   
 
 ## GREY
 
