@@ -104,8 +104,10 @@ for time in TIMES:
       B0_loc = ka_mean[:k] / ((rho[:k] * 1e-10) * \
                               (np.maximum(T[:k], T[k]) ** 2) * \
                               X[i_species][:k])
-    B0_loc_avg = np.nansum(B0_loc * dV[:k,...] * rho[:k, ...]) / np.nansum(dV[:k,...] * rho[:k, ...])
-    B1_loc_avg = np.nansum(B1_loc * dV[:k, ...] * rho[:k, ...]) / np.nansum(dV[:k, ...] * rho[:k, ...])
+    B0_loc_avg = np.nansum(B0_loc * dV[:k,...] * rho[:k, ...]) / \
+                  np.nansum(dV[:k,...] * rho[:k, ...])
+    B1_loc_avg = np.nansum(B1_loc * dV[:k, ...] * rho[:k, ...]) / \
+                  np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == TIMES[-1]):
