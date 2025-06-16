@@ -114,12 +114,15 @@ def shock_radius_1D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
     vr = simulation.radial_velocity(file_name)
     s = simulation.entropy(file_name)
-    dP = IDL_derivative(r, s) * r / s
+    p = simulation.gas_pressure(file_name)
+    dS = IDL_derivative(r, s) * r / s
     dvr = IDL_derivative(r, vr) * r / np.abs(vr)
-    for ir in range(len(dP) - 1):
+    dP = IDL_derivative(r, p) * r / p
+    for ir in range(len(dS) - 1):
         if r[ir] > rmax:
             continue
-        if (dP[ir] < -5) and np.any(dvr[ir-5:ir+6] < -20):
+        if dS[ir] < -7.5 and np.any(dvr[ir-5:ir+6] < -20) \
+            and dP[ir] < -10:
             return r[ir]
     return 0.0 * r.unit
 
