@@ -8,6 +8,7 @@ import scipy.signal
 import warnings
 from typing import Literal
 from AeViz.utils.math_utils import IDL_derivative
+from scipy.integrate import cumulative_simpson, cumulative_trapezoid
 
 def get_selection_indices(a, b):
     """
@@ -633,4 +634,26 @@ class aeseries:
         return aeseries(IDL_derivative(getattr(self, axis), self.data,
                                            axis=self.__axis_indices[axis]),
                         **{name: getattr(self, name) for name in self.__axis_names})
-            
+        
+    def integrate(self, axis):
+        """
+        linearly integrate along the selected axis
+        """
+        if axis not in self.__axis_names:
+            raise AttributeError("Axis not found in the aeseries")
+        xvar = getattr(self, axis)
+        dvar_label = r'$\mathrm{d}' + \
+            xvar.label.replace('$', '').split('-')[0] + r'$'
+        integral = cumulative_simpson(self.data.value, x=xvar.value,
+                                      axis=self.__axis_indices[axis])
+        integral = aerray(
+            np.insert(integral, 0, integral[0], self.__axis_indices[axis]),
+            unit = (self.data.unit * xvar.unit),
+            name = self.data.name + '_' + xvar.name + '_integrated',
+            label = merge_strings(r'$\int$', dvar_label, self.data.label),
+            cmap = self.data.cmap,
+            limits = [integral.min() * 1.1, integral.max() * 0.9],
+            log = self.data.log
+        )
+        return aeseries(integral,
+                        **{name: getattr(self, name) for name in self.__axis_names})
