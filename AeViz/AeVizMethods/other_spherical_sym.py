@@ -13,14 +13,16 @@ imported into the AeViz class.
 ## SPHERICAL HARMONICS
 
 @fig_window_open
-def rho_decomposition(self, l=0, m=None, correct_zero=True, **kwargs):
+def rho_decomposition(self, l=0, m=None, correct_zero=True, projection:Literal['1D', '2D']='1D',
+                      **kwargs):
     kwargs['l'] = l
     kwargs['m'] = m
     kwargs['correct_zero'] = correct_zero
     if any(cc in kwargs for cc in ['rhomin', 'rhomax', 'r']):
-        projection = '1D'
+        pass
     else:
         projection = '2D'
+        kwargs['spectrogram'] = False
     AeViz_plot_panel(self, 'rho_spherical_harmonics', None, projection, 'time',
                      **kwargs)
     
