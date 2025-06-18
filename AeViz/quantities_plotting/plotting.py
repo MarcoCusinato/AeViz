@@ -117,10 +117,10 @@ class Plotting(PlottingUtils, Data):
         else:
             if 'plot' in kwargs:
                 ax_letter = kwargs['plot']
+                if ax_letter not in self.axd:
+                    ax_letter = list(self.axd.keys())[-1].upper()
             else:
                 # USE last active plot
-                ax_letter = list(self.axd.keys())[-1].upper()
-            if ax_letter not in self.axd:
                 ax_letter = list(self.axd.keys())[-1].upper()
             if self.__simple_labelling:
                 data, label = remove_labelling(data, self.__no_nu)
