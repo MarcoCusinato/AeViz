@@ -47,7 +47,7 @@ def derive(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
-        if 'der' not in kwargs:
+        if 'der' not in kwargs and 'integrate' not in kwargs:
             return data
         if type(data) == tuple:
             data = list(data)
@@ -86,7 +86,10 @@ def derive(func):
                                                 f'and data has {dd.shape}')
                     data[i] = IDL_derivative(phi, dd, axis=dd.shape.index(len(phi)))
             elif isinstance(dd, aeseries):
-                data[i] = dd.derive(kwargs['der'])
+                if 'der' in kwargs:
+                    data[i] = dd.derive(kwargs['der'])
+                else:
+                    data[i] = dd.integrate(kwargs['integrate'])
         if len(data) == 1:
             return data[0]
         return data
