@@ -12,6 +12,7 @@ of the Simulation class
 ## -----------------------------------------------------------------
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -70,6 +71,7 @@ def kinetic_energy(self, file_name, comp:Literal['tot', 'r', 'th', 'ph']='tot',
 
 ## VELOCITY
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -85,6 +87,7 @@ def radial_velocity(self, file_name, **kwargs):
                   [-1e10, 5e10], log=True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -100,6 +103,7 @@ def theta_velocity(self, file_name, **kwargs):
                   'Spectral_r', [-1e10, 5e10], log=True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -116,6 +120,7 @@ def phi_velocity(self, file_name, **kwargs):
 
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -127,6 +132,7 @@ def soundspeed(self, file_name, **kwargs):
                   'nipy_spectral', [1e8, 1e10], log=True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def omega(self, file_name, **kwargs):

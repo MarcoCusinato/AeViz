@@ -51,6 +51,7 @@ def magnetic_fields(self, file_name, comp:Literal['all', 'r', 'th', 'ph']='all',
                     [-1e15, 1e15], True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def poloidal_magnetic_fields(self, file_name, **kwargs):
@@ -61,6 +62,7 @@ def poloidal_magnetic_fields(self, file_name, **kwargs):
     return data
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def toroidal_magnetic_fields(self, file_name, **kwargs):
@@ -68,6 +70,7 @@ def toroidal_magnetic_fields(self, file_name, **kwargs):
     return Bphi
 
 @get_grid
+@mask_points
 @smooth
 def magnetic_energy(self, file_name, comp: Literal['all', 'tot', 'pol', 'tor']='all',
                     **kwargs):
@@ -98,6 +101,7 @@ def stream_function(self, file_name, plane):
                     self.ghost, plane)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def alfven_velocity(self, file_name, **kwargs):
