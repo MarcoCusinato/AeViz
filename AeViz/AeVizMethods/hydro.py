@@ -16,6 +16,11 @@ def rho(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
     AeViz_plot_panel(self, 'rho', file, projection, plane, **kwargs)
 
 @fig_window_open
+def mass(self, file=None, projection:Literal['1D', '2D']='1D', plane='time',
+        **kwargs):
+    AeViz_plot_panel(self, 'mass', file, projection, plane, **kwargs)
+
+@fig_window_open
 def MHD_energy(self, file=None, projection:Literal['1D', '2D']='1D',
                     plane='time', **kwargs):
     AeViz_plot_panel(self, 'MHD_energy', file, projection, plane, **kwargs)

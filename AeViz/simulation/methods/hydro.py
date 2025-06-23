@@ -23,6 +23,17 @@ def rho(self, file_name, **kwargs):
     return aerray(data, u.g / u.cm**3, 'density', r'$\rho$', 'viridis',
                   [1e4, 1e15], log=True)
 
+@get_grid
+@mask_points
+@smooth
+@derive
+def mass(self, file_name, **kwargs):
+    data = self.rho(file_name) * self.cell.dVolume_integration(self.ghost)
+    data = data.to(u.Msun)
+    data.set(name='mass', label=r'$M$', cmap='cividis', limits=[1e-10, 1e-1],
+             log=True)
+    return data
+
 ## ENERGY
 @get_grid
 @smooth
