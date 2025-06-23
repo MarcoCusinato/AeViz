@@ -287,7 +287,7 @@ def mask_points(func):
             raise NotImplementedError(f"{kwargs['mask']} not available as input.")
         
         if 'not' not in kwargs['mask']:
-            mask = mask
+            mask = ~mask
         data[mask] = np.nan
         return data
     return wrapper
