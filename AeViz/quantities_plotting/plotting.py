@@ -557,8 +557,7 @@ class Plotting(PlottingUtils, Data):
         if 'return_letter' in kwargs:
             if kwargs['return_letter']:
                 return plots[1]
-        
-    
+
     def plot1DSpectrogram(self, qt, **kwargs):
         """
         Plots the GW spectrogram and the GW signal.
@@ -648,7 +647,39 @@ class Plotting(PlottingUtils, Data):
         if redo:
             self._PlottingUtils__redo_plot()
         show_figure()
-        
+    
+    def plot1Dhistogram(self, file, qt, yquantity, **kwargs):
+        """
+        Plots a 1D histogram with the quantity on the yquantity.
+        """
+        axd_letters = ['A', 'B', 'C', 'D']
+        d_kwargs = kwargs.copy()
+        ydata = self._Data__get_data_from_name(name=yquantity, file=file, **d_kwargs)
+        xdata = self._Data__get_data_from_name(name=qt, file=file, **d_kwargs)
+        data = aeseries(ydata, **{str(qt): xdata})
+        number = self.__check_axd_1D(ydata.label, xdata, True)
+        ax_letter = axd_letters[number]
+        if 'nbins' not in kwargs:
+            kwargs['nbins'] = 20
+        if not isinstance(kwargs['nbins'], int):
+            kwargs['nbins'] = 20
+        self._PlottingUtils__update_params(
+                                            file=file,
+                                            ax_letter=ax_letter,
+                                            plane=qt,
+                                            data=data,
+                                            cbar_position=None,
+                                            dim=-5,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        self._PlottingUtils__plot1DBars(ax_letter)
+        self._PlottingUtils__save_lims()
+        self._PlottingUtils__save_labels(ax_letter)
+        self.Xscale(xdata.log, ax_letter)
+        self.Yscale('linear', ax_letter)
+        show_figure()
+
     ## IMFs Stuff
     def plotIMFs(self, qt, **kwargs):
         ## Plots the IMFs in a top down fashion
@@ -954,7 +985,7 @@ class Plotting(PlottingUtils, Data):
                                                   streamlines, 'B')
         self._PlottingUtils__plot2Dfield(axd_letter, grid_number)
              
-    def __check_axd_1D(self, qt, xaxis):
+    def __check_axd_1D(self, qt, xaxis, open_new=False):
         """
         Helper method to check if the quantity that we want to plot is
         already in the figure. If it is, it returns the number of the
@@ -980,9 +1011,10 @@ class Plotting(PlottingUtils, Data):
                 self._PlotCreation__setup_axd(number, 1)
         else:
             for axd_letter in self.axd:
-                if (qt == self.ylabels[axd_letter]) and \
-                    (xaxis.label == self.xlabels[axd_letter]):
-                    return number - 1
+                if not open_new:
+                    if (qt == self.ylabels[axd_letter]) and \
+                        (xaxis.label == self.xlabels[axd_letter]):
+                        return number - 1
                 number += 1
             if number > 4:
                 raise ValueError('No more axes available.')

@@ -6,6 +6,7 @@ from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
 from AeViz.units import u
+from AeViz.plot_utils.utils import get_1Dhist_data
 
 
 class PlottingUtils(PlotCreation):
@@ -187,7 +188,11 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[ax_letter].set_yscale('linear')
         self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
- 
+    
+    def rebin(self, bins, axd_letter="A"):
+        self.nbins[axd_letter] = bins
+        self.__redo_plot()
+        
     def cmap(self, cmap, axd_letter="A"):
         """
         Change the colormap of the plot at the corresponding letter, if
@@ -314,6 +319,10 @@ class PlottingUtils(PlotCreation):
                 self.ls[ax_letter] = [kwargs['ls']]
             else:
                 self.ls[ax_letter] = [None]
+            if 'nbins' in kwargs:
+                self.nbins[ax_letter] = kwargs['nbins']
+            else:
+                self.nbins[ax_letter] = None
         else:
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
@@ -454,6 +463,7 @@ class PlottingUtils(PlotCreation):
         self.field = {}
         self.field_type = {}
         self.sim_dimension = {}
+        self.nbins = {}
     
     def __normalize_format_cbar(self, ax_letter):
         """
@@ -662,6 +672,22 @@ class PlottingUtils(PlotCreation):
                                             **kw)
         self.set_labels(ax_letter)
 
+    def __plot1DBars(self, ax_letter):
+        if self.plot_dim[ax_letter].count(-5) != 1:
+            raise ValueError("Too many histograms!!")
+        indx = self.plot_dim[ax_letter].index(-5)
+        xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
+        xdata, ydata, bin_widths = get_1Dhist_data(xlim,
+                                       self.nbins[ax_letter],
+                                       'linear',
+                                       self.grid[ax_letter][indx],
+                                       self.data[ax_letter][indx])
+        kw = {'alpha': self.alpha[ax_letter][indx]}
+        if self.line_color[ax_letter][indx] is not None:
+                    kw['color'] = self.line_color[ax_letter][indx]
+        self.axd[ax_letter].bar(xdata, ydata, width=bin_widths, **kw)
+        self.set_labels(ax_letter)
+        
     def __redo_plot(self):
         """
         We replot everything in the figure. What is done depends on the
@@ -712,8 +738,14 @@ class PlottingUtils(PlotCreation):
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
+            elif (-5 in dm):
+                self.__plot1DBars(ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
             if 1 in dm:
-                self.__plot1D(ax_letter, redo=True)
+                self.__plot1D(ax_letter)
                 if all_1D:
                     self.ylim(self.ylims[ax_letter], ax_letter)
                     self.xlim(self.xlims[ax_letter], ax_letter)
