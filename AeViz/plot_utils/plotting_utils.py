@@ -155,7 +155,7 @@ class PlottingUtils(PlotCreation):
             self.logX[ax_letter] = scale
             return
         self.__save_lims(ax_letter)
-        if scale == 'log' or scale == True:
+        if scale in ['log', 'symlog'] or scale == True:
             if self.xlims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.xlims[ax_letter][0].value),
@@ -677,9 +677,10 @@ class PlottingUtils(PlotCreation):
             raise ValueError("Too many histograms!!")
         indx = self.plot_dim[ax_letter].index(-5)
         xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
+        xlog = self.logX[ax_letter] if ax_letter in self.logX else None
         xdata, ydata, bin_widths = get_1Dhist_data(xlim,
                                        self.nbins[ax_letter],
-                                       'linear',
+                                       xlog,
                                        self.grid[ax_letter][indx],
                                        self.data[ax_letter][indx])
         kw = {'alpha': self.alpha[ax_letter][indx]}
@@ -697,8 +698,11 @@ class PlottingUtils(PlotCreation):
         indx = self.plot_dim[ax_letter].index(-52)
         xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
         ylim = self.ylims[ax_letter] if ax_letter in self.ylims else None
+        ylog = self.logY[ax_letter] if ax_letter in self.logY else None
+        xlog = self.logX[ax_letter] if ax_letter in self.logX else None
         xbinned, ybinned, bins = get_2Dhist_data(xlim, ylim, self.nbins[ax_letter],
-                                                 'linear', 'linear',
+                                                 xlog,
+                                                 ylog,
                                                  self.grid[ax_letter][indx][0],
                                                  self.grid[ax_letter][indx][1],
                                                  self.data[ax_letter][indx])
@@ -709,11 +713,13 @@ class PlottingUtils(PlotCreation):
                                              norm=norm,
                                              cmap=self.cmap_color[ax_letter],
                                              shading='auto',
-                                             extend='both' )
+                                             )
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
                                  format=ticker.FuncFormatter(fmt),
                                  location=cbar_loaction(
-                                     self.cbar_position[ax_letter]))
+                                     self.cbar_position[ax_letter]),
+                                 extend='both' 
+                                 )
         if bins.unit == u.dimensionless_unscaled:
             ulab = ''
         else:

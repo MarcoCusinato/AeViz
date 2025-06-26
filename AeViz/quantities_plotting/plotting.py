@@ -2,7 +2,6 @@ import os
 import numpy as np
 from AeViz.load_utils.data_load_utils import Data
 from AeViz.plot_utils.plotting_utils import PlottingUtils
-import matplotlib.pyplot as plt
 from AeViz.units import u, aeseries, aerray
 from AeViz.quantities_plotting.plotting_helpers import (recognize_quantity,
                                                         setup_cbars,
@@ -677,7 +676,7 @@ class Plotting(PlottingUtils, Data):
         self._PlottingUtils__save_lims()
         self._PlottingUtils__save_labels(ax_letter)
         self.Xscale(xdata.log, ax_letter)
-        self.Yscale('linear', ax_letter)
+        self.Yscale(ydata.log, ax_letter)
         show_figure()
 
     def plot2Dhistogram(self, file, qt, yquantity, cquantity, **kwargs):
@@ -722,16 +721,17 @@ class Plotting(PlottingUtils, Data):
                                             **kwargs
                                             )
         self._PlottingUtils__plot2DHist(ax_letter)
-        self.Xscale(xdata.log, ax_letter)
-        self.Yscale(ydata.log, ax_letter)
         self.xlim(xdata.limits, ax_letter)
         self.ylim(ydata.limits, ax_letter)
+        self.Xscale(xdata.log, ax_letter)
+        self.Yscale(ydata.log, ax_letter)
+        self._PlottingUtils__save_labels(ax_letter)
         if redo:
             for ax_letter in self.axd:
                 if ax_letter.islower():
                     continue
                 self._PlottingUtils__update_cbar_position(ax_letter,
-                                                          cbars[ax_letter]) 
+                                                          cbars[ax_letter])
             self._PlottingUtils__redo_plot()
         show_figure()
 
