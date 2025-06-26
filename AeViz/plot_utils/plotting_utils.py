@@ -7,6 +7,7 @@ from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
 from AeViz.units import u
 from AeViz.plot_utils.utils import get_1Dhist_data, get_2Dhist_data
+import warnings
 
 
 class PlottingUtils(PlotCreation):
@@ -188,7 +189,17 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[ax_letter].set_yscale('linear')
         self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
-    
+
+    def CBarscale(self, scale, ax_letter="A"):
+        if not ax_letter in self.cbar_log:
+            warnings.warn(f"{ax_letter} does not have a colorbar.")
+        else:
+            if scale in ["log", "symlog"]:
+                self.cbar_log[ax_letter] = True
+            else:
+                self.cbar_log[ax_letter] = False
+            self.__redo_plot()
+
     def rebin(self, bins, axd_letter="A"):
         self.nbins[axd_letter] = bins
         self.__redo_plot()
@@ -910,8 +921,7 @@ class PlottingUtils(PlotCreation):
                 self.texts[ax_letter].append(t)
         else:
             self.texts[ax_letter] = [t]
-        
-    
+
     def set_labels(self, ax_letter=None):
         if ax_letter is None:
             for letter in self.axd:
@@ -952,7 +962,6 @@ class PlottingUtils(PlotCreation):
                 self.axd[ax_letter].set_ylabel(lab)
             except:
                 pass
-                
 
     def __save_scale(self, ax_letter=None):
         """
@@ -965,7 +974,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
             self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
-    
+
     def __save_params(self):
         """
         Saves the limits, scales and labels of the plots.
