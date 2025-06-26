@@ -11,6 +11,7 @@ imported into the Simulation class.
 ## -----------------------------------------------------------------
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -23,6 +24,7 @@ def Ye(self, file_name, **kwargs):
     return data
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -34,6 +36,7 @@ def neutron_fraction(self, file_name, **kwargs):
                   r'$X_\mathrm{n}$', 'cividis', [0, 1], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -45,6 +48,7 @@ def proton_fraction(self, file_name, **kwargs):
                   r'$X_\mathrm{p}$', 'viridis', [0, 1], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -56,6 +60,7 @@ def alpha_fraction(self, file_name, **kwargs):
                   r'$X_\alpha$', 'plasma', [0, 1], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -67,6 +72,7 @@ def heavy_fraction(self, file_name, **kwargs):
                   r'$X_\mathrm{h}$', 'magma', [0, 1], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -78,6 +84,7 @@ def Abar(self, file_name, **kwargs):
                   r'$\bar{A}$', 'gist_rainbow_r', [4, 80], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -90,6 +97,7 @@ def Zbar(self, file_name, **kwargs):
 
 ## CHEMICAL POTENTIAL
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -101,6 +109,7 @@ def electron_chemical_potential(self, file_name, **kwargs):
                   r'$\mu_\mathrm{e}$', 'coolwarm', [0.1, 300], True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -112,6 +121,7 @@ def neutron_chemical_potential(self, file_name, **kwargs):
                   r'$\mu_\mathrm{n}$', 'bwr', [-2e2, 2e3], True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -123,6 +133,7 @@ def proton_chemical_potential(self, file_name, **kwargs):
                   r'$\mu_\mathrm{p}$', 'seismic', [-2e2, 3e3], True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen

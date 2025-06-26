@@ -270,3 +270,24 @@ def sum_tob(func):
                             limits=[0, data.time.value[-1]])
         return data
     return wrapper
+
+def mask_points(func):
+    """
+    Decorator to mask the quantity with the selected value.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        if not 'mask' in kwargs:
+            return data
+        if 'unbound' in kwargs['mask']:
+            mask = (args[0].MHD_energy(args[1]) + \
+                2 * args[0].gravitational_energy(args[1]) > 0)
+        else:
+            raise NotImplementedError(f"{kwargs['mask']} not available as input.")
+        
+        if 'not' not in kwargs['mask']:
+            mask = ~mask
+        data[mask] = np.nan
+        return data
+    return wrapper

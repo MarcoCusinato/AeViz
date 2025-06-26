@@ -12,6 +12,7 @@ imported into the Simulation class.
 
 ## THERMODYNAMICAL
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -23,6 +24,7 @@ def gas_pressure(self, file_name, **kwargs):
                   cmap='gist_rainbow_r', limits=[1e25, 1e34], log=True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -34,6 +36,7 @@ def temperature(self, file_name, **kwargs):
                   cmap='inferno', limits=[0, 40], log=False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -45,6 +48,7 @@ def enthalpy(self, file_name, **kwargs):
                   True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -56,6 +60,7 @@ def entropy(self, file_name, **kwargs):
                   [1.5, 15], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -68,6 +73,7 @@ def adiabatic_index(self, file_name, **kwargs):
 
 ## RELATIVITY AND GRAVITY
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -79,6 +85,7 @@ def lorentz(self, file_name, **kwargs):
                   r'$\gamma$', 'gist_rainbow', [1, 1.1], False)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -94,6 +101,7 @@ def gravitational_potential(self, file_name, **kwargs):
                   'magma', [-1e22, -1e15], True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def gravitational_energy(self, file_name, **kwargs):
@@ -104,6 +112,7 @@ def gravitational_energy(self, file_name, **kwargs):
     return data
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def lapse_function(self, file_name, **kwargs):
@@ -123,6 +132,7 @@ def lapse_function(self, file_name, **kwargs):
     
 ## ENERGY
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen
@@ -134,6 +144,7 @@ def internal_energy(self, file_name, **kwargs):
                   r'$E_\mathrm{int}$', 'nipy_spectral', [1e24, 1e35], log=True)
 
 @get_grid
+@mask_points
 @smooth
 @derive
 def specific_internal_energy(self, file_name, **kwargs):
@@ -144,6 +155,7 @@ def specific_internal_energy(self, file_name, **kwargs):
     return data
 
 @get_grid
+@mask_points
 @smooth
 @derive
 @hdf_isopen

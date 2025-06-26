@@ -1,190 +1,99 @@
-from AeViz.plot_utils.limits_utils import GW_limit, max_min
-## PLOTTING UTILS DICTIONARIES
+import numpy as np
+from AeViz.units import aerray
 
-## PLOT LABELS, COLORMAPS, AND Y-LIMITS or COLORBAR LIMITS and LIMITS
-## SCALES (LOG, LINEAR, or SYMLOG)
-plot_labels = {
-        'VX': {'log': True,
-               'lim': (-1e10, 5e10),
-               'cmap': 'Spectral_r',
-               'label': r'$v_r$ [cm$\cdot$s$^{-1}$]'},
-        'VY': {'log': True,
-               'lim': (-1e10, 1e10),
-               'cmap': 'Spectral_r',
-               'label': r'$v_\theta$ [cm$\cdot$s$^{-1}$]'},
-        'VZ': {'log': True,
-               'lim': (1e7, 1e10),
-               'cmap': 'cividis',
-               'label': r'$v_\phi$ [cm$\cdot$s$^{-1}$]'},
-        'YN': {'log': False,
-               'lim': (0, 1.0),
-               'cmap': 'gist_rainbow',
-               'label': r'Y$_N$'},
-
-        'DENS': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'PELE': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'TELE': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'NELE': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'PION': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'TION': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'NION': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'DELP': {'log': True,
-                 'lim': (1e4, 1e15),
-                 'cmap': 'viridis',
-                 'label': r''},
-        'JX': {'log': True,
-               'lim': (-1e24, 1e24),
-               'cmap': 'coolwarm',
-               'label': r'$j_r$ [g$\cdot$cm$^{2}\cdot$s$^{-2}$]'},
-        'JY': {'log': True,
-               'lim': (-1e20, 1e20),
-               'cmap': 'Spectral_r',
-               'label': r'$j_\theta$ [g$\cdot$cm$^{2}\cdot$s$^{-2}$]'},
-        'JZ': {'log': True,
-               'lim': (-1e23, 1e23),
-               'cmap': 'seismic',
-               'label': r'$j_\phi$ [g$\cdot$cm$^{2}\cdot$s$^{-2}]$'},
-        'BHEX': {'log': True, 
-                 'lim': (1e4, 1e15), 
-                 'cmap': 'viridis', 
-                 'label': r'$\rho$ [g cm$^{-3}$]'},
-        'NUEX': {'log': True, 
-                 'lim': (-1e39, 1e39), 
-                 'cmap': 'Spectral_r', 
-                 'label': r'F$_{\nu_e,r}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUEY': {'log': True, 
-                 'lim': (-1e38, 1e38), 
-                 'cmap': 'Spectral_r', 
-                 'label': r'F$_{\nu_e,\theta}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUEZ': {'log': True, 
-                 'lim': (-1e38, 1e38), 
-                 'cmap': 'Spectral_r', 
-                 'label': r'F$_{\nu_e,\phi}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUEE': {'log': True, 
-                 'lim': (1e25, 1e34), 
-                 'cmap': 'viridis', 
-                 'label': r'E$_{\nu_e}$ [erg$\cdot$ s$^{-1}$]'},
-        'NUAX': {'log': True, 
-                 'lim': (-1e39, 1e39), 
-                 'cmap': 'Spectral_r', 
-                 'label': r'F$_{\overline{\nu}_e,r}$' \
-                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUAY': {'log': True, 'lim': (-1e38, 1e38),
-                 'cmap': 'Spectral_r',
-                 'label': r'F$_{\overline{\nu}_e,\theta}$' \
-                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUAZ': {'log': True,
-                 'lim': (-1e38, 1e38),
-                 'cmap': 'Spectral_r',
-                 'label': r'F$_{\overline{\nu}_e,\phi}$' \
-                     r' [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUAE': {'log': True, 
-                 'lim': (1e25, 1e34),
-                 'cmap': 'viridis',
-                 'label': r'E$_{\overline{\nu}_e}$ [erg$\cdot$ s$^{-1}$]'},
-        'NUXX': {'log': True,
-                 'lim': (-1e39, 1e39),
-                 'cmap': 'Spectral_r',
-                 'label': r'F$_{\nu_x,r}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUXY': {'log': True,
-                 'lim': (-1e38, 1e38),
-                 'cmap': 'Spectral_r', 
-                 'label': r'F$_{\nu_x,\theta}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUXZ': {'log': True,
-                 'lim': (-1e38, 1e38),
-                 'cmap': 'Spectral_r',
-                 'label': r'F$_{\nu_x,\phi}$ [$\#_\nu\cdot$ s$^{-1}$]'},
-        'NUXE': {'log': True,
-                 'lim': (1e25, 1e34),
-                 'cmap': 'viridis',
-                 'label': r'E$_{\nu_x}$ [erg$\cdot$ s$^{-1}$]'},
-        'BX': {'log': True,
-               'lim': (-1e15, 1e15),
-               'cmap': 'coolwarm',
-               'label': r'B$_r$ [G]'},
-        'BY': {'log': True,
-               'lim': (-1e15, 1e15),
-               'cmap': 'coolwarm',
-               'label': r'B$_\theta$ [G]'},
-        'BZ': {'log': True,
-               'lim': (-1e15, 1e15),
-               'cmap': 'coolwarm',
-               'label': r'B$_\phi$ [G]'}
-}
-
-keys = list(plot_labels.keys())
-for key in keys:
-       if 'cmap' in plot_labels[key]:
-              plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
-                                           'lim': (None, None),
-                                           'cmap': plot_labels[key]['cmap'],
-                                           'label':r'$\partial_r$ ' + \
-                                            plot_labels[key]['label'].split(']')[0] + '/cm]',
-                                            }
-              plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
-                                              'lim': (None, None),
-                                              'cmap': plot_labels[key]['cmap'],
-                                              'label': r'$\partial_\theta$ ' + \
-                                              plot_labels[key]['label'],
-                                              }
-              plot_labels['dphi_' + key] = {'log': plot_labels[key]['log'],
-                                            'lim': (None, None),
-                                            'cmap': plot_labels[key]['cmap'],
-                                            'label': r'$\partial_\phi$ ' + \
-                                            plot_labels[key]['label'],
-                                            }
-              plot_labels['dt_' + key] = {'log': plot_labels[key]['log'],
-                                          'lim': (None, None),
-                                          'cmap': plot_labels[key]['cmap'],
-                                          'label': r'$\partial_t$ ' + \
-                                          plot_labels[key]['label'].split(']')[0] + '/s]',
-                                          }
+def __create_logspaced_bin(lims, nbins):
+       if isinstance(lims, tuple):
+              lims = list(lims)
+       lims.sort()
+       if lims[0] == 0:
+              lims[0] = 10 ** (np.round(np.log10(lims[1])) - 6)
+       if lims[1] == 0:
+              lims[1] = -10 ** (np.round(np.log10(np.abs(lims[1]))) - 6)
+       if lims[0] < 0 and lims[1] > 0:
+              lntresh = 10 ** (np.round(min(np.log10(-lims[0]),
+                                              np.log10(lims[1]))) - 6)
+              spaces = np.concatenate(
+                     (-np.logspace(np.log10(-lims[0]), np.log10(lntresh),
+                                   int(nbins * 0.45), endpoint=False),
+                    np.linspace(-lntresh, lntresh,
+                                int(nbins * 0.1), endpoint=False),
+                    np.logspace(np.log10(lntresh),
+                                np.log10(lims[1]),
+                                int(nbins * 0.45))
+                    ))
+       elif lims[0] < 0 and lims[1] < 0:
+              spaces = -np.logspace(np.log10(-lims[1]),
+                                    np.log10(-lims[0]),
+                                    nbins)
        else:
-              plot_labels['dr_' + key] = {'log': plot_labels[key]['log'],
-                                          'lim': (None, None),
-                                          'label':r'$\partial_r$ ' + \
-                                          plot_labels[key]['label'].split(']')[0] + '/cm]',
-                                          }
-              plot_labels['dtheta_' + key] = {'log': plot_labels[key]['log'],
-                                              'lim': (None, None),
-                                              'label': r'$\partial_\theta$ ' + \
-                                              plot_labels[key]['label'],
-                                             }
-              plot_labels['dphi_' + key] = {'log': plot_labels[key]['log'],
-                                            'lim': (None, None),
-                                            'label': r'$\partial_\phi$ ' + \
-                                                   plot_labels[key]['label'],
-                                           }
-              plot_labels['dt_' + key] = {'log': plot_labels[key]['log'],
-                                          'lim': (None, None),
-                                          'label': r'$\partial_t$ ' + \
-                                                  plot_labels[key]['label'].split(']')[0] + '/s]',
-                                          }
+              spaces = np.logspace(np.log10(lims[0]),
+                                   np.log10(lims[1]),
+                                   nbins)
+       return spaces
 
-## PLOT LABELS FOR X-AXIS
-xaxis_labels = {'radius': 'R [km]',
-                'theta': r'$\theta$ [rad]',
-                'phi': r'$\phi$ [rad]',
-                'time': 't [s]'
-                }
+def get_1Dhist_data(xlims, nbins, xscale, xdata, ydata):
+       assert xlims is None or len(xlims) == 2, "Too many limits"
+
+       if xlims is None:
+              xlims = xdata.limits
+       if xscale is None:
+              xscale = xdata.log
+       if nbins is None:
+              nbins = 20
+
+       if isinstance(xlims[0], aerray) and isinstance(xlims[1], aerray):
+              xlims = [xlims[0].value, xlims[1].value]
+       if xscale == 'linear':
+              bins = np.linspace(xlims[0], xlims[1], nbins)
+       else:
+              bins = __create_logspaced_bin(xlims, nbins)
+       ybinned, bin_edges = np.histogram(xdata.value, bins=bins,
+                                           weights=ydata.value)
+       bin_centers = (bin_edges[:-1] + bin_edges[1:]) * 0.5
+
+       ybinned = aerray(ybinned, ydata.unit, ydata.name, ydata.label,
+                        None, [ybinned.min(), ybinned.max()], False)
+       bin_centers = aerray(bin_centers, xdata.unit, xdata.name, xdata.label,
+                            None, xlims, False)
+       return bin_centers, ybinned, np.diff(bin_edges)
+
+def get_2Dhist_data(xlims, ylims, nbins, xscale, yscale, xdata, ydata, cdata):
+       assert nbins is None or len(nbins) == 2, "Weird number of bins"
+       if xlims is None:
+              xlims = xdata.limits
+       if ylims is None:
+              ylims = ydata.limits
+       if xscale is None:
+              xscale = xdata.log
+       if yscale is None:
+              yscale = ydata.log
+       if nbins is None:
+              nxbins, nybins = 100, 100
+       else:
+              nxbins, nybins = nbins
+       if isinstance(xlims[0], aerray) and isinstance(xlims[1], aerray):
+              xlims = [xlims[0].value, xlims[1].value]
+       if isinstance(ylims[0], aerray) and isinstance(ylims[1], aerray):
+              ylims = [ylims[0].value, ylims[1].value]
+       if xscale == 'linear':
+              xbins = np.linspace(xlims[0], xlims[1], nxbins)
+       else:
+              xbins = __create_logspaced_bin(xlims, nxbins)
+       if yscale == 'linear':
+              ybins = np.linspace(ylims[0], ylims[1], nybins)
+       else:
+              ybins = __create_logspaced_bin(ylims, nybins)
+
+       bins, xbinned, ybinned = np.histogram2d(
+              xdata.value.flatten(), ydata.value.flatten(), bins=[xbins, ybins],
+              weights=cdata.value.flatten()
+              )
+       bins = aerray(bins.T, cdata.unit, cdata.name, cdata.label,
+                            cdata.cmap, [bins.max(), bins.min()], False)
+       xbinned = aerray(xbinned, xdata.unit, xdata.name, xdata.label,
+                            None, xlims, False)
+       ybinned = aerray(ybinned, ydata.unit, ydata.name, ydata.label,
+                        None, ylims, False)
+       return xbinned, ybinned, bins
+
+    

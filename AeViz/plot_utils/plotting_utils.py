@@ -6,6 +6,8 @@ from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
 from AeViz.units import u
+from AeViz.plot_utils.utils import get_1Dhist_data, get_2Dhist_data
+import warnings
 
 
 class PlottingUtils(PlotCreation):
@@ -154,7 +156,7 @@ class PlottingUtils(PlotCreation):
             self.logX[ax_letter] = scale
             return
         self.__save_lims(ax_letter)
-        if scale == 'log' or scale == True:
+        if scale in ['log', 'symlog'] or scale == True:
             if self.xlims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.xlims[ax_letter][0].value),
@@ -187,7 +189,21 @@ class PlottingUtils(PlotCreation):
         else:
             self.axd[ax_letter].set_yscale('linear')
         self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
- 
+
+    def CBarscale(self, scale, ax_letter="A"):
+        if not ax_letter in self.cbar_log:
+            warnings.warn(f"{ax_letter} does not have a colorbar.")
+        else:
+            if scale in ["log", "symlog"]:
+                self.cbar_log[ax_letter] = True
+            else:
+                self.cbar_log[ax_letter] = False
+            self.__redo_plot()
+
+    def rebin(self, bins, axd_letter="A"):
+        self.nbins[axd_letter] = bins
+        self.__redo_plot()
+        
     def cmap(self, cmap, axd_letter="A"):
         """
         Change the colormap of the plot at the corresponding letter, if
@@ -314,6 +330,10 @@ class PlottingUtils(PlotCreation):
                 self.ls[ax_letter] = [kwargs['ls']]
             else:
                 self.ls[ax_letter] = [None]
+            if 'nbins' in kwargs:
+                self.nbins[ax_letter] = kwargs['nbins']
+            else:
+                self.nbins[ax_letter] = None
         else:
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
@@ -454,6 +474,7 @@ class PlottingUtils(PlotCreation):
         self.field = {}
         self.field_type = {}
         self.sim_dimension = {}
+        self.nbins = {}
     
     def __normalize_format_cbar(self, ax_letter):
         """
@@ -503,10 +524,17 @@ class PlottingUtils(PlotCreation):
                                       self.cbar_lv[ax_letter][1], 100)
             norm = Normalize(vmin=self.cbar_lv[ax_letter][0],
                              vmax=self.cbar_lv[ax_letter][1])
-            if self.cbar_label[ax_letter] == r'Y$_e$':
+            max_lev = max(abs(cbar_levels[0]), abs(cbar_levels[1]))
+            if max_lev <= 1:
                 fmt = lambda x, pos: '{:.2f}'.format(x)
-            else: 
+            elif max_lev <= 20:
                 fmt = lambda x, pos: '{:.1f}'.format(x)
+            elif max_lev <= 100:
+                fmt = lambda x, pos: '{:.0f}'.format(x)
+            elif max_lev <= 1000:
+                fmt = lambda x, pos: '{:.2e}'.format(x)
+            else: 
+                fmt = lambda x, pos: '{:.1e}'.format(x)
         self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
         return norm, fmt, cbar_levels
 
@@ -662,6 +690,61 @@ class PlottingUtils(PlotCreation):
                                             **kw)
         self.set_labels(ax_letter)
 
+    def __plot1DBars(self, ax_letter):
+        if self.plot_dim[ax_letter].count(-5) != 1:
+            raise ValueError("Too many histograms!!")
+        indx = self.plot_dim[ax_letter].index(-5)
+        xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
+        xlog = self.logX[ax_letter] if ax_letter in self.logX else None
+        xdata, ydata, bin_widths = get_1Dhist_data(xlim,
+                                       self.nbins[ax_letter],
+                                       xlog,
+                                       self.grid[ax_letter][indx],
+                                       self.data[ax_letter][indx])
+        kw = {'alpha': self.alpha[ax_letter][indx]}
+        if self.line_color[ax_letter][indx] is not None:
+                    kw['color'] = self.line_color[ax_letter][indx]
+        self.axd[ax_letter].bar(xdata, ydata, width=bin_widths, **kw)
+        self.set_labels(ax_letter)
+    
+    def __plot2DHist(self, ax_letter):
+        """
+        Special case of mesh plot that allows to be rebinned
+        """
+        if self.plot_dim[ax_letter].count(-52) != 1:
+            raise ValueError("Too many histograms!!")
+        indx = self.plot_dim[ax_letter].index(-52)
+        xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
+        ylim = self.ylims[ax_letter] if ax_letter in self.ylims else None
+        ylog = self.logY[ax_letter] if ax_letter in self.logY else None
+        xlog = self.logX[ax_letter] if ax_letter in self.logX else None
+        xbinned, ybinned, bins = get_2Dhist_data(xlim, ylim, self.nbins[ax_letter],
+                                                 xlog,
+                                                 ylog,
+                                                 self.grid[ax_letter][indx][0],
+                                                 self.grid[ax_letter][indx][1],
+                                                 self.data[ax_letter][indx])
+        norm, fmt, _ = self.__normalize_format_cbar(ax_letter)
+        pcm = self.axd[ax_letter].pcolormesh(xbinned,
+                                             ybinned,
+                                             bins.value,
+                                             norm=norm,
+                                             cmap=self.cmap_color[ax_letter],
+                                             shading='auto',
+                                             )
+        cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
+                                 format=ticker.FuncFormatter(fmt),
+                                 location=cbar_loaction(
+                                     self.cbar_position[ax_letter]),
+                                 extend='both' 
+                                 )
+        if bins.unit == u.dimensionless_unscaled:
+            ulab = ''
+        else:
+            ulab = f' [{bins.unit:latex}]'
+        cbar.set_label(self.cbar_label[ax_letter])
+        self.set_labels(ax_letter + ulab)
+ 
     def __redo_plot(self):
         """
         We replot everything in the figure. What is done depends on the
@@ -712,8 +795,20 @@ class PlottingUtils(PlotCreation):
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)
                 self.Yscale(self.logY[ax_letter], ax_letter)
+            elif (-5 in dm):
+                self.__plot1DBars(ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
+            elif (-52 in dm):
+                self.__plot2DHist(ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
             if 1 in dm:
-                self.__plot1D(ax_letter, redo=True)
+                self.__plot1D(ax_letter)
                 if all_1D:
                     self.ylim(self.ylims[ax_letter], ax_letter)
                     self.xlim(self.xlims[ax_letter], ax_letter)
@@ -833,8 +928,7 @@ class PlottingUtils(PlotCreation):
                 self.texts[ax_letter].append(t)
         else:
             self.texts[ax_letter] = [t]
-        
-    
+
     def set_labels(self, ax_letter=None):
         if ax_letter is None:
             for letter in self.axd:
@@ -875,7 +969,6 @@ class PlottingUtils(PlotCreation):
                 self.axd[ax_letter].set_ylabel(lab)
             except:
                 pass
-                
 
     def __save_scale(self, ax_letter=None):
         """
@@ -888,7 +981,7 @@ class PlottingUtils(PlotCreation):
         else:
             self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
             self.logY[ax_letter] = self.axd[ax_letter].get_yscale()
-    
+
     def __save_params(self):
         """
         Saves the limits, scales and labels of the plots.
