@@ -524,10 +524,17 @@ class PlottingUtils(PlotCreation):
                                       self.cbar_lv[ax_letter][1], 100)
             norm = Normalize(vmin=self.cbar_lv[ax_letter][0],
                              vmax=self.cbar_lv[ax_letter][1])
-            if self.cbar_label[ax_letter] == r'Y$_e$':
+            max_lev = max(abs(cbar_levels[0]), abs(cbar_levels[1]))
+            if max_lev <= 1:
                 fmt = lambda x, pos: '{:.2f}'.format(x)
-            else: 
+            elif max_lev <= 20:
                 fmt = lambda x, pos: '{:.1f}'.format(x)
+            elif max_lev <= 100:
+                fmt = lambda x, pos: '{:.0f}'.format(x)
+            elif max_lev <= 1000:
+                fmt = lambda x, pos: '{:.2e}'.format(x)
+            else: 
+                fmt = lambda x, pos: '{:.1e}'.format(x)
         self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
         return norm, fmt, cbar_levels
 
