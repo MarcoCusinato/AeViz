@@ -6,7 +6,7 @@ from AeViz.plot_utils.limits_utils import set2Dlims
 from AeViz.plot_utils.figure_utils import cbar_loaction
 from AeViz.units import aerray
 from AeViz.units import u
-from AeViz.plot_utils.utils import get_1Dhist_data
+from AeViz.plot_utils.utils import get_1Dhist_data, get_2Dhist_data
 
 
 class PlottingUtils(PlotCreation):
@@ -687,7 +687,40 @@ class PlottingUtils(PlotCreation):
                     kw['color'] = self.line_color[ax_letter][indx]
         self.axd[ax_letter].bar(xdata, ydata, width=bin_widths, **kw)
         self.set_labels(ax_letter)
-        
+    
+    def __plot2DHist(self, ax_letter):
+        """
+        Special case of mesh plot that allows to be rebinned
+        """
+        if self.plot_dim[ax_letter].count(-52) != 1:
+            raise ValueError("Too many histograms!!")
+        indx = self.plot_dim[ax_letter].index(-52)
+        xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
+        ylim = self.ylims[ax_letter] if ax_letter in self.ylims else None
+        xbinned, ybinned, bins = get_2Dhist_data(xlim, ylim, self.nbins[ax_letter],
+                                                 'linear', 'linear',
+                                                 self.grid[ax_letter][indx][0],
+                                                 self.grid[ax_letter][indx][1],
+                                                 self.data[ax_letter][indx])
+        norm, fmt, _ = self.__normalize_format_cbar(ax_letter)
+        pcm = self.axd[ax_letter].pcolormesh(xbinned,
+                                             ybinned,
+                                             bins.value,
+                                             norm=norm,
+                                             cmap=self.cmap_color[ax_letter],
+                                             shading='auto',
+                                             extend='both' )
+        cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
+                                 format=ticker.FuncFormatter(fmt),
+                                 location=cbar_loaction(
+                                     self.cbar_position[ax_letter]))
+        if bins.unit == u.dimensionless_unscaled:
+            ulab = ''
+        else:
+            ulab = f' [{bins.unit:latex}]'
+        cbar.set_label(self.cbar_label[ax_letter])
+        self.set_labels(ax_letter + ulab)
+ 
     def __redo_plot(self):
         """
         We replot everything in the figure. What is done depends on the
@@ -740,6 +773,12 @@ class PlottingUtils(PlotCreation):
                 self.Yscale(self.logY[ax_letter], ax_letter)
             elif (-5 in dm):
                 self.__plot1DBars(ax_letter)
+                self.ylim(self.ylims[ax_letter], ax_letter)
+                self.xlim(self.xlims[ax_letter], ax_letter)
+                self.Xscale(self.logX[ax_letter], ax_letter)
+                self.Yscale(self.logY[ax_letter], ax_letter)
+            elif (-52 in dm):
+                self.__plot2DHist(ax_letter)
                 self.ylim(self.ylims[ax_letter], ax_letter)
                 self.xlim(self.xlims[ax_letter], ax_letter)
                 self.Xscale(self.logX[ax_letter], ax_letter)

@@ -680,6 +680,61 @@ class Plotting(PlottingUtils, Data):
         self.Yscale('linear', ax_letter)
         show_figure()
 
+    def plot2Dhistogram(self, file, qt, yquantity, cquantity, **kwargs):
+        redo = False
+        number_spect = 0
+        number = 0
+        if self.axd is not None:
+            number_spect = sum([-52 in self.plot_dim[ax_letter] 
+                                 for ax_letter in self.axd if ax_letter 
+                                 in self.plot_dim])
+            if len(self.plot_dim) != number_spect:
+                self.Close()
+                number = 0
+            else:
+                number = number_spect
+                redo = True
+        
+        if number == 4:
+            self.Close()
+            number = 1
+        else:
+            number += 1
+            redo = True
+        ax_letter, cbars = setup_cbars_HHT(number)
+        self._PlotCreation__setup_axd(number, 4)
+        ydata = self._Data__get_data_from_name(name=yquantity, file=file, **kwargs)
+        xdata = self._Data__get_data_from_name(name=qt, file=file, **kwargs)
+        cdata = self._Data__get_data_from_name(name=cquantity, file=file, **kwargs)
+        data = aeseries(cdata, **{str(qt): xdata, str(yquantity): ydata})
+        if 'nbins' not in kwargs:
+            kwargs['nbins'] = (100, 100)
+        if not isinstance(kwargs['nbins'], list) or not isinstance(kwargs['nbins'], tuple):
+            kwargs['nbins'] =  (100, 100)
+        self._PlottingUtils__update_params(
+                                            file=file,
+                                            ax_letter=ax_letter,
+                                            plane=(qt, yquantity),
+                                            data=data,
+                                            cbar_position=cbars[ax_letter],
+                                            dim=-52,
+                                            sim_dim=self.sim_dim,
+                                            **kwargs
+                                            )
+        self._PlottingUtils__plot2DHist(ax_letter)
+        self.Xscale(xdata.log, ax_letter)
+        self.Yscale(ydata.log, ax_letter)
+        self.xlim(xdata.limits, ax_letter)
+        self.ylim(ydata.limits, ax_letter)
+        if redo:
+            for ax_letter in self.axd:
+                if ax_letter.islower():
+                    continue
+                self._PlottingUtils__update_cbar_position(ax_letter,
+                                                          cbars[ax_letter]) 
+            self._PlottingUtils__redo_plot()
+        show_figure()
+
     ## IMFs Stuff
     def plotIMFs(self, qt, **kwargs):
         ## Plots the IMFs in a top down fashion
