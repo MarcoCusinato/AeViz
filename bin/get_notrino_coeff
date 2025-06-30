@@ -10,7 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 1.0
+PERC_RNEU = 0.9
 TLIM = 0.1
 
 warnings.filterwarnings("ignore")
@@ -33,7 +33,7 @@ TIMES = np.arange(args.time - TLIM, args.time + args.dt, args.dt, dtype=float)
 # Open the simulation
 m = Simulation(args.sim_name, args.sim_path)
 if args.time > m.time(-1).value:
-  raise ValueError('The choice of time as to be lower (Remember, remember, the postbounce time...)')
+  raise ValueError('The choice of time has to be lower (Remember, remember, the postbounce time...)')
 r = m.cell.radius(m.ghost) # Radius of the simulation
 dr = m.cell.radius_right(m.ghost) - m.cell.radius_left(m.ghost)
 dV = m.cell.dVolume_integration(m.ghost)
