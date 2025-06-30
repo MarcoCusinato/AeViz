@@ -41,8 +41,14 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
     This plot a single panel/line on a figure.
     """
     kwargs.setdefault('spectrogram', False)
+    kwargs.setdefault('histogram', False)
     if projection == '1D':
-        if plane == 'time':
+        if kwargs['histogram']:
+            kwargs.setdefault('yquantity', 'mass')
+            yquantity = kwargs['yquantity']
+            kwargs.pop('yquantity')
+            AeViz.plot1Dhistogram(file, qt, yquantity, **kwargs)
+        elif plane == 'time':
             if hasattr(AeViz.loaded_data, 'global_' + qt):
                 qt = 'global_' + qt
             if kwargs['spectrogram']:
@@ -55,7 +61,15 @@ def AeViz_plot_panel(AeViz, qt, file, projection, plane, **kwargs):
         if file is not None:
             if type(plane) == tuple:
                 plane = plane[0]
-            if type(plane) != str:
+            if kwargs['histogram']:
+                kwargs.setdefault('yquantity', qt)
+                kwargs.setdefault('cquantity', 'mass')
+                yquantity = kwargs['yquantity']
+                cquantity = kwargs['cquantity']
+                kwargs.pop('yquantity')
+                kwargs.pop('cquantity')
+                AeViz.plot2Dhistogram(file, qt, yquantity, cquantity, **kwargs)
+            elif type(plane) != str:
                 AeViz.plotHammer(file, plane, qt, **kwargs)
             else:
                 AeViz.plot2D(file, plane, qt, **kwargs)

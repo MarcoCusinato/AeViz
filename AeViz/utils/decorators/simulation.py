@@ -47,7 +47,7 @@ def derive(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         data = func(*args, **kwargs)
-        if 'der' not in kwargs:
+        if 'der' not in kwargs and 'integrate' not in kwargs:
             return data
         if type(data) == tuple:
             data = list(data)
@@ -86,7 +86,10 @@ def derive(func):
                                                 f'and data has {dd.shape}')
                     data[i] = IDL_derivative(phi, dd, axis=dd.shape.index(len(phi)))
             elif isinstance(dd, aeseries):
-                data[i] = dd.derive(kwargs['der'])
+                if 'der' in kwargs:
+                    data[i] = dd.derive(kwargs['der'])
+                else:
+                    data[i] = dd.integrate(kwargs['integrate'])
         if len(data) == 1:
             return data[0]
         return data
@@ -265,5 +268,26 @@ def sum_tob(func):
                 data.time.set(name=nm,
                             label=merge_strings(lb,r'$+$', r'$t_\mathrm{b}$'),
                             limits=[0, data.time.value[-1]])
+        return data
+    return wrapper
+
+def mask_points(func):
+    """
+    Decorator to mask the quantity with the selected value.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        if not 'mask' in kwargs:
+            return data
+        if 'unbound' in kwargs['mask']:
+            mask = (args[0].MHD_energy(args[1]) + \
+                2 * args[0].gravitational_energy(args[1]) > 0)
+        else:
+            raise NotImplementedError(f"{kwargs['mask']} not available as input.")
+        
+        if 'not' not in kwargs['mask']:
+            mask = ~mask
+        data[mask] = np.nan
         return data
     return wrapper

@@ -17,7 +17,7 @@ imported into the Simulation class.
 @smooth
 def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
                             rhomin=None, rhomax=None, r=None,
-                            save_checkpoints=True, **kwargs):
+                            save_checkpoints=True, mode='radius', **kwargs):
     if m is None:
         calculate_rho_decomposition(self, save_checkpoints, msum=True)
         if zero_norm:
@@ -48,7 +48,8 @@ def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
         return aeseries(rlm, time=time, radius=radius)
     else:
         time, rlm = get_sph_profiles_r(self, l=l, m=m, rhomin=rhomin,
-                                    rhomax=rhomax, r=r, zero_norm=zero_norm)
+                                    rhomax=rhomax, r=r, zero_norm=zero_norm,
+                                    mode=mode)
         time = aerray(time, u.s, name='time', label=r'$t-t_\mathrm{b}$',
                       cmap=None, log=False,
                  limits=[-0.005, time.max()])
