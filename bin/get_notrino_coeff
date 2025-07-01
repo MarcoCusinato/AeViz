@@ -84,6 +84,7 @@ for time in TIMES:
     neu_sph_radius = neu_sph[species].data[it]
     # Getting the index corresponding to the position
     k = np.argmin(np.abs(r - PERC_RNEU * neu_sph_radius))
+    k_ns = np.argmin(np.abs(r - neu_sph_radius))
     k_neu[species] = int(k)
 
     # Averaging the opacities over the energy bins
@@ -111,8 +112,13 @@ for time in TIMES:
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == TIMES[-1]):
-      ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
-      ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
+      ax.plot(r.value[:k_ns], B0_loc.value, color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k_ns], B1_loc.value, color = COLOURS[i_species], \
+              ls='--')
+      ax.plot(r.value[k], B0_loc.value[k], color = COLOURS[i_species], \
+              marker='x')
+      ax.plot(r.value[k], B1_loc.value[k], color = COLOURS[i_species], \
+              marker='x')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
