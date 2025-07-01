@@ -93,27 +93,27 @@ for time in TIMES:
     kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
                         m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
     
-    B1_loc = kt_mean[:k] / ((rho[:k] * 1.e-10) * (np.maximum(T[:k], T[k]) ** 2) * \
-                            (Xn[:k] + Xp[:k]))
+    B1_loc = kt_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \
+                            (Xn + Xp))
     
     if species == 'nux':
       # In this case, B0 is computed differently
-      B0_loc = ka_mean[:k] / (np.sqrt(rho[:k] * 1.e-10) * \
-                              (np.maximum(T[:k], T[k]) ** 3) * \
-                              X[i_species][:k])
+      B0_loc = ka_mean / (np.sqrt(rho * 1.e-10) * \
+                              (np.maximum(T, T) ** 3) * \
+                              X[i_species])
     else:
-      B0_loc = ka_mean[:k] / ((rho[:k] * 1e-10) * \
-                              (np.maximum(T[:k], T[k]) ** 2) * \
-                              X[i_species][:k])
-    B0_loc_avg = np.nansum(B0_loc * dV[:k,...] * rho[:k, ...]) / \
+      B0_loc = ka_mean / ((rho * 1e-10) * \
+                              (np.maximum(T, T[k_ns]) ** 2) * \
+                              X[i_species])
+    B0_loc_avg = np.nansum(B0_loc[:k] * dV[:k,...] * rho[:k, ...]) / \
                   np.nansum(dV[:k,...] * rho[:k, ...])
-    B1_loc_avg = np.nansum(B1_loc * dV[:k, ...] * rho[:k, ...]) / \
+    B1_loc_avg = np.nansum(B1_loc[:k] * dV[:k, ...] * rho[:k, ...]) / \
                   np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == TIMES[-1]):
-      ax.plot(r.value[:k_ns], B0_loc.value, color = COLOURS[i_species], ls='-')
-      ax.plot(r.value[:k_ns], B1_loc.value, color = COLOURS[i_species], \
+      ax.plot(r.value[:k_ns], B0_loc.value[:k_ns], color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
               ls='--')
       ax.plot(r.value[k], B0_loc.value[k], color = COLOURS[i_species], \
               marker='x')
