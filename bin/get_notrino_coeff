@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import warnings
 from matplotlib.lines import Line2D
 import os
+from AeViz.utils.math_utils import IDL_derivative
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
@@ -105,13 +106,23 @@ for time in TIMES:
       B0_loc = ka_mean / ((rho * 1e-10) * \
                               (np.maximum(T, T[k_ns]) ** 2) * \
                               X[i_species])
+    dB0 = IDL_derivative(r, B0_loc)
+    print(dB0)
+    exit()
+    dB1 = IDL_derivative(r, B1_loc)
+
+    k0 = np.argwhere(dB0 < 0)
+    if k0.shape[0] == 0:
+      # The derivative is always positive, look at the ratio
+      k0 = np.argwhere(dB0[:-1] / dB0[0:] > 1.5)
+    k0 = k0[0][0]
     B0_loc_avg = np.nansum(B0_loc[:k] * dV[:k,...] * rho[:k, ...]) / \
                   np.nansum(dV[:k,...] * rho[:k, ...])
     B1_loc_avg = np.nansum(B1_loc[:k] * dV[:k, ...] * rho[:k, ...]) / \
                   np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
-    if (time == TIMES[-1]):
+    if (time == TIMES[1]):
       ax.plot(r.value[:k_ns], B0_loc.value[:k_ns], color = COLOURS[i_species], ls='-')
       ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
               ls='--')
