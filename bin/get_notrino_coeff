@@ -116,9 +116,9 @@ for time in TIMES:
       ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
               ls='--')
       ax.plot(r.value[k], B0_loc.value[k], color = COLOURS[i_species], \
-              marker='x')
+              marker='o')
       ax.plot(r.value[k], B1_loc.value[k], color = COLOURS[i_species], \
-              marker='x')
+              marker='o')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
