@@ -10,7 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 0.9
+PERC_RNEU = 0.8
 TLIM = 0.1
 
 warnings.filterwarnings("ignore")
