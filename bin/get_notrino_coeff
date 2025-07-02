@@ -7,11 +7,10 @@ import matplotlib.pyplot as plt
 import warnings
 from matplotlib.lines import Line2D
 import os
-from AeViz.utils.math_utils import IDL_derivative
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 0.1
+PERC_RNEU = 0.25
 TLIM = 0.1
 
 warnings.filterwarnings("ignore")
@@ -90,8 +89,12 @@ for time in TIMES:
 
     # Averaging the opacities over the energy bins
     ka_mean = np.nansum(ka[i_species] * m.cell.E_nu()[None,:] * \
-                        m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
-    kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
+    if m.dim > 1:
+        kt_mean = np.nansum(kt[i_species][...,0] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
+    else:
+        kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
                         m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
     
     B1_loc = kt_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \
@@ -106,23 +109,18 @@ for time in TIMES:
       B0_loc = ka_mean / ((rho * 1e-10) * \
                               (np.maximum(T, T[k_ns]) ** 2) * \
                               X[i_species])
-    dB0 = IDL_derivative(r, B0_loc)
-    print(dB0)
-    exit()
-    dB1 = IDL_derivative(r, B1_loc)
-
-    k0 = np.argwhere(dB0 < 0)
-    if k0.shape[0] == 0:
-      # The derivative is always positive, look at the ratio
-      k0 = np.argwhere(dB0[:-1] / dB0[0:] > 1.5)
-    k0 = k0[0][0]
-    B0_loc_avg = np.nansum(B0_loc[:k] * dV[:k,...] * rho[:k, ...]) / \
+    B0_loc_avg = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...]) / \
                   np.nansum(dV[:k,...] * rho[:k, ...])
-    B1_loc_avg = np.nansum(B1_loc[:k] * dV[:k, ...] * rho[:k, ...]) / \
+    B1_loc_avg = np.nansum(B1_loc[:k,...] * dV[:k, ...] * rho[:k, ...]) / \
                   np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
     if (time == TIMES[1]):
+      if m.dim > 1:
+        B0_loc = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
+                   np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
+        B1_loc = np.nansum(B1_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
+                    np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
       ax.plot(r.value[:k_ns], B0_loc.value[:k_ns], color = COLOURS[i_species], ls='-')
       ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
               ls='--')
@@ -135,7 +133,7 @@ for time in TIMES:
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
 print('Neutrinosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
 print('Neutrinosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
-print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']])
+print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']].max())
 
 B0 /= TIMES.shape[0]
 B1 /= TIMES.shape[0]
@@ -153,14 +151,14 @@ print(' JANKA2001A_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001A_KTRNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001A_KTRNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001A_KTRNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']])
+print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
 print(' JANKA2001B_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001B_KAENUA_COEFF = %.15e,' % B0[1])
 print(' JANKA2001B_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001B_KSCNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001B_KSCNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']])
+print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
 print(' WGHMOD  =           2,')
 print(' WGH_TANH_TAU0   =  1.333333333333333     ,')
 print(' WGH_FD_DTAU     =   1.00000000000000     ,')
