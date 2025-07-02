@@ -16,7 +16,7 @@ from typing import Literal
 ## GW strain
 ## ---------------------------------------------------------------------
 
-def GW_strain(sim_dim, column_change, data, index, distance):
+def GW_strain(sim_dim, column_change, data, index, ref, distance):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if distance:
         if not isinstance(distance, aerray):
@@ -24,14 +24,14 @@ def GW_strain(sim_dim, column_change, data, index, distance):
     if sim_dim == 1:
         return GW_strain_1D(data)
     elif sim_dim == 2:
-        return correct_zero(2, GW_strain_2D(data, distance), index)
+        return correct_zero(2, GW_strain_2D(data[::ref, :], distance), index)
     else:
         GWs = GW_strain_3D(data, distance)
-        if column_change is not None:
+        if column_change is not None:    
             GWs[0].data[:column_change] = GW_strain_2D(data, distance).data[:column_change]
             for hh in range(1, len(GWs)):
                 GWs[hh].data.value[:column_change] = np.zeros(column_change)
-        return correct_zero(3, GWs, index)
+        return correct_zero(3, refine_3D(GWs, ref), index)
 
 def GW_strain_1D(data):
     print("No GW for you :'(")
@@ -94,6 +94,19 @@ def GW_strain_3D(data, distance):
             GWs[hh] /= distance
             GWs[hh].data.set(label=lb.replace(r'\mathcal{D}', r''), name=nm, cmap=cm,
                         limits=lm)
+    return GWs
+
+def refine_3D(GWs, ref):
+    if ref == 1:
+        return GWs
+    time = aerray(GWs[0].time.value[::ref], GWs[0].time.unit, GWs[0].time.name,
+                  GWs[0].time.label, GWs[0].time.cmap, GWs[0].time.limits,
+                  GWs[0].time.log)
+    for hh in range(len(GWs)):
+        h = aerray(GWs[hh].data.value[::ref], GWs[hh].data.unit,
+                   GWs[hh].data.name, GWs[hh].data.label, GWs[hh].data.cmap,
+                   GWs[hh].data.limits, GWs[hh].data.log)
+        GWs[hh] = aeseries(h, time = time.copy())
     return GWs
 
 def correct_zero(sim_dim, GWs, index):

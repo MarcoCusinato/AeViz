@@ -50,6 +50,7 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
     """
     data = load_file(self._Simulation__log_path, self._Simulation__grw_path)
     
+    n = 1
     if lower_refinement:
         dt = data[1, 2] - data[0, 2]
         new_dt = dt
@@ -57,7 +58,6 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
         while new_dt < 5e-5:
             new_dt += dt
             n += 1
-        data = data[::n, :]
     
     if 'column_index' in kwargs:
         col = kwargs['column_index']
@@ -71,7 +71,7 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
         index = np.argmax((data[:, 2] - self.tob) >= -0.01)
     else:
         index = None
-    GWs = GW_strain(self.dim, column_change, data, index, distance)
+    GWs = GW_strain(self.dim, column_change, data, index, n, distance)
     if GWs is None:
         return None
     if self.dim > 2:
