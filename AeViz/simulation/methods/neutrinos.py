@@ -11,8 +11,6 @@ imported into the Simulation class.
 ## -----------------------------------------------------------------
 
 ## Check if NOTRINO is used
-@get_grid
-@smooth
 @hdf_isopen
 def notrino(self, file_name, **kwargs):
     if 'notrino' in self._Simulation__data_h5:
