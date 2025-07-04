@@ -236,9 +236,19 @@ def neutrino_mean_energy(self, file_name,
 def neutrino_energy_density_grey(self, file_name,
                                  comp:Literal['all', 'nue', 'nua', 'nux']='all',
                                  **kwargs):
-    nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
-    nu_ene[..., 2] /= 4
+    try:
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
+        nu_ene[..., 2] /= 4
+    except:
+        try:
+            nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+                    self._Simulation__data_h5['neutrino/e'][..., 0]), self.dim)
+            nu_ene[..., 2] /= 4
+            nu_ene = np.sum(nu_ene, axis=self.dim)
+        except:
+            nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+                self._Simulation__data_h5['notrino/notrino_e'][...]), self.dim)
     if comp == 'all':
         return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
                     r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
@@ -267,9 +277,20 @@ def neutrino_momenta_grey(self, file_name, **kwargs):
     In the comoving rest frame of the fluid are equal to the 
     neutrino energy fluxes
     """
-    nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(
-        self._Simulation__data_h5['/neutrinogrey/egrey'][..., 1:]), self.dim)
-    if self.dim == 1:
+    notrino = False
+    try:
+        nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['/neutrinogrey/egrey'][..., 1:]), self.dim)
+    except:
+        try:
+            nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+                   self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
+            nu_flux = np.sum(nu_flux, axis=self.dim)
+        except:
+            notrino = True
+            nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+                self._Simulation__data_h5['notrino/notrino_f'][...]), self.dim)
+    if self.dim == 1 or notrino:
         nu_flux[..., 2] /= 4
         return (aerray(nu_flux[..., 0], u.erg / u.s / u.cm ** 2, 'nue_fdens',
                   r'$F_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
