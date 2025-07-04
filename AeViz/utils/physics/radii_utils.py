@@ -57,7 +57,7 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    if simulation.dim==1:
+    if simulation.dim==1 or 'notrino' in simulation._Simulation__data_h5:
         axis = -1
     else:
         axis = (-1, simulation.dim)
