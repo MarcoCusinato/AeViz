@@ -37,6 +37,7 @@ def get_grid(func):
             isinstance(kwargs['plane'], (int, float)) or \
             (type(kwargs['plane']) == str and \
              kwargs['plane'] not in ['radius', 'r', 'theta', 'th', 'phi', 'ph',
+                                     'mass', 'm',
                                      'xy', 'yx', 'xz', 'zx', 'zy', 'yz',
                                      'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg',
                                      'zy_phi_avg'])) and args[0].dim == 3:
@@ -58,6 +59,13 @@ def get_grid(func):
                 outdata.append(aeseries(_plane_cut(args[0].dim, dd, gr,
                                                    index_theta, index_phi),
                                                    **{X.name: X, Y.name: Y}))
+        elif kwargs['plane'] in ['mass', 'm']:
+            gmass = args[0].mass_grid(args[1])
+            for dd in data:
+                outdata.append(aeseries(function_average(dd,
+                                                         args[0].dim, 'Omega',
+                                            args[0].cell.dOmega(args[0].ghost)),
+                               mass=gmass)) 
         elif kwargs['plane'] in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg',
                                  'zy_phi_avg']:
             gr = grid(args[0].dim, args[0].cell.radius(args[0].ghost),
