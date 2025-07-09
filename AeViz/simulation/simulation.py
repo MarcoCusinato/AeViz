@@ -15,6 +15,9 @@ from AeViz.utils.files.file_utils import list_module_functions
 from AeViz.utils.utils import time_array
 import numpy as np
 import types, os
+from AeViz.utils.decorators.grid import get_grid
+from AeViz.utils.decorators.simulation import subtract_tob
+from AeViz.units.aeseries import aeseries
 
 
 class Simulation:
@@ -125,13 +128,25 @@ class Simulation:
         return file_list[index]
     
     ## ERROR
+    @get_grid
     @hdf_isopen
     def error(self, file_name, **kwargs):
         data = self.ghost.remove_ghost_cells(np.squeeze(
             self.__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                           ['I_EOSERR']]), self.dim)
-        return aerray(data, u.dimensionless_unscaled, 'error', '$Error$',
+        return aerray(data, u.dimensionless_unscaled, 'error', 
+                      r'$\mathrm{Error}$',
                       cmap='seismic', limits=[0, 1], log=False)
+    
+    @subtract_tob
+    def global_error(self, tob_corrected=True, **kwargs):
+        data = np.loadtxt(os.path.join(self.__log_path, self.__erg_data))
+        return aeseries(
+            aerray(data[:, -1], u.dimensionless_unscaled, 'error', 
+                      r'$\mathrm{Error cells}$',
+                      cmap='seismic', limits=[1, 1e3], log=True),
+            time = aerray(data[:,2], u.s, 'time', r'$t$', None,
+                          [0, data[-1, 2]], False))
 
     ## TIME
     @hdf_isopen
