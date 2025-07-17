@@ -111,6 +111,8 @@ def find_column_changing_line(path_folder, file_name, column=None):
             line_number += 1
     if len(line_change) > 1:
         line_number = line_change[column]
+    if len(line_change) == 1:
+        line_number = line_change[0]
     if line_number < 3:
         line_number = None
     return line_number
