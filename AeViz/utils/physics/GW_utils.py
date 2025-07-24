@@ -30,7 +30,9 @@ def GW_strain(sim_dim, column_change, data, index, ref, distance):
         if column_change is not None:    
             GWs[0].data[:column_change] = GW_strain_2D(data, distance).data[:column_change]
             for hh in range(1, len(GWs)):
-                GWs[hh].data.value[:column_change] = np.zeros(column_change)
+                GWs[hh].data.value[:column_change-1] = np.zeros(column_change-1)
+            GWs = match_remap(remove_3D_spikes(GWs, column_change, distance),
+                              column_change)
         return correct_zero(3, refine_3D(GWs, ref), index)
 
 def GW_strain_1D(data):
@@ -122,6 +124,28 @@ def correct_zero(sim_dim, GWs, index):
                 GWs[i] -= GWs[i].data[:index].mean()
         return GWs
 
+def remove_3D_spikes(GWs, index, distance):
+    """
+    Around the 2D-3D matching there are spikes at least in some cases,
+    let's try to remove them.
+    """
+    if distance:
+        check_GWs = [hh.data * distance for hh in GWs]
+    else:
+        check_GWs =  [hh.data for hh in GWs]
+    for h in range(len(GWs)):
+        for i in range(index-50, index+50):
+            if check_GWs[h][i] >= 1e3 or check_GWs[h][i] <= -1e3:
+                GWs[h].data[i] = GWs[h].data[i-1]            
+    return GWs
+
+def match_remap(GWs, index):
+    for h in range(len(GWs)):
+        diff = np.mean(GWs[h].data[index-8:index]) - \
+            np.mean(GWs[h].data[index:index+8])
+        GWs[h].data[index:] += diff
+    return GWs
+        
 ## ---------------------------------------------------------------------
 ## GW Energy
 ## ---------------------------------------------------------------------
