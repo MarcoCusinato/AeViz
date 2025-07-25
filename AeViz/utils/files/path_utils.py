@@ -81,6 +81,7 @@ def standardize_simulation_path(path):
     Returns standardized Linux path (i.e. path starting with '/')
         in: path string
     """
+    path = os.path.abspath(path)
     if pltf() == 'Windows':
         try:
             
