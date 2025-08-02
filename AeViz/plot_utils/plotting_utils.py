@@ -338,7 +338,7 @@ class PlottingUtils(PlotCreation):
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
             self.grid[ax_letter].append(grid)
-            self.data[ax_letter].append([data.data])
+            self.data[ax_letter].append(data.data)
             self.plot_dim[ax_letter].append(dim)
             self.sim_dimension[ax_letter].append(sim_dim)
             if 'alpha' in kwargs:
@@ -668,7 +668,6 @@ class PlottingUtils(PlotCreation):
                     self.axd[ax_letter].plot(self.grid[ax_letter][indx],
                                             self.data[ax_letter][indx],
                                             **kw)
-                break
         else:
             for indx in range(len(self.plot_dim[ax_letter])):
                 if self.plot_dim[ax_letter][indx] not in [1, -4]:
