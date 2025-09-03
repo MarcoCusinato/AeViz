@@ -15,6 +15,7 @@ class PlottingUtils(PlotCreation):
     Class with utilities for plotting the data and manipulating the
     essential plot parametes, eg limits, scales, labels, etc.
     """
+
     def __init__(self):
         """
         No parameters are needed to initialize the class.
@@ -24,7 +25,7 @@ class PlottingUtils(PlotCreation):
         """
         self.__reset_params()
         PlotCreation.__init__(self)
-        
+
     def to(self, unit, plot='A', axis=None):
         """
         change the units of the selected plot either of the main data or axis.add()
@@ -54,7 +55,8 @@ class PlottingUtils(PlotCreation):
                             self.grid[plot][i] = list(self.grid[plot][i])
                         if (self.grid[plot][i]) == list:
                             old_units = self.grid[plot][i][0].unit
-                            self.grid[plot][i][0] = self.grid[plot][i][0].to(unit)
+                            self.grid[plot][i][0] = self.grid[plot][i][0].to(
+                                unit)
                         else:
                             old_units = self.grid[plot][i].unit
                             self.grid[plot][i] = self.grid[plot][i].to(unit)
@@ -70,7 +72,8 @@ class PlottingUtils(PlotCreation):
                             if type(self.grid[plot][i]) == tuple:
                                 self.grid[plot][i] = list(self.grid[plot][i])
                             old_units = self.grid[plot][i][1].unit
-                            self.grid[plot][i][1] = self.grid[plot][i][1].to(unit)
+                            self.grid[plot][i][1] = self.grid[plot][i][1].to(
+                                unit)
                     except:
                         pass
             elif axis in ['xy', 'yx']:
@@ -84,10 +87,12 @@ class PlottingUtils(PlotCreation):
                             if type(self.grid[plot][i]) == tuple:
                                 self.grid[plot][i] = list(self.grid[plot][i])
                             old_units = self.grid[plot][i][0].unit
-                            self.grid[plot][i][1] = self.grid[plot][i][1].to(unit)
-                            self.grid[plot][i][0] = self.grid[plot][i][0].to(unit)                    
+                            self.grid[plot][i][1] = self.grid[plot][i][1].to(
+                                unit)
+                            self.grid[plot][i][0] = self.grid[plot][i][0].to(
+                                unit)
                     except:
-                        pass 
+                        pass
         self.__redo_plot()
 
     def xlim(self, xlim, axd_letter="A"):
@@ -112,12 +117,12 @@ class PlottingUtils(PlotCreation):
             sdim = self.sim_dimension[axd_letter][idx]
             set2Dlims(self.axd, xlim, None, self.number, self.form_factor,
                       sdim, plane)
-            self.__save_lims()
+            self.__save_lims(axd_letter)
         else:
             self.axd[axd_letter].set_xlim(xlim)
             self.__save_xlims(axd_letter)
         self._PlotCreation__setup_aspect()
-    
+
     def ylim(self, ylim, axd_letter="A"):
         """
         Sets the y limits of the axes corresponding to the axd_letter
@@ -140,17 +145,17 @@ class PlottingUtils(PlotCreation):
             sdim = self.sim_dimension[axd_letter][idx]
             set2Dlims(self.axd, None, ylim, self.number, self.form_factor,
                       sdim, plane)
-            self.__save_lims()
+            self.__save_lims(axd_letter)
         else:
             self.axd[axd_letter].set_ylim(ylim)
         self.__save_ylims(axd_letter)
         self._PlotCreation__setup_aspect()
-    
+
     def Xscale(self, scale, ax_letter="A"):
         """
         Sets the x axis scale of the plot at the cooresponding letter.
-        If the scale is 'log' and the limits are negative, we use a 
-        custom symlog scale. 
+        If the scale is 'log' and the limits are negative, we use a
+        custom symlog scale.
         """
         if scale is None:
             self.logX[ax_letter] = scale
@@ -160,19 +165,19 @@ class PlottingUtils(PlotCreation):
             if self.xlims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.xlims[ax_letter][0].value),
-                    np.log10(self.xlims[ax_letter][1].value))) - 6)
+                        np.log10(self.xlims[ax_letter][1].value))) - 6)
                 self.axd[ax_letter].set_xscale('symlog', linthresh=lntresh)
             else:
                 self.axd[ax_letter].set_xscale('log')
         else:
             self.axd[ax_letter].set_xscale('linear')
         self.logX[ax_letter] = self.axd[ax_letter].get_xscale()
-    
+
     def Yscale(self, scale, ax_letter="A"):
         """
         Sets the y axis scale of the plot at the cooresponding letter.
-        If the scale is 'log' and the limits are negative, we use a 
-        custom symlog scale. 
+        If the scale is 'log' and the limits are negative, we use a
+        custom symlog scale.
         """
         if scale is None:
             self.logY[ax_letter] = scale
@@ -182,7 +187,7 @@ class PlottingUtils(PlotCreation):
             if self.ylims[ax_letter][0] < 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.ylims[ax_letter][0].value),
-                    np.log10(self.ylims[ax_letter][1].value))) - 6)
+                        np.log10(self.ylims[ax_letter][1].value))) - 6)
                 self.axd[ax_letter].set_yscale('symlog', linthresh=lntresh)
             else:
                 self.axd[ax_letter].set_yscale('log')
@@ -203,7 +208,7 @@ class PlottingUtils(PlotCreation):
     def rebin(self, bins, axd_letter="A"):
         self.nbins[axd_letter] = bins
         self.__redo_plot()
-        
+
     def cmap(self, cmap, axd_letter="A"):
         """
         Change the colormap of the plot at the corresponding letter, if
@@ -233,11 +238,11 @@ class PlottingUtils(PlotCreation):
         """
         Write text on the plot corresponding to axd_letter.
         """
-        
+
         if text is not None:
             self.axd[axd_letter].text(xt, yt, text, **kwargs_text)
         self.__save_text(xt, yt, text, kwargs_text, axd_letter)
-    
+
     def labels(self, xlabel, ylabel, axd_letter="A"):
         """
         Let the user change the default labels of the plot at the
@@ -250,7 +255,7 @@ class PlottingUtils(PlotCreation):
             unit = self.axd[axd_letter].yaxis.get_units()[1]
             self.axd[axd_letter].set_ylabel(ylabel + f' [{unit:latex}]')
         self.__save_labels(axd_letter)
-    
+
     def update_legend(self, legend, axd_letter="A", loc='upper right'):
         """
         Plot the legend of the plot at the corresponding letter. The
@@ -291,8 +296,8 @@ class PlottingUtils(PlotCreation):
                 grid = (getattr(data, plane[0]), getattr(data, plane[1]))
             else:
                 grid = getattr(data, data.return_axis_names()[0])
-        elif plane in  ['xy', 'yx', 'xz', 'zx', 'yz', 'zy',
-                        'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
+        elif plane in ['xy', 'yx', 'xz', 'zx', 'yz', 'zy',
+                       'xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
             if plane in ['xz_phi_avg', 'zx_phi_avg', 'yz_phi_avg', 'zy_phi_avg']:
                 plane = 'xz_phi_avg'
             if plane in ['yx', 'zx', 'zy']:
@@ -347,7 +352,7 @@ class PlottingUtils(PlotCreation):
                 self.alpha[ax_letter].append(1)
             if 'color' in kwargs or 'c' in kwargs:
                 self.line_color[ax_letter].append(kwargs.get('color',
-                                                         kwargs.get('c')))
+                                                             kwargs.get('c')))
             else:
                 self.line_color[ax_letter].append(None)
             if 'lw' in kwargs:
@@ -358,13 +363,13 @@ class PlottingUtils(PlotCreation):
                 self.ls[ax_letter].append(kwargs['ls'])
             else:
                 self.ls[ax_letter].append(None)
-         
+
     def __update_cbar_position(self, ax_letter, cbar_position):
         """
         Changes the position of the colorbar of the plot.
         """
         self.cbar_position[ax_letter] = cbar_position
-    
+
     def __update_fields_params(self, ax_letter, field, field_type):
         """
         If we want to plot field lines or arrows, we need to have the
@@ -376,69 +381,69 @@ class PlottingUtils(PlotCreation):
         else:
             self.field[ax_letter].append(field)
             self.field_type[ax_letter].append(field_type)
-    
+
     def __copy_param_key(self, ax_letter_in, ax_letter_out):
         """
         Clears the dictionaries containing the plot parameters.
         """
         keys = [
-                self.file,
-                self.plane,
-                self.plot_dim,
-                self.grid,
-                self.data,
-                self.sim_dimension,
-                self.cbar_position,
-                self.cbar_log,
-                self.cbar_lv,
-                self.cmap_color,
-                self.cbar_label,
-                self.xlims,
-                self.ylims,
-                self.logX,
-                self.logY,
-                self.xlabels,
-                self.ylabels,
-                self.titles,
-                self.legend,
-                self.alpha,
-                self.line_color,
-                self.lw,
-                self.field,
-                self.field_type]
+            self.file,
+            self.plane,
+            self.plot_dim,
+            self.grid,
+            self.data,
+            self.sim_dimension,
+            self.cbar_position,
+            self.cbar_log,
+            self.cbar_lv,
+            self.cmap_color,
+            self.cbar_label,
+            self.xlims,
+            self.ylims,
+            self.logX,
+            self.logY,
+            self.xlabels,
+            self.ylabels,
+            self.titles,
+            self.legend,
+            self.alpha,
+            self.line_color,
+            self.lw,
+            self.field,
+            self.field_type]
         for key in keys:
             if ax_letter_out in key:
                 key[ax_letter_in] = key[ax_letter_out]
-    
+
     def __clear_param_key(self, ax_letter):
         """
         Clears the dictionaries containing the plot parameters.
         """
         keys = [
-                self.file,
-                self.plane,
-                self.plot_dim,
-                self.grid,
-                self.data,
-                self.sim_dimension,
-                self.cbar_position,
-                self.cbar_log,
-                self.cbar_lv,
-                self.cmap_color,
-                self.cbar_label,
-                self.xlims,
-                self.ylims,
-                self.logX,
-                self.logY,
-                self.xlabels,
-                self.ylabels,
-                self.titles,
-                self.legend,
-                self.alpha,
-                self.line_color,
-                self.lw,
-                self.field,
-                self.field_type]
+            self.file,
+            self.plane,
+            self.plot_dim,
+            self.grid,
+            self.data,
+            self.sim_dimension,
+            self.cbar_position,
+            self.cbar_log,
+            self.cbar_lv,
+            self.cmap_color,
+            self.cbar_label,
+            self.xlims,
+            self.ylims,
+            self.logX,
+            self.logY,
+            self.xlabels,
+            self.ylabels,
+            self.titles,
+            self.legend,
+            self.alpha,
+            self.line_color,
+            self.lw,
+            self.field,
+            self.field_type]
         for key in keys:
             if ax_letter in key:
                 key.pop(ax_letter)
@@ -475,7 +480,7 @@ class PlottingUtils(PlotCreation):
         self.field_type = {}
         self.sim_dimension = {}
         self.nbins = {}
-    
+
     def __normalize_format_cbar(self, ax_letter):
         """
         Sets up the normalization and the tick format of the colorbar.
@@ -488,10 +493,10 @@ class PlottingUtils(PlotCreation):
             self.cbar_lv[ax_letter][1] = np.nanmax(self.data[ax_letter])
         if self.cbar_log[ax_letter]:
             if self.cbar_lv[ax_letter][0] < 0 and \
-                self.cbar_lv[ax_letter][1] > 0:
+                    self.cbar_lv[ax_letter][1] > 0:
                 lntresh = 10 ** (np.round(
                     min(np.log10(-self.cbar_lv[ax_letter][0]),
-                    np.log10(self.cbar_lv[ax_letter][1]))) - 6)
+                        np.log10(self.cbar_lv[ax_letter][1]))) - 6)
                 cbar_levels = np.concatenate((
                     -np.logspace(np.log10(-self.cbar_lv[ax_letter][0]),
                                  np.log10(lntresh), 45, endpoint=False),
@@ -501,14 +506,14 @@ class PlottingUtils(PlotCreation):
                 norm = SymLogNorm(lntresh, vmin=self.cbar_lv[ax_letter][0],
                                   vmax=self.cbar_lv[ax_letter][1])
             elif self.cbar_lv[ax_letter][0] < 0 and \
-                self.cbar_lv[ax_letter][1] <= 0:
+                    self.cbar_lv[ax_letter][1] <= 0:
                 if self.cbar_lv[ax_letter][1] == 0:
                     self.cbar_lv[ax_letter][1] = -10 ** (
                         np.log10(-self.cbar_lv[ax_letter][1]) - 10)
                     self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
                 cbar_levels = -np.logspace(np.log10(-self.cbar_lv[ax_letter][0]),
-                                          np.log10(-self.cbar_lv[ax_letter][1]),
-                                          100)
+                                           np.log10(-self.cbar_lv[ax_letter][1]),
+                                           100)
                 norm = SymLogNorm(-self.cbar_lv[ax_letter][1],
                                   vmin=self.cbar_lv[ax_letter][0],
                                   vmax=self.cbar_lv[ax_letter][1])
@@ -517,8 +522,9 @@ class PlottingUtils(PlotCreation):
                                           np.log10(self.cbar_lv[ax_letter][1]),
                                           100)
                 norm = LogNorm(vmin=self.cbar_lv[ax_letter][0],
-                                vmax=self.cbar_lv[ax_letter][1])
-            fmt = lambda x, pos: '{:.0e}'.format(x)
+                               vmax=self.cbar_lv[ax_letter][1])
+
+            def fmt(x, pos): return '{:.0e}'.format(x)
         else:
             cbar_levels = np.linspace(self.cbar_lv[ax_letter][0],
                                       self.cbar_lv[ax_letter][1], 100)
@@ -526,15 +532,15 @@ class PlottingUtils(PlotCreation):
                              vmax=self.cbar_lv[ax_letter][1])
             max_lev = max(abs(cbar_levels[0]), abs(cbar_levels[1]))
             if max_lev <= 1:
-                fmt = lambda x, pos: '{:.2f}'.format(x)
+                def fmt(x, pos): return '{:.2f}'.format(x)
             elif max_lev <= 20:
-                fmt = lambda x, pos: '{:.1f}'.format(x)
+                def fmt(x, pos): return '{:.1f}'.format(x)
             elif max_lev <= 100:
-                fmt = lambda x, pos: '{:.0f}'.format(x)
+                def fmt(x, pos): return '{:.0f}'.format(x)
             elif max_lev <= 1000:
-                fmt = lambda x, pos: '{:.2e}'.format(x)
-            else: 
-                fmt = lambda x, pos: '{:.1e}'.format(x)
+                def fmt(x, pos): return '{:.2e}'.format(x)
+            else:
+                def fmt(x, pos): return '{:.1e}'.format(x)
         self.cbar_lv[ax_letter] = tuple(self.cbar_lv[ax_letter])
         return norm, fmt, cbar_levels
 
@@ -542,9 +548,9 @@ class PlottingUtils(PlotCreation):
         """
         Fills up the selected axes with a 2D mesh plot.
         """
-        ## -2 is spectrogram, -3 is HHT spectrogram
-        if (self.plot_dim[ax_letter].count(-2) + \
-            self.plot_dim[ax_letter].count(-3)) != 1:
+        # -2 is spectrogram, -3 is HHT spectrogram
+        if (self.plot_dim[ax_letter].count(-2) +
+                self.plot_dim[ax_letter].count(-3)) != 1:
             raise ValueError('Too many mesh data')
         try:
             indx = self.plot_dim[ax_letter].index(-2)
@@ -552,16 +558,16 @@ class PlottingUtils(PlotCreation):
             indx = self.plot_dim[ax_letter].index(-3)
         norm, fmt, _ = self.__normalize_format_cbar(ax_letter)
         if 'lmin' in kwargs or self.grid[ax_letter][indx][1].label in [r'$l$',
-                                                                    r'$2l+1$']:
+                                                                       r'$2l+1$']:
             sh = 'auto'
         else:
             sh = 'gouraud'
         pcm = self.axd[ax_letter].pcolormesh(self.grid[ax_letter][indx][0],
-                                            self.grid[ax_letter][indx][1],
-                                            self.data[ax_letter][indx].value,
-                                            norm=norm,
-                                            cmap=self.cmap_color[ax_letter],
-                                            shading=sh)
+                                             self.grid[ax_letter][indx][1],
+                                             self.data[ax_letter][indx].value,
+                                             norm=norm,
+                                             cmap=self.cmap_color[ax_letter],
+                                             shading=sh)
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
                                  format=ticker.FuncFormatter(fmt),
                                  location=cbar_loaction(
@@ -572,7 +578,7 @@ class PlottingUtils(PlotCreation):
             ulab = f' [{self.data[ax_letter][indx].unit:latex}]'
         cbar.set_label(self.cbar_label[ax_letter])
         self.set_labels(ax_letter + ulab)
-        
+
     def __plot2Dfield(self, ax_letter, grid_number):
         """
         Add a 2D field to the plot. It can be a velocity field or a
@@ -582,57 +588,57 @@ class PlottingUtils(PlotCreation):
             if self.field_type[ax_letter][i] == 'v':
                 skip = (slice(None, None, 5), slice(None, None, 5))
                 self.axd[ax_letter].quiver(self.grid[ax_letter][grid_number][0][skip],
-                                        self.grid[ax_letter][grid_number][1][skip],
-                                        self.field[ax_letter][i][0][skip].value,
-                                        self.field[ax_letter][i][1][skip].value,
-                                        linewidths=0.01,
-                                        color='black',
-                                        angles='xy'
-                                        )
+                                           self.grid[ax_letter][grid_number][1][skip],
+                                           self.field[ax_letter][i][0][skip].value,
+                                           self.field[ax_letter][i][1][skip].value,
+                                           linewidths=0.01,
+                                           color='black',
+                                           angles='xy'
+                                           )
             elif self.field_type[ax_letter][i] == 'B':
                 self.axd[ax_letter].contour(self.grid[ax_letter][grid_number][0],
                                             self.grid[ax_letter][grid_number][1],
                                             self.field[ax_letter][i], 45,
-                                            colors = 'black',
+                                            colors='black',
                                             linewidths=0.2)
 
     def __plot2D(self, ax_letter):
         """
         Adds a contourf plot to the selected axes.
         """
-        ## Check whether we have more than one 2D data per plot
-        ## 2 is slice -1 is profile
-        if (self.plot_dim[ax_letter].count(2) + \
-            self.plot_dim[ax_letter].count(-1)) != 1:
+        # Check whether we have more than one 2D data per plot
+        # 2 is slice -1 is profile
+        if (self.plot_dim[ax_letter].count(2) +
+                self.plot_dim[ax_letter].count(-1)) != 1:
             raise ValueError('Too many 2D data')
         norm, fmt, cbar_levels = self.__normalize_format_cbar(ax_letter)
-        ## Find what to plot
+        # Find what to plot
         try:
             indx = self.plot_dim[ax_letter].index(2)
         except:
             indx = self.plot_dim[ax_letter].index(-1)
         pcm = self.axd[ax_letter].contourf(self.grid[ax_letter][indx][0],
-                                            self.grid[ax_letter][indx][1],
-                                            self.data[ax_letter][indx].value,
-                                            norm=norm,
-                                            levels=cbar_levels,
-                                            antialiased=True,
-                                            cmap=self.cmap_color[ax_letter],
-                                            extend='both')
+                                           self.grid[ax_letter][indx][1],
+                                           self.data[ax_letter][indx].value,
+                                           norm=norm,
+                                           levels=cbar_levels,
+                                           antialiased=True,
+                                           cmap=self.cmap_color[ax_letter],
+                                           extend='both')
 
         cbar = self.fig.colorbar(pcm, cax=self.axd[ax_letter.lower()],
-                                 format=ticker.FuncFormatter(fmt), 
-                                location=cbar_loaction(
-                                    self.cbar_position[ax_letter]))
+                                 format=ticker.FuncFormatter(fmt),
+                                 location=cbar_loaction(
+            self.cbar_position[ax_letter]))
         if self.data[ax_letter][indx].unit == u.dimensionless_unscaled:
             ulab = ''
         else:
             ulab = f' [{self.data[ax_letter][indx].unit:latex}]'
         cbar.set_label(self.cbar_label[ax_letter] + ulab)
-        ## Moved the label to avoid overlapping with the cbar
+        # Moved the label to avoid overlapping with the cbar
         if self.cbar_position[ax_letter] in ['L', 'R'] and self.plot_dim == 2:
             self.axd[ax_letter].yaxis.labelpad = -10
-        ## Hides every other tick label to avoid overlapping
+        # Hides every other tick label to avoid overlapping
         if self.cbar_position[ax_letter] in ['T', 'B']:
             for lb in cbar.ax.xaxis.get_ticklabels()[::2]:
                 lb.set_visible(False)
@@ -663,11 +669,11 @@ class PlottingUtils(PlotCreation):
                 if type(self.data[ax_letter][indx]) == list:
                     for data in self.data[ax_letter][indx]:
                         self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                                data, **kw)
+                                                 data, **kw)
                 else:
                     self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                            self.data[ax_letter][indx],
-                                            **kw)
+                                             self.data[ax_letter][indx],
+                                             **kw)
                 break
         else:
             for indx in range(len(self.plot_dim[ax_letter])):
@@ -683,11 +689,11 @@ class PlottingUtils(PlotCreation):
                 if type(self.data[ax_letter][indx]) == list:
                     for data in self.data[ax_letter][indx]:
                         self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                                data, **kw)
+                                                 data, **kw)
                 else:
                     self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                            self.data[ax_letter][indx],
-                                            **kw)
+                                             self.data[ax_letter][indx],
+                                             **kw)
         self.set_labels(ax_letter)
 
     def __plot1DBars(self, ax_letter):
@@ -697,16 +703,16 @@ class PlottingUtils(PlotCreation):
         xlim = self.xlims[ax_letter] if ax_letter in self.xlims else None
         xlog = self.logX[ax_letter] if ax_letter in self.logX else None
         xdata, ydata, bin_widths = get_1Dhist_data(xlim,
-                                       self.nbins[ax_letter],
-                                       xlog,
-                                       self.grid[ax_letter][indx],
-                                       self.data[ax_letter][indx])
+                                                   self.nbins[ax_letter],
+                                                   xlog,
+                                                   self.grid[ax_letter][indx],
+                                                   self.data[ax_letter][indx])
         kw = {'alpha': self.alpha[ax_letter][indx]}
         if self.line_color[ax_letter][indx] is not None:
-                    kw['color'] = self.line_color[ax_letter][indx]
+            kw['color'] = self.line_color[ax_letter][indx]
         self.axd[ax_letter].bar(xdata, ydata, width=bin_widths, **kw)
         self.set_labels(ax_letter)
-    
+
     def __plot2DHist(self, ax_letter):
         """
         Special case of mesh plot that allows to be rebinned
@@ -736,7 +742,7 @@ class PlottingUtils(PlotCreation):
                                  format=ticker.FuncFormatter(fmt),
                                  location=cbar_loaction(
                                      self.cbar_position[ax_letter]),
-                                 extend='both' 
+                                 extend='both'
                                  )
         if bins.unit == u.dimensionless_unscaled:
             ulab = ''
@@ -744,7 +750,7 @@ class PlottingUtils(PlotCreation):
             ulab = f' [{bins.unit:latex}]'
         cbar.set_label(self.cbar_label[ax_letter])
         self.set_labels(ax_letter + ulab)
- 
+
     def __redo_plot(self):
         """
         We replot everything in the figure. What is done depends on the
@@ -828,14 +834,14 @@ class PlottingUtils(PlotCreation):
                         if 'transform' in self.texts[ax_letter][i][3]:
                             self.texts[ax_letter][i][3]['transform'] = \
                                 self.axd[ax_letter].transAxes
-                        self.text(self.texts[ax_letter][i][0], \
-                                self.texts[ax_letter][i][1], \
-                                self.texts[ax_letter][i][2], \
-                                axd_letter=ax_letter, \
-                                kwargs_text=self.texts[ax_letter][i][3])
+                        self.text(self.texts[ax_letter][i][0],
+                                  self.texts[ax_letter][i][1],
+                                  self.texts[ax_letter][i][2],
+                                  axd_letter=ax_letter,
+                                  kwargs_text=self.texts[ax_letter][i][3])
                 else:
                     pass
-            #self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
+            # self.labels(self.xlabels[ax_letter], self.ylabels[ax_letter],
             #            ax_letter)
         self._PlotCreation__setup_aspect()
 
@@ -860,7 +866,7 @@ class PlottingUtils(PlotCreation):
             if unit is not None:
                 unit = unit[1]
                 self.xlims[ax_letter] = (xlims[0] * unit, xlims[1] * unit)
-    
+
     def __save_ylims(self, ax_letter=None):
         """
         Saves the y limits into the dictionary.
@@ -882,14 +888,14 @@ class PlottingUtils(PlotCreation):
             if unit is not None:
                 unit = unit[1]
                 self.ylims[ax_letter] = (ylims[0] * unit, ylims[1] * unit)
-    
+
     def __save_lims(self, ax_letter=None):
         """
         Saves the x and y limits into the dictionary.
         """
         self.__save_xlims(ax_letter)
         self.__save_ylims(ax_letter)
- 
+
     def __save_labels(self, ax_letter=None):
         """
         Saves the x and y labels into the dictionary.
@@ -989,4 +995,3 @@ class PlottingUtils(PlotCreation):
         self.__save_lims()
         self.__save_scale()
         self.__save_labels()
-
