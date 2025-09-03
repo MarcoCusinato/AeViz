@@ -343,7 +343,7 @@ class PlottingUtils(PlotCreation):
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
             self.grid[ax_letter].append(grid)
-            self.data[ax_letter].append([data.data])
+            self.data[ax_letter].append(data.data)
             self.plot_dim[ax_letter].append(dim)
             self.sim_dimension[ax_letter].append(sim_dim)
             if 'alpha' in kwargs:
