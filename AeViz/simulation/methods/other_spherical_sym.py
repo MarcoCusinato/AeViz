@@ -2,6 +2,7 @@ from AeViz.simulation.methods import *
 from AeViz.utils.physics.profiles import calculate_profile
 from AeViz.utils.physics.tidal_love import solve_tidal_love_profile
 from AeViz.utils.decorators.grid import profile_grid
+import re
 from typing import Literal
 
 """
@@ -72,3 +73,13 @@ def radial_profile(self, quantity, tob_corrected=True,
     returned as the last axis.
     """
     return calculate_profile(self, quantity, save_checkpoints, **kwargs)
+
+def mass_grid(self, file_name, **kwargs):
+    """
+    Calculates the grid in mass at a specific timestep
+    """
+    dm = np.sum(self.mass(file_name), axis=tuple(range(self.dim - 1)))
+    mgrid = np.cumsum(dm.to(u.M_sun))
+    mgrid.set(label=r"$M$", name="mass_grid", log=False, cmap=None,
+              limits=[0, mgrid.max().value])
+    return mgrid
