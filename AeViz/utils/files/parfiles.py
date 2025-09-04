@@ -148,18 +148,6 @@ def get_initial_parameters(path_folder):
         initial_parameters['gravity'] = 'Pseudo-relativistic'
     else:
         initial_parameters['gravity'] = 'Newtonian'
-    initial_parameters["gravitational_potential"] = start_pars["GRAVPARS"]["MDPOT"]
-    initial_parameters["lapse_function"] = start_pars["GRAVPARS"]["LAPSE_FORM"]
-    initial_parameters["NS_EOS"] = (os.path.basename(start_pars["SHENEOSPARS"]["SHEN_TBFILE"]))
-    initial_parameters["NS_EOS"] = initial_parameters["NS_EOS"].split('.')[:-1]
-    if type(initial_parameters["NS_EOS"]) == list:
-        if len(initial_parameters["NS_EOS"]) == 1:
-            initial_parameters["NS_EOS"] = initial_parameters["NS_EOS"][0]
-        else:
-            tmp = initial_parameters["NS_EOS"][0]
-            for i in initial_parameters["NS_EOS"][1:]:
-                tmp += '.' + i
-            initial_parameters["NS_EOS"] = tmp
     # Add reading notrino parameters (if there are)
     if start_pars['NOTRINOPARS']['OPMOD'] == 1:
         initial_parameters['notrino']['ktrnue'] = \
@@ -191,6 +179,18 @@ def get_initial_parameters(path_folder):
             start_pars['NOTRINOPARS']['JANKA2001A_KAENUX_COEFF']
         initial_parameters['notrino']['Tmin'] = \
             start_pars['NOTRINOPARS']['JANKA2001B_TMIN']
+    initial_parameters["gravitational_potential"] = start_pars["GRAVPARS"]["MDPOT"]
+    initial_parameters["lapse_function"] = start_pars["GRAVPARS"]["LAPSE_FORM"]
+    initial_parameters["NS_EOS"] = (os.path.basename(start_pars["SHENEOSPARS"]["SHEN_TBFILE"]))
+    initial_parameters["NS_EOS"] = initial_parameters["NS_EOS"].split('.')[:-1]
+    if type(initial_parameters["NS_EOS"]) == list:
+        if len(initial_parameters["NS_EOS"]) == 1:
+            initial_parameters["NS_EOS"] = initial_parameters["NS_EOS"][0]
+        else:
+            tmp = initial_parameters["NS_EOS"][0]
+            for i in initial_parameters["NS_EOS"][1:]:
+                tmp += '.' + i
+            initial_parameters["NS_EOS"] = tmp
     files = os.listdir(path_folder)
     files = [x for x in files if not x == 'start.pars' and not x == '.run']
     files.sort()
