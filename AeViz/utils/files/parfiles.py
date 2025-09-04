@@ -160,7 +160,37 @@ def get_initial_parameters(path_folder):
             for i in initial_parameters["NS_EOS"][1:]:
                 tmp += '.' + i
             initial_parameters["NS_EOS"] = tmp
-    
+    # Add reading notrino parameters (if there are)
+    if start_pars['NOTRINOPARS']['OPMOD'] == 1:
+        initial_parameters['notrino']['ktrnue'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KTRNUE_COEFF']
+        initial_parameters['notrino']['ktrnua'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KTRNUA_COEFF']
+        initial_parameters['notrino']['ktrnux'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KTRNUX_COEFF']
+        initial_parameters['notrino']['kaenue'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUE_COEFF']
+        initial_parameters['notrino']['kaenua'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUA_COEFF']
+        initial_parameters['notrino']['kaenux'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUX_COEFF']
+        initial_parameters['notrino']['Tmin'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_TMIN']
+    elif start_pars['NOTRINOPARS']['OPMOD'] == 2:
+        initial_parameters['notrino']['kscnue'] = \
+            start_pars['NOTRINOPARS']['JANKA2001B_KSCNUE_COEFF']
+        initial_parameters['notrino']['kscnua'] = \
+            start_pars['NOTRINOPARS']['JANKA2001B_KSCNUA_COEFF']
+        initial_parameters['notrino']['kscnux'] = \
+            start_pars['NOTRINOPARS']['JANKA2001B_KSCNUX_COEFF']
+        initial_parameters['notrino']['kaenue'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUE_COEFF']
+        initial_parameters['notrino']['kaenua'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUA_COEFF']
+        initial_parameters['notrino']['kaenux'] = \
+            start_pars['NOTRINOPARS']['JANKA2001A_KAENUX_COEFF']
+        initial_parameters['notrino']['Tmin'] = \
+            start_pars['NOTRINOPARS']['JANKA2001B_TMIN']
     files = os.listdir(path_folder)
     files = [x for x in files if not x == 'start.pars' and not x == '.run']
     files.sort()
