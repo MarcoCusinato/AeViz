@@ -340,6 +340,9 @@ class PlottingUtils(PlotCreation):
             else:
                 self.nbins[ax_letter] = None
         else:
+            """
+            prevent duplicates for the 1D cases
+            """
             self.file[ax_letter].append(file)
             self.plane[ax_letter].append(plane)
             self.grid[ax_letter].append(grid)
@@ -656,7 +659,9 @@ class PlottingUtils(PlotCreation):
         it will plot all of them.
         """
         if not redo:
-            for indx in reversed(range(len(self.plot_dim[ax_letter]))):
+            lines = self.axd[ax_letter].get_lines()
+            lines = [ln.get_data() for ln in lines if len(ln.get_data()) == 2]
+            for indx in range(len(self.plot_dim[ax_letter])):
                 if self.plot_dim[ax_letter][indx] not in [1, -4]:
                     continue
                 kw = {'alpha': self.alpha[ax_letter][indx]}
@@ -667,14 +672,32 @@ class PlottingUtils(PlotCreation):
                 if self.ls[ax_letter][indx] is not None:
                     kw['ls'] = self.ls[ax_letter][indx]
                 if type(self.data[ax_letter][indx]) == list:
-                    for data in self.data[ax_letter][indx]:
-                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                                 data, **kw)
+                    ## Check if the line is already plotted
+                    for i in range(self.data[ax_letter][indx]):
+                        to_plot = True
+                        for ln in lines:
+                            if ln[0].shape == self.grid[ax_letter][indx].shape:
+                                if np.all(ln[0] == self.grid[ax_letter][indx]) and \
+                                    np.all(ln[1] == self.data[ax_letter][indx][i]):
+                                        to_plot = False
+                                        break
+                        if to_plot:
+                            self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                self.data[ax_letter][indx][i],
+                                                **kw)
                 else:
-                    self.axd[ax_letter].plot(self.grid[ax_letter][indx],
-                                             self.data[ax_letter][indx],
-                                             **kw)
-                break
+                    ## Check if the line is already plotted
+                    to_plot = True
+                    for ln in lines:
+                        if ln[0].shape == self.grid[ax_letter][indx].shape:
+                            if np.all(ln[0] == self.grid[ax_letter][indx]) and \
+                                np.all(ln[1] == self.data[ax_letter][indx]):
+                                    to_plot = False
+                                    break
+                    if to_plot:
+                        self.axd[ax_letter].plot(self.grid[ax_letter][indx],
+                                                self.data[ax_letter][indx],
+                                                **kw)
         else:
             for indx in range(len(self.plot_dim[ax_letter])):
                 if self.plot_dim[ax_letter][indx] not in [1, -4]:

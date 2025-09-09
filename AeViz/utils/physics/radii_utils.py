@@ -46,8 +46,8 @@ def neutrino_sphere_radii(simulation, file_name):
     Calculates the neutrino sphere for each neutrino flvaour radii at
     each timestep.
     Employed method: calculate k(r, θ, ϕ) as
-    k(r, θ, ϕ) = (∑_ω p^α(r, θ, ϕ, ω) κ_α(r, θ, ϕ, ω)) / \
-        ∑_ω p^α(r, θ, ϕ, ω)
+    k(r, θ, ϕ) = (∑_ω p^r(r, θ, ϕ, ω) κ_r(r, θ, ϕ, ω)) / \
+        ∑_ω p^r(r, θ, ϕ, ω)
     where p^α(r, θ, ϕ, ω) is the neutrino three-momentum of each 
     neutrino flavour,  ω is the neutrino energy and κ_α(r, θ, ϕ, ω) is
     the neutrino opacity.
@@ -57,13 +57,17 @@ def neutrino_sphere_radii(simulation, file_name):
     tau = 1
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
-    if simulation.dim==1 or 'notrino' in simulation._Simulation__data_h5:
-        axis = -1
+
+    if simulation.dim == 1 or 'notrino' in simulation._Simulation__data_h5:
+        k = [np.nansum(mom * ka, axis=simulation.dim) /
+              np.nansum(mom, axis=simulation.dim) for (mom, ka) in
+            zip(momenta, kappa)]
+
     else:
-        axis = (-1, simulation.dim)
-    k = [np.nansum(mom * ka, axis=axis) /
-          np.nansum(mom, axis=axis) for (mom, ka) in
-          zip(momenta, kappa)] 
+        k = [np.nansum(mom[..., 0] * ka[..., 0], axis=simulation.dim) /
+              np.nansum(mom[..., 0], axis=simulation.dim) for (mom, ka) in
+            zip(momenta, kappa)]
+    
     dr = simulation.cell.dr(simulation.ghost)
     while dr.ndim < k[0].ndim:
         dr = dr[None, ...]
