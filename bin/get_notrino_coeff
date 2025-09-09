@@ -10,7 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 1.0
+PERC_RNEU = 0.25
 TLIM = 0.1
 
 warnings.filterwarnings("ignore")
@@ -21,7 +21,7 @@ parser.add_argument('--sim-path', type=str, default=None, required=False,
                     help="Path of the simulation.")
 parser.add_argument('--time', required=True, type=float, \
             help='Time at which you want to start using NOTRINO (in seconds)')
-parser.add_argument('--dt', type=float, required=True, \
+parser.add_argument('--dt', type=float, default=0.001, \
         help='Time Tipestep for saving the neutrino information (in seconds)')
 parser.add_argument('--show', action='store_true', default=False, \
                     help='Pop out the plot?')
@@ -33,7 +33,7 @@ TIMES = np.arange(args.time - TLIM, args.time + args.dt, args.dt, dtype=float)
 # Open the simulation
 m = Simulation(args.sim_name, args.sim_path)
 if args.time > m.time(-1).value:
-  raise ValueError('The choice of time as to be lower (Remember, remember, the postbounce time...)')
+  raise ValueError('The choice of time has to be lower (Remember, remember, the postbounce time...)')
 r = m.cell.radius(m.ghost) # Radius of the simulation
 dr = m.cell.radius_right(m.ghost) - m.cell.radius_left(m.ghost)
 dV = m.cell.dVolume_integration(m.ghost)
@@ -84,41 +84,56 @@ for time in TIMES:
     neu_sph_radius = neu_sph[species].data[it]
     # Getting the index corresponding to the position
     k = np.argmin(np.abs(r - PERC_RNEU * neu_sph_radius))
+    k_ns = np.argmin(np.abs(r - neu_sph_radius))
     k_neu[species] = int(k)
 
     # Averaging the opacities over the energy bins
     ka_mean = np.nansum(ka[i_species] * m.cell.E_nu()[None,:] * \
-                        m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
-    kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
+    if m.dim > 1:
+        kt_mean = np.nansum(kt[i_species][...,0] * m.cell.E_nu()[None,:] * \
+                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
+    else:
+        kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
                         m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
     
-    B1_loc = kt_mean[:k] / ((rho[:k] * 1.e-10) * (np.maximum(T[:k], T[k]) ** 2) * \
-                            (Xn[:k] + Xp[:k]))
+    B1_loc = kt_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \
+                            (Xn + Xp))
     
     if species == 'nux':
       # In this case, B0 is computed differently
-      B0_loc = ka_mean[:k] / (np.sqrt(rho[:k] * 1.e-10) * \
-                              (np.maximum(T[:k], T[k]) ** 3) * \
-                              X[i_species][:k])
+      B0_loc = ka_mean / (np.sqrt(rho * 1.e-10) * \
+                              (np.maximum(T, T) ** 3) * \
+                              X[i_species])
     else:
-      B0_loc = ka_mean[:k] / ((rho[:k] * 1e-10) * \
-                              (np.maximum(T[:k], T[k]) ** 2) * \
-                              X[i_species][:k])
-    B0_loc_avg = np.nansum(B0_loc * dV[:k,...] * rho[:k, ...]) / \
+      B0_loc = ka_mean / ((rho * 1e-10) * \
+                              (np.maximum(T, T[k_ns]) ** 2) * \
+                              X[i_species])
+    B0_loc_avg = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...]) / \
                   np.nansum(dV[:k,...] * rho[:k, ...])
-    B1_loc_avg = np.nansum(B1_loc * dV[:k, ...] * rho[:k, ...]) / \
+    B1_loc_avg = np.nansum(B1_loc[:k,...] * dV[:k, ...] * rho[:k, ...]) / \
                   np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
     B0[i_species] += B0_loc_avg
-    if (time == TIMES[-1]):
-      ax.plot(r.value[:k], B0_loc.value, color = COLOURS[i_species], ls='-')
-      ax.plot(r.value[:k], B1_loc.value, color = COLOURS[i_species], ls='--')
+    if (time == TIMES[1]):
+      if m.dim > 1:
+        B0_loc = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
+                   np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
+        B1_loc = np.nansum(B1_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
+                    np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
+      ax.plot(r.value[:k_ns], B0_loc.value[:k_ns], color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
+              ls='--')
+      ax.plot(r.value[k], B0_loc.value[k], color = COLOURS[i_species], \
+              marker='o')
+      ax.plot(r.value[k], B1_loc.value[k], color = COLOURS[i_species], \
+              marker='o')
 
 # Printing neutrino-spheres radii at the final time
 print('Neutrinosphere radius for nue: %.2e cm' % neu_sph['nue'].data[it])
 print('Neutrinosphere radius for nua: %.2e cm' % neu_sph['nua'].data[it])
 print('Neutrinosphere radius for nux: %.2e cm' % neu_sph['nux'].data[it])
-print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']])
+print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']].max())
 
 B0 /= TIMES.shape[0]
 B1 /= TIMES.shape[0]
@@ -136,17 +151,17 @@ print(' JANKA2001A_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001A_KTRNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001A_KTRNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001A_KTRNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']])
+print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
 print(' JANKA2001B_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001B_KAENUA_COEFF = %.15e,' % B0[1])
 print(' JANKA2001B_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001B_KSCNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001B_KSCNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']])
+print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
 print(' WGHMOD  =           2,')
-print(' WGH_TANH_TAU0   =  0.333333333333333     ,')
-print(' WGH_FD_DTAU     =   1.00000000000000     ,')
+print(' WGH_TANH_TAU0   =  1.333333333333333     ,')
+print(' WGH_FD_DTAU     =   0.25000000000000     ,')
 print(' HF      =   1.00000000000000')
 print(' /')
 
