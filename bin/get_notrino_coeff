@@ -10,8 +10,8 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 0.25
-TLIM = 0.1
+PERC_RNEU = 0.1
+TLIM = 0.05
 
 warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser()
