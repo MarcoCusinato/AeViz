@@ -2,7 +2,7 @@
 from PyEMD import EEMD
 import numpy as np
 from AeViz.simulation.simulation import Simulation
-from AeViz.utils.EMD_utils import (polish_signal, remove_residuals,
+from AeViz.utils.physics.EMD_utils import (polish_signal, remove_residuals,
                                    save_IMFs, compact_IMFs)
 import argparse
 import os
