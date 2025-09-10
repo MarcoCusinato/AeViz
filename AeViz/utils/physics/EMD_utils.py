@@ -1,10 +1,10 @@
 import numpy as np
 import h5py, os
 from collections import defaultdict
-from numpy.fft import fft, ifft, fftfreq
+from numpy.fft import fftfreq
 from PyEMD import EMD
 from scipy.signal import hilbert
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, butter, filtfilt
 from sparse import COO
 from AeViz.utils.decorators.simulation import EMD_smooth
 from AeViz.units import aerray, aeseries, u
@@ -12,17 +12,18 @@ from AeViz.units import aerray, aeseries, u
 
 def polish_signal(GWs, frequency_cut):
     """
-    Remove high frequency noise from the signal.
+    Removes the high frequency in the signal by applying a butterworth
+    filter
     """
-    freq = fftfreq(len(GWs.time.value), np.mean(np.diff(GWs.time.value)))
+    N = len(GWs.time)
+    dt = np.mean(np.diff(GWs.time.value))
     if frequency_cut is None:
+        freq = fftfreq(N, dt)
         frequency_cut = np.max(freq)
-        return GWs, frequency_cut
-    
-    mask = (np.abs(freq) > frequency_cut)
-    spectro = fft(GWs.data.value)
-    spectro[mask] = 0
-    GWs.data[:] = np.real(ifft(spectro))
+        return GWs, frequency_cut    
+    nyq = 0.5 / dt
+    b, a = butter(4, frequency_cut/nyq, btype='low', analog=False)
+    GWs.data[:] = filtfilt(b, a, GWs.data.value)
     return GWs, frequency_cut
 
 def remove_residuals(GWs):
@@ -30,10 +31,10 @@ def remove_residuals(GWs):
     Remove residuals from the signal.
     """
     emd = EMD()
-    for i in range(1, GWs.shape[1]):
-        emd.emd(GWs[:, i], GWs[:, 0])
-        _, residual = emd.get_imfs_and_residue()
-        GWs[:, i] -= residual
+    
+    emd.emd(GWs.data.value, GWs.time.value)
+    _, residual = emd.get_imfs_and_residue()
+    GWs.data -= (residual * GWs.data.unit)
     return GWs
 
 def save_IMFs(res, path, time, IMFs, residue, args):
