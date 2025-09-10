@@ -6,8 +6,6 @@ from AeViz.utils.EMD_utils import (polish_signal, remove_residuals,
                                    save_IMFs, compact_IMFs)
 import argparse
 import os
-import matplotlib.pyplot as plt
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sim-name', type=str, required=True,
@@ -68,8 +66,6 @@ GWs, args.cut_freq = polish_signal(GWs, args.cut_freq)
 if args.start_time is not None:
     tstart = np.argmax(GWs.time >= args.start_time)
     GWs = GWs[tstart:]
-
-plt.show()
 
 
 ## REMOVE THE RESIDUAL
