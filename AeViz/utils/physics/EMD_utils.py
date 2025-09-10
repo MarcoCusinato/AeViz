@@ -14,18 +14,15 @@ def polish_signal(GWs, frequency_cut):
     """
     Remove high frequency noise from the signal.
     """
-    dt = GWs[1, 0] - GWs[0, 0]
-    frequency_spectrum = fftfreq(GWs.shape[0], dt)
+    freq = fftfreq(len(GWs.time.value), np.mean(np.diff(GWs.time.value)))
     if frequency_cut is None:
-        frequency_cut = np.max(frequency_spectrum)
+        frequency_cut = np.max(freq)
         return GWs, frequency_cut
     
-    
-    mask = (np.abs(frequency_spectrum) > frequency_cut)
-    for i in range(1, GWs.shape[1]):
-        fourier_transform = fft(GWs[:, i])
-        fourier_transform[mask] = 0
-        GWs[:, i] = np.real(ifft(fourier_transform))
+    mask = (np.abs(freq) > frequency_cut)
+    spectro = fft(GWs.data.value)
+    spectro[mask] = 0
+    GWs.data[:] = np.real(ifft(spectro))
     return GWs, frequency_cut
 
 def remove_residuals(GWs):
