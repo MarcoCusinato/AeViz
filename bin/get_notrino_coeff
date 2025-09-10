@@ -103,7 +103,7 @@ for time in TIMES:
     if species == 'nux':
       # In this case, B0 is computed differently
       B0_loc = ka_mean / (np.sqrt(rho * 1.e-10) * \
-                              (np.maximum(T, T) ** 3) * \
+                              (np.maximum(T, T[k_ns]) ** 3) * \
                               X[i_species])
     else:
       B0_loc = ka_mean / ((rho * 1e-10) * \
