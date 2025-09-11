@@ -154,8 +154,7 @@ def omega(self, file_name, **kwargs):
                 self.cell.radius(self.ghost)[None, :])
     else:
         data = self.phi_velocity(file_name) / \
-            (np.cos(self.cell.phi(self.ghost))[:, None, None] *
-                np.sin(self.cell.theta(self.ghost))[None, :, None] * \
+            (np.sin(self.cell.theta(self.ghost))[None, :, None] * \
                 self.cell.radius(self.ghost)[None, None, :])
     return aerray(data, u.rad / u.s, 'omega', r'$\Omega$', 'magma',
                   [1e0, 1e4], log=True)
