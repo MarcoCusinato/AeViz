@@ -77,8 +77,16 @@ for time in TIMES:
   Ye = m.Ye(time)
   X = [Xn, Xp, Ye]
 
-  ka = m.neutrino_energy_opacity(time) # Absorption/emission opacity
-  kt = m.neutrino_momenta_opacities(time) # Transport opacity
+  # Absorption/emission opacity
+  ka = m.neutrino_absorption_opacity(time)
+  if args.model == 1:
+    # Transport opacity
+    k_op = m.neutrino_transport_opacities(time)
+  elif args.model == 2:
+    # Scattering opacity
+    k_op = m.neutrino_scattering_opacities(time)
+  else:
+    raise ValueError('Sorry, not a valid choice for NOTRINO model. It must be 1 or 2.')
 
   for (i_species, species) in enumerate(SPECIES):
     # Getting the position of the neutirnosphere at given time for the 
@@ -106,22 +114,12 @@ for time in TIMES:
                     np.nansum(dV[:k,...] * rho[:k, ...])
     B0[i_species] += B0_loc_avg
 
-    # If using model 1, compute for transport opacity
-    if args.model == 1:
-      if m.dim > 1:
-        k_op = kt[i_species][...,0]
-      else:
-        k_op = kt[i_species]
-    # If using Model 2, compute for scattering opacity
-    elif args.model == 2:
-      if m.dim > 1:
-        k_op = kt[i_species][..., 0] - ka[i_species]
-      else:
-        k_op = kt[i_species] - ka[i_species]
+    if m.dim == 1:
+      k_op_r = k_op[i_species]
     else:
-      raise ValueError('Sorry, not a valid choice for NOTRINO model. It must be 1 or 2.')
-
-    k_mean = np.nansum(k_op * m.cell.E_nu()[None,:] * \
+      k_op_r = k_op[i_species][...,0]
+  
+    k_mean = np.nansum(k_op_r * m.cell.E_nu()[None,:] * \
                           m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
       
     B1_loc = k_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \

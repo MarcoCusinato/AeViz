@@ -101,27 +101,26 @@ def neutrino_momenta(self, file_name, **kwargs):
 @hdf_isopen
 def neutrino_energy_opacity(self, file_name, **kwargs):
     """
-    Neutrino opacity ("temporal" component of the four-vector)
+    Neutrino opacity ("temporal" component of the four-vector).
+    This is the absorption/emission opacity.
     Now with NOTRINO case!
     """
-    notrino = False
     try:
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/oe'][..., 0]), self.dim)
     except:
-        notrino = True
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
         # (hopefully) not having to change a lot in the library
         nu_opac = np.expand_dims(nu_opac, axis = -2)
-    return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
-                r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
-            aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_fdens',
-                r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
+    return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa_ae',
+                r'$\kappa_{\mathrm{ae}, \nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
+            aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa_ae',
+                r'$\kappa_{\mathrm{ae}, \overline{\nu}_\mathrm{e}}$', 'PuOr_r',
                 [-1e40, 1e40], True),
-            aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
-                r'$\kappa_{\nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
+            aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa_ae',
+                r'$\kappa_{\mathrm{ae}, \nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
             )
     
 
@@ -131,6 +130,7 @@ def neutrino_energy_opacity(self, file_name, **kwargs):
 def neutrino_momenta_opacities(self, file_name, **kwargs):
     """
     Neutrino opacities ("spatial" components of the four-vector).
+    This is the transport opacity.
     Now with NOTRINO case!
     """
     notrino = False
@@ -148,32 +148,85 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
     #    nu_opac = nu_opac[..., None]
     
     if self.dim == 1 or notrino:
-        return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa',
-                  r'$\kappa_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
-                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa',
-                  r'$\kappa_{\overline{\nu}_\mathrm{e}}$', 'PuOr_r',
+        return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa_tr',
+                  r'$\kappa_{\mathrm{tr}, \nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
+                aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa_tr',
+                  r'$\kappa_{\mathrm{tr}, \overline{\nu}_\mathrm{e}}$', 'PuOr_r',
                   [-1e40, 1e40], True),
-                aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa',
-                  r'$\kappa_{\nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
+                aerray(nu_opac[..., 2], u.erg / u.s / u.cm ** 3, 'nux_kappa_tr',
+                  r'$\kappa_{\mathrm{tr}, \nu_\mathrm{x}}$', 'RdYlBu_r', [-1e40, 1e40], True)
                 )
-    return (aerray(nu_opac[..., 0, :], u.erg / u.s / u.cm ** 3, 'nue_kappa',
-                  [r'$\kappa_{\nu_\mathrm{e}, r}$', r'$\kappa_{\nu_\mathrm{e}, \theta}$',
-                   r'$\kappa_{\nu_\mathrm{e}, \phi}$'],
+    return (aerray(nu_opac[..., 0, :], u.erg / u.s / u.cm ** 3, 'nue_kappa_tr',
+                  [r'$\kappa^r_{\mathrm{tr}, \nu_\mathrm{e}}$', \
+                   r'$\kappa^{\theta}_{\mathrm{tr}, \nu_\mathrm{e}}$',
+                   r'$\kappa^{\phi}_{\mathrm{tr}, \nu_\mathrm{e}}$'],
                   ['PiYG_r', 'PRGn_r', 'BrBG_r'],
                   [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True),
-            aerray(nu_opac[..., 1, :], u.erg / u.s / u.cm ** 3, 'nua_kappa',
-                [r'$\kappa_{\overline{\nu}_\mathrm{e}, r}$',
-                 r'$\kappa_{\overline{\nu}_\mathrm{e}, \theta}$',
-                 r'$\kappa_{\overline{\nu}_\mathrm{e}, \phi}$'],
+            aerray(nu_opac[..., 1, :], u.erg / u.s / u.cm ** 3, 'nua_kappa_tr',
+                [r'$\kappa^r_{\mathrm{tr}, \overline{\nu}_\mathrm{e}}$',
+                 r'$\kappa^{\theta}_{\mathrm{tr}, \overline{\nu}_\mathrm{e}}$',
+                 r'$\kappa^{\phi}_{\mathrm{tr}, \overline{\nu}_\mathrm{e}}$'],
                 ['PuOr_r', 'RdGy_r', 'RdBu_r'],
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True),
-            aerray(nu_opac[..., 2, :], u.erg / u.s / u.cm ** 3, 'nux_kappa',
-                [r'$\kappa_{\nu_\mathrm{x}, r}$', r'$\kappa_{\nu_\mathrm{x}, \theta}$',
-                 r'$\kappa_{\nu_\mathrm{x}, \phi}$'],
+            aerray(nu_opac[..., 2, :], u.erg / u.s / u.cm ** 3, 'nux_kappa_tr',
+                [r'$\kappa^r_{\mathrm{tr}, \nu_\mathrm{x}}$', \
+                 r'$\kappa^{\theta}_{\mathrm{tr}, \nu_\mathrm{x}}$',
+                 r'$\kappa^{\phi}_{\mathrm{tr}, \nu_\mathrm{x}}$'],
                 ['RdYlBu_r', 'RdYlGn_r', 'Spectral_r'],
                 [[-1e40, 1e40], [-1e39, 1e39], [-1e39, 1e39]], True)
             )
 
+@get_grid
+@smooth
+@hdf_isopen
+def neutrino_absorption_opacity(self, file_name, **kwargs):
+    """
+    Neutrino absorption/emission opacity.
+    """
+    return neutrino_energy_opacity(self, file_name, **kwargs)
+
+@get_grid
+@smooth
+@hdf_isopen
+def neutrino_transport_opacities(self, file_name, **kwargs):
+    """
+    Neutrino transport opacities.
+    """
+    return neutrino_momenta_opacities(self, file_name, **kwargs)
+
+
+@get_grid
+@smooth
+@hdf_isopen
+def neutrino_scattering_opacities(self, file_name, **kwargs):
+    """
+    Neutrino scattering opacities. 
+    Remember the relation
+        ktr = ksc + kae.
+    """
+    ktr = neutrino_transport_opacities(self, file_name, **kwargs)
+    kae = neutrino_absorption_opacity(self, file_name, **kwargs)
+    if self.dim == 1:
+        ksc_nue = ktr[0] - kae[0]
+        ksc_nue.name = 'nue_kappa_sc'
+        ksc_nue.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{e}}$'
+        ksc_nua = ktr[1] - kae[1]
+        ksc_nua.name = 'nua_kappa_sc'
+        ksc_nua.label = r'$\kappa^r_{\mathrm{sc}, \overline{\nu}_\mathrm{e}}$'
+        ksc_nux = ktr[2] - kae[2]
+        ksc_nux.name = 'nux_kappa_sc'
+        ksc_nux.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{x}}$'
+    else:
+        ksc_nue = ktr[0] - kae[0][..., None]
+        ksc_nue.name = 'nue_kappa_sc'
+        ksc_nue.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{e}}$'
+        ksc_nua = ktr[1] - kae[1][..., None]
+        ksc_nua.name = 'nua_kappa_sc'
+        ksc_nua.label = r'$\kappa^r_{\mathrm{sc}, \overline{\nu}_\mathrm{e}}$'
+        ksc_nux = ktr[2] - kae[2][..., None]
+        ksc_nux.name = 'nux_kappa_sc'
+        ksc_nux.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{x}}$'
+    return (ksc_nue, ksc_nua, ksc_nux)
 @get_grid
 @smooth
 @hdf_isopen
