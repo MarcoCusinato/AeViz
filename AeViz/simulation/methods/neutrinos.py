@@ -204,9 +204,15 @@ def neutrino_scattering_opacities(self, file_name, **kwargs):
     Remember the relation
         ktr = ksc + kae.
     """
+    if 'neutrino/oe' in self._Simulation__data_h5.keys():
+        notrino = False
+    elif 'notrino/notrino_ktr' in self._Simulation__data_h5.keys():
+        notrino = True
+
     ktr = neutrino_transport_opacities(self, file_name, **kwargs)
     kae = neutrino_absorption_opacity(self, file_name, **kwargs)
-    if self.dim == 1:
+    
+    if self.dim == 1 or notrino:
         ksc_nue = ktr[0] - kae[0]
         ksc_nue.name = 'nue_kappa_sc'
         ksc_nue.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{e}}$'
