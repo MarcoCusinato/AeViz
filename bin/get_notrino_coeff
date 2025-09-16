@@ -10,7 +10,7 @@ import os
 
 SPECIES = ['nue', 'nua', 'nux']
 COLOURS = ['red', 'blue', 'black']
-PERC_RNEU = 0.1
+PERC_RNEU = 1.0
 TLIM = 0.05
 
 warnings.filterwarnings("ignore")
@@ -25,6 +25,9 @@ parser.add_argument('--dt', type=float, default=0.001, \
         help='Time Tipestep for saving the neutrino information (in seconds)')
 parser.add_argument('--show', action='store_true', default=False, \
                     help='Pop out the plot?')
+parser.add_argument('--model', required=True, type=int, \
+                    help='model 1: absorption and transport opacities\n' \
+                    'model 2: absorption and scattering opacities')
 
 args = parser.parse_args()
 
@@ -86,20 +89,10 @@ for time in TIMES:
     k = np.argmin(np.abs(r - PERC_RNEU * neu_sph_radius))
     k_ns = np.argmin(np.abs(r - neu_sph_radius))
     k_neu[species] = int(k)
-
+    # Absorption calculations
     # Averaging the opacities over the energy bins
     ka_mean = np.nansum(ka[i_species] * m.cell.E_nu()[None,:] * \
-                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
-    if m.dim > 1:
-        kt_mean = np.nansum(kt[i_species][...,0] * m.cell.E_nu()[None,:] * \
-                        m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
-    else:
-        kt_mean = np.nansum(kt[i_species] * m.cell.E_nu()[None,:] * \
-                        m.cell.dE_nu()[None,:], axis = 1) / E_bin_sum
-    
-    B1_loc = kt_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \
-                            (Xn + Xp))
-    
+                          m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
     if species == 'nux':
       # In this case, B0 is computed differently
       B0_loc = ka_mean / (np.sqrt(rho * 1.e-10) * \
@@ -110,11 +103,34 @@ for time in TIMES:
                               (np.maximum(T, T[k_ns]) ** 2) * \
                               X[i_species])
     B0_loc_avg = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...]) / \
-                  np.nansum(dV[:k,...] * rho[:k, ...])
-    B1_loc_avg = np.nansum(B1_loc[:k,...] * dV[:k, ...] * rho[:k, ...]) / \
-                  np.nansum(dV[:k, ...] * rho[:k, ...])
-    B1[i_species] += B1_loc_avg
+                    np.nansum(dV[:k,...] * rho[:k, ...])
     B0[i_species] += B0_loc_avg
+
+    # If using model 1, compute for transport opacity
+    if args.model == 1:
+      if m.dim > 1:
+        k_op = kt[i_species][...,0]
+      else:
+        k_op = kt[i_species]
+    # If using Model 2, compute for scattering opacity
+    elif args.model == 2:
+      if m.dim > 1:
+        k_op = kt[i_species][..., 0] - ka[i_species]
+      else:
+        k_op = kt[i_species] - ka[i_species]
+    else:
+      raise ValueError('Sorry, not a valid choice for NOTRINO model. It must be 1 or 2.')
+
+    k_mean = np.nansum(k_op * m.cell.E_nu()[None,:] * \
+                          m.cell.dE_nu()[None,:], axis = -1) / E_bin_sum
+      
+    B1_loc = k_mean / ((rho * 1.e-10) * (np.maximum(T, T[k_ns]) ** 2) * \
+                              (Xn + Xp))
+
+    B1_loc_avg = np.nansum(B1_loc[:k,...] * dV[:k, ...] * rho[:k, ...]) / \
+                    np.nansum(dV[:k, ...] * rho[:k, ...])
+    B1[i_species] += B1_loc_avg
+       
     if (time == TIMES[1]):
       if m.dim > 1:
         B0_loc = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
@@ -143,7 +159,7 @@ print(' &NOTRINOPARS')
 print(' NOTRINO_FLAG    = T,')
 print(' LAPSE = T,')
 print(' LORENTZ = T,')
-print(' OPMOD   =           2,')
+print(' OPMOD   =           %d,' % args.model)
 print(' OPAC_MINDEN     =  0.000000000000000E+000,')
 print(' JANKA2001A_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001A_KAENUA_COEFF = %.15e,' % B0[1])
