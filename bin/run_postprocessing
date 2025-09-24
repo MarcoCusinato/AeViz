@@ -31,6 +31,8 @@ parser.add_argument('--rmax', type=float, default=None, required=False,
 parser.add_argument('--column-index', type=int, default=None, required=False,
                     help="The index to use to indicate the line change in the GWs. "
                     "Typically between 0 and 3")
+parser.add_argument('--spherical-harmonics', action='store_true', default=False,
+                    help="Enables the computation of the spherical harmonics")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -58,6 +60,9 @@ if not args.noprofiles:
     sim.radial_profile('Ye')
 if not args.noGWs and sim.dim > 1:
     sim.hydro_strain()
+if args.spherical_harmonics:
+    sim.rho_spherical_harmonics()
+    sim.rho_spherical_harmonics(l=0, m=0)
 if args.plot:
     from AeViz import ae
     ae.Load(args.sim_name)
@@ -218,7 +223,3 @@ if args.plot:
                     ae.Close()
             print("GWs decomposition summary plotted.")
 print("All done.")
-    
-    
-    
-    
