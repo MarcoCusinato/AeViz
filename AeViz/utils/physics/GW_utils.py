@@ -10,6 +10,7 @@ from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units import u
 from AeViz.units.constants import constants as c
 from typing import Literal
+from AeViz.cell.cell_methods.spherical_methods import dOmega
 
 
 ## ---------------------------------------------------------------------
@@ -715,17 +716,22 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'Qdot.h5'):
-        time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
+        time, Qdot_radial, Qdot_corr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
             read_Qdot(simulation)
         if processed_hdf is None:
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, simulation.hdf_file_list[:len(time)]])
-            time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
+                      Qdot_corr, Qdot_radial,
+                      simulation.hdf_file_list[:len(time)]])
+            time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, Qdot_corr, processed_hdf = \
             read_Qdot(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if len(processed_hdf) == 0:
+            start_point = 0
+            processed_hdf = []
+            print("No checkpoint found. Starting from step 0")
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return calculate_strain_3D(D, THETA, PHI, time,
                                        simulation.cell.radius(simulation.ghost),
                                        Qdot_radial,
@@ -745,22 +751,24 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     check_index = 0
     progress_index = 0
     dV = simulation.cell.dVolume_integration(simulation.ghost)
+    dOmega = simulation.cell.dOmega(simulation.ghost)
     inner_rad, igcells = simulation.innercore_radius(rad='full')
     nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
 
     inner_rad = inner_rad.data
     nuc_rad = nuc_rad.data
         
-    grad = spherical_harmonics_gradient(
-                                    simulation.cell.radius(simulation.ghost),
-                                    simulation.cell.theta(simulation.ghost),
-                                    simulation.cell.phi(simulation.ghost))
+    grad, harm = get_spherical_harmonics(
+                    simulation.cell.radius(simulation.ghost),
+                    simulation.cell.theta(simulation.ghost),
+                    simulation.cell.phi(simulation.ghost),
+                    dOmega)
     
     for file in simulation.hdf_file_list[start_point:]:
-        Qtot, Qinner, Qnuc, Qouter, Qradial = calculate_Qdot(simulation, 
-                            grad, file, dV,
-                            inner_rad[..., findex], igcells,
-                            nuc_rad[..., findex], ngcells)
+        Qtot, Qinner, Qnuc, Qouter, Qradial, Qcorr = \
+            calculate_Qdot(simulation, grad, harm,
+                           file, dV, inner_rad[..., findex],
+                           igcells, nuc_rad[..., findex], ngcells)
         try:
             time = np.concatenate((time, simulation.time(file)))
             Qdot_radial = np.concatenate((Qdot_radial, Qradial[..., None]),
@@ -772,23 +780,26 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
                                           axis=-1)
             Qdot_outer = np.concatenate((Qdot_outer, Qouter[..., None]),
                                         axis=-1)
-        except:
+            Qdot_corr = np.concatenate((Qdot_corr, Qcorr[..., None]),
+                                        axis=-1)
+        except Exception as e:
+            print(e)
             time = simulation.time(file)
             Qdot_radial = Qradial[..., None]
             Qdot_total = Qtot[..., None]
             Qdot_inner = Qinner[..., None]
             Qdot_nucleus = Qnuc[..., None]
             Qdot_outer = Qouter[..., None]
+            Qdot_corr = Qcorr[..., None]
         processed_hdf.append(file)
-            
             
         if save_checkpoints and check_index == checkpoint:
             print("Checkpoint reached. Saving...")
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, processed_hdf])
+                      Qdot_radial, Qdot_corr, processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -799,15 +810,30 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, processed_hdf])
+                      Qdot_radial, Qdot_corr, processed_hdf])
     return calculate_strain_3D(D, THETA, PHI, time,
                                simulation.cell.radius(simulation.ghost),
                                Qdot_radial, Qdot_total,
                                Qdot_inner, Qdot_nucleus, Qdot_outer)
 
-def spherical_harmonics_gradient(radius, theta, phi):
+def Qdot_surface_correction(Qcorr, r1_ind, r2_ind):
+    if r1_ind is None:
+        r1 = 0 * Qcorr.unit
+    else:
+        r1 = Qcorr[np.arange(Qcorr.shape[0])[:, None],
+                   np.arange(Qcorr.shape[1])[None, :], r1_ind]
+        r1 = r1.sum()
+    if r2_ind is None:
+        r2 = 0 * Qcorr.unit
+    else:
+        r2 = Qcorr[np.arange(Qcorr.shape[0])[:, None],
+                   np.arange(Qcorr.shape[1])[None, :], r2_ind]
+        r2 = r2.sum()
+    return r2-r1
+
+def get_spherical_harmonics(radius, theta, phi, dOmega):
     """
     Calculates the gradient of the conjugate spherical harmonics times
     the radius for l = 2.
@@ -816,70 +842,105 @@ def spherical_harmonics_gradient(radius, theta, phi):
     harmonics times the radius from m=-2 to m=2.
     """
     grd = []
+    hr = []
     harmonics = SphericalHarmonics()
     for m in range(-2, 3):
         Y2m_r = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
             radius[None, None, :] ** 2
         grd.append(gradient(Y2m_r, radius, theta, phi, 'spherical'))
-    return grd
+        hr.append(Y2m_r * radius[None, None, :] ** 2 * dOmega[..., None])    
+    return grd, hr
 
-def calculate_Qdot(simulation, gradY, file_name, dV, 
+def calculate_Qdot(simulation, gradY, Ylm, file_name, dV, 
                         inner_rad, igcells, nuc_rad, ngcells):
     """
     Calculates the Qdot for the different regions of the star.
     dot{Q} = dV ρ ∇(v Y*_2m)
     """
-    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
+    radius = simulation.cell.radius(simulation.ghost)
+    mask_nuc = radius <= \
         simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
                                                     **ngcells)[..., None]
-    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
+    mask_inner = (radius <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
                                              **igcells)[..., None] + (20*u.km)) & \
         (np.logical_not(mask_nuc))
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     
-    rho = simulation.rho(file_name) * dV
+    r_nuc_ind = np.argmax(radius[None, None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
+                                                    **ngcells)[..., None],
+                        axis=-1)
+    r_inner_ind = np.argmax(radius[None, None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim,
+                                         **ngcells)[..., None] + (2e6 * u.cm),
+                        axis=-1)
+    r_outer_ind = -np.ones(dV.shape[:-1], dtype=int)
+    
+    rho = simulation.rho(file_name)
     v_r = simulation.radial_velocity(file_name)
     v_t = simulation.theta_velocity(file_name)
     v_p = simulation.phi_velocity(file_name)
+    rho_vr = rho * v_r
+    rho *= dV
     Qdot = (rho * (v_r * gradY[0][0, ...] + v_t * gradY[0][1, ...] + v_p \
         * gradY[0][2, ...]))
+    Qcorr = Ylm[0] * rho_vr
     Qdot_tot = Qdot.sum()[..., None]
-    Qdot_inner = Qdot[mask_inner].sum()[..., None]
-    Qdot_nuc = Qdot[mask_nuc].sum()[..., None]
-    Qdot_outer = Qdot[mask_outer].sum()[..., None]
+    Qdot_inner = (Qdot[mask_inner].sum() - \
+        Qdot_surface_correction(Qcorr, None, r_nuc_ind))[..., None]
+    Qdot_nuc = (Qdot[mask_nuc].sum() - \
+        Qdot_surface_correction(Qcorr, r_nuc_ind, r_inner_ind))[..., None]
+    Qdot_outer = (Qdot[mask_outer].sum() - \
+        Qdot_surface_correction(Qcorr, r_inner_ind, r_outer_ind))[..., None]
     Qdot_radial = Qdot.sum(axis=(0,1))[..., None]
+    Qdot_corr = Qcorr.sum(axis=(0,1))[..., None]
     for i in range(1, 5):
         Qdot = (rho * (v_r * gradY[i][0, ...] + v_t * \
             gradY[i][1, ...] + v_p * gradY[i][2, ...]))
+        Qcorr = Ylm[i] * rho_vr
         Qdot_tot = np.concatenate((Qdot_tot, Qdot.sum()[..., None]), axis=-1)
-        Qdot_inner = np.concatenate((Qdot_inner, Qdot[mask_inner].sum()
+        Qdot_inner = np.concatenate((Qdot_inner,
+                                     (Qdot[mask_inner].sum() - \
+                                         Qdot_surface_correction(Qcorr,
+                                                                 None,
+                                                                 r_nuc_ind))
                                      [..., None]), axis=-1)
-        Qdot_nuc = np.concatenate((Qdot_nuc, Qdot[mask_nuc].sum()[..., None]),
+        Qdot_nuc = np.concatenate((Qdot_nuc, (Qdot[mask_nuc].sum() - \
+                                    Qdot_surface_correction(Qcorr, r_nuc_ind,
+                                                    r_inner_ind))[..., None]),
                                   axis=-1)
-        Qdot_outer = np.concatenate((Qdot_outer, Qdot[mask_outer].sum()
+        Qdot_outer = np.concatenate((Qdot_outer, (Qdot[mask_outer].sum() - \
+                                    Qdot_surface_correction(Qcorr,
+                                                            r_inner_ind,
+                                                            r_outer_ind))
                                      [..., None]), axis=-1)
         Qdot_radial = np.concatenate((Qdot_radial, Qdot.sum(axis=(0, 1))
                                       [..., None]), axis=-1)
-    
-    return Qdot_tot, Qdot_inner, Qdot_nuc, Qdot_outer, Qdot_radial
+        Qdot_corr = np.concatenate((Qdot_corr, Qdot.sum(axis=(0, 1))
+                                      [..., None]), axis=-1)
+            
+    return Qdot_tot, Qdot_inner, Qdot_nuc, Qdot_outer, Qdot_radial, Qdot_corr
 
 def read_Qdot(simulation):
     """
     Reads the Qdot and masks from a checkpoint file.
     """
     with h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5')) as data:
+        if 'Qdot_corr' not in data.keys():
+            return 0, 0, 0, 0, 0, 0, 0, []
         time = data['time'][...] * u.s
         Qdot_radial = data['Qdot_radial'][...] * u.g * u.cm ** 2 / u.s
         Qdot_total = data['Qdot_total'][...] * u.g * u.cm ** 2 / u.s
         Qdot_inner = data['Qdot_inner'][...] * u.g * u.cm ** 2 / u.s
         Qdot_nucleus = data['Qdot_nucleus'][...] * u.g * u.cm ** 2 / u.s
         Qdot_outer = data['Qdot_outer'][...] * u.g * u.cm ** 2 / u.s
+        Qcorr = data['Qdot_corr'][...] * u.g * u.cm ** 2 / u.s
         if 'processed' in data.keys():
             processed_hdf = data['processed'][...]
         else:
             processed_hdf = None
-    return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
+    return time, Qdot_radial, Qcorr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
 
 def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
                         Qdot_inner, Qdot_nucleus, Qdot_outer):
