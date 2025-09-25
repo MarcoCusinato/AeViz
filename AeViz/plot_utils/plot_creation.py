@@ -118,22 +118,18 @@ class PlotCreation(object):
                     self.__share_axis(self.axd["B"], [self.axd["D"]], False,
                                       True)
                 elif self.form_factor == 5:
-                    for ax_letter in self.axd:
-                        self.__share_axis(self.axd["A"], [self.axd["B"], 
-                                                          self.axd["C"],
-                                                          self.axd["D"],
-                                                          self.axd["E"],
-                                                          self.axd["F"],
-                                                          self.axd["G"],
-                                                          self.axd["H"]],
-                                          True, False)
-            elif self.number == 5:
-                if self.form_factor == 1:
                     self.__share_axis(self.axd["A"], [self.axd["B"], 
                                                       self.axd["C"],
                                                       self.axd["D"],
-                                                      self.axd["E"]],
+                                                      self.axd["E"],
+                                                      self.axd["F"],
+                                                      self.axd["G"],
+                                                      self.axd["H"]],
                                       True, False)
+            elif self.number == 5:
+                axes_to_share = [self.axd[ax_letter] for ax_letter in self.axd 
+                                  if (not ax_letter.islower() and ax_letter != 'A')]
+                self.__share_axis(self.axd["A"], axes_to_share, True, False)
             elif self.number == 6:
                 sharing = [self.axd[f'IMF{i}'] for i in range(1, form_factor+1)]
                 self.__share_axis(self.axd['full'], sharing, True, False)
@@ -238,23 +234,14 @@ class PlotCreation(object):
             self.axd["B"].yaxis.set_label_position('left')
             self.axd["C"].yaxis.set_label_position('right')
             self.axd["D"].yaxis.set_label_position('right')
-        elif self.number == 5 and self.form_factor == 1:
-            self.axd["A"].tick_params(top=False, labeltop=False,
-                                      bottom=False, labelbottom=False,
-                                      left=True, labelleft=True,
-                                      right=False, labelright=False)
-            self.axd["B"].tick_params(top=False, labeltop=False,
-                                      bottom=False, labelbottom=False,
-                                      left=True, labelleft=True,
-                                      right=False, labelright=False)
-            self.axd["C"].tick_params(top=False, labeltop=False,
-                                      bottom=False, labelbottom=False,
-                                      left=True, labelleft=True,
-                                      right=False, labelright=False)
-            self.axd["D"].tick_params(top=False, labeltop=False,
-                                      bottom=True, labelbottom=True,
-                                      left=True, labelleft=True,
-                                      right=False, labelright=False)
+        elif self.number == 5:
+            for ax_letter in self.axd:
+                if ax_letter in ['E', 'e']:
+                    continue
+                self.axd[ax_letter].tick_params(top=False, labeltop=False,
+                                          bottom=False, labelbottom=False,
+                                          left=True, labelleft=True,
+                                          right=False, labelright=False)
         elif self.number == 6:
             self.axd['full'].tick_params(top=False, labeltop=False,
                                          bottom=False, labelbottom=False,

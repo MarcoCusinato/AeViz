@@ -413,61 +413,38 @@ class Plotting(PlottingUtils, Data):
 
     def plotGWDecomposition(self, qt, **kwargs):
         """
-        Plot the GW decomposition. ONLY in 2D.
+        Plot the space time 2D map of the GW signal for a single polarization.
+        Up to three zones are supported to be plotted.
         """
         self.Close()
-        self._PlotCreation__setup_axd(5, 1)
+        ## Count the zones
+        r1 = kwargs.setdefault("r1", None)
+        r2 = kwargs.setdefault("r2", None)
+        r3 = kwargs.setdefault("r3", None)
+        radii = [r1, r2, r3]
+        count = sum(x is not None for x in radii)
+        radii = [r for r in radii if r is not None]
+        self._PlotCreation__setup_axd(5, int(count+1))
         AE220, oth  = self._Data__get_data_from_name(name=qt, file=None, **kwargs)
         f_h, nuc_h, conv_h, out_h = oth
-        kwargs['color'] = 'C0'
-        self._PlottingUtils__update_params(
-                                            ax_letter='A',
-                                            plane='time',
-                                            data=f_h,
-                                            cbar_position=None,
-                                            dim=1,
-                                            sim_dim=self.sim_dim,
-                                            **kwargs
-                                            )
-        kwargs['color'] = 'C1'
-        self._PlottingUtils__update_params(
-                                            ax_letter='B',
-                                            plane='time',
-                                            data=nuc_h,
-                                            cbar_position=None,
-                                            dim=1,
-                                            sim_dim=self.sim_dim,
-                                            **kwargs
-                                            )
-        kwargs['color'] = 'C2'
-        self._PlottingUtils__update_params(
-                                            ax_letter='C',
-                                            plane='time',
-                                            data=conv_h,
-                                            cbar_position=None,
-                                            dim=1,
-                                            sim_dim=self.sim_dim,
-                                            **kwargs
-                                            )
-        kwargs['color'] = 'C3'
-        self._PlottingUtils__update_params(
-                                            ax_letter='D',
-                                            plane='time',
-                                            data=out_h,
-                                            cbar_position=None,
-                                            dim=1,
-                                            sim_dim=self.sim_dim,
-                                            **kwargs
-                                            )
-        kwargs.pop('color')
-        for (axd_letter, dd) in zip(['A', 'B', 'C', 'D'],
-                                       [f_h, nuc_h, conv_h, out_h]
-                                       ):
-            self._PlottingUtils__plot1D(axd_letter)
-            self.update_legend([dd.data.label], axd_letter)
-            self.ylim(dd.data.limits, axd_letter)
-            self.Yscale(dd.data.log, axd_letter)
-            self.Xscale(dd.time.log, axd_letter)
+        letters = ['A', 'B', 'C', 'D']
+        for i in range(count+1):
+            kwargs['color'] = f'C{i}'
+            self._PlottingUtils__update_params(
+                                                ax_letter=letters[i],
+                                                plane='time',
+                                                data=oth[i],
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
+            kwargs.pop('color')
+            self._PlottingUtils__plot1D(letters[i])
+            self.ylim(oth[0].data.limits, letters[i])
+            self.Yscale(oth[0].data.log, letters[i])
+            self.Xscale(oth[0].time.log, letters[i])
+
         self._PlottingUtils__update_params(
                                             ax_letter='E',
                                             plane=('time', 'radius'),
@@ -482,10 +459,44 @@ class Plotting(PlottingUtils, Data):
         self.Yscale(AE220.radius.log, 'E')
         self.xlim(AE220.time.limits, 'E')
         self.ylim(AE220.radius.limits, 'E')
-        self.plot1D(None, 'innercore_radius', 'time', rad='avg', plot='E',
-                    color='black', ls='dashed', lw=0.75)
-        self.plot1D(None, 'PNS_nucleus_radius', 'time', rad='avg', plot='E',
-                    color='black', lw=0.75)        
+        ## Plot the lines, if any
+        ltype = ['solid', 'dashed', 'dotted']
+        for i, r in enumerate(radii):
+            if r is None:
+                continue
+            elif type(r) == str:
+                rr = r.split('-')
+                if len(rr) == 1:
+                    rr = rr[0]
+                    rt = 'avg'
+                else:
+                    rt = rr[1] if rr[1] != 'full' else 'avg'
+                    rr = rr[0]
+                self.plot1D(None, rr, 'time', rad=rt, plot='E',
+                                     color='black', ls=ltype[i], lw=0.75)
+            else:
+                if isinstance(r, aerray):
+                    rdata = aeseries(r * np.ones(len(oth[0].time)),
+                                     time = oth[0].time.copy())
+                else:
+                    rdata = aeseries(
+                        aerray(r * np.ones(oth[0].time.shape), AE220.radius.unit,
+                               f'r{i}', f'r{i}'),
+                                     time = oth[0].time.copy())
+                kwargs['color'] = 'black'
+                kwargs['ls'] = ltype[i]
+                kwargs['lw'] = 0.75
+                kwargs['overplot'] = True
+                self._PlottingUtils__update_params(
+                                                ax_letter='E',
+                                                plane='time',
+                                                data=rdata,
+                                                cbar_position=None,
+                                                dim=1,
+                                                sim_dim=self.sim_dim,
+                                                **kwargs
+                                                )
+        self._PlottingUtils__plot1D('E')
         show_figure()
 
     def plotSpectrogram(self, qt, **kwargs):
