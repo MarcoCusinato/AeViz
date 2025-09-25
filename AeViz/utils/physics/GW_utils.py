@@ -522,17 +522,24 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'NE220.h5'):
-        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
+        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, \
+            NE220_rad_corr, processed_hdf = \
             read_NE220(simulation)
         if processed_hdf is None:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, simulation.hdf_file_list[:len(time)]])
-            time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
+                      outer_NE220, NE220_rad_corr,
+                      simulation.hdf_file_list[:len(time)]])
+            time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, \
+                NE220_rad_corr, processed_hdf = \
             read_NE220(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if len(processed_hdf) == 0:
+            start_point = 0
+            processed_hdf = []
+            print("No checkpoint found. Starting from step 0")
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
             return calculate_strain_2D(D, time,
                                        simulation.cell.radius(simulation.ghost),
                                        NE220, full_NE220, nuc_NE220,
@@ -560,12 +567,14 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     nuc_rad = nuc_rad.data
 
     for file in simulation.hdf_file_list[start_point:]:
-        fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
+        fNE220, ffull, finner, fnuc, fouter, corr = NE220_2D(simulation,
             file, dV, dOmega, ctheta, inner_rad[..., findex], igcells,
             nuc_rad[..., findex], ngcells)
         try:
             time = np.concatenate((time, simulation.time(file)))
             NE220 = np.concatenate((NE220, fNE220[..., None]), axis=-1)
+            NE220_rad_corr = np.concatenate((NE220_rad_corr, corr[..., None]),
+                                            axis=-1)
             full_NE220 = np.concatenate((full_NE220, ffull))
             nuc_NE220 = np.concatenate((nuc_NE220, fnuc))
             conv_NE220 = np.concatenate((conv_NE220, finner))
@@ -574,6 +583,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
             print(e)
             time = simulation.time(file)
             NE220 = fNE220[..., None]
+            NE220_rad_corr = corr[..., None]
             full_NE220 = ffull
             nuc_NE220 = fnuc
             conv_NE220 = finner
@@ -582,9 +592,10 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         if save_checkpoints and check_index == checkpoint:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, processed_hdf])
+                      outer_NE220, NE220_rad_corr, processed_hdf])
+            print("Checkpoint reached, saving...")
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -594,29 +605,32 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, processed_hdf])
+                      outer_NE220, NE220_rad_corr, processed_hdf])
     return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
                                NE220, full_NE220, nuc_NE220, conv_NE220,
                                outer_NE220)
 
-def Zha_correction_2D(dOmega, ctheta, r1_ind, r2_ind, r, rho, vr):
+def Zha_correction_2D(dOmega, ctheta, r, rho, vr):
     """
     Computes the Zha correction into the strains computed on spherica shells
     """
     P2 = 0.5 * (3 * ctheta ** 2 - 1) * dOmega[:, None]
     
     prod = r[None, :] ** 4 * rho * vr * P2
+    return prod
+
+def Zha_surface_correction(r1_ind, r2_ind, Zha_corr):
     if r1_ind is None:
-        r1 = 0 * prod.unit
+        r1 = 0 * Zha_corr.unit
     else:
-        r1 = prod[np.arange(prod.shape[0]), r1_ind]
+        r1 = Zha_corr[np.arange(Zha_corr.shape[0]), r1_ind]
         r1 = r1.sum()
     if r2_ind is None:
-        r2 = 0 * prod.unit
+        r2 = 0 * Zha_corr.unit
     else:
-        r2 = prod[np.arange(prod.shape[0]), r2_ind]
+        r2 = Zha_corr[np.arange(Zha_corr.shape[0]), r2_ind]
         r2 = r2.sum()
     return r2-r1
     
@@ -647,29 +661,33 @@ def NE220_2D(simulation, file_name, dV, dOmega, ctheta, inner_rad, igcells,
                                                     **ngcells)[..., None]+ (2e6 * u.cm), axis=-1)
     r_outer_ind = -np.ones(vt.shape[0], dtype=int)
     mask_outer = np.logical_not(mask_inner + mask_nuc)
-    nuc_corr = Zha_correction_2D(dOmega, ctheta, None, r_nuc_ind, radius, rho, vr)
-    inn_corr = Zha_correction_2D(dOmega, ctheta, r_nuc_ind+1, r_inner_ind, radius, rho, vr)
-    out_corr = Zha_correction_2D(dOmega, ctheta, r_inner_ind+1, r_outer_ind, radius, rho, vr)
+    Zha_corr = Zha_correction_2D(dOmega, ctheta, radius, rho, vr)
+    nuc_corr = Zha_surface_correction(None, r_nuc_ind, Zha_corr)
+    inn_corr = Zha_surface_correction(r_nuc_ind+1, r_inner_ind, Zha_corr)
+    out_corr = Zha_surface_correction(r_inner_ind+1, r_outer_ind, Zha_corr)
     return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner) + nuc_corr, \
-        np.sum(NE220 * mask_nuc)+inn_corr, np.sum(NE220 * mask_outer)+out_corr
+        np.sum(NE220 * mask_nuc)+inn_corr, np.sum(NE220 * mask_outer)+out_corr, np.sum(Zha_corr, axis=0)
            
 def read_NE220(simulation):
     """
     Reads the NE220 from a checkpoint file.
     """
-    data = h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r')
-    time = data['time'][...] * u.s
-    NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
-    full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
-    nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
-    conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
-    outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
-    if 'processed' in data.keys():
-        processed = data['processed'][...]
-    else:
-        processed = None
-    data.close()
-    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed
+    with h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r') as data:
+        if 'NE220_corr' not in data.keys():
+            return 0, 0, 0, 0, 0, 0, 0, []
+        time = data['time'][...] * u.s
+        NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
+        full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
+        nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
+        conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
+        outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
+        correction = data['NE220_corr'][...] * u.cm ** 2 * u.g / u.s
+        if 'processed' in data.keys():
+            processed = data['processed'][...]
+        else:
+            processed = None
+        
+    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, correction, processed
 
 def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
                         conv_NE220, outer_NE220):
