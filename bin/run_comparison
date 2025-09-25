@@ -36,7 +36,7 @@ else:
   elif len(path) > len(sims):
     raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
 
-COLOURS = ['black', 'red', 'blue', 'cyan']
+COLOURS = ['black', 'blue', 'red', 'cyan']
 LETTERS = ['A', 'B', 'C', 'D']
 
 for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius']:
