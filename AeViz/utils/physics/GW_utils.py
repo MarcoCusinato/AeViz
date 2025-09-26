@@ -10,7 +10,6 @@ from AeViz.units.aeseries import aeseries, aerray
 from AeViz.units import u
 from AeViz.units.constants import constants as c
 from typing import Literal
-from AeViz.cell.cell_methods.spherical_methods import dOmega
 
 
 ## ---------------------------------------------------------------------
@@ -485,7 +484,7 @@ def GWs_frequency_peak_indices(frequency, htilde):
 ## ---------------------------------------------------------------------
 
 def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
-                save_checkpoints=True):
+                save_checkpoints=True, **kwargs):
     """
     Calculates the h cross and x from postprocessing quantities for 
     every timestep of a simulation.
@@ -505,17 +504,22 @@ def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
             [h_+, h_x]_conv: len(time)
             [h_+, h_x]_out: len(time)
     """
+    r1 = kwargs.setdefault("r1", None)
+    r2 = kwargs.setdefault("r2", None)
+    r3 = kwargs.setdefault("r3", None)
+    radii = [r1, r2, r3]
+    radii = [r for r in radii if r is not None]
     if simulation.dim == 1:
         print("No GWs for you :'(")
         return None
     elif simulation.dim == 2:
-        return NE220_2D_timeseries(simulation, save_checkpoints, D)
+        return NE220_2D_timeseries(simulation, save_checkpoints, D, radii)
     elif simulation.dim == 3:
         return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI)
 
 ## 2D
 
-def NE220_2D_timeseries(simulation, save_checkpoints, D):
+def NE220_2D_timeseries(simulation, save_checkpoints, D, radii):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
@@ -540,10 +544,11 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
             processed_hdf = []
             print("No checkpoint found. Starting from step 0")
         elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return calculate_strain_2D(D, time,
+            return calculate_strain_2D(simulation, D, time,
                                        simulation.cell.radius(simulation.ghost),
                                        NE220, full_NE220, nuc_NE220,
-                                       conv_NE220, outer_NE220)
+                                       conv_NE220, outer_NE220, NE220_rad_corr,
+                                       radii)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -608,9 +613,9 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
                       'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
                       outer_NE220, NE220_rad_corr, processed_hdf])
-    return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
+    return calculate_strain_2D(simulation, D, time, simulation.cell.radius(simulation.ghost),
                                NE220, full_NE220, nuc_NE220, conv_NE220,
-                               outer_NE220)
+                               outer_NE220, NE220_rad_corr, radii)
 
 def Zha_correction_2D(dOmega, ctheta, r, rho, vr):
     """
@@ -689,8 +694,8 @@ def read_NE220(simulation):
         
     return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, correction, processed
 
-def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
-                        conv_NE220, outer_NE220):
+def calculate_strain_2D(simulation, D, time, radius, NE220, full_NE220, nuc_NE220,
+                        conv_NE220, outer_NE220, corrections, radii):
     """
     Derives ancd fixes the constants of the strain.
     """
@@ -706,12 +711,14 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
         D = 1 * u.dimensionless_unscaled
     time.set(name='time', label=r'$t-t_\mathrm{b}$',
              cmap=None, limits=[-0.005, time[-1]])
+    NE220_og = NE220.copy()
     NE220 = const * IDL_derivative(time, NE220)
     NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
               cmap='seismic', limits=[-3 / D.value, 3 / D.value])
     full_NE220 = const * IDL_derivative(time, full_NE220)
     full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
                    cmap='seismic', limits=[-70 / D.value, 70 / D.value])
+    out_strains = create_series(time, full_NE220)
     nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
     nuc_NE220.set(name='nuc_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                   label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
@@ -722,9 +729,101 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
     outer_NE220.set(name='outer_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                     label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
     T, R = np.meshgrid(time, radius)
-    return aeseries(NE220, time=T, radius=R),\
-            create_series(time, full_NE220, nuc_NE220, conv_NE220, outer_NE220)
+    ## Now we select the right radius
+    if len(radii) == 1:
+        if radii[0] == 'PNS_nucleus_radius-full':
+            out_strains.extend(create_series(time, nuc_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution_2D(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+    elif len(radii) == 2:
+        if radii == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out_strains.extend(create_series(time, nuc_NE220, conv_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution_2D(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+            corr_r2, mask_r2 = get_correction_evolution_2D(simulation, radii[1], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r1,
+                                                      corr_r2, mask_r1, mask_r2,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r2}}$'))
+    elif len(radii) == 3:
+        if radii[:2] == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out_strains.extend(create_series(time, nuc_NE220, conv_NE220,
+                                             outer_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution_2D(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+            corr_r2, mask_r2 = get_correction_evolution_2D(simulation, radii[1], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r1,
+                                                      corr_r2, mask_r1, mask_r2,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r2}}$'))
+            corr_r3, mask_r3 = get_correction_evolution_2D(simulation, radii[2], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r2,
+                                                      corr_r3, mask_r2, mask_r3,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r3}}$'))
+            
+    return aeseries(NE220, time=T, radius=R), out_strains
 
+def compute_partial_strain(NE220, time, corr1, corr2, mask1, mask2, const, D,
+                           Dlab, label):
+    if corr1 is None:
+        corr = corr2
+    else:
+        corr = corr2 - corr1
+    AE220 = NE220.copy()
+    if mask1 is not None:
+        if isinstance(mask1, np.int64):
+            AE220[:mask1, :] = 0
+        else:
+            AE220 = NE220.copy()
+            AE220[mask1] = 0
+    if isinstance(mask2, np.int64):
+        AE220[mask2:, :] = 0
+    else:
+        AE220[~mask2] = 0
+    AE220 = np.sum(AE220, axis=0) - corr
+    strain = const * IDL_derivative(time, AE220)
+    strain.set(name='partial_strain', label=merge_strings(Dlab, label),
+                   cmap='seismic', limits=[-70 / D.value, 70 / D.value])
+    return create_series(time, strain)
+
+def get_correction_evolution_2D(simulation, r, radius, amplitude):
+    ## get the correspondig radius
+    if isinstance(r, str):
+        rr = r.split('-')
+        if len(rr) == 1:
+            rr = rr[0]
+            rt = 'avg'
+        else:
+            rt = rr[1] if rr[1] != 'full' else 'avg'
+            rr = rr[0]
+        r = getattr(simulation, rr)(rad=rt)
+        rindex = np.argmax(radius[None, :] >= r.data[:, None], axis=-1)
+        corr = amplitude[rindex, np.arange(amplitude.shape[1])]
+        rindex = radius[:, None] * np.ones(r.data.shape)[None, :] <= r.data[None, :]
+    elif isinstance(r, float):
+        r = r * radius.unit
+        rindex = np.argmax(radius >= r)
+        corr = amplitude[rindex, :]
+    elif isinstance(r, aerray):
+        rindex = np.argmax(radius >= r)
+        corr = amplitude[rindex, :]
+    else:
+        raise ValueError("Option not recognized")
+        
+    return corr, rindex
 ## 3D
 
 def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):

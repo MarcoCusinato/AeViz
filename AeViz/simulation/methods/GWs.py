@@ -271,7 +271,7 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
     if self.dim == 1:
         return None
     elif self.dim == 2:
-        return calculate_h(self, D, theta, phi, save_checkpoints)
+        return calculate_h(self, D, theta, phi, save_checkpoints, **kwargs)
     elif self.dim == 3:
         if comp is None:
             return calculate_h(self, D, theta, phi, save_checkpoints)

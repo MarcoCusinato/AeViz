@@ -426,7 +426,6 @@ class Plotting(PlottingUtils, Data):
         radii = [r for r in radii if r is not None]
         self._PlotCreation__setup_axd(5, int(count+1))
         AE220, oth  = self._Data__get_data_from_name(name=qt, file=None, **kwargs)
-        f_h, nuc_h, conv_h, out_h = oth
         letters = ['A', 'B', 'C', 'D']
         for i in range(count+1):
             kwargs['color'] = f'C{i}'
@@ -441,9 +440,9 @@ class Plotting(PlottingUtils, Data):
                                                 )
             kwargs.pop('color')
             self._PlottingUtils__plot1D(letters[i])
-            self.ylim(oth[0].data.limits, letters[i])
-            self.Yscale(oth[0].data.log, letters[i])
-            self.Xscale(oth[0].time.log, letters[i])
+            self.ylim(oth[i].data.limits, letters[i])
+            self.Yscale(oth[i].data.log, letters[i])
+            self.Xscale(oth[i].time.log, letters[i])
 
         self._PlottingUtils__update_params(
                                             ax_letter='E',
