@@ -484,7 +484,7 @@ def GWs_frequency_peak_indices(frequency, htilde):
 ## ---------------------------------------------------------------------
 
 def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
-                save_checkpoints=True):
+                save_checkpoints=True, **kwargs):
     """
     Calculates the h cross and x from postprocessing quantities for 
     every timestep of a simulation.
@@ -504,38 +504,51 @@ def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
             [h_+, h_x]_conv: len(time)
             [h_+, h_x]_out: len(time)
     """
+    r1 = kwargs.setdefault("r1", None)
+    r2 = kwargs.setdefault("r2", None)
+    r3 = kwargs.setdefault("r3", None)
+    radii = [r1, r2, r3]
+    radii = [r for r in radii if r is not None]
     if simulation.dim == 1:
         print("No GWs for you :'(")
         return None
     elif simulation.dim == 2:
-        return NE220_2D_timeseries(simulation, save_checkpoints, D)
+        return NE220_2D_timeseries(simulation, save_checkpoints, D, radii)
     elif simulation.dim == 3:
-        return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI)
+        return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii)
 
 ## 2D
 
-def NE220_2D_timeseries(simulation, save_checkpoints, D):
+def NE220_2D_timeseries(simulation, save_checkpoints, D, radii):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'NE220.h5'):
-        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
+        time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, \
+            NE220_rad_corr, processed_hdf = \
             read_NE220(simulation)
         if processed_hdf is None:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, simulation.hdf_file_list[:len(time)]])
-            time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed_hdf = \
+                      outer_NE220, NE220_rad_corr,
+                      simulation.hdf_file_list[:len(time)]])
+            time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, \
+                NE220_rad_corr, processed_hdf = \
             read_NE220(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return calculate_strain_2D(D, time,
+        if len(processed_hdf) == 0:
+            start_point = 0
+            processed_hdf = []
+            print("No checkpoint found. Starting from step 0")
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+            return calculate_strain_2D(simulation, D, time,
                                        simulation.cell.radius(simulation.ghost),
                                        NE220, full_NE220, nuc_NE220,
-                                       conv_NE220, outer_NE220)
+                                       conv_NE220, outer_NE220, NE220_rad_corr,
+                                       radii)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -559,12 +572,14 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     nuc_rad = nuc_rad.data
 
     for file in simulation.hdf_file_list[start_point:]:
-        fNE220, ffull, finner, fnuc, fouter = NE220_2D(simulation,
+        fNE220, ffull, finner, fnuc, fouter, corr = NE220_2D(simulation,
             file, dV, dOmega, ctheta, inner_rad[..., findex], igcells,
             nuc_rad[..., findex], ngcells)
         try:
             time = np.concatenate((time, simulation.time(file)))
             NE220 = np.concatenate((NE220, fNE220[..., None]), axis=-1)
+            NE220_rad_corr = np.concatenate((NE220_rad_corr, corr[..., None]),
+                                            axis=-1)
             full_NE220 = np.concatenate((full_NE220, ffull))
             nuc_NE220 = np.concatenate((nuc_NE220, fnuc))
             conv_NE220 = np.concatenate((conv_NE220, finner))
@@ -573,6 +588,7 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
             print(e)
             time = simulation.time(file)
             NE220 = fNE220[..., None]
+            NE220_rad_corr = corr[..., None]
             full_NE220 = ffull
             nuc_NE220 = fnuc
             conv_NE220 = finner
@@ -581,9 +597,10 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
         if save_checkpoints and check_index == checkpoint:
             save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, processed_hdf])
+                      outer_NE220, NE220_rad_corr, processed_hdf])
+            print("Checkpoint reached, saving...")
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -593,29 +610,32 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'NE220.h5'),
                      ['time', 'NE220', 'full_NE220', 'nucleus_NE220',
-                      'convection_NE220', 'outer_NE220', 'processed'],
+                      'convection_NE220', 'outer_NE220', 'NE220_corr', 'processed'],
                      [time, NE220, full_NE220, nuc_NE220, conv_NE220,
-                      outer_NE220, processed_hdf])
-    return calculate_strain_2D(D, time, simulation.cell.radius(simulation.ghost),
+                      outer_NE220, NE220_rad_corr, processed_hdf])
+    return calculate_strain_2D(simulation, D, time, simulation.cell.radius(simulation.ghost),
                                NE220, full_NE220, nuc_NE220, conv_NE220,
-                               outer_NE220)
+                               outer_NE220, NE220_rad_corr, radii)
 
-def Zha_correction_2D(dOmega, ctheta, r1_ind, r2_ind, r, rho, vr):
+def Zha_correction_2D(dOmega, ctheta, r, rho, vr):
     """
     Computes the Zha correction into the strains computed on spherica shells
     """
     P2 = 0.5 * (3 * ctheta ** 2 - 1) * dOmega[:, None]
     
     prod = r[None, :] ** 4 * rho * vr * P2
+    return prod
+
+def Zha_surface_correction(r1_ind, r2_ind, Zha_corr):
     if r1_ind is None:
-        r1 = 0 * prod.unit
+        r1 = 0 * Zha_corr.unit
     else:
-        r1 = prod[np.arange(prod.shape[0]), r1_ind]
+        r1 = Zha_corr[np.arange(Zha_corr.shape[0]), r1_ind]
         r1 = r1.sum()
     if r2_ind is None:
-        r2 = 0 * prod.unit
+        r2 = 0 * Zha_corr.unit
     else:
-        r2 = prod[np.arange(prod.shape[0]), r2_ind]
+        r2 = Zha_corr[np.arange(Zha_corr.shape[0]), r2_ind]
         r2 = r2.sum()
     return r2-r1
     
@@ -646,32 +666,36 @@ def NE220_2D(simulation, file_name, dV, dOmega, ctheta, inner_rad, igcells,
                                                     **ngcells)[..., None]+ (2e6 * u.cm), axis=-1)
     r_outer_ind = -np.ones(vt.shape[0], dtype=int)
     mask_outer = np.logical_not(mask_inner + mask_nuc)
-    nuc_corr = Zha_correction_2D(dOmega, ctheta, None, r_nuc_ind, radius, rho, vr)
-    inn_corr = Zha_correction_2D(dOmega, ctheta, r_nuc_ind+1, r_inner_ind, radius, rho, vr)
-    out_corr = Zha_correction_2D(dOmega, ctheta, r_inner_ind+1, r_outer_ind, radius, rho, vr)
+    Zha_corr = Zha_correction_2D(dOmega, ctheta, radius, rho, vr)
+    nuc_corr = Zha_surface_correction(None, r_nuc_ind, Zha_corr)
+    inn_corr = Zha_surface_correction(r_nuc_ind+1, r_inner_ind, Zha_corr)
+    out_corr = Zha_surface_correction(r_inner_ind+1, r_outer_ind, Zha_corr)
     return np.sum(NE220, axis=0), np.sum(NE220), np.sum(NE220 * mask_inner) + nuc_corr, \
-        np.sum(NE220 * mask_nuc)+inn_corr, np.sum(NE220 * mask_outer)+out_corr
+        np.sum(NE220 * mask_nuc)+inn_corr, np.sum(NE220 * mask_outer)+out_corr, np.sum(Zha_corr, axis=0)
            
 def read_NE220(simulation):
     """
     Reads the NE220 from a checkpoint file.
     """
-    data = h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r')
-    time = data['time'][...] * u.s
-    NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
-    full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
-    nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
-    conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
-    outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
-    if 'processed' in data.keys():
-        processed = data['processed'][...]
-    else:
-        processed = None
-    data.close()
-    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, processed
+    with h5py.File(os.path.join(simulation.storage_path, 'NE220.h5'), 'r') as data:
+        if 'NE220_corr' not in data.keys():
+            return 0, 0, 0, 0, 0, 0, 0, []
+        time = data['time'][...] * u.s
+        NE220 = data['NE220'][...] * u.cm ** 2 * u.g / u.s
+        full_NE220 = data['full_NE220'][...] * u.cm ** 2 * u.g / u.s
+        nuc_NE220 = data['nucleus_NE220'][...] * u.cm ** 2 * u.g / u.s
+        conv_NE220 = data['convection_NE220'][...] * u.cm ** 2 * u.g / u.s
+        outer_NE220 = data['outer_NE220'][...] * u.cm ** 2 * u.g / u.s
+        correction = data['NE220_corr'][...] * u.cm ** 2 * u.g / u.s
+        if 'processed' in data.keys():
+            processed = data['processed'][...]
+        else:
+            processed = None
+        
+    return time, NE220, full_NE220, nuc_NE220, conv_NE220, outer_NE220, correction, processed
 
-def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
-                        conv_NE220, outer_NE220):
+def calculate_strain_2D(simulation, D, time, radius, NE220, full_NE220, nuc_NE220,
+                        conv_NE220, outer_NE220, corrections, radii):
     """
     Derives ancd fixes the constants of the strain.
     """
@@ -687,12 +711,14 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
         D = 1 * u.dimensionless_unscaled
     time.set(name='time', label=r'$t-t_\mathrm{b}$',
              cmap=None, limits=[-0.005, time[-1]])
+    NE220_og = NE220.copy()
     NE220 = const * IDL_derivative(time, NE220)
     NE220.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
               cmap='seismic', limits=[-3 / D.value, 3 / D.value])
     full_NE220 = const * IDL_derivative(time, full_NE220)
     full_NE220.set(name='full_NE220', label=merge_strings(add_lb, r'$h_{+,eq}$'),
                    cmap='seismic', limits=[-70 / D.value, 70 / D.value])
+    out_strains = create_series(time, full_NE220)
     nuc_NE220 = const * IDL_derivative(time, nuc_NE220)
     nuc_NE220.set(name='nuc_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                   label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
@@ -703,34 +729,129 @@ def calculate_strain_2D(D, time, radius, NE220, full_NE220, nuc_NE220,
     outer_NE220.set(name='outer_NE220', cmap='seismic', limits=[-70 / D.value, 70 / D.value],
                     label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,outer}}$'))
     T, R = np.meshgrid(time, radius)
-    return aeseries(NE220, time=T, radius=R),\
-            create_series(time, full_NE220, nuc_NE220, conv_NE220, outer_NE220)
+    ## Now we select the right radius
+    if len(radii) == 1:
+        if radii[0] == 'PNS_nucleus_radius-full':
+            out_strains.extend(create_series(time, nuc_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+    elif len(radii) == 2:
+        if radii == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out_strains.extend(create_series(time, nuc_NE220, conv_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+            corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r1,
+                                                      corr_r2, mask_r1, mask_r2,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r2}}$'))
+    elif len(radii) == 3:
+        if radii[:2] == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out_strains.extend(create_series(time, nuc_NE220, conv_NE220,
+                                             outer_NE220))
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, None,
+                                                      corr_r1, None, mask_r1,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r1}}$'))
+            corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r1,
+                                                      corr_r2, mask_r1, mask_r2,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r2}}$'))
+            corr_r3, mask_r3 = get_correction_evolution(simulation, radii[2], radius, corrections)
+            out_strains.extend(compute_partial_strain(NE220_og, time, corr_r2,
+                                                      corr_r3, mask_r2, mask_r3,
+                                                      const, D, add_lb,
+                                                      r'$h_{+,\mathrm{eq,r3}}$'))
+            
+    return aeseries(NE220, time=T, radius=R), out_strains
 
+def compute_partial_strain(NE220, time, corr1, corr2, mask1, mask2, const, D,
+                           Dlab, label):
+    if corr1 is None:
+        corr = corr2
+    else:
+        corr = corr2 - corr1
+    AE220 = NE220.copy()
+    if mask1 is not None:
+        if isinstance(mask1, np.int64):
+            AE220[:mask1, :] = 0
+        else:
+            AE220 = NE220.copy()
+            AE220[mask1] = 0
+    if isinstance(mask2, np.int64):
+        AE220[mask2:, :] = 0
+    else:
+        AE220[~mask2] = 0
+    AE220 = np.sum(AE220, axis=0) - corr
+    strain = const * IDL_derivative(time, AE220)
+    strain.set(name='partial_strain', label=merge_strings(Dlab, label),
+                   cmap='seismic', limits=[-70 / D.value, 70 / D.value])
+    return create_series(time, strain)
+
+def get_correction_evolution(simulation, r, radius, amplitude):
+    ## get the correspondig radius
+    if isinstance(r, str):
+        rr = r.split('-')
+        if len(rr) == 1:
+            rr = rr[0]
+            rt = 'avg'
+        else:
+            rt = rr[1] if rr[1] != 'full' else 'avg'
+            rr = rr[0]
+        r = getattr(simulation, rr)(rad=rt)
+        rindex = np.argmax(radius[None, :] >= r.data[:, None], axis=-1)
+        corr = amplitude[rindex, np.arange(amplitude.shape[1])]
+        rindex = radius[:, None] * np.ones(r.data.shape)[None, :] <= r.data[None, :]
+    elif isinstance(r, float):
+        r = r * radius.unit
+        rindex = np.argmax(radius >= r)
+        corr = amplitude[rindex, :]
+    elif isinstance(r, aerray):
+        rindex = np.argmax(radius >= r)
+        corr = amplitude[rindex, :]
+    else:
+        raise ValueError("Option not recognized")
+    return corr, rindex
 ## 3D
 
-def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
+def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
     and outer core contributions to the strain.
     """
     if check_existence(simulation, 'Qdot.h5'):
-        time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
+        time, Qdot_radial, Qdot_corr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
             read_Qdot(simulation)
         if processed_hdf is None:
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, simulation.hdf_file_list[:len(time)]])
-            time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
+                      Qdot_corr, Qdot_radial,
+                      simulation.hdf_file_list[:len(time)]])
+            time, Qdot_radial, Qdot_corr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf = \
             read_Qdot(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
-            return calculate_strain_3D(D, THETA, PHI, time,
+        if len(processed_hdf) == 0:
+            start_point = 0
+            processed_hdf = []
+            print("No checkpoint found. Starting from step 0")
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+            return calculate_strain_3D(simulation, D, THETA, PHI, time,
                                        simulation.cell.radius(simulation.ghost),
-                                       Qdot_radial,
-                                       Qdot_total, Qdot_inner, Qdot_nucleus,
-                                       Qdot_outer)
+                                       Qdot_radial, Qdot_total, Qdot_inner,
+                                       Qdot_nucleus, Qdot_outer, Qdot_corr, radii)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -745,22 +866,24 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     check_index = 0
     progress_index = 0
     dV = simulation.cell.dVolume_integration(simulation.ghost)
+    dOmega = simulation.cell.dOmega(simulation.ghost)
     inner_rad, igcells = simulation.innercore_radius(rad='full')
     nuc_rad, ngcells = simulation.PNS_nucleus_radius(rad='full')
 
     inner_rad = inner_rad.data
     nuc_rad = nuc_rad.data
         
-    grad = spherical_harmonics_gradient(
-                                    simulation.cell.radius(simulation.ghost),
-                                    simulation.cell.theta(simulation.ghost),
-                                    simulation.cell.phi(simulation.ghost))
+    grad, harm = get_spherical_harmonics(
+                    simulation.cell.radius(simulation.ghost),
+                    simulation.cell.theta(simulation.ghost),
+                    simulation.cell.phi(simulation.ghost),
+                    dOmega)
     
     for file in simulation.hdf_file_list[start_point:]:
-        Qtot, Qinner, Qnuc, Qouter, Qradial = calculate_Qdot(simulation, 
-                            grad, file, dV,
-                            inner_rad[..., findex], igcells,
-                            nuc_rad[..., findex], ngcells)
+        Qtot, Qinner, Qnuc, Qouter, Qradial, Qcorr = \
+            calculate_Qdot(simulation, grad, harm,
+                           file, dV, inner_rad[..., findex],
+                           igcells, nuc_rad[..., findex], ngcells)
         try:
             time = np.concatenate((time, simulation.time(file)))
             Qdot_radial = np.concatenate((Qdot_radial, Qradial[..., None]),
@@ -772,23 +895,26 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
                                           axis=-1)
             Qdot_outer = np.concatenate((Qdot_outer, Qouter[..., None]),
                                         axis=-1)
-        except:
+            Qdot_corr = np.concatenate((Qdot_corr, Qcorr[..., None]),
+                                        axis=-1)
+        except Exception as e:
+            print(e)
             time = simulation.time(file)
             Qdot_radial = Qradial[..., None]
             Qdot_total = Qtot[..., None]
             Qdot_inner = Qinner[..., None]
             Qdot_nucleus = Qnuc[..., None]
             Qdot_outer = Qouter[..., None]
+            Qdot_corr = Qcorr[..., None]
         processed_hdf.append(file)
-            
             
         if save_checkpoints and check_index == checkpoint:
             print("Checkpoint reached. Saving...")
             save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, processed_hdf])
+                      Qdot_radial, Qdot_corr, processed_hdf])
             check_index = 0
         check_index += 1
         progress_index += 1
@@ -799,15 +925,30 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI):
     print("Computations done, saving...")
     save_hdf(os.path.join(simulation.storage_path, 'Qdot.h5'),
                      ['time', 'Qdot_total', 'Qdot_inner', 'Qdot_nucleus',
-                      'Qdot_outer', 'Qdot_radial', 'processed'],
+                      'Qdot_outer', 'Qdot_radial', 'Qdot_corr', 'processed'],
                      [time, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer,
-                      Qdot_radial, processed_hdf])
-    return calculate_strain_3D(D, THETA, PHI, time,
+                      Qdot_radial, Qdot_corr, processed_hdf])
+    return calculate_strain_3D(simulation, D, THETA, PHI, time,
                                simulation.cell.radius(simulation.ghost),
-                               Qdot_radial, Qdot_total,
-                               Qdot_inner, Qdot_nucleus, Qdot_outer)
+                               Qdot_radial, Qdot_total, Qdot_inner,
+                               Qdot_nucleus, Qdot_outer, Qdot_corr, radii)
 
-def spherical_harmonics_gradient(radius, theta, phi):
+def Qdot_surface_correction(Qcorr, r1_ind, r2_ind):
+    if r1_ind is None:
+        r1 = 0 * Qcorr.unit
+    else:
+        r1 = Qcorr[np.arange(Qcorr.shape[0])[:, None],
+                   np.arange(Qcorr.shape[1])[None, :], r1_ind]
+        r1 = r1.sum()
+    if r2_ind is None:
+        r2 = 0 * Qcorr.unit
+    else:
+        r2 = Qcorr[np.arange(Qcorr.shape[0])[:, None],
+                   np.arange(Qcorr.shape[1])[None, :], r2_ind]
+        r2 = r2.sum()
+    return r2-r1
+
+def get_spherical_harmonics(radius, theta, phi, dOmega):
     """
     Calculates the gradient of the conjugate spherical harmonics times
     the radius for l = 2.
@@ -816,73 +957,207 @@ def spherical_harmonics_gradient(radius, theta, phi):
     harmonics times the radius from m=-2 to m=2.
     """
     grd = []
+    hr = []
     harmonics = SphericalHarmonics()
     for m in range(-2, 3):
         Y2m_r = harmonics.Ylm_conj(m, 2, theta, phi)[..., None] * \
             radius[None, None, :] ** 2
         grd.append(gradient(Y2m_r, radius, theta, phi, 'spherical'))
-    return grd
+        hr.append(Y2m_r * radius[None, None, :] ** 2 * dOmega[..., None])    
+    return grd, hr
 
-def calculate_Qdot(simulation, gradY, file_name, dV, 
+def calculate_Qdot(simulation, gradY, Ylm, file_name, dV, 
                         inner_rad, igcells, nuc_rad, ngcells):
     """
     Calculates the Qdot for the different regions of the star.
     dot{Q} = dV ρ ∇(v Y*_2m)
     """
-    mask_nuc = simulation.cell.radius(simulation.ghost) <= \
+    radius = simulation.cell.radius(simulation.ghost)
+    mask_nuc = radius <= \
         simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
                                                     **ngcells)[..., None]
-    mask_inner = (simulation.cell.radius(simulation.ghost) <= \
+    mask_inner = (radius <= \
         simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim, 
                                              **igcells)[..., None] + (20*u.km)) & \
         (np.logical_not(mask_nuc))
     mask_outer = np.logical_not(mask_inner + mask_nuc)
     
-    rho = simulation.rho(file_name) * dV
+    r_nuc_ind = np.argmax(radius[None, None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(nuc_rad, simulation.dim,
+                                                    **ngcells)[..., None],
+                        axis=-1)
+    r_inner_ind = np.argmax(radius[None, None, :] >= \
+        simulation.ghost.remove_ghost_cells_radii(inner_rad, simulation.dim,
+                                         **ngcells)[..., None] + (2e6 * u.cm),
+                        axis=-1)
+    r_outer_ind = -np.ones(dV.shape[:-1], dtype=int)
+    
+    rho = simulation.rho(file_name)
     v_r = simulation.radial_velocity(file_name)
     v_t = simulation.theta_velocity(file_name)
     v_p = simulation.phi_velocity(file_name)
+    rho_vr = rho * v_r
+    rho *= dV
     Qdot = (rho * (v_r * gradY[0][0, ...] + v_t * gradY[0][1, ...] + v_p \
         * gradY[0][2, ...]))
+    Qcorr = Ylm[0] * rho_vr
     Qdot_tot = Qdot.sum()[..., None]
-    Qdot_inner = Qdot[mask_inner].sum()[..., None]
-    Qdot_nuc = Qdot[mask_nuc].sum()[..., None]
-    Qdot_outer = Qdot[mask_outer].sum()[..., None]
+    Qdot_inner = (Qdot[mask_inner].sum() - \
+        Qdot_surface_correction(Qcorr, None, r_nuc_ind))[..., None]
+    Qdot_nuc = (Qdot[mask_nuc].sum() - \
+        Qdot_surface_correction(Qcorr, r_nuc_ind, r_inner_ind))[..., None]
+    Qdot_outer = (Qdot[mask_outer].sum() - \
+        Qdot_surface_correction(Qcorr, r_inner_ind, r_outer_ind))[..., None]
     Qdot_radial = Qdot.sum(axis=(0,1))[..., None]
+    Qdot_corr = Qcorr.sum(axis=(0,1))[..., None]
     for i in range(1, 5):
         Qdot = (rho * (v_r * gradY[i][0, ...] + v_t * \
             gradY[i][1, ...] + v_p * gradY[i][2, ...]))
+        Qcorr = Ylm[i] * rho_vr
         Qdot_tot = np.concatenate((Qdot_tot, Qdot.sum()[..., None]), axis=-1)
-        Qdot_inner = np.concatenate((Qdot_inner, Qdot[mask_inner].sum()
+        Qdot_inner = np.concatenate((Qdot_inner,
+                                     (Qdot[mask_inner].sum() - \
+                                         Qdot_surface_correction(Qcorr,
+                                                                 None,
+                                                                 r_nuc_ind))
                                      [..., None]), axis=-1)
-        Qdot_nuc = np.concatenate((Qdot_nuc, Qdot[mask_nuc].sum()[..., None]),
+        Qdot_nuc = np.concatenate((Qdot_nuc, (Qdot[mask_nuc].sum() - \
+                                    Qdot_surface_correction(Qcorr, r_nuc_ind,
+                                                    r_inner_ind))[..., None]),
                                   axis=-1)
-        Qdot_outer = np.concatenate((Qdot_outer, Qdot[mask_outer].sum()
+        Qdot_outer = np.concatenate((Qdot_outer, (Qdot[mask_outer].sum() - \
+                                    Qdot_surface_correction(Qcorr,
+                                                            r_inner_ind,
+                                                            r_outer_ind))
                                      [..., None]), axis=-1)
         Qdot_radial = np.concatenate((Qdot_radial, Qdot.sum(axis=(0, 1))
                                       [..., None]), axis=-1)
-    
-    return Qdot_tot, Qdot_inner, Qdot_nuc, Qdot_outer, Qdot_radial
+        Qdot_corr = np.concatenate((Qdot_corr, Qdot.sum(axis=(0, 1))
+                                      [..., None]), axis=-1)
+            
+    return Qdot_tot, Qdot_inner, Qdot_nuc, Qdot_outer, Qdot_radial, Qdot_corr
 
 def read_Qdot(simulation):
     """
     Reads the Qdot and masks from a checkpoint file.
     """
     with h5py.File(os.path.join(simulation.storage_path, 'Qdot.h5')) as data:
+        if 'Qdot_corr' not in data.keys():
+            return 0, 0, 0, 0, 0, 0, 0, []
         time = data['time'][...] * u.s
         Qdot_radial = data['Qdot_radial'][...] * u.g * u.cm ** 2 / u.s
         Qdot_total = data['Qdot_total'][...] * u.g * u.cm ** 2 / u.s
         Qdot_inner = data['Qdot_inner'][...] * u.g * u.cm ** 2 / u.s
         Qdot_nucleus = data['Qdot_nucleus'][...] * u.g * u.cm ** 2 / u.s
         Qdot_outer = data['Qdot_outer'][...] * u.g * u.cm ** 2 / u.s
+        Qcorr = data['Qdot_corr'][...] * u.g * u.cm ** 2 / u.s
         if 'processed' in data.keys():
             processed_hdf = data['processed'][...]
         else:
             processed_hdf = None
-    return time, Qdot_radial, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
+    return time, Qdot_radial, Qcorr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
 
-def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
-                        Qdot_inner, Qdot_nucleus, Qdot_outer):
+def compute_partial_corrected_Qdotdot(Qdot, Ylm, time, corr1, corr2, mask1, mask2):
+    Qdot_og = Qdot.copy()
+    if corr1 is None:
+        corr = corr2
+    else:
+        corr = corr2 - corr1
+    if mask1 is not None:
+        if isinstance(mask1, np.int64):
+            Qdot_og[:mask1, :] = 0
+        else:
+            Qdot_og[mask1] = 0
+    if isinstance(mask2, np.int64):
+        Qdot_og[mask2:, :] = 0
+    else:
+        Qdot_og[~mask2] = 0
+    Qdot_og = np.sum(Qdot_og, axis=0) - corr
+    return IDL_derivative(time, Qdot_og) * Ylm
+
+def compute_partial_Qdotdot_3D(simulation, radii, radius, Qdot_radial, Ylm,
+                               time, corrections, Qout):
+    if len(radii) == 1:
+        if radii[0] == 'PNS_nucleus_radius-full':
+            return []
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
+                                                        radius, corrections)
+            q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                   None, corr_r1, None, mask_r1)
+            if len(Qout) == 0:
+                Qout = [q0]
+            else:
+                Qout[0] += q0
+    elif len(radii) == 2:
+        if radii == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            return []
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
+                                                        radius, corrections)
+            q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                         None, corr_r1, None,
+                                                         mask_r1)
+            corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1],
+                                                        radius, corrections)
+            q1 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                         corr_r1, corr_r2,
+                                                         mask_r1, mask_r2)
+            if len(Qout) == 0:
+                Qout = [q0, q1]
+            else:
+                Qout[0] += q0
+                Qout[1] += q1
+    elif len(radii) == 3:
+        if radii[:2] == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            return []
+        else:
+            corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
+                                                        radius, corrections)
+            q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                         None, corr_r1, None,
+                                                         mask_r1)
+            corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1],
+                                                        radius, corrections)
+            q1 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                         corr_r1, corr_r2,
+                                                         mask_r1, mask_r2)
+            corr_r3, mask_r3 = get_correction_evolution(simulation, radii[2],
+                                                        radius, corrections)
+            q2 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
+                                                         corr_r2, corr_r3,
+                                                         mask_r2, mask_r3)
+            if len(Qout) == 0:
+                Qout = [q0, q1, q2]
+            else:
+                Qout[0] += q0
+                Qout[1] += q1
+                Qout[2] += q2
+    else:
+        return []
+    return Qout
+
+def return_3D_strains(time, tot_st, cor_st, inn_st, out_st, oth_st, radii):
+    out = create_series(time, tot_st)
+    if len(radii) == 1:
+        if radii[0] == 'PNS_nucleus_radius-full':
+            out.extend(create_series(time, cor_st))
+        else:
+            out.extend(create_series(time, oth_st[0]))
+    elif len(radii) == 2:
+        if radii == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out.extend(create_series(time, cor_st, inn_st))
+        else:
+            out.extend(create_series(time, oth_st)[0])
+    elif len(radii) == 3:
+        if radii[:2] == ['PNS_nucleus_radius-full', 'innercore_radius-full']:
+            out.extend(create_series(time, cor_st, inn_st, out_st))
+        else:
+            out.extend(create_series(time, oth_st)[0])
+    return out
+    
+def calculate_strain_3D(simulation, D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
+                        Qdot_inner, Qdot_nucleus, Qdot_outer, corrections, radii):
     if D is not None:
         if not isinstance(D, aerray):
             D = D * u.cm
@@ -892,187 +1167,212 @@ def calculate_strain_3D(D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
         add_lb = r'$\mathcal{D}$'
         D = 1 * u.dimensionless_unscaled
     harmonics = SphericalHarmonics()
+    partialQ = []
     for m in range(5):
         Y22m = harmonics.spin_weighted_Ylm(-2, m-2, 2, THETA, PHI)
+        partialQ = compute_partial_Qdotdot_3D(simulation, radii, radius,
+                                              Qdot_radial[:, m, :], Y22m, time,
+                                              corrections[:, m, :], partialQ)
         Qdot_radial[:, m, :] = IDL_derivative(time, Qdot_radial[:, m, :]) * \
             Y22m
-        Qdot_total[m, :]= IDL_derivative(time, Qdot_total[m, :]) * Y22m
-        Qdot_inner[m, :]= IDL_derivative(time, Qdot_inner[m, :]) * Y22m
-        Qdot_nucleus[m, :]= IDL_derivative(time, Qdot_nucleus[m, :]) * Y22m
-        Qdot_outer[m, :]= IDL_derivative(time, Qdot_outer[m, :]) * Y22m
-    const = np.sqrt(2/3) * 8 * np.pi * c.G / (D * c.c ** 4) / u.s ## last u.s accounts for the derivative
+        Qdot_total[m, :] = IDL_derivative(time, Qdot_total[m, :]) * Y22m
+        Qdot_inner[m, :] = IDL_derivative(time, Qdot_inner[m, :]) * Y22m
+        Qdot_nucleus[m, :] = IDL_derivative(time, Qdot_nucleus[m, :]) * Y22m
+        Qdot_outer[m, :] = IDL_derivative(time, Qdot_outer[m, :]) * Y22m
+    const = np.sqrt(2/3) * 8 * np.pi * c.G / (D * c.c ** 4 * 5) / u.s ## last u.s accounts for the derivative
     Qdot_radial = const * Qdot_radial.sum(axis=1)
     Qdot_total = const * Qdot_total.sum(axis=0)
     Qdot_inner = const * Qdot_inner.sum(axis=0)
     Qdot_nucleus = const * Qdot_nucleus.sum(axis=0)
     Qdot_outer = const * Qdot_outer.sum(axis=0)
-    
+    partialQ = [const * pQ for pQ in partialQ]
     time.set(name='time', label=r'$t-t_\mathrm{b}$', cmap=None,
              limits=[-0.005, time[-1]])
+    ## Compute the polarizations
+    hplus_radial = Qdot_radial.real
+    hcross_radial = -Qdot_radial.imag
+    hplus_tot = Qdot_total.real
+    hcross_tot = -Qdot_total.imag
+    hplus_nuc = Qdot_nucleus.real
+    hcross_nuc = -Qdot_nucleus.imag
+    hplus_inn = Qdot_inner.real
+    hcross_inn = -Qdot_inner.imag
+    hcross_out = -Qdot_outer.imag
+    hplus_out = Qdot_outer.real
+    partialQ_plus = [pQ.real for pQ in partialQ]
+    partialQ_cross = [-pQ.imag for pQ in partialQ]
+    
+    ## Set the labels
     if np.isclose(THETA, np.pi, 0.05):
-        hplus_radial = Qdot_radial.real
         hplus_radial.set(name='hpuls_radial_pol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,pol}(r)$'),
                          cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
-        hcross_radial = -Qdot_radial.imag
-        
         hcross_radial.set(name='hcross_radial_pol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,pol}(r)$'),
                          cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
-        hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus_pol',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,tot}}$'))
-        hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,tot}}$'))
-        hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus_pol',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,core}}$'))
-        hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,core}}$'))
-        hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,conv}}$'))
-        hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,conv}}$'))
-        hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,out}}$'))
-        hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross_pol',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,out}}$'))
+        [pQ.set(name=f'r{i}_hplus_pol',
+                      cmap='seismic',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{+,\mathrm{pol,r$',
+                                          f'$_{i}$', r'$}}$'))
+                      for i, pQ in enumerate(partialQ_plus)]
+        [pQ.set(name=f'r{i}_hcross_pol',
+                      cmap='seismic',
+                      limits=[-70 / D.value, 70 / D.value],
+                      label=merge_strings(add_lb, r'$h_{\times,\mathrm{pol,r$',
+                                          f'$_{i}$', r'$}}$'))
+                      for i, pQ in enumerate(partialQ_cross)]
     elif np.isclose(THETA, np.pi/2, 0.05):
-        hplus_radial = Qdot_radial.real
         hplus_radial.set(name='hpuls_radial_eq',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,eq}(r)$'),
                          cmap='seismic',
-                         limits=[-3 / D.value, 3 / D.value])
-        hcross_radial = -Qdot_radial.imag
-        
+                         limits=[-3 / D.value, 3 / D.value])        
         hcross_radial.set(name='hcross_radial_eq',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,eq}(r)$'),
                          cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
-        hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus_eq',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,tot}}$'))
-        hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,tot}}$'))
-        hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus_eq',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,core}}$'))
-        hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,core}}$'))
-        hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,conv}}$'))
-        hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,conv}}$'))
-        hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,out}}$'))
-        hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross_eq',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,out}}$'))
+        [pQ.set(name=f'r{i}_hplus_eq',
+              cmap='seismic',
+              limits=[-70 / D.value, 70 / D.value],
+              label=merge_strings(add_lb, r'$h_{+,\mathrm{eq,r$',
+                                  f'$_{i}$', r'$}}$'))
+              for i, pQ in enumerate(partialQ_plus)]
+        [pQ.set(name=f'r{i}_hcross_eq',
+              cmap='seismic',
+              limits=[-70 / D.value, 70 / D.value],
+              label=merge_strings(add_lb, r'$h_{\times,\mathrm{eq,r$',
+                                  f'$_{i}$', r'$}}$'))
+              for i, pQ in enumerate(partialQ_cross)]
     else:
-        hplus_radial = Qdot_radial.real
         hplus_radial.set(name='hpuls_radial',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+}(r)$'),
                          cmap='seismic',
-                         limits=[-3 / D.value, 3 / D.value])
-        hcross_radial = -Qdot_radial.imag
-        
+                         limits=[-3 / D.value, 3 / D.value])        
         hcross_radial.set(name='hcross_radial',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times}(r)$'),
                          cmap='seismic',
                          limits=[-3 / D.value, 3 / D.value])
-        hplus_tot = Qdot_total.real
         hplus_tot.set(name='tot_hplus',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{tot}}$'))
-        hcross_tot = -Qdot_total.imag
         hcross_tot.set(name='tot_hcross',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{tot}}$'))
-        hplus_nuc = Qdot_nucleus.real
         hplus_nuc.set(name='nuc_hplus',
                       cmap='seismic',
                       limits=[-70 / D.value, 70 / D.value],
                       label=merge_strings(add_lb, r'$h_{+,\mathrm{core}}$'))
-        hcross_nuc = -Qdot_nucleus.imag
         hcross_nuc.set(name='nuc_hcross',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{core}}$'))
-        hplus_inn = Qdot_inner.real
         hplus_inn.set(name='inn_hplus',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{conv}}$'))
-        hcross_inn = -Qdot_inner.imag
         hcross_inn.set(name='inn_hcross',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{conv}}$'))
-        hplus_out = Qdot_outer.real
         hplus_out.set(name='out_hcross',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{+,\mathrm{out}}$'))
-        hcross_out = -Qdot_outer.imag
         hcross_out.set(name='out_hcross',
                        cmap='seismic',
                        limits=[-70 / D.value, 70 / D.value],
                        label=merge_strings(add_lb, r'$h_{\times,\mathrm{out}}$'))
+        [pQ.set(name=f'r{i}_hplus',
+              cmap='seismic',
+              limits=[-70 / D.value, 70 / D.value],
+              label=merge_strings(add_lb, r'$h_{+,\mathrm{r$',
+                                  f'$_{i}$', r'$}}$'))
+              for i, pQ in enumerate(partialQ_plus)]
+        [pQ.set(name=f'r{i}_hcross',
+              cmap='seismic',
+              limits=[-70 / D.value, 70 / D.value],
+              label=merge_strings(add_lb, r'$h_{\times,\mathrm{r$',
+                                  f'$_{i}$', r'$}}$'))
+              for i, pQ in enumerate(partialQ_cross)]
+    
     T, R = np.meshgrid(time, radius)
     return aeseries(data=hplus_radial, time=T.copy(), radius=R.copy()), \
-           create_series(time, hplus_tot, hplus_nuc, hplus_inn, hplus_out), \
+           return_3D_strains(time, hplus_tot, hplus_nuc, hplus_inn, hplus_out,
+                             partialQ_plus, radii), \
            aeseries(data=hcross_radial, time=T.copy(), radius=R.copy()), \
-           create_series(time, hcross_tot, hcross_nuc, hcross_inn, hcross_out)
+           return_3D_strains(time, hcross_tot, hcross_nuc, hcross_inn,
+                             hcross_out, partialQ_cross, radii)

@@ -271,18 +271,18 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
     if self.dim == 1:
         return None
     elif self.dim == 2:
-        return calculate_h(self, D, theta, phi, save_checkpoints)
+        return calculate_h(self, D, theta, phi, save_checkpoints, **kwargs)
     elif self.dim == 3:
         if comp is None:
-            return calculate_h(self, D, theta, phi, save_checkpoints)
+            return calculate_h(self, D, theta, phi, save_checkpoints, **kwargs)
         elif comp == 'h+eq':
-            return calculate_h(self, D, np.pi/2, 0, save_checkpoints)[0:2]
+            return calculate_h(self, D, np.pi/2, 0, save_checkpoints, **kwargs)[0:2]
         elif comp == 'hxeq':
-            return calculate_h(self, D, np.pi/2, 0, save_checkpoints)[2:]
+            return calculate_h(self, D, np.pi/2, 0, save_checkpoints, **kwargs)[2:]
         elif comp == 'h+pol':
-            return calculate_h(self, D, np.pi, 0, save_checkpoints)[:2]
+            return calculate_h(self, D, np.pi, 0, save_checkpoints, **kwargs)[:2]
         elif comp == 'hxpol':
-            return calculate_h(self, D, np.pi, 0, save_checkpoints)[2:]
+            return calculate_h(self, D, np.pi, 0, save_checkpoints, **kwargs)[2:]
 
 def ASD(self, detector, **kwargs):
     """

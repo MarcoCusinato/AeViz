@@ -91,10 +91,19 @@ def return_positioning(number, form_factor):
                         },
                     5: {
                         1:"""A..
-                             B..
-                             C..
-                             D..
-                             E.e"""
+                             E.e""",
+                        2: """A..
+                              B..
+                              E.e""",
+                        3: """A..
+                              B..
+                              C..
+                              E.e""",
+                        4: """A..
+                              B..
+                              C..
+                              D..
+                              E.e""",
                         }
                     }
     
@@ -124,7 +133,11 @@ def return_positioning(number, form_factor):
                        5: [0.08, 0.2, 1, 0.2, 1, 0.1, 0.08],
                        6: [0.08, 0.4, 1.1, 0.4, 1.1, 0.4, 0.08],
                        7: [1.1, 0.4, 1.1]},
-                    5: {1: [1, 0.03, 0.04]}}
+                    5: {1: [1, 0.03, 0.04],
+                        2: [1, 0.03, 0.04],
+                        3: [1, 0.03, 0.04],
+                        4: [1, 0.03, 0.04],
+                        }}
     
     height_ratio = {1: {1: [1],
                         2: [1],
@@ -151,15 +164,18 @@ def return_positioning(number, form_factor):
                         5: [0.25, 0.75, 0.2, 0.25, 0.75],
                         6: [1, 0.2, 1],
                         7: [0.5, 0.5, 0.25, 0.5, 0.5],},
-                    5: {1: [0.5, 0.5, 0.5, 0.5, 2]}}
-    
-    if form_factor == 4:
+                    5: {1: [0.5, 2],
+                        2: [0.5, 0.5, 2],
+                        3: [0.5, 0.5, 0.5, 2],
+                        4: [0.5, 0.5, 0.5, 0.5, 2],
+                        }}
+    if form_factor == 4 and number != 5:
         gs_kw = {"wspace": 0,
                  "hspace": 0.2}
     elif number == 6:
         gs_kw = {"wspace": 0,
                  "hspace": 0}
-    elif '.' in positioning[number][form_factor] or form_factor == 7:
+    elif '.' in positioning[number][form_factor] or form_factor in [7, 5]:
         gs_kw = {"wspace": 0,
                  "hspace": 0}
     else:
@@ -208,7 +224,11 @@ def return_fig_size(number, form_factor):
                     5: (12, 12),
                     6: (8, 11.6),
                     7: (8, 11.6)},
-                5: {1: (9, 16)}}
+                5: {1: (9, 10),
+                    2: (9, 12),
+                    3: (9, 14),
+                    4: (9, 16),
+                    }}
     
     if number == 6:
         return (9, form_factor*4)
