@@ -97,6 +97,8 @@ args.nres = nres
 time = GWs.time.value
 strain = GWs.data.value
 
+print('Starting computation')
+
 for res in range(start, args.nsplits):
     ## SET THE NOISE SEED
     if args.seed is not None:
@@ -117,3 +119,4 @@ for res in range(start, args.nsplits):
     print('Saving %d realizations' % nres)
     
 compact_IMFs(sim.storage_path, args.strain, files)
+print('Done')
