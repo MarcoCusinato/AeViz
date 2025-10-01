@@ -616,7 +616,6 @@ class aeseries:
             signal = butter_filter(signal, cutoff=highpass, fs=fs, btype='high')
         if lowpass is not None:
             signal = butter_filter(signal, cutoff=lowpass, fs=fs, btype='low')
-            print(signal)
         if isinstance(bandpass, list):
             if len(bandpass) == 2:
                 signal = butter_filter(signal, cutoff=bandpass, fs=fs,
