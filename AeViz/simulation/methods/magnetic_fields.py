@@ -25,6 +25,7 @@ def __CT_magnetic_fields(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 @hdf_isopen
 def magnetic_fields(self, file_name, comp:Literal['all', 'r', 'th', 'ph']='all',
                     **kwargs):
@@ -54,6 +55,7 @@ def magnetic_fields(self, file_name, comp:Literal['all', 'r', 'th', 'ph']='all',
 @mask_points
 @smooth
 @derive
+@finite_differences
 def poloidal_magnetic_fields(self, file_name, **kwargs):
     Br, Btheta, _ = self.magnetic_fields(file_name)
     data = np.sqrt(Br ** 2 + Btheta ** 2)
@@ -65,6 +67,7 @@ def poloidal_magnetic_fields(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 def toroidal_magnetic_fields(self, file_name, **kwargs):
     _, _, Bphi = self.magnetic_fields(file_name)
     return Bphi
@@ -72,6 +75,7 @@ def toroidal_magnetic_fields(self, file_name, **kwargs):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 def magnetic_energy(self, file_name, comp: Literal['all', 'tot', 'pol', 'tor']='all',
                     **kwargs):
     """
@@ -103,6 +107,7 @@ def stream_function(self, file_name, plane):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 @derive
 def alfven_velocity(self, file_name, **kwargs):
     """

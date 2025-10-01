@@ -14,6 +14,7 @@ imported into the Simulation class.
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def Ye(self, file_name, **kwargs):
     data = aerray(self.ghost.remove_ghost_cells(np.squeeze(
@@ -27,6 +28,7 @@ def Ye(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def neutron_fraction(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -39,6 +41,7 @@ def neutron_fraction(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def proton_fraction(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -51,6 +54,7 @@ def proton_fraction(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def alpha_fraction(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -63,6 +67,7 @@ def alpha_fraction(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def heavy_fraction(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -75,6 +80,7 @@ def heavy_fraction(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def Abar(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -87,6 +93,7 @@ def Abar(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def Zbar(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -100,6 +107,7 @@ def Zbar(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def electron_chemical_potential(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -112,6 +120,7 @@ def electron_chemical_potential(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def neutron_chemical_potential(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -124,6 +133,7 @@ def neutron_chemical_potential(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def proton_chemical_potential(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -136,6 +146,7 @@ def proton_chemical_potential(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def neutrino_chemical_potential(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(

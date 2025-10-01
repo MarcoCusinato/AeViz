@@ -15,6 +15,7 @@ of the Simulation class
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def rho(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -37,6 +38,7 @@ def mass(self, file_name, **kwargs):
 ## ENERGY
 @get_grid
 @smooth
+@finite_differences
 @hdf_isopen
 def MHD_energy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -47,6 +49,7 @@ def MHD_energy(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 @hdf_isopen
 def rotational_energy(self, file_name, **kwargs):
     data = self.rho(file_name) * self.phi_velocity(file_name) ** 2 * 0.5
@@ -57,6 +60,7 @@ def rotational_energy(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 @hdf_isopen
 def kinetic_energy(self, file_name, comp:Literal['tot', 'r', 'th', 'ph']='tot',
                    **kwargs):
@@ -74,7 +78,7 @@ def kinetic_energy(self, file_name, comp:Literal['tot', 'r', 'th', 'ph']='tot',
     elif comp == 'ph':
         v = self.phi_velocity(file_name) ** 2
         label=r'$E_{\mathrm{kin},\phi}$'
-    data = self.rho(file_name) * self._velocity(file_name) ** 2 * 0.5
+    data = self.rho(file_name) * v ** 2 * 0.5
     data.to(u.erg / u.cm**3)
     data.set(name='kin_ene', label=label, cmap='turbo', log=True,
              limits=[1e24, 1e35])
@@ -85,6 +89,7 @@ def kinetic_energy(self, file_name, comp:Literal['tot', 'r', 'th', 'ph']='tot',
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def radial_velocity(self, file_name, **kwargs):
     if self.relativistic:
@@ -101,6 +106,7 @@ def radial_velocity(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def theta_velocity(self, file_name, **kwargs):
     if self.relativistic:
@@ -117,6 +123,7 @@ def theta_velocity(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def phi_velocity(self, file_name, **kwargs):
     if self.relativistic:
@@ -134,6 +141,7 @@ def phi_velocity(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def soundspeed(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -145,6 +153,7 @@ def soundspeed(self, file_name, **kwargs):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 @derive
 def omega(self, file_name, **kwargs):
     assert self.dim in [2, 3], "No rotational velocity in 1D"

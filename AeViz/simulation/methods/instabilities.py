@@ -15,6 +15,7 @@ imported into the Simulation class.
 
 @get_grid
 @smooth
+@finite_differences
 def BV_frequency(self, file_name, mode=1, **kwargs):
     """
     Returns the Brunt-Vaisala frequency at specific timestep.
@@ -49,6 +50,7 @@ def BV_frequency(self, file_name, mode=1, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 def convective_velocity(self, file_name, **kwargs):
     """
     Returns the convective velocity at specific timestep. Defined as
@@ -67,6 +69,7 @@ def convective_velocity(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 def turbulent_velocity(self, file_name, **kwargs):
     """
     Returns the turbulent velocity at specific timestep. Defined as
@@ -92,6 +95,7 @@ def turbulent_velocity(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 def convective_flux(self, file_name, **kwargs):
     """
     Returns the convective flux at specific timestep. Defined as
@@ -109,6 +113,7 @@ def convective_flux(self, file_name, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 def Rossby_number(self, file_name, lenghtscale=True, **kwargs):
     """
     Returns the Rossby number at specific timestep. Defined as
@@ -132,6 +137,7 @@ def Rossby_number(self, file_name, lenghtscale=True, **kwargs):
 
 @get_grid
 @smooth
+@finite_differences
 def epicyclic_frequency(self, file_name, **kwargs):
     """
     Returns the epicyclic frequency at specific timestep. Defined as
