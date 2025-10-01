@@ -355,7 +355,9 @@ def remove_labelling(data, no_nu):
                        ',max', ',min', ',avg', ',tot', ', max', ', min', ', avg',
                        ', tot', ',x', ',y', ',z', ', x', ', y', ', z', ',r',
                        r',\theta', r',\phi', r', \theta', r', \phi', ', r',
-                       ',pol', ',tor', ', pol', ', tor']
+                       r'_{+,eq}', r'_{+,pol}', r'_{\times,eq}', r'_{\times,pol}',
+                       ',pol', ',tor', ', pol', ', tor',
+                       ]
     for symb in remove_symbols:
         new_label = new_label.replace(symb, '')
 

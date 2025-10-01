@@ -80,11 +80,11 @@ def GW_strain_3D(data, distance):
         time=time.copy())
     hD_cr_e = aeseries(
         aerray(const * IDL_derivative( data[:,2], hD_cr_e ), u.cm, 'hxeq',
-               r'$\mathcal{D}h_{x,eq}$', 'Spectral_r', [-150, 150]),
+               r'$\mathcal{D}h_{\times,eq}$', 'Spectral_r', [-150, 150]),
         time=time.copy())
     hD_cr_p = aeseries(
         aerray(const * IDL_derivative( data[:,2], hD_cr_p ), u.cm, 'hxpol',
-               r'$\mathcal{D}h_{x,pol}$', 'Spectral_r', [-150, 150]),
+               r'$\mathcal{D}h_{\times,pol}$', 'Spectral_r', [-150, 150]),
         time=time.copy())
     GWs = [hD_pl_e, hD_pl_p, hD_cr_e, hD_cr_p]
     if distance:
@@ -226,8 +226,8 @@ def GWs_energy_per_frequency_3D(GWs, time_range=None, windowing='hanning'):
     names = ['dE_df_h+eq', 'dE_df_h+pol', 'dE_df_hxeq', 'dE_df_hxpol']
     labels = [r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,eq}$',
               r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
-              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
-              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{x,pol}$']
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{\times,pol}$',
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{\times,pol}$']
     for i, GW in enumerate(GWs):
         spectro = GW.rfft(norm='forward', time_range=time_range,
                        windowing=windowing)
@@ -285,8 +285,8 @@ def characteristic_strain_3D(GWs, time_range, windowing, distance,
     names = ['hchar+eq', 'hchar+pol', 'hcharxeq', 'hcharxpol']
     labels = [r'$h_\mathrm{char,+,eq}$',
               r'$h_\mathrm{char,+,pol}$',
-              r'$h_\mathrm{char,x,eq}$',
-              r'$h_\mathrm{char,x,pol}$']
+              r'$h_\mathrm{char,\times,eq}$',
+              r'$h_\mathrm{char,\times,pol}$']
     if divide_by_frequency:
         labels = [merge_strings(lb, r'$\sqrt{f}$') for lb in labels]
     hchar = []
