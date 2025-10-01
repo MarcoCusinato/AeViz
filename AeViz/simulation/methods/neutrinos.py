@@ -10,28 +10,21 @@ imported into the Simulation class.
 ## NEUTRINO DATA
 ## -----------------------------------------------------------------
 
-## Check if NOTRINO is used
-@hdf_isopen
-def notrino(self, file_name, **kwargs):
-    if 'notrino' in self._Simulation__data_h5:
-        return True
-    else:
-        return False
-
 ## ENERGY DEPENDENT
 
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_energy_density(self, file_name, **kwargs):
     """
     Neutrino energy density.
     Now with NOTRINO case!
     """
-    try:
+    if not kwargs['notrino']:
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['neutrino/e'][..., 0]), self.dim)
-    except:
+    else:
         nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
         self._Simulation__data_h5['notrino/notrino_e'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
@@ -50,25 +43,24 @@ def neutrino_energy_density(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_momenta(self, file_name, **kwargs):
     """
     In the comoving rest frame of the fluid are equal to the
     neutrino energy fluxes.
     Now with NOTRINO case!
     """
-    notrino = False
-    try:
+    if not kwargs['notrino']:
         nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
-    except:
-        notrino = True
+    else:
         nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_f'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
         # (hopefully) not having to change a lot in the library
         nu_flux = np.expand_dims(nu_flux, axis = -2)
     ## Insert a new axis to be consistent with the other dimensions
-    if self.dim == 1 or notrino:
+    if self.dim == 1 or kwargs['notrino']:
         nu_flux[..., 2] /= 4
         return (aerray(nu_flux[..., 0], u.erg / u.s / u.cm ** 2, 'nue_fdens',
                   r'$F_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
@@ -99,16 +91,17 @@ def neutrino_momenta(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_energy_opacity(self, file_name, **kwargs):
     """
     Neutrino opacity ("temporal" component of the four-vector).
     This is the absorption/emission opacity.
     Now with NOTRINO case!
     """
-    try:
+    if not kwargs['notrino']:
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/oe'][..., 0]), self.dim)
-    except:
+    else:
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_kae'][...]), self.dim)
         # Adding a fictitious to account for missing energy bin and thus
@@ -127,17 +120,17 @@ def neutrino_energy_opacity(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_momenta_opacities(self, file_name, **kwargs):
     """
     Neutrino opacities ("spatial" components of the four-vector).
     This is the transport opacity.
     Now with NOTRINO case!
     """
-    notrino = False
-    try:
+    if not kwargs['notrino']:
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['neutrino/oe'][..., 1:]), self.dim)
-    except:
+    else:
         notrino = True
         nu_opac = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_ktr'][...]), self.dim)
@@ -147,7 +140,7 @@ def neutrino_momenta_opacities(self, file_name, **kwargs):
     #if self.dim == 1:
     #    nu_opac = nu_opac[..., None]
     
-    if self.dim == 1 or notrino:
+    if self.dim == 1 or kwargs['notrino']:
         return (aerray(nu_opac[..., 0], u.erg / u.s / u.cm ** 3, 'nue_kappa_tr',
                   r'$\kappa_{\mathrm{tr}, \nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
                 aerray(nu_opac[..., 1], u.erg / u.s / u.cm ** 3, 'nua_kappa_tr',
@@ -198,21 +191,18 @@ def neutrino_transport_opacities(self, file_name, **kwargs):
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_scattering_opacities(self, file_name, **kwargs):
     """
     Neutrino scattering opacities. 
     Remember the relation
         ktr = ksc + kae.
     """
-    if 'neutrino/oe' in self._Simulation__data_h5.keys():
-        notrino = False
-    elif 'notrino/notrino_ktr' in self._Simulation__data_h5.keys():
-        notrino = True
 
     ktr = neutrino_transport_opacities(self, file_name, **kwargs)
     kae = neutrino_absorption_opacity(self, file_name, **kwargs)
     
-    if self.dim == 1 or notrino:
+    if self.dim == 1 or kwargs['notrino']:
         ksc_nue = ktr[0] - kae[0]
         ksc_nue.name = 'nue_kappa_sc'
         ksc_nue.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{e}}$'
@@ -233,13 +223,15 @@ def neutrino_scattering_opacities(self, file_name, **kwargs):
         ksc_nux.name = 'nux_kappa_sc'
         ksc_nux.label = r'$\kappa_{\mathrm{sc}, \nu_\mathrm{x}}$'
     return (ksc_nue, ksc_nua, ksc_nux)
+
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_number_density(self, file_name, **kwargs):
     # If notrino is used, the number density is returned in  the output,
     # and there is no need to compute it.
-    try:
+    if kwargs['notrino']:
         ndens = self.ghost.remove_ghost_cells(np.squeeze(
             self._Simulation__data_h5['notrino/notrino_n'][...]), 
             self.dim)
@@ -252,7 +244,7 @@ def neutrino_number_density(self, file_name, **kwargs):
                 aerray(ndens[..., 2], u.cm ** (-3), 'Nnux',
                   r'$N_{\nu_\mathrm{x}}$', 'CMRmap', [1e32, 1e35], True)
                 )
-    except:
+    else:
         edens = list(self.neutrino_energy_density(file_name))
         de = self.cell.E_nu().to(u.erg)
         edens = [ed / de for ed in edens]
@@ -300,22 +292,23 @@ def neutrino_mean_energy(self, file_name,
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_energy_density_grey(self, file_name,
                                  comp:Literal['all', 'nue', 'nua', 'nux']='all',
                                  **kwargs):
-    try:
-        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
-            self._Simulation__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
-        nu_ene[..., 2] /= 4
-    except:
+    if not kwargs['notrino']:
         try:
+            nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+                self._Simulation__data_h5['/neutrinogrey/egrey'][..., 0]), self.dim)
+            nu_ene[..., 2] /= 4
+        except:
             nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
                     self._Simulation__data_h5['neutrino/e'][..., 0]), self.dim)
             nu_ene[..., 2] /= 4
             nu_ene = np.sum(nu_ene, axis=self.dim)
-        except:
-            nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
-                self._Simulation__data_h5['notrino/notrino_e'][...]), self.dim)
+    else:
+        nu_ene = self.ghost.remove_ghost_cells(np.squeeze(
+            self._Simulation__data_h5['notrino/notrino_e'][...]), self.dim)
     if comp == 'all':
         return (aerray(nu_ene[..., 0], u.erg / u.cm ** 3, 'nue_edens',
                     r'$E_{\nu_\mathrm{e}}$', 'viridis', [1e28, 1e32], True),
@@ -339,25 +332,25 @@ def neutrino_energy_density_grey(self, file_name,
 @get_grid
 @smooth
 @hdf_isopen
+@notrino_used
 def neutrino_momenta_grey(self, file_name, **kwargs):
     """
     In the comoving rest frame of the fluid are equal to the 
     neutrino energy fluxes
     """
-    notrino = False
-    try:
-        nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(
-            self._Simulation__data_h5['/neutrinogrey/egrey'][..., 1:]), self.dim)
-    except:
+    if not kwargs['notrino']:
         try:
-            nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
-                   self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
-            nu_flux = np.sum(nu_flux, axis=self.dim)
+            nu_flux =  self.ghost.remove_ghost_cells(np.squeeze(
+                self._Simulation__data_h5['/neutrinogrey/egrey'][..., 1:]), self.dim)
         except:
-            notrino = True
             nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
+                    self._Simulation__data_h5['neutrino/e'][..., 1:]), self.dim)
+            nu_flux = np.sum(nu_flux, axis=self.dim)
+    else:
+        nu_flux = self.ghost.remove_ghost_cells(np.squeeze(
                 self._Simulation__data_h5['notrino/notrino_f'][...]), self.dim)
-    if self.dim == 1 or notrino:
+        
+    if self.dim == 1 or kwargs['notrino']:
         nu_flux[..., 2] /= 4
         return (aerray(nu_flux[..., 0], u.erg / u.s / u.cm ** 2, 'nue_fdens',
                   r'$F_{\nu_\mathrm{e}}$', 'PiYG_r', [-1e40, 1e40], True),
