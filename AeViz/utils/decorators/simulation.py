@@ -187,7 +187,7 @@ def finite_differences(func):
             data = [data]
         for i, dd in enumerate(data):
             ## Save the labels
-            lab = merge_strings(r'$\frac{\delta$', dd.label, r'$}{$', dd.label, r'$}$')
+            lab = merge_strings(r'$\frac{\delta $', dd.label, r'$}{$', dd.label, r'$}$')
             name = 'diff_' + dd.name
             if kwargs['mode'] == 'shell':
                 ## Get radial shell averages
