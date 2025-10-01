@@ -5,6 +5,8 @@ import inspect
 from AeViz.utils.files.string_utils import merge_strings
 import warnings
 from AeViz.units.aerray import apply_monkey_patch, remove_monkey_patch
+from AeViz.utils.decorators.grid import _get_plane_avgs
+from scipy.ndimage import uniform_filter
 try:
     from astropy.convolution import (convolve, Gaussian1DKernel,
                                      Gaussian2DKernel, Box1DKernel,
@@ -120,8 +122,7 @@ def smooth(func):
             data = list(data)
         if type(data) != list:
             data = [data]
-        
-                
+      
         for i, dd in enumerate(data):
             try:
                 dim = dd.ndim
@@ -156,6 +157,52 @@ def smooth(func):
                 raise TypeError("Type not supported.")
         if len(data) == 1:
             data = data[0]
+        return data
+    return wrapper
+
+def finite_differences(func):
+    """
+    The Idea of this decorator is to compute the difference between the
+    value per cell and the medium value before normalizing it for the
+    medium value.
+    ```
+    δfunc/fun = (func -<func>)/<func>
+    ```
+    two modes are supported, the difference with the average quantity in the
+    sperical shell and with first neighbors (27 points)
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        data = func(*args, **kwargs)
+        kwargs.setdefault('diff', False)
+        if not kwargs['diff']:
+            return data
+        kwargs.setdefault('mode', 'shell')
+        if kwargs['mode'] not in ['shell', 'edges']:
+            kwargs['mode'] = 'shell'
+        ## Should be superfluos
+        if type(data) == tuple:
+            data = list(data)
+        if type(data) != list:
+            data = [data]
+        for i, dd in enumerate(data):
+            ## Save the labels
+            lab = merge_strings(r'$\frac{\delta$', dd.label, r'$}{$', dd.label, r'$}$')
+            name = 'diff_' + dd.name
+            if kwargs['mode'] == 'shell':
+                ## Get radial shell averages
+                rave = _get_plane_avgs(args[0], dd, 'radius').data * np.ones(dd.shape)
+                data[i] = (dd - rave) / rave
+            else:
+                dV = args[0].cell.dVolume_integration(args[0].ghost)
+                nearest_avg = uniform_filter((dd * dV).value, size=3, mode='nearest') / \
+                    uniform_filter((dV).value, size=3, mode='nearest')
+                nearest_avg = nearest_avg * dd.unit
+                data[i] = (dd - nearest_avg) / nearest_avg
+            data[i].set(name = name, label = lab, cmap='RdBu_r',
+                        limits=[-1, 1], log=False)                
+            if len(data) == 1:
+                data = data[0]
         return data
     return wrapper
 
