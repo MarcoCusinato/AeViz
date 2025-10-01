@@ -771,8 +771,8 @@ class PlottingUtils(PlotCreation):
             ulab = ''
         else:
             ulab = f' [{bins.unit:latex}]'
-        cbar.set_label(self.cbar_label[ax_letter])
-        self.set_labels(ax_letter + ulab)
+        cbar.set_label(self.cbar_label[ax_letter] + ulab)
+        self.set_labels(ax_letter)
 
     def __redo_plot(self):
         """
