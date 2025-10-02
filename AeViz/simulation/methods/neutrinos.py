@@ -285,8 +285,49 @@ def neutrino_mean_energy(self, file_name,
     elif comp == 'nua':
         return mean_ene[1]
     elif comp == 'nux':
-        return mean_ene[2]   
+        return mean_ene[2]
+    
+@hdf_isopen
+@notrino_used
+def neutrino_luminosity(self, file_name, 
+                        comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                        **kwargs):
+    # get radial flux
+    if self.dim == 1 or kwargs['notrino']:
+        flux = list(self.neutrino_momenta_grey(file_name, **kwargs))
+    else:
+        flux_nu = self.neutrino_momenta_grey(file_name, **kwargs)
+        flux = [flux_nu[0][...,0], flux_nu[1][...,0], flux_nu[2][...,0]]
+    dA = self.cell.ax(self.ghost)
 
+    lum = [f * dA for f in flux]
+    [l.set(name=s1, label=s2, cmap=s3, limits=[-1e49, 1e49]) 
+     for l, s1, s2, s3 in zip(
+        lum,
+        ['Lum_nue', 'Lum_nua', 'Lum_nux'],
+        [r'$L_{\nu_\mathrm{e}}$', r'$L_{\nu_\mathrm{a}}$', r'$L_{\nu_\mathrm{x}}$'],
+        ['ocean', 'gist_earth', 'terrain']
+    )]
+
+    if comp == 'nue':
+        return lum[0]
+    elif comp == 'nua':
+        return lum[1]
+    elif comp == 'nux':
+        return lum[2]
+    elif comp == 'all':
+        return lum
+
+def integrated_neutrino_luminosity(self, file_name, rmax=5e7, \
+                            comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                            **kwargs):
+    L = self.neutrino_luminosity(file_name, comp=comp, **kwargs)
+    idx = np.argmin(self.cell.radius(self.ghost) < (rmax * u.cm))
+    if comp == 'all':
+        return (np.sum(L[0][..., idx+1]), np.sum(L[1][..., idx+1]), np.sum(L[2][..., idx+1]))
+    else:
+        return np.sum(L[..., idx+1])
+    
 ## GREY
 
 @get_grid
