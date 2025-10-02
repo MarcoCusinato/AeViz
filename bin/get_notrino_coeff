@@ -129,14 +129,14 @@ for time in TIMES:
                     np.nansum(dV[:k, ...] * rho[:k, ...])
     B1[i_species] += B1_loc_avg
        
-    if (time == TIMES[1]):
+    if (time == TIMES[0]):
       if m.dim > 1:
         B0_loc = np.nansum(B0_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
                    np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
         B1_loc = np.nansum(B1_loc[:k,...] * dV[:k,...] * rho[:k, ...], axis=0) / \
                     np.nansum(dV[:k,...] * rho[:k, ...], axis=0)
-      ax.plot(r.value[:k_ns], B0_loc.value[:k_ns], color = COLOURS[i_species], ls='-')
-      ax.plot(r.value[:k_ns], B1_loc.value[:k_ns], color = COLOURS[i_species], \
+      ax.plot(r.value[:k_ns+1], B0_loc.value[:k_ns+1], color = COLOURS[i_species], ls='-')
+      ax.plot(r.value[:k_ns+1], B1_loc.value[:k_ns+1], color = COLOURS[i_species], \
               ls='--')
       ax.plot(r.value[k], B0_loc.value[k], color = COLOURS[i_species], \
               marker='o')
@@ -152,27 +152,29 @@ print('Neutrinosphere temperature: %.2e MeV' % T[k_neu['nue']].max())
 B0 /= TIMES.shape[0]
 B1 /= TIMES.shape[0]
 
+rhomin = m.initial_parameters['rhomin_neutrino']
+
 print('\nPrint the whole namelist for NOTRINO ->')
 print(' &NOTRINOPARS')
 print(' NOTRINO_FLAG    = T,')
 print(' LAPSE = T,')
 print(' LORENTZ = T,')
 print(' OPMOD   =           %d,' % args.model)
-print(' OPAC_MINDEN     =  0.000000000000000E+000,')
+print(' OPAC_MINDEN     =  %.15e,' % rhomin)
 print(' JANKA2001A_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001A_KAENUA_COEFF = %.15e,' % B0[1])
 print(' JANKA2001A_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001A_KTRNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001A_KTRNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001A_KTRNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001A_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
+print(' JANKA2001A_TMIN =   %.14f     ,' % (T[k_neu['nue']].max() / 4.))
 print(' JANKA2001B_KAENUE_COEFF = %.15e,' % B0[0])
 print(' JANKA2001B_KAENUA_COEFF = %.15e,' % B0[1])
 print(' JANKA2001B_KAENUX_COEFF = %.15e,' % B0[2])
 print(' JANKA2001B_KSCNUE_COEFF = %.15e,' % B1[0])
 print(' JANKA2001B_KSCNUA_COEFF = %.15e,' % B1[1])
 print(' JANKA2001B_KSCNUX_COEFF = %.15e,' % B1[2])
-print(' JANKA2001B_TMIN =   %.14f     ,' % T[k_neu['nue']].max())
+print(' JANKA2001B_TMIN =   %.14f     ,' % (T[k_neu['nue']].max() / 4.))
 print(' WGHMOD  =           2,')
 print(' WGH_TANH_TAU0   =  1.333333333333333     ,')
 print(' WGH_FD_DTAU     =   0.25000000000000     ,')
