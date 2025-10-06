@@ -317,16 +317,6 @@ def neutrino_luminosity(self, file_name,
         return lum[2]
     elif comp == 'all':
         return lum
-
-def integrated_neutrino_luminosity(self, file_name, rmax=5e7, \
-                            comp:Literal['all', 'nue', 'nua', 'nux']='all',
-                            **kwargs):
-    L = self.neutrino_luminosity(file_name, comp=comp, **kwargs)
-    idx = np.argmin(self.cell.radius(self.ghost) < (rmax * u.cm))
-    if comp == 'all':
-        return (np.sum(L[0][..., idx+1]), np.sum(L[1][..., idx+1]), np.sum(L[2][..., idx+1]))
-    else:
-        return np.sum(L[..., idx+1])
     
 ## GREY
 

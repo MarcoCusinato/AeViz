@@ -128,5 +128,19 @@ def mass_flux(self, file=None, projection:Literal['1D', '2D']='1D', plane='time'
     AeViz_plot_panel(self, 'mass_flux', file, projection, plane, **kwargs)
 
 
+## NEUTRINO LUMINOSITY
 
+@fig_window_open
+def neutrino_luminosity(self, file=None, projection:Literal['1D', '2D']='1D', \
+                        comp:Literal['nue', 'nua', 'nux', 'all']='all', \
+                        plane='time', **kwargs):
+    if comp == 'all':
+        for cm in ['nue', 'nua', 'nux']:
+            kwargs['comp'] = cm
+            AeViz_plot_panel(self, 'total_neutrino_luminosity', file, projection, \
+                        plane, **kwargs)
+    else:
+        kwargs['comp'] = comp
+        AeViz_plot_panel(self, 'total_neutrino_luminosity', file, projection, \
+                        plane, **kwargs)
 
