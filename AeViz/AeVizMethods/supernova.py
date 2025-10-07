@@ -134,11 +134,14 @@ def mass_flux(self, file=None, projection:Literal['1D', '2D']='1D', plane='time'
 def neutrino_luminosity(self, file=None, projection:Literal['1D', '2D']='1D', \
                         comp:Literal['nue', 'nua', 'nux', 'all']='all', \
                         plane='time', **kwargs):
+    kwargs['comp'] = comp
     if comp == 'all':
+        self.set_simple_labelling()
         for cm in ['nue', 'nua', 'nux']:
             kwargs['comp'] = cm
             AeViz_plot_panel(self, 'total_neutrino_luminosity', file, projection, \
                         plane, **kwargs)
+        self.set_simple_labelling()
     else:
         kwargs['comp'] = comp
         AeViz_plot_panel(self, 'total_neutrino_luminosity', file, projection, \

@@ -50,9 +50,9 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
 
       Lum = simulation.neutrino_luminosity(file, comp='all', **kwargs)
 
-      Lnuetot = np.nansum(Lum[0][..., idx+1])
-      Lnuatot = np.nansum(Lum[1][..., idx+1])
-      Lnuxtot = np.nansum(Lum[2][..., idx+1])
+      Lnuetot = np.nanmean(Lum[0][..., idx:idx+1]) * 4.0 * np.pi * rmax * rmax
+      Lnuatot = np.nanmean(Lum[1][..., idx:idx+1]) * 4.0 * np.pi * rmax * rmax
+      Lnuxtot = np.nanmean(Lum[2][..., idx:idx+1]) * 4.0 * np.pi * rmax * rmax
 
       try:
         time = np.concatenate((time, simulation.time(file)))
@@ -92,11 +92,11 @@ def read_luminosity(simulation):
                     [-0.005, data_h5['time'][-1]]),
             {
             'nue' : aerray(data_h5['luminosity/nue'][...], u.erg / u.s, 'Lnue', \
-                               r'$L_{\nu_e}$', None, [1e48, 1.5e54]),
+                               r'$L_{\nu_e}$', None, [1e48, 1e53]),
             'nua' : aerray(data_h5['luminosity/nua'][...], u.erg / u.s, 'Lnua', \
-                               r'$L_{\nu_a}$', None, [1e48, 1.5e54]),
+                               r'$L_{\nu_a}$', None, [1e48, 1e53]),
             'nux' : aerray(data_h5['luminosity/nux'][...], u.erg / u.s, 'Lnux', \
-                               r'$L_{\nu_x}$', None, [1e48, 1.5e54])
+                               r'$L_{\nu_x}$', None, [1e48, 1e53])
             }]
     if 'processed' in data_h5:
         data.append(data_h5['processed'][...])

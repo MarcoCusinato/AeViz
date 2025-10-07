@@ -298,9 +298,9 @@ def neutrino_luminosity(self, file_name,
     else:
         flux_nu = self.neutrino_momenta_grey(file_name, **kwargs)
         flux = [flux_nu[0][...,0], flux_nu[1][...,0], flux_nu[2][...,0]]
-    dA = self.cell.ax(self.ghost)
+    #dA = self.cell.ax(self.ghost)
 
-    lum = [f * dA for f in flux]
+    lum = [f for f in flux]
     [l.set(name=s1, label=s2, cmap=s3, limits=[-1e49, 1e49]) 
      for l, s1, s2, s3 in zip(
         lum,
