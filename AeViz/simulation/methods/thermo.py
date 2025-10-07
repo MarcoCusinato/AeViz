@@ -15,6 +15,7 @@ imported into the Simulation class.
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def gas_pressure(self, file_name, **kwargs):
     data =  self.ghost.remove_ghost_cells(np.squeeze(
@@ -27,6 +28,7 @@ def gas_pressure(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def temperature(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -39,6 +41,7 @@ def temperature(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def enthalpy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -51,6 +54,7 @@ def enthalpy(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def entropy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -63,6 +67,7 @@ def entropy(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def adiabatic_index(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -76,6 +81,7 @@ def adiabatic_index(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def lorentz(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -88,6 +94,7 @@ def lorentz(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def gravitational_potential(self, file_name, **kwargs):
     data = np.squeeze(
@@ -103,6 +110,7 @@ def gravitational_potential(self, file_name, **kwargs):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 @derive
 def gravitational_energy(self, file_name, **kwargs):
     data = 0.5 * self.rho(file_name) * \
@@ -114,6 +122,7 @@ def gravitational_energy(self, file_name, **kwargs):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 @derive
 def lapse_function(self, file_name, **kwargs):
     if self.lapse_form == 1:
@@ -135,6 +144,7 @@ def lapse_function(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def internal_energy(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(
@@ -146,6 +156,7 @@ def internal_energy(self, file_name, **kwargs):
 @get_grid
 @mask_points
 @smooth
+@finite_differences
 @derive
 def specific_internal_energy(self, file_name, **kwargs):
     data = self.internal_energy(file_name) / self.rho(file_name)
@@ -158,6 +169,7 @@ def specific_internal_energy(self, file_name, **kwargs):
 @mask_points
 @smooth
 @derive
+@finite_differences
 @hdf_isopen
 def nu_heat(self, file_name, **kwargs):
     data = self.ghost.remove_ghost_cells(np.squeeze(

@@ -4,7 +4,7 @@ import numpy as np
 from AeViz.units import u
 from AeViz.utils.files.string_utils import apply_symbol, merge_strings
 import numpy as np
-import scipy.signal 
+import scipy.signal
 import warnings
 from typing import Literal
 from AeViz.utils.math_utils import IDL_derivative
@@ -557,7 +557,8 @@ class aeseries:
     def stft(self, window_size=aerray(10, u.ms), check_spacing=False,
              time_range=None, scale_to:Literal['magnitude', 'psd']='magnitude',
              windowing:Literal['bartlett', 'blackman', 'hamming', 'hanning',
-                                'kaiser']='hanning', overlap=0.5):
+                                'kaiser']='hanning', overlap=0.5,
+             highpass=None, lowpass=None, bandpass=None):
         """
         Returns an aeseries with the short time fourier transform of the signal.
         Time is necessary to perform this.
@@ -574,8 +575,17 @@ class aeseries:
         scale_to{'magnitude', 'psd'} default magnitude. Each STFT column
                 represents either a 'magnitude' or a power spectral
                 density ('psd') spectrum
+        filters are avaiable: lowpass, highpass and bandpass
         returns the absolute value of the fft
         """
+        def butter_filter(signal, fs, cutoff, btype, order=4):
+            nyquist = 0.5 * fs
+            normal_cutoff = np.array(cutoff) / nyquist
+            b, a = scipy.signal.butter(order, normal_cutoff, btype=btype,
+                                       analog=False)
+            signal[:] = scipy.signal.filtfilt(b, a, signal.value)
+            return signal
+        
         if 'time' not in self.__axis_names:
             raise AttributeError("aeseries does not have the time attribute.")
         if self.time.shape != self.data.shape:
@@ -601,9 +611,18 @@ class aeseries:
         hop = int(overlap * win_len)
         window = getattr(np, windowing)(win_len)
         fs = 1 / np.mean(np.diff(self.time[indices].to(u.s).value))
+        signal = self.data[indices].copy()
+        if highpass is not None:
+            signal = butter_filter(signal, cutoff=highpass, fs=fs, btype='high')
+        if lowpass is not None:
+            signal = butter_filter(signal, cutoff=lowpass, fs=fs, btype='low')
+        if isinstance(bandpass, list):
+            if len(bandpass) == 2:
+                signal = butter_filter(signal, cutoff=bandpass, fs=fs,
+                                       btype='band')
         SFT = scipy.signal.ShortTimeFFT(window, hop, fs, scale_to=scale_to)
         freq = SFT.f
-        Zxx = np.abs(SFT.stft(self.data.value[indices]))
+        Zxx = np.abs(SFT.stft(signal.value))
         tm = SFT.t(len(self.time)) + self.time[0].value
         ffreq = aerray(freq, u.Hz, 'frequency', r'$f$', None, [0, 2000])
         ttm = aerray(tm, u.s, self.time.name, self.time.label,

@@ -524,7 +524,7 @@ class Plotting(PlottingUtils, Data):
         data = self._Data__get_data_from_name(qt, **kwargs)
         keep_kwargs = {}
         for nm in ['window_size', 'check_spacing', 'time_range', 'scale_to',
-                   'windowing', 'overlap']:
+                   'windowing', 'overlap', 'highpass', 'lowpass', 'bandpass']:
             if nm in kwargs:
                 keep_kwargs[nm] = kwargs[nm]
         spectrogram = data.stft(**keep_kwargs)
