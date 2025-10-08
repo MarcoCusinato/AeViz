@@ -11,26 +11,33 @@ FILE_H5 = 'neutrino_luminosity.h5'
 def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
                             **kwargs):
     if check_existence(simulation, FILE_H5):
-        time, L, processed_hdf = read_luminosity(simulation)
+        time, L, processed_hdf, r_lum = read_luminosity(simulation)
         ## Retrocompatibility option
         if processed_hdf is None:
             if len(simulation.hdf_file_list) == len(time):
                 save_hdf(os.path.join(simulation.storage_path, FILE_H5),
-                        ['time', 'luminosity', 'processed'],
-                        [time, L, simulation.hdf_file_list])
+                        ['time', 'luminosity', 'processed', 'rmax'],
+                        [time, L, simulation.hdf_file_list, rmax])
                 return create_series(time, L['nue'], L['nua'], L['nux'])
             else:
                 start_point = 0
                 time = 0
                 L = {'nue' : 0.0, 'nua' : 0.0, 'nux' : 0.0}
                 processed_hdf = []
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+          and r_lum == rmax:
             return create_series(time, L['nue'], L['nua'], L['nux'])
-        else:
+        elif processed_hdf[-1].decode("utf-8") != simulation.hdf_file_list[-1]:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print('Checkpoint found for neutrino luminosity, starting' \
                 ' from checkpoint.\nPlease wait...')
+        elif r_lum != rmax:
+            start_point = 0
+            processed_hdf = []
+            print(f'Stored luminosity at r = {r_lum:.1e} cm. ' \
+                  f'Recomputing for r = {rmax:.1e} cm.\nPlease wait...')
+
     else:
         start_point = 0
         processed_hdf = []
@@ -68,19 +75,19 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
       if (check_index >= checkpoint and save_checkpoints):
           print('Checkpoint reached, saving...\n')
           save_hdf(os.path.join(simulation.storage_path, FILE_H5),
-                    ['time', 'luminosity', 'processed'],
-                    [time, L, processed_hdf])
+                    ['time', 'luminosity', 'processed', 'rmax'],
+                    [time, L, processed_hdf, rmax])
           check_index = 0
       check_index += 1
       progress_index += 1
     
     print('Computation completed, saving...')
     save_hdf(os.path.join(simulation.storage_path, FILE_H5),
-                ['time', 'luminosity', 'processed'],
-                [time, L, processed_hdf])
+                ['time', 'luminosity', 'processed', 'rmax'],
+                [time, L, processed_hdf, rmax])
     print('Done!')
 
-    time, L, _ = read_luminosity(simulation)
+    time, L, proc, r_lum = read_luminosity(simulation)
     return create_series(time, L['nue'], L['nua'], L['nux'])
     
 def read_luminosity(simulation):
@@ -92,14 +99,19 @@ def read_luminosity(simulation):
                     [-0.005, data_h5['time'][-1]]),
             {
             'nue' : aerray(data_h5['luminosity/nue'][...], u.erg / u.s, 'Lnue', \
-                               r'$L_{\nu_e}$', None, [1e48, 1e53]),
+                               r'$L_\mathrm{\nu_e}$', None, [1e48, 1e53]),
             'nua' : aerray(data_h5['luminosity/nua'][...], u.erg / u.s, 'Lnua', \
-                               r'$L_{\nu_a}$', None, [1e48, 1e53]),
+                               r'$L_\mathrm{\overline{\nu}_e}$', None, [1e48, 1e53]),
             'nux' : aerray(data_h5['luminosity/nux'][...], u.erg / u.s, 'Lnux', \
-                               r'$L_{\nu_x}$', None, [1e48, 1e53])
-            }]
+                               r'$L_\mathrm{\nu_x}$', None, [1e48, 1e53])
+            }
+            ]
     if 'processed' in data_h5:
         data.append(data_h5['processed'][...])
+    else:
+        data.append(None)
+    if 'rmax' in data_h5:
+        data.append(data_h5['rmax'][()])
     else:
         data.append(None)
     data_h5.close()

@@ -305,7 +305,8 @@ def neutrino_luminosity(self, file_name,
      for l, s1, s2, s3 in zip(
         lum,
         ['Lum_nue', 'Lum_nua', 'Lum_nux'],
-        [r'$L_{\nu_\mathrm{e}}$', r'$L_{\nu_\mathrm{a}}$', r'$L_{\nu_\mathrm{x}}$'],
+        [r'$L_{\nu_\mathrm{e}}$', r'$L_\mathrm{\overline{\nu}_e}$', 
+         r'$L_{\nu_\mathrm{x}}$'],
         ['ocean', 'gist_earth', 'terrain']
     )]
 
