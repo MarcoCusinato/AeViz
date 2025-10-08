@@ -340,7 +340,7 @@ def hydro_strain_2D(self, file_name, **kwargs):
         GWs = (NE220_1 - NE220_0) / (t1 - t0) * const
         kwargs['D'] = kwargs['D'].value if isinstance(kwargs['D'], aerray) else kwargs['D']
         GWs.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
-              cmap='seismic', limits=[-1 / kwargs['D'].value, 1 / kwargs['D'].value])
+              cmap='seismic', limits=[-0.1 / kwargs['D'].value, 0.1 / kwargs['D'].value])
     else:
         if kwargs['comp'] in ['h+eq', 'hxeq']:
             THETA = np.pi / 2
@@ -386,28 +386,28 @@ def hydro_strain_2D(self, file_name, **kwargs):
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,eq}$'),
                          cmap='seismic',
-                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+                         limits=[-0.1 / kwargs['D'], 0.1 / kwargs['D']])
         elif kwargs['comp'] == 'hxeq':
             GWs = -GWs.imag
             GWs.set(name='htimeseq',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,eq}$'),
                          cmap='seismic',
-                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+                         limits=[-0.1 / kwargs['D'], 0.1 / kwargs['D']])
         elif kwargs['comp'] == 'h+pol':
             GWs = GWs.real
             GWs.set(name='hpluspol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{+,pol}$'),
                          cmap='seismic',
-                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+                         limits=[-0.1 / kwargs['D'], 0.1 / kwargs['D']])
         elif kwargs['comp'] == 'hxpol':
             GWs = -GWs.imag
             GWs.set(name='hcrosspol',
                          label=merge_strings(add_lb,
                                              r'$h_\mathrm{\times,pol}$'),
                          cmap='seismic',
-                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+                         limits=[-0.1 / kwargs['D'], 0.1 / kwargs['D']])
     return GWs
 
 def ASD(self, detector, **kwargs):
