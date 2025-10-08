@@ -92,11 +92,11 @@ def read_luminosity(simulation):
                     [-0.005, data_h5['time'][-1]]),
             {
             'nue' : aerray(data_h5['luminosity/nue'][...], u.erg / u.s, 'Lnue', \
-                               r'$L_{\nu_e}$', None, [1e48, 1e53]),
+                               r'$L_\mathrm{\nu_e}$', None, [1e48, 1e53]),
             'nua' : aerray(data_h5['luminosity/nua'][...], u.erg / u.s, 'Lnua', \
-                               r'$L_{\nu_a}$', None, [1e48, 1e53]),
+                               r'$L_\mathrm{\overline{\nu}_e}$', None, [1e48, 1e53]),
             'nux' : aerray(data_h5['luminosity/nux'][...], u.erg / u.s, 'Lnux', \
-                               r'$L_{\nu_x}$', None, [1e48, 1e53])
+                               r'$L_\mathrm{\nu_x}$', None, [1e48, 1e53])
             }]
     if 'processed' in data_h5:
         data.append(data_h5['processed'][...])
