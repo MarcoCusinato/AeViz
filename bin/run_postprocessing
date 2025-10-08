@@ -33,7 +33,7 @@ parser.add_argument('--column-index', type=int, default=None, required=False,
                     "Typically between 0 and 3")
 parser.add_argument('--spherical-harmonics', action='store_true', default=False,
                     help="Enables the computation of the spherical harmonics")
-parser.add_argument('--neutirno-luminosity', action='store_true', default=False,
+parser.add_argument('--neutrino-luminosity', action='store_true', default=False,
                     help="Enables the computation of the neutrino luminosities from the output .h5 files")
 
 args = parser.parse_args()
