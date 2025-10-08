@@ -47,7 +47,7 @@ def global_neutrino_luminosity(self, tob_corrected=True,
         return aeseries(
                         aerray(nu_tmp[:, 39], u.erg / u.s, 'Lnua',
                             r'$L_\mathrm{\overline{\nu}_e}$', None, [0, 1e53]),
-                            time=time.copy())
+                            time=time)
     elif comp == 'nue':
         return aeseries(
                         aerray(nu_tmp[:, 38], u.erg / u.s, 'Lnue',
@@ -57,7 +57,7 @@ def global_neutrino_luminosity(self, tob_corrected=True,
         return aeseries(
                         aerray(nu_tmp[:, 40] / 4, u.erg / u.s, 'Lnux',
                             r'$L_\mathrm{\nu_x}$', None, [0, 1e53]),
-                            time=time.copy())
+                            time=time)
 
 @subtract_tob
 def global_neutrino_number_luminosity(self, tob_corrected=True,

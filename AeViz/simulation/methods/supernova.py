@@ -3,6 +3,7 @@ from AeViz.utils.physics.kick_vel_utils import calculate_kick
 from AeViz.utils.physics.load_save_mass_ene_utils import calculate_masses_energies
 from AeViz.utils.physics.load_save_radii_utils import calculate_radius
 from AeViz.utils.physics.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
+from AeViz.utils.physics.load_save_neutrinos import calculate_luminosity
 import os
 from typing import Literal
 
@@ -565,3 +566,24 @@ def PNS_kick_velocity(self, comp:Literal['x', 'y', 'z', 'tot']=None,
         return nux[comp]
     else:
         raise NotImplementedError
+    
+## -----------------------------------------------------------------
+## NEUTRINO LUMINOSITY
+## -----------------------------------------------------------------
+
+@smooth
+@derive
+@sum_tob
+def total_neutrino_luminosity(self, tob_corrected=True, save_checkpoints=True,
+                              comp:Literal['nue', 'nua', 'nux', 'all']='all', 
+                              rmax=5e7, **kwargs):
+    data = calculate_luminosity(self, save_checkpoints, rmax, **kwargs)
+
+    if comp == 'nue':
+        return data[0]
+    elif comp == 'nua':
+        return data[1]
+    elif comp == 'nux':
+        return data[2]
+    elif comp == 'all':
+        return data[0], data[1], data[2]

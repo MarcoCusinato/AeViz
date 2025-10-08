@@ -338,3 +338,13 @@ def mask_points(func):
         data[mask] = np.nan
         return data
     return wrapper
+
+def notrino_used(func):
+    """
+    Decorator to check if NOTRINO approximation is used.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        kwargs['notrino'] = ('notrino' in args[0]._Simulation__data_h5)
+        return func(*args, **kwargs)
+    return wrapper

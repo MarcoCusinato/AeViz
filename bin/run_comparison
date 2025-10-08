@@ -36,7 +36,7 @@ else:
   elif len(path) > len(sims):
     raise ValueError('Why do you have more paths than simulations? Do you have something to hide?')
 
-COLOURS = ['black', 'red', 'blue', 'cyan']
+COLOURS = ['black', 'blue', 'red', 'cyan']
 LETTERS = ['A', 'B', 'C', 'D']
 
 for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius']:
@@ -55,9 +55,16 @@ for q in ['shock_radius', 'explosion', 'gain_radius', 'PNS_radius']:
       att(comp='nua', ls='--', color=COLOURS[i_s])
       att(comp='nux', ls=':', color=COLOURS[i_s])
     else:
-      att(color=COLOURS[i_s])
-  ae.update_legend(sims)
-  ae.save_plot('%s.pdf' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
+      if q == 'explosion':
+        att(color=COLOURS[i_s], comp='tot')
+      else:
+        att(color=COLOURS[i_s])
+  ae.xlim([-0.005, 2.0])
+  if not q == 'PNS_radius':
+    ae.update_legend(sims, loc='lower right')
+  else:
+    ae.update_legend(sims)
+  ae.save_plot('%s.png' % q, savedir=args.savedir, kwargs_savefig={'bbox_inches' : 'tight'})
   ae.Close()
 
 # Radial profiles
@@ -78,6 +85,7 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
 
   ae.update_legend(sims)
   ae.title('Time = %.1f s' % args.tr)
+  #ae.change_figsize([8,4.5])
   ae.save_plot('%s_r.pdf' % q, savedir=args.savedir, \
                kwargs_savefig={'bbox_inches' : 'tight'})
   ae.save_plot('%s_r.png' % q, savedir=args.savedir, \
@@ -97,8 +105,22 @@ for q in ['entropy', 'rho', 'gas_pressure', 'temperature']:
     att = getattr(ae, q)
     # Let's plot
     att(projection='2D')
-    ae.text(0.15, 0.9, sim, axd_letter=LETTERS[i_s], \
+    if i_s == 0:
+      ae.text(0.15, 0.9, 'F', axd_letter=LETTERS[i_s], \
             kwargs_text={'transform':ae.axd[LETTERS[i_s]].transAxes})
+    elif i_s == 1:
+      ae.text(0.15, 0.9, 'N', axd_letter=LETTERS[i_s], \
+            kwargs_text={'transform':ae.axd[LETTERS[i_s]].transAxes})
+    ae.xlim([-0.005, 2.0], LETTERS[i_s])
+    if q == 'entropy':
+      ae.cbar_levels([5, 40], LETTERS[i_s])
+    elif q == 'rho':
+      ae.cbar_levels([1e8, 1e14], LETTERS[i_s])
+    elif q == 'gas_pressure':
+      ae.cbar_levels([1e26, 1e32], LETTERS[i_s])
+    elif q == 'temperature':
+      ae.cbar_levels([5, 30], LETTERS[i_s])
+  #ae.change_figsize([10,10])
   ae.save_plot('%s' % q, savedir=args.savedir, \
                kwargs_savefig={'bbox_inches' : 'tight'})
   ae.Close()

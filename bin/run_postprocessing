@@ -54,6 +54,7 @@ if not args.noNu:
 sim.gain_radius()
 sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
+sim.total_neutrino_luminosity()
 if sim.dim > 1:
     sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
