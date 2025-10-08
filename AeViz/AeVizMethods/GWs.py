@@ -12,9 +12,9 @@ imported into the AeViz class.
 
 
 @fig_window_open
-def GWs(self, projection:Literal['1D', '2D']='1D',
+def GWs(self, file=None, projection:Literal['1D', '2D']='1D',
         comp:Literal['all', 'h+eq', 'h+pol', 'hxeq', 'hxpol']='h+eq',
-        decomposition=False, spectrogram=False, **kwargs):  
+        decomposition=False, spectrogram=False, plane='time', **kwargs):  
     if self.sim_dim == 1:
         pass
     kwargs['spectrogram'] = spectrogram
@@ -50,23 +50,27 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                     self.update_legend(leg, letter)
         else:
             kwargs['return_letter'] = True
-            letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
-                                      'time', **kwargs)
-            if kwargs['modes'] is not None and spectrogram and projection == '2D':
-                if not isinstance(kwargs['modes'], list):
-                    modes = [kwargs['modes']]
-                else:
-                    modes = kwargs['modes']
-                kwargs.pop('color', None)
-                kwargs.pop('c', None)
-                kwargs['lw'] = 1
-                kwargs['plot'] = letter
-                self.set_simple_labelling()
-                for mod in modes:
-                    kwargs['mode'] = mod
-                    self.plot1D(None, 'modes_universal_relations', 'time',
-                                **kwargs)
-                self.set_simple_labelling()
+            if file is not None:
+                AeViz_plot_panel(self, 'hydro_strain_2D', file, projection,
+                                        plane, **kwargs)
+            else:
+                letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
+                                        'time', **kwargs)
+                if kwargs['modes'] is not None and spectrogram and projection == '2D':
+                    if not isinstance(kwargs['modes'], list):
+                        modes = [kwargs['modes']]
+                    else:
+                        modes = kwargs['modes']
+                    kwargs.pop('color', None)
+                    kwargs.pop('c', None)
+                    kwargs['lw'] = 1
+                    kwargs['plot'] = letter
+                    self.set_simple_labelling()
+                    for mod in modes:
+                        kwargs['mode'] = mod
+                        self.plot1D(None, 'modes_universal_relations', 'time',
+                                    **kwargs)
+                    self.set_simple_labelling()
     else:
         if comp == 'all':
             for cm in ['h+eq', 'h+pol', 'hxeq', 'hxpol']:
@@ -99,23 +103,27 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                             self.update_legend(leg, letter)
                 else:
                     kwargs['return_letter'] = True
-                    letter = AeViz_plot_panel(self, 'GW_Amplitudes', None,
-                                              projection, 'time', **kwargs)
-                    if kwargs['modes'] is not None and spectrogram and projection == '2D':
-                        if not isinstance(kwargs['modes'], list):
-                            modes = [kwargs['modes']]
-                        else:
-                            modes = kwargs['modes']
-                        kwargs.pop('color', None)
-                        kwargs.pop('c', None)
-                        kwargs['lw'] = 1
-                        kwargs['plot'] = letter
-                        self.set_simple_labelling()
-                        for mod in modes:
-                            kwargs['mode'] = mod
-                            self.plot1D(None, 'modes_universal_relations', 'time',
-                                        **kwargs)
-                        self.set_simple_labelling()
+                    if file is not None:
+                        AeViz_plot_panel(self, 'hydro_strain_2D', file, projection,
+                                        plane, **kwargs)
+                    else:
+                        letter = AeViz_plot_panel(self, 'GW_Amplitudes', None,
+                                                projection, 'time', **kwargs)
+                        if kwargs['modes'] is not None and spectrogram and projection == '2D':
+                            if not isinstance(kwargs['modes'], list):
+                                modes = [kwargs['modes']]
+                            else:
+                                modes = kwargs['modes']
+                            kwargs.pop('color', None)
+                            kwargs.pop('c', None)
+                            kwargs['lw'] = 1
+                            kwargs['plot'] = letter
+                            self.set_simple_labelling()
+                            for mod in modes:
+                                kwargs['mode'] = mod
+                                self.plot1D(None, 'modes_universal_relations', 'time',
+                                            **kwargs)
+                            self.set_simple_labelling()
         else:
             kwargs['comp'] = comp
             if decomposition:
@@ -145,24 +153,28 @@ def GWs(self, projection:Literal['1D', '2D']='1D',
                         self.update_legend(leg, letter)
             else:
                 kwargs['return_letter'] = True
-                letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
-                                        'time', **kwargs)
-                if kwargs['modes'] is not None and spectrogram and projection == '2D':
-                    if not isinstance(kwargs['modes'], list):
-                        modes = [kwargs['modes']]
-                    else:
-                        modes = kwargs['modes']
-                    kwargs['plot'] = letter
-                    kwargs.pop('color', None)
-                    kwargs.pop('c', None)
-                    kwargs['lw'] = 1
-                    kwargs['plot'] = letter
-                    self.set_simple_labelling()
-                    for mod in modes:
-                        kwargs['mode'] = mod
-                        self.plot1D(None, 'modes_universal_relations', 'time',
-                                    **kwargs)
-                    self.set_simple_labelling()
+                if file is not None:
+                        AeViz_plot_panel(self, 'hydro_strain_2D', file, projection,
+                                        plane, **kwargs)
+                else:
+                    letter = AeViz_plot_panel(self, 'GW_Amplitudes', None, projection,
+                                            'time', **kwargs)
+                    if kwargs['modes'] is not None and spectrogram and projection == '2D':
+                        if not isinstance(kwargs['modes'], list):
+                            modes = [kwargs['modes']]
+                        else:
+                            modes = kwargs['modes']
+                        kwargs['plot'] = letter
+                        kwargs.pop('color', None)
+                        kwargs.pop('c', None)
+                        kwargs['lw'] = 1
+                        kwargs['plot'] = letter
+                        self.set_simple_labelling()
+                        for mod in modes:
+                            kwargs['mode'] = mod
+                            self.plot1D(None, 'modes_universal_relations', 'time',
+                                        **kwargs)
+                        self.set_simple_labelling()
 
 @fig_window_open
 def IMFs(self, projection:Literal['1D', '2D']='1D',

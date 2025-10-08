@@ -5,9 +5,12 @@ from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
                                   GWs_frequency_peak_indices,
                                   characteristic_strain,
                                   GWs_energy_per_frequency,
-                                  universal_modes_relation)
+                                  universal_modes_relation,
+                                  get_spherical_harmonics)
+from AeViz.utils.files.string_utils import merge_strings
 from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
                                           load_asd)
+from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from typing import Literal
 
 """
@@ -283,6 +286,129 @@ def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
             return calculate_h(self, D, np.pi, 0, save_checkpoints, **kwargs)[:2]
         elif comp == 'hxpol':
             return calculate_h(self, D, np.pi, 0, save_checkpoints, **kwargs)[2:]
+
+@get_grid
+def hydro_strain_2D(self, file_name, **kwargs):
+    ## find the two file indices
+    if isinstance(file_name, int):
+        file_1 = file_name
+    elif isinstance(file_name, float) or isinstance(file_name, aerray):
+        file_1 = self.hdf_file_list.index(self.find_file_from_time(file_name))
+    else:
+        file_1 = self.hdf_file_list.index(file_name)
+    if file_1 == 0:
+        file_0 = 0
+    else:
+        file_0 = file_1 - 1 
+    kwargs.setdefault('comp', 'h+eq')
+    ## set up constant
+    if self.dim == 1:
+        const = 1
+    elif self.dim == 2:
+        const =  -0.125 *  np.sqrt(15/np.pi) * \
+        (c.G * 8 * np.pi ** 0.5 / (np.sqrt( 15 ) * c.c ** 4))
+    else:
+        const = np.sqrt(2/3) * 8 * np.pi * c.G / (c.c ** 4 * 5) / u.s
+    kwargs.setdefault('D', None)
+    if kwargs['D'] is not None:
+        if not isinstance(kwargs['D'], aerray):
+            kwargs['D'] = kwargs['D'] * u.cm
+        const /= kwargs['D']
+        add_lb = r''
+    else:
+        add_lb = r'$\mathcal{D}$'
+        kwargs['D'] = 1 * u.dimensionless_unscaled
+    
+    if self.dim == 1:
+        return None
+    elif self.dim == 2:
+        radius = self.cell.radius(self.ghost)
+        dV = self.cell.dVolume_integration(self.ghost)
+        ctheta = np.cos(self.cell.theta(self.ghost))[:, None]
+        rho = self.rho(file_1)
+        vr = self.radial_velocity(file_1)
+        vt = self.theta_velocity(file_1)
+        t1 = self.time(file_1)
+        NE220_1 = dV * radius * rho * (vr * (3 * ctheta ** 2 - 1) - \
+            3 * vt * ctheta * np.sqrt(1 - ctheta ** 2))
+        rho = self.rho(file_0)
+        vr = self.radial_velocity(file_0)
+        vt = self.theta_velocity(file_0)
+        t0 = self.time(file_0)
+        NE220_0 = dV * radius * rho * (vr * (3 * ctheta ** 2 - 1) - \
+            3 * vt * ctheta * np.sqrt(1 - ctheta ** 2))
+        GWs = (NE220_1 - NE220_0) / (t1 - t0) * const
+        kwargs['D'] = kwargs['D'].value if isinstance(kwargs['D'], aerray) else kwargs['D']
+        GWs.set(name='AE220', label=merge_strings(add_lb, r'$A^{E2}_{20}(r)$'),
+              cmap='seismic', limits=[-1 / kwargs['D'].value, 1 / kwargs['D'].value])
+    else:
+        if kwargs['comp'] in ['h+eq', 'hxeq']:
+            THETA = np.pi / 2
+        elif kwargs['comp'] in ['h+pol', 'hxpol']:
+            THETA = np.pi
+        dOmega = self.cell.dOmega(self.ghost)
+        dV = self.cell.dVolume_integration(self.ghost)
+        gradY, _ = get_spherical_harmonics(
+                    self.cell.radius(self.ghost),
+                    self.cell.theta(self.ghost),
+                    self.cell.phi(self.ghost),
+                    dOmega)
+        rho = self.rho(file_1) * dV
+        vr = self.radial_velocity(file_1)
+        vt = self.theta_velocity(file_1)
+        vp = self.phi_velocity(file_1)
+        t1 = self.time(file_1)
+        Qdot_1 = (rho * (vr * gradY[0][0, ...] + vt * gradY[0][1, ...] + vp \
+            * gradY[0][2, ...]))[..., None]
+        for i in range(1, 5):
+            Qdot_1 = np.concatenate((Qdot_1, (rho * (vr * gradY[i][0, ...] + vt * \
+                gradY[i][1, ...] + vp * gradY[i][2, ...]))[..., None]), axis=-1)
+        rho = self.rho(file_0) * dV
+        vr = self.radial_velocity(file_0)
+        vt = self.theta_velocity(file_0)
+        vp = self.phi_velocity(file_0)
+        t0 = self.time(file_0)
+        Qdot_0 = (rho * (vr * gradY[0][0, ...] + vt * gradY[0][1, ...] + vp \
+            * gradY[0][2, ...]))[..., None]
+        for i in range(1, 5):
+            Qdot_0 = np.concatenate((Qdot_0, (rho * (vr * gradY[i][0, ...] + vt * \
+                gradY[i][1, ...] + vp * gradY[i][2, ...]))[..., None]), axis=-1)
+        dt = t1 - t0
+        harmonics = SphericalHarmonics()
+        for m in range(0, 5):
+            Y22m = harmonics.spin_weighted_Ylm(-2, m-2, 2, THETA, 0)
+            Qdot_1[..., m] = (Qdot_1[..., m] - Qdot_0[..., m]) / dt * Y22m
+        GWs = const * Qdot_1.sum(axis=-1)
+        kwargs['D'] = kwargs['D'].value if isinstance(kwargs['D'], aerray) else kwargs['D']
+        if kwargs['comp'] == 'h+eq':
+            GWs = GWs.real
+            GWs.set(name='hpluseq',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{+,eq}$'),
+                         cmap='seismic',
+                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+        elif kwargs['comp'] == 'hxeq':
+            GWs = -GWs.imag
+            GWs.set(name='htimeseq',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{\times,eq}$'),
+                         cmap='seismic',
+                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+        elif kwargs['comp'] == 'h+pol':
+            GWs = GWs.real
+            GWs.set(name='hpluspol',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{+,pol}$'),
+                         cmap='seismic',
+                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+        elif kwargs['comp'] == 'hxpol':
+            GWs = -GWs.imag
+            GWs.set(name='hcrosspol',
+                         label=merge_strings(add_lb,
+                                             r'$h_\mathrm{\times,pol}$'),
+                         cmap='seismic',
+                         limits=[-1 / kwargs['D'], 1 / kwargs['D']])
+    return GWs
 
 def ASD(self, detector, **kwargs):
     """
