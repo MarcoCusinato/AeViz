@@ -33,6 +33,8 @@ parser.add_argument('--column-index', type=int, default=None, required=False,
                     "Typically between 0 and 3")
 parser.add_argument('--spherical-harmonics', action='store_true', default=False,
                     help="Enables the computation of the spherical harmonics")
+parser.add_argument('--neutirno-luminosity', action='store_true', default=False,
+                    help="Enables the computation of the neutrino luminosities from the output .h5 files")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -54,7 +56,8 @@ if not args.noNu:
 sim.gain_radius()
 sim.PNS_mass_ene()
 sim.PNS_kick_velocity()
-sim.total_neutrino_luminosity()
+if args.neutrino_luminosity:
+    sim.total_neutrino_luminosity()
 if sim.dim > 1:
     sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
