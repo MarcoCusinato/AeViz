@@ -1,6 +1,6 @@
 from AeViz.utils.physics.radii_utils import (PNS_radius, innercore_radius, gain_radius,
                                      neutrino_sphere_radii, PNS_nucleus,
-                                     shock_radius)
+                                     shock_radius, isodensity_radii)
 from AeViz.utils.files.file_utils import save_hdf, create_series
 import numpy as np
 from typing import Literal
@@ -17,7 +17,8 @@ functions = {
     'gain': gain_radius,
     'neutrino': neutrino_sphere_radii,
     'shock': shock_radius,
-    'nucleus': PNS_nucleus
+    'nucleus': PNS_nucleus,
+    'isodensity': isodensity_radii
 }
 
 save_names = {
@@ -26,11 +27,13 @@ save_names = {
     'gain': 'gain_radius.h5',
     'neutrino': 'neutrino_sphere_radii.h5',
     'shock': 'shock_radius.h5',
-    'nucleus': 'PNS_nucleus.h5'
+    'nucleus': 'PNS_nucleus.h5',
+    'isodensity': 'isodensities_radii.h5'
 }
 
 def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
-                                             'neutrino', 'shock', 'nucleus'],
+                                             'neutrino', 'shock', 'nucleus',
+                                             'isodensity'],
                      save_checkpoints=True, rmax=None):
     """
     Calculates the selected radius for each timestep of the simulation.
@@ -149,6 +152,39 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                                     nog_rad_step[key], simulation.dim,
                                     dOmega) for key in
                                 ['nue', 'nua', 'nux']}
+        elif radius == 'isodensity':
+            try:
+                time = np.concatenate((time, simulation.time(file)))
+                full_radius = {key: np.concatenate((full_radius[key], 
+                                                    rad_step[key][..., None]),
+                                                    axis=-1)
+                               for key in rad_step.keys()}
+                nog_rad_step = {key: simulation.ghost.remove_ghost_cells_radii(
+                    rad_step[key], simulation.dim) for key in rad_step.keys()}
+                max_radius = {key: np.concatenate((max_radius[key],
+                                                   np.nanmax(nog_rad_step[key])))
+                              for key in nog_rad_step.keys()}
+                min_radius = {key: np.concatenate((min_radius[key], np.nanmin(nog_rad_step[key])))
+                              for key in nog_rad_step.keys()}
+                avg_radius = {key: np.concatenate((avg_radius[key],
+                                function_average_radii(nog_rad_step[key],
+                                                       simulation.dim, dOmega)))
+                                for key in nog_rad_step.keys()}
+            except Exception as e:
+                print(e)
+                time = simulation.time(file)
+                full_radius = {key: rad_step[key][..., None] for key in 
+                               rad_step.keys()}
+                nog_rad_step = {key: simulation.ghost.remove_ghost_cells_radii(
+                    rad_step[key], simulation.dim) for key in rad_step.keys()}
+                max_radius = {key: np.nanmax(nog_rad_step[key])
+                              for key in nog_rad_step.keys()}
+                min_radius = {key: np.nanmin(nog_rad_step[key])
+                              for key in nog_rad_step.keys()}
+                avg_radius = {key: function_average_radii(nog_rad_step[key],
+                                                          simulation.dim,
+                                                          dOmega)
+                              for key in nog_rad_step.keys()}
         else:
             nog_rad_step = simulation.ghost.remove_ghost_cells_radii(rad_step,
                                                                simulation.dim)
@@ -202,7 +238,7 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
    
 def read_radius(simulation,
                 radius:Literal['PNS', 'innercore', 'gain',
-                               'neutrino', 'shock', 'nucleus'],
+                               'neutrino', 'shock', 'nucleus', 'isodensity'],
                 ):
     """
     Reads the data from the hdf file. Returns a tuple containing:
@@ -246,6 +282,35 @@ def read_radius(simulation,
                  't_r':  list(radius_data['gcells/theta'])[1],
                  'r_l':  list(radius_data['gcells/radius'])[0],
                  'r_r':  list(radius_data['gcells/radius'])[1]}]
+    elif radius == 'isodensity':
+        keys = ['1e+14', '1e+13', '1e+12', '1e+10', '1e+09', '1e+08']
+        data = [
+                aerray(radius_data['time'][...], u.s, 'time',
+                       r'$t-t_\mathrm{b}$', None,
+                       [-0.005, radius_data['time'][-1]]),
+                {key: aerray(radius_data[f'radii/{key}'], u.cm, f'R{key}',
+                             merge_strings(r'$R_\mathrm{',
+                                           key.replace('+', '')),
+                             None, [0, 1.5e7], False) for key in keys},
+                {key: aerray(radius_data[f'max/{key}'], u.cm, f'R{key}',
+                             merge_strings(r'$R_\mathrm{',
+                                           key.replace('+', ''), r',max}$'),
+                             None, [0, 1.5e7], False) for key in keys},
+                {key: aerray(radius_data[f'min/{key}'], u.cm, f'R{key}',
+                             merge_strings(r'$R_\mathrm{',
+                                           key.replace('+', ''), r',min}$'),
+                             None, [0, 1.5e7], False) for key in keys},
+                {key: aerray(radius_data[f'avg/{key}'], u.cm, f'R{key}',
+                             merge_strings(r'$R_\mathrm{',
+                                           key.replace('+', ''), r',avg}$'),
+                             None, [0, 1.5e7], False) for key in keys},
+                {'p_l': list(radius_data['gcells/phi'])[0],
+                 'p_r':  list(radius_data['gcells/phi'])[1],
+                 't_l':  list(radius_data['gcells/theta'])[0],
+                 't_r':  list(radius_data['gcells/theta'])[1],
+                 'r_l':  list(radius_data['gcells/radius'])[0],
+                 'r_r':  list(radius_data['gcells/radius'])[1]}
+        ]
     else:
         lab = radius if len(radius) <=5 else radius[:3]
         lm = [0, 1.5e7] if radius in ['PNS', 'innercore'] else [1e6, 1e9] if radius in ['gain', 'shock'] else [0, 4e6]

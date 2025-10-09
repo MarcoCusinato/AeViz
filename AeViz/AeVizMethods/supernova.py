@@ -44,6 +44,15 @@ def PNS_nucleus_radius(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
                  projection:Literal['1D', '2D']='1D', **kwargs):
     AeViz_plot_radius_panel(self, 'PNS_nucleus_radius', projection, rad,
                             **kwargs)
+
+@fig_window_open
+def isodensities_lines(self, rad:Literal['all', 'min', 'max', 'avg']='avg',
+                     comp:Literal['1e+14', '1e+13', '1e+12', '1e+11',
+                                    '1e+10', '1e+09', '1e+08']='1e+14',
+                     projection:Literal['1D', '2D']='1D', **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_radius_panel(self, 'isodensities_lines', projection, rad,
+                            **kwargs)
     
 ## ENERGIES
 @fig_window_open
@@ -60,7 +69,6 @@ def gain(self,  projection:Literal['1D', '2D']='1D',
     kwargs['comp'] = comp
     AeViz_plot_panel(self, 'gain_mass_nu_heat', None, projection, 'time',
                      **kwargs)
-    
 
 @fig_window_open
 def innercore(self,  projection:Literal['1D', '2D']='1D',

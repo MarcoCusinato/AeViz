@@ -263,6 +263,39 @@ def innercore_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     elif rad == 'all':
         return data[1], data[2], data[3]
 
+@get_radius
+@smooth
+@derive
+@sum_tob
+def isodensities_lines(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
+                       comp:Literal['1e+14', '1e+13', '1e+12', '1e+11',
+                                    '1e+10', '1e+09', '1e+08']='1e+14',
+                     tob_corrected=True, save_checkpoints=True, **kwargs):
+    """
+    Returns the isodensities contours at every timestep.
+    If tob_corrected is True, the time is corrected for the time of
+    bounce. If save_checkpoints is True, the checkpoints are saved
+    during the calculation.
+    Returns: time, radius(phi, theta), max_radius, min_radius,
+                average_radius, number of ghost cells
+    """
+    if comp == '1e+11':
+        return self.PNS_radius(rad=rad)
+    else:
+        data = calculate_radius(self, 'isodensity', save_checkpoints)
+        if rad == 'full':
+            return data[0][comp], data[-1]
+        elif rad == 'min':
+            return data[2][comp]
+        elif rad == 'max':
+            return data[1][comp]
+        elif rad == 'avg':
+            return data[3][comp]
+        elif rad == 'all':
+            return data[1][comp], data[2][comp], data[3][comp]
+        else:
+            return data
+    
 ## -----------------------------------------------------------------
 ## MASS AND ENERGY DATA
 ## -----------------------------------------------------------------
