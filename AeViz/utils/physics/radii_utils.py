@@ -12,6 +12,19 @@ def PNS_radius(simulation, file_name):
     return simulation.cell.radius(simulation.ghost)[np.argmax(
         simulation.rho(file_name) < (1e11 * u.g / u.cm ** 3), axis=-1)]
 
+def isodensity_radii(simulation, file_name):
+    """
+    Calculates the isodensity radii for each timestep.
+    These are equally spaced by one order of magnitude between
+    1e14 to 1e8, excluding 1e11 which is the PNS.
+    """
+    radius = simulation.cell.radius(simulation.ghost)
+    return {'%.0e' % id: radius[np.argmax(simulation.rho(file_name) < \
+                                          (id * u.g / u.cm ** 3), 
+                                          axis=-1)]
+                                          for id in [1e14, 1e13, 1e12, 1e10,
+                                                  1e9, 1e8]}
+
 def innercore_radius(simulation, file_name):
     """
     Calculates the radius of the inner core for each timestep. 
