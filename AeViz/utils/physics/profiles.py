@@ -13,18 +13,27 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
     Returns the radial profile of the desired quantity. Quantity names
     must be the same as the ones in the simulation class.
     """
+    ## check if we want the finite differences
+    kwargs.setdefault('diff', False)
+    kwargs.setdefault('rms', False)
+    kwargs.setdefault('norm', False)
     if profile in ['Rossby_number', 'Ye', 'temperature', 'rho',
-                   'entropy', 'convective_flux', 'gas_pressure']:
+                   'entropy', 'convective_flux', 'gas_pressure'] and \
+                    not kwargs['diff'] and not kwargs['rms']:
         return read_profile(simulation, profile, save_checkpoints)
-    elif profile == 'BV_frequency':
-        if 'mode' not in kwargs:
-            kwargs['mode'] = 1
-        if kwargs['mode'] == 1:
+    elif profile == 'BV_frequency' and not kwargs['diff'] and not kwargs['rms']:
+        kwargs.setdefault('mode', 1)
+        if kwargs['mode'] == 2:
+            return derive_profile(simulation, 'BV_frequency', **kwargs)
+        else:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
-        elif kwargs['mode'] == 2:
-            return derive_profile(simulation, 'BV_frequency', mode = 2)
+    elif profile in ['radial_velocity', 'phi_velocity', 'theta_velocity'] and \
+        ((kwargs['diff'] and kwargs['rms'] and not kwargs['norm']) or \
+         (not kwargs['diff'] and not kwargs['rms'])):
+        return read_velocity_profile(simulation, profile, kwargs['rms'],
+                                     save_checkpoints)
     else:
-        return derive_profile(simulation, profile)
+        return derive_profile(simulation, profile, **kwargs)
 
 def read_profile(simulation, profile, save_checkpoints):
     """
@@ -53,36 +62,77 @@ def read_profile(simulation, profile, save_checkpoints):
         derive_profiles(simulation, None, save_checkpoints)
         return read_profile(simulation, profile, save_checkpoints)
 
-def derive_profile(simulation, profile):
+def read_velocity_profile(simulation, profile, rms, save_checkpoints):
+    """
+    Reads the radial velocity profile saved in the velocity_profiles.h5 file.
+    """
+    if check_existence(simulation, 'velocity_profiles.h5'):
+        data = h5py.File(os.path.join(simulation.storage_path,
+                                      'velocity_profiles.h5'), 'r')
+        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+            prname = f'profiles/{profile}'
+            prname = prname + '_rms' if rms else prname 
+            t, pr = data['time'][...], data[prname][...]
+            data.close()
+            return make_velocity_series(t, simulation.cell.radius(simulation.ghost), pr,
+                               profile, rms)
+        else:
+            derive_velocity_profiles(simulation, data, save_checkpoints)
+            return read_velocity_profile(simulation, profile, rms, save_checkpoints)
+    else:
+        derive_velocity_profiles(simulation, None, save_checkpoints)
+        return read_velocity_profile(simulation, profile, rms, save_checkpoints)
+
+def derive_profile(simulation, profile, **kwargs):
     """
     Calculates a single profile and returns it.
     """
+    ##Remove problematic kwargs
+    kwargs.pop('der', None)
+    kwargs.pop('smooth', None)
+    kwargs.pop('tob_corrected', None)
+    kwargs.pop('mask', None)
+    kwargs.setdefault('rms', False)
     qt = getattr(simulation, profile)
     radius = len(simulation.cell.radius(simulation.ghost))
     dOmega = simulation.cell.dOmega(simulation.ghost)
-    zeroth_step = qt(0)
+    zeroth_step = qt(0, **kwargs)
     nm, lb, lm, = zeroth_step.name, zeroth_step.label, zeroth_step.limits
     lg, cm = zeroth_step.log, zeroth_step.cmap
     nm = nm + '_profile'
-    lb = merge_strings(r'$\langle $', lb, r'$\rangle_\Omega$')
+    if kwargs['rms']:
+        lb = merge_strings(r'$\sqrt{\langle ($', lb, r'$)^2\rangle_\Omega}$')
+    else:
+        lb = merge_strings(r'$\langle $', lb, r'$\rangle_\Omega$')
     for (file, progress) in zip(simulation.hdf_file_list,
                          range(len(simulation.hdf_file_list))):
         try:
             time = np.concatenate((time, simulation.time(file)))
-            qt_local = qt(file)
+            qt_local = qt(file, **kwargs)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):
-                    qt_av[:, i] = function_average(qt_local[..., i], 
+                    if kwargs['rms']:
+                        qt_av[:, i] = np.sqrt(function_average(qt_local[..., i] ** 2, 
+                                                   simulation.dim, 'Omega',
+                                                   dOmega))
+                    else:
+                        qt_av[:, i] = function_average(qt_local[..., i], 
                                                    simulation.dim, 'Omega',
                                                    dOmega)
-            else:                                     
-                qt_av = function_average(qt(file), simulation.dim, 'Omega',
-                                            dOmega)
+            else:
+                if kwargs['rms']:
+                    qt_av = np.sqrt(function_average(qt(file, **kwargs) ** 2,
+                                             simulation.dim, 'Omega',
+                                             dOmega))
+                else:
+                    qt_av = function_average(qt(file, **kwargs),
+                                             simulation.dim, 'Omega',
+                                             dOmega)
             profiles = np.concatenate((profiles, qt_av[..., None]), axis=-1)
         except:
             time = simulation.time(file)
-            qt_local = qt(file)
+            qt_local = qt(file, **kwargs)
             if qt_local.shape[-1] != radius:
                 qt_av = np.zeros((radius, qt_local.shape[-1]))
                 for i in range(qt_local.shape[-1]):
@@ -90,7 +140,7 @@ def derive_profile(simulation, profile):
                                                    simulation.dim, 'Omega',
                                                    dOmega)
             else:                                     
-                qt_av = function_average(qt(file), simulation.dim, 'Omega',
+                qt_av = function_average(qt(file, **kwargs), simulation.dim, 'Omega',
                                             dOmega)
             profiles = qt_av[..., None]
         progressBar(progress, len(simulation.hdf_file_list),
@@ -206,7 +256,102 @@ def derive_profiles(simulation, data, save_checkpoints):
              ['time', 'profiles', 'processed'],  [time, profiles,
                                                   processed_hdf])
     print('Profiles saved.')
-    
+
+def derive_velocity_profiles(simulation, data, save_checkpoints):
+    """
+    Calculates and saves the velocity and their rms radial
+    profiles in an hdf file.
+    """
+    if data is None:
+        start_point = 0
+        processed_hdf = []
+    else:
+        time = data['time'][...] * u.s
+        start_point = len(data['processed'][...])
+        processed_hdf = [ff.decode("utf-8") for ff in data['processed'][...]]
+        print('Checkpoint found. Starting from timestep', start_point)
+        profiles = {'radial_velocity': data['profiles/radial_velocity'][...] * u.cm / u.s,
+                    'radial_velocity_rms': data['profiles/radial_velocity_rms'][...] * u.cm / u.s,
+                    'theta_velocity': data['profiles/theta_velocity'][...] * u.cm / u.s,
+                    'theta_velocity_rms': data['profiles/theta_velocity_rms'][...] * u.cm / u.s,
+                    'phi_velocity': data['profiles/phi_velocity'][...] * u.cm / u.s,
+                    'phi_velocity_rms': data['profiles/phi_velocity_rms'][...] * u.cm / u.s
+                    }
+        data.close()
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    dOmega = simulation.cell.dOmega(simulation.ghost)
+    checkpoint_index = 0
+    progress_index = 0
+    total_points = len(simulation.hdf_file_list) - start_point
+    for file in simulation.hdf_file_list[start_point:]:
+        t_loc = simulation.time(file, True)
+        vr_av = function_average(simulation.radial_velocity(file),
+                                 simulation.dim, 'Omega', dOmega)[..., None]
+        if simulation.dim > 1:
+            vth_av = function_average(simulation.theta_velocity(file),
+                                  simulation.dim, 'Omega', dOmega)[..., None]
+            vr_rms_av = np.sqrt(
+                function_average(
+                    simulation.radial_velocity(file, diff=True, norm=False) ** 2,
+                    simulation.dim, 'Omega', dOmega))[..., None]
+            vth_rms_av = np.sqrt(
+                function_average(
+                    simulation.theta_velocity(file, diff=True, norm=False) ** 2,
+                    simulation.dim, 'Omega', dOmega))[..., None]
+            vph_av = function_average(simulation.phi_velocity(file),
+                                      simulation.dim, 'Omega', dOmega)[..., None]
+            vph_rms_av = function_average(simulation.theta_velocity(file),
+                                          simulation.dim, 'Omega',
+                                          dOmega)[..., None]
+        else:
+            vr_rms_av = np.zeros(vr_av.shape)
+            vth_av = np.zeros(vr_av.shape)
+            vth_rms_av = np.zeros(vr_av.shape)
+            vph_av = np.zeros(vr_av.shape)
+            vth_rms_av = np.zeros(vr_av.shape)
+        try:
+            time = np.concatenate((time, t_loc))
+            profiles = {
+                'radial_velocity': np.concatenate((profiles['radial_velocity'],
+                                                vr_av), axis=-1),
+                'radial_velocity_rms': np.concatenate((profiles['radial_velocity_rms'],
+                                                 vr_rms_av), axis=-1),
+                'theta_velocity': np.concatenate((profiles['theta_velocity'], vth_av), axis=-1),
+                'theta_velocity_rms': np.concatenate((profiles['theta_velocity_rms'],
+                                               vth_rms_av), axis=-1),
+                'phi_velocity': np.concatenate((profiles['phi_velocity'], vph_av), axis=-1),
+                'phi_velocity_rms': np.concatenate((profiles['phi_velocity_rms'], vph_rms_av),
+                                          axis=-1)
+            }
+        except Exception as e:
+            print(e)
+            time = t_loc
+            profiles = {
+                'radial_velocity': vr_av,
+                'radial_velocity_rms': vr_rms_av,
+                'theta_velocity': vth_av,
+                'theta_velocity_rms': vth_rms_av,
+                'phi_velocity': vph_av,
+                'phi_velocity_rms': vph_rms_av
+            }
+        processed_hdf.append(file)
+        if checkpoint_index >= checkpoint:
+            checkpoint_index = 0
+            print('Saving checkpoint...')
+            save_hdf(os.path.join(simulation.storage_path, 'velocity_profiles.h5'),
+                     ['time', 'profiles', 'processed'],
+                     [time, profiles, processed_hdf])
+        progressBar(progress_index, total_points, 'Calculating velocity profiles...')
+        progress_index += 1
+        checkpoint_index += 1
+    save_hdf(os.path.join(simulation.storage_path, 'velocity_profiles.h5'),
+             ['time', 'profiles', 'processed'],  [time, profiles,
+                                                  processed_hdf])
+    print('Velocity profiles saved.')
+
 def make_series(time, radius, prof, name):
     """
     Returns a series of profiles for a given time.
@@ -243,4 +388,37 @@ def make_series(time, radius, prof, name):
         pr = aerray(prof, u.s ** (-2), 'BV_profile',
                     r'$\langle \omega_\mathrm{BV}\rangle_\Omega$', 'coolwarm',  [-1e6, 1e6],
                     True)
+    return aeseries(pr, time=t, radius=radius)
+
+def make_velocity_series(time, radius, prof, name, rms):
+    """
+    Returns a series of velocity profiles for a given time.
+    """
+    t = aerray(time, u.s, 'time', r'$t-t_\mathrm{b}$', None, [-0.005, time[-1]])
+    if not rms:
+        if name == 'radial_velocity':
+            pr = aerray(prof, u.cm / u.s, 'radial_velocity_profile',
+                        r'$\langle v_r \rangle_\Omega$', 'Spectral_r', [-3e10, 3e10],
+                        True)
+        elif name == 'theta_velocity':
+            pr = aerray(prof, u.cm / u.s, 'theta_velocity_profile',
+                        r'$\langle v_\theta \rangle_\Omega$', 'Spectral_r',
+                        [-3e10, 3e10], True)
+        elif name == 'phi_velocity':
+            pr = aerray(prof, u.cm / u.s, 'phi_velocity_profile',
+                        r'$\langle v_\phi \rangle_\Omega$', 'cividis', [1e7, 3e10], True)
+    else:
+        if name == 'radial_velocity':
+            pr = aerray(prof, u.cm / u.s, 'radial_velocity_rms_profile',
+                        r'$\sqrt{\langle (\delta v_r)^2 \rangle}_\Omega$',
+                        'rainbow', [1e5, 3e10],
+                        True)
+        elif name == 'theta_velocity':
+            pr = aerray(prof, u.cm / u.s, 'theta_velocity_rms_profile',
+                        r'$\sqrt{\langle (\delta v_\theta)^2 \rangle}_\Omega$',
+                        'gnuplot', [1e5, 3e10], True)
+        elif name == 'phi_velocity':
+            pr = aerray(prof, u.cm / u.s, 'phi_velocity_rms_profile',
+                        r'$\sqrt{\langle (\delta v_\phi)^2 \rangle}_\Omega$',
+                        'turbo', [1e7, 3e10], True)
     return aeseries(pr, time=t, radius=radius)

@@ -178,8 +178,11 @@ def finite_differences(func):
         if not kwargs['diff']:
             return data
         kwargs.setdefault('mode', 'shell')
+        kwargs.setdefault('norm', True)
         if kwargs['mode'] not in ['shell', 'edges']:
             kwargs['mode'] = 'shell'
+        if kwargs['norm'] not in [True, False]:
+            kwargs['norm'] = True
         ## Should be superfluos
         if type(data) == tuple:
             data = list(data)
@@ -187,20 +190,25 @@ def finite_differences(func):
             data = [data]
         for i, dd in enumerate(data):
             ## Save the labels
-            lab = merge_strings(r'$\frac{\delta $', dd.label, r'$}{$', dd.label, r'$}$')
             name = 'diff_' + dd.name
             if kwargs['mode'] == 'shell':
                 ## Get radial shell averages
                 rave = _get_plane_avgs(args[0], dd, 'radius').data * np.ones(dd.shape)
-                data[i] = (dd - rave) / rave
             else:
                 dV = args[0].cell.dVolume_integration(args[0].ghost)
-                nearest_avg = uniform_filter((dd * dV).value, size=3, mode='nearest') / \
+                rave = uniform_filter((dd * dV).value, size=3, mode='nearest') / \
                     uniform_filter((dV).value, size=3, mode='nearest')
-                nearest_avg = nearest_avg * dd.unit
-                data[i] = (dd - nearest_avg) / nearest_avg
-            data[i].set(name = name, label = lab, cmap='RdBu_r',
-                        limits=[-1, 1], log=False)                
+                rave = rave * dd.unit
+            if kwargs['norm']:
+                lab = merge_strings(r'$\frac{\delta $', dd.label, r'$}{$', dd.label, r'$}$')
+                data[i] = (dd - rave) / rave
+                data[i].set(name = name, label = lab, cmap='RdBu_r',
+                        limits=[-1, 1], log=False) 
+            else:
+                lab = merge_strings(r'$\delta $', dd.label)
+                data[i] = (dd - rave)
+                data[i].set(name = name, label = lab, cmap=dd.cmap,
+                        limits=dd.limits, log=dd.log)                
             if len(data) == 1:
                 data = data[0]
         return data
