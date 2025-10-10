@@ -100,7 +100,7 @@ def radial_velocity(self, file_name, **kwargs):
         self._Simulation__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                     [ivx]]), self.dim)
     return aerray(data, u.cm / u.s, 'velocity_radial', r'$v_r$', 'Spectral_r',
-                  [-1e10, 5e10], log=True)
+                  [-3e10, 3e10], log=True)
 
 @get_grid
 @mask_points
@@ -117,7 +117,7 @@ def theta_velocity(self, file_name, **kwargs):
         self._Simulation__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                     [ivy]]), self.dim)
     return aerray(data, u.cm / u.s, 'velocity_theta', r'$v_\theta$',
-                  'Spectral_r', [-1e10, 5e10], log=True)
+                  'Spectral_r', [-3e10, 3e10], log=True)
 
 @get_grid
 @mask_points
@@ -134,7 +134,7 @@ def phi_velocity(self, file_name, **kwargs):
         self._Simulation__data_h5['thd/data'][..., self.hydroTHD_index['thd']
                                     [ivz]]), self.dim)
     return aerray(data, u.cm / u.s, 'velocity_phi', r'$v_\phi$',
-                  'cividis', [1e7, 5e10], log=True)
+                  'cividis', [1e7, 3e10], log=True)
 
 
 @get_grid

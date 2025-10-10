@@ -67,6 +67,7 @@ if sim.dim > 1:
     sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
     sim.radial_profile('Ye')
+    sim.radial_profile('radial_velocity')
 if not args.noGWs and sim.dim > 1:
     sim.hydro_strain()
 if args.spherical_harmonics:
