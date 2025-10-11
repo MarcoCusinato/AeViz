@@ -802,14 +802,23 @@ def compute_partial_strain(NE220, time, corr1, corr2, mask1, mask2, const, D,
 def get_correction_evolution(simulation, r, radius, amplitude):
     ## get the correspondig radius
     if isinstance(r, str):
-        rr = r.split('-')
-        if len(rr) == 1:
-            rr = rr[0]
+        rs = r.split('-')
+        if len(rs) == 1:
+            rr = rs[0]
             rt = 'avg'
-        else:
-            rt = rr[1] if rr[1] != 'full' else 'avg'
-            rr = rr[0]
-        r = getattr(simulation, rr)(rad=rt)
+            rc = None
+        elif len(rs) == 2:
+            rr = rs[0]
+            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else 'avg'
+            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else None
+        elif len(rs) == 3:
+            rr = rs[0]
+            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else rs[2] \
+                if rs[2] in ['avg', 'max', 'min'] else 'avg'
+            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else \
+                rs[2] if rs[2] not in ['avg', 'max', 'min', 'full'] else None
+        r = getattr(simulation, rr)(rad=rt) if rc is None else \
+            getattr(simulation, rr)(rad=rt, comp=rc)
         rindex = np.argmax(radius[None, :] >= r.data[:, None], axis=-1)
         corr = amplitude[rindex, np.arange(amplitude.shape[1])]
         rindex = radius[:, None] * np.ones(r.data.shape)[None, :] <= r.data[None, :]

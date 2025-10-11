@@ -464,14 +464,29 @@ class Plotting(PlottingUtils, Data):
             if r is None:
                 continue
             elif type(r) == str:
-                rr = r.split('-')
-                if len(rr) == 1:
-                    rr = rr[0]
+                rs = r.split('-')
+                if len(rs) == 1:
+                    rr = rs[0]
                     rt = 'avg'
+                    rc = None
+                elif len(rs) == 2:
+                    rr = rs[0]
+                    rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else 'avg'
+                    rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] \
+                        else None
+                elif len(rs) == 3:
+                    rr = rs[0]
+                    rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else rs[2] \
+                        if rs[2] in ['avg', 'max', 'min'] else 'avg'
+                    rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] \
+                        else rs[2] if rs[2] not in ['avg', 'max', 'min', 'full'] \
+                            else None
+                if rc is None:
+                    self.plot1D(None, rr, 'time', rad=rt, plot='E',
+                                     color='black', ls=ltype[i], lw=0.75)
                 else:
-                    rt = rr[1] if rr[1] != 'full' else 'avg'
-                    rr = rr[0]
-                self.plot1D(None, rr, 'time', rad=rt, plot='E',
+
+                    self.plot1D(None, rr, 'time', rad=rt, comp=rc, plot='E',
                                      color='black', ls=ltype[i], lw=0.75)
             else:
                 if isinstance(r, aerray):
