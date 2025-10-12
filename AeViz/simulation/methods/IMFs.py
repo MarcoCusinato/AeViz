@@ -37,6 +37,7 @@ def IMFs(self, comp:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
     time of bounce.
     Returns: time, IMFs, residue
     """
+    kwargs.setdefault('res', True)
     if self.dim == 1:
         warnings.warn("No GWs in spherical symmetry.")
         return None, None, None
@@ -75,7 +76,8 @@ def IMFs(self, comp:Literal['h+eq', 'hxeq', 'h+pol', 'hxpol']='h+eq',
         i += 1
     residue = aerray(residue, u.cm, 'residue', r'Res', None, [-150, 150], False)
     IMFs = create_series(time, out_IMFs)[0]
-    IMFs.append(create_series(time, residue)[0])
+    if kwargs['res']:
+        IMFs.append(create_series(time, residue)[0])
     return IMFs
 
 def instantaneous_frequency(self, IMFs=None, strain:Literal['h+eq', 'hxeq',
