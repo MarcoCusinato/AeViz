@@ -12,19 +12,8 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
                             **kwargs):
     if check_existence(simulation, FILE_H5):
         time, L, processed_hdf, r_lum = read_luminosity(simulation)
-        ## Retrocompatibility option
-        if processed_hdf is None:
-            if len(simulation.hdf_file_list) == len(time):
-                save_hdf(os.path.join(simulation.storage_path, FILE_H5),
-                        ['time', 'luminosity', 'processed', 'rmax'],
-                        [time, L, simulation.hdf_file_list, rmax])
-                return create_series(time, L['nue'], L['nua'], L['nux'])
-            else:
-                start_point = 0
-                time = 0
-                L = {'nue' : 0.0, 'nua' : 0.0, 'nux' : 0.0}
-                processed_hdf = []
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+        
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
           and r_lum == rmax:
             return create_series(time, L['nue'], L['nua'], L['nux'])
         elif processed_hdf[-1].decode("utf-8") != simulation.hdf_file_list[-1]:
@@ -41,6 +30,8 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
     else:
         start_point = 0
         processed_hdf = []
+        time = 0
+        L = {'nue' : 0.0, 'nua' : 0.0, 'nux' : 0.0}
         print('No checkpoint found for neutrino luminosity, starting from' \
             ' the beginning.\nPlease wait...')
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -48,7 +39,8 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
     else:
         checkpoint = checkpoints[simulation.dim]
 
-    idx = np.argmin(simulation.cell.radius(simulation.ghost) < (rmax * u.cm))
+    rmax *= u.cm
+    idx = np.argmin(simulation.cell.radius(simulation.ghost) < rmax)
     check_index = 0
     progress_index = 0
     total_points = len(simulation.hdf_file_list) - start_point
@@ -67,7 +59,8 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
                   for (key, Ltot) in zip(['nue', 'nua', 'nux'],
                                          [Lnuetot, Lnuatot, Lnuxtot])}
 
-      except:
+      except Exception as e:
+        print(e)
         time = simulation.time(file)
         L = {key: Ltot for (key, Ltot) in zip(['nue', 'nua', 'nux'],
                                          [Lnuetot, Lnuatot, Lnuxtot])}
