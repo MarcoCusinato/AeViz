@@ -236,7 +236,7 @@ def return_real_path(folder, path, platform):
     else:
         return os.path.join(path, folder)
 
-def find_simulation(folder, platform, sim_path=None):
+def find_simulation(folder, platform, sim_path=None, dim=None):
     """
     Funcion that allows the user to find the path of a specific simulation.
     Parameters:
@@ -275,6 +275,11 @@ def find_simulation(folder, platform, sim_path=None):
         print(msg)
         return return_real_path(folder, p, platform)
     else:
+        if dim is not None:
+            dim = f'{dim}D'
+            p = return_real_path(folder, simDict[sim_possibilities.index(dim)][folder],
+                             platform)
+            return p
         import numpy as np
         msg = "There are " + str(sim_number) + " simulations with the requested name (" + \
                folder + "). " + \

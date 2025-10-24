@@ -33,7 +33,7 @@ class Simulation:
         # Also let's load the indices of the specific quantities
         self.simulation_name = simulation_name
         self.path = find_simulation(self.simulation_name, pltf(),
-                                    simulation_folder_path)
+                                    simulation_folder_path, dim)
         parfile = load_parfile('start.pars', os.path.join(self.path, 'pars'))
         self.GEOM, self.dim, self.relativistic, \
             self.evolved_qts, self.lapse_form = get_simulation_info(parfile)
