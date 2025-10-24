@@ -4,6 +4,7 @@ from AeViz.utils.physics.load_save_mass_ene_utils import calculate_masses_energi
 from AeViz.utils.physics.load_save_radii_utils import calculate_radius
 from AeViz.utils.physics.PNS_ang_mom_nu_utils import calculate_angular_mom_PNS_nu
 from AeViz.utils.physics.load_save_neutrinos import calculate_luminosity
+from AeViz.utils.physics.inertia import calculate_moment_inertia
 import os
 from typing import Literal
 
@@ -401,6 +402,29 @@ def PNS_angular_momentum_neutrinos(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=
             return Lz_tot
         else:
             return Lz[flavour]
+
+@smooth
+@derive
+@sum_tob
+def inertia_moment(self, comp:Literal['1e+08', '1e+09', '1e+10', '1e+11',
+                                      '1e+12', '1e+13', '1e+14', 'PNS']='PNS',
+                   tob_corrected=True, save_checkpoints=True, **kwargs):
+    i14, i13, i12, i11, i10, i9, i8 = calculate_moment_inertia(self,
+                                                               save_checkpoints)
+    if comp == '1e+08':
+        return i8
+    elif comp == '1e+09':
+        return i9
+    elif comp == '1e+10':
+        return i10
+    elif comp in ['1e+11', 'PNS']:
+        return i11
+    elif comp == '1e+12':
+        return i12
+    elif comp == '1e+13':
+        return i13
+    elif comp == '1e+14':
+        return i14
 
 @smooth
 @derive

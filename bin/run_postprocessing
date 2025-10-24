@@ -38,6 +38,8 @@ parser.add_argument('--neutrino-luminosity', action='store_true', default=False,
                     "luminosities from the output .h5 files")
 parser.add_argument('--isodensity', action='store_true', default=False,
                     help="Enables the computation of isodensities lines.")
+parser.add_argument('--inertia', action='store_true', default=False,
+                    help="Enables the computation of the inertia moment.")
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -63,6 +65,8 @@ if args.neutrino_luminosity:
     sim.total_neutrino_luminosity()
 if args.isodensity:
     sim.isodensities_lines()
+if args.inertia:
+    sim.inertia_moment()
 if sim.dim > 1:
     sim.PNS_angular_momentum_neutrinos()
 if not args.noprofiles:
