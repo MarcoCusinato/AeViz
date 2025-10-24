@@ -136,6 +136,14 @@ def mass_flux(self, file=None, projection:Literal['1D', '2D']='1D', plane='time'
     AeViz_plot_panel(self, 'mass_flux', file, projection, plane, **kwargs)
 
 
+@fig_window_open
+def inertia_moment(self, projection:Literal['1D', '2D']='1D',
+                   comp:Literal['1e+08', '1e+09', '1e+10', '1e+11', '1e+12',
+                                '1e+13', '1e+14', 'PNS']='PNS', **kwargs):
+    kwargs['comp'] = comp
+    AeViz_plot_panel(self, 'inertia_moment', None, projection, 'time',
+                     **kwargs)
+
 ## NEUTRINO LUMINOSITY
 
 @fig_window_open
