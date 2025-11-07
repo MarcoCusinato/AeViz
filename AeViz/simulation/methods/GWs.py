@@ -12,6 +12,7 @@ from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
                                           load_asd)
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from typing import Literal
+from AeViz.simulation.methods.other_spherical_sym import radial_profile
 
 """
 Function to process gravitational waves data from a simulation in
@@ -421,8 +422,14 @@ def ASD(self, detector, **kwargs):
 def modes_universal_relations(self,
                               mode: Literal['2f_torres', '2p1_torres',
                                             '2p2_torres', '2p3_torres',
-                                            '2g1_torres'], tob_corrected=True,
-                              **kwargs):
+                                            '2g1_torres', '2g3_torres'],
+                              tob_corrected=True, **kwargs):
     radius = self.PNS_radius(rad='avg')
     mass = self.PNS_mass_ene(comp='mass')
-    return universal_modes_relation(mass, radius, mode)
+    if mode == '2g3_torres':
+        rhoC = self.radial_profile('rho')
+        pC = self.radial_profile('gas_pressure')
+    else:
+        rhoC = None
+        pC = None
+    return universal_modes_relation(mass, radius, mode, rhoC=rhoC, pC=pC)

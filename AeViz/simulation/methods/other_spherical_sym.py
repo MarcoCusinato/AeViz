@@ -47,7 +47,7 @@ def love_number(self, tob_corrected=True, save_checkpoints=True,
     during the calculation.
     Returns: time, Love number
     """
-    kappa_pns, _, kappa_core, _ = solve_tidal_love_profile(self,
+    _, kappa_pns, _, kappa_core = solve_tidal_love_profile(self,
                                                              save_checkpoints)
     if comp == 'PNS_core':
         return kappa_core

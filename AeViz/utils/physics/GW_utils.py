@@ -308,7 +308,9 @@ def characteristic_strain_3D(GWs, time_range, windowing, distance,
 def universal_modes_relation(PNS_mass, PNS_radius,
                              mode:Literal['2f_torres', '2p1_torres',
                                           '2p2_torres', '2p3_torres', 
-                                          '2g1_torres', '2g1_torres']):
+                                          '2g1_torres', '2g2_torres',
+                                          '2g3_torres'],
+                             rhoC=None, pC=None):
     """
     Universal relations coming from:
         Torres-Forné+18 https://arxiv.org/pdf/1902.10048
@@ -326,11 +328,15 @@ def universal_modes_relation(PNS_mass, PNS_radius,
         '2g1_torres':{'a': 0, 'b': 8.67e5, 'c': -51.9e6, 'd':0,
                      'mexp': 1, 'rexp': 2, 'nm':'2g1', 'lb':r'$^2g_1$'},
         '2g2_torres':{'a': 0, 'b': 5.88e5, 'c': -86.2e6, 'd': 4.67e10,
-                     'mexp': 1, 'rexp': 2, 'nm':'2g2', 'lb':r'$^2g_2$'},          
+                     'mexp': 1, 'rexp': 2, 'nm':'2g2', 'lb':r'$^2g_2$'},
+        '2g3_torres':{'a': 905, 'b': -79.9, 'c': -11000, 'd': 0,
+                     'mexp': 0.5, 'rexp': 3/2, 'nm':'2g3', 'lb':r'$^2g_3$'},          
     }
     md = modes[mode]
     x = PNS_mass.data.to(u.Msun).value ** md['mexp'] / \
         PNS_radius.data.to(u.km).value ** md['rexp']
+    if mode == '2g3_torres':
+        x = x * pC.data[0, :].value / rhoC.data[0, :].value ** 2.5
     val = md['a'] + md['b'] * x + md['c'] * x ** 2 + md['d'] * x ** 3
     frequency = aerray(val, u.Hz, md['nm'], md['lb'], None,
                        [val.min(), val.max()], False)
