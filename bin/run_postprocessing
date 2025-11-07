@@ -40,6 +40,7 @@ parser.add_argument('--isodensity', action='store_true', default=False,
                     help="Enables the computation of isodensities lines.")
 parser.add_argument('--inertia', action='store_true', default=False,
                     help="Enables the computation of the inertia moment.")
+parser.add_argument('--Love', action='store_true', default=False)
 
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
@@ -77,6 +78,8 @@ if not args.noGWs and sim.dim > 1:
 if args.spherical_harmonics:
     sim.rho_spherical_harmonics()
     sim.rho_spherical_harmonics(l=0, m=0)
+if args.Love:
+    sim.tidal_deformability()
 if args.plot:
     from AeViz import ae
     ae.Load(args.sim_name)
