@@ -12,7 +12,7 @@ from AeViz.units.aerray import aerray
 from AeViz.units import u
 
 
-def calculate_masses_energies(simulation, save_checkpoints=True):
+def calculate_masses_energies(simulation, save_checkpoints=True, no_new=False):
     if check_existence(simulation, 'masses_energies.h5'):
         time, mdot, inner_me, gain_me, PNS_me, unb_me, nuc_me, \
             processed_hdf = \
@@ -38,7 +38,8 @@ def calculate_masses_energies(simulation, save_checkpoints=True):
                 PNS_me = 0
                 unb_data = 0
                 processed_hdf = []
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return create_series(time, mdot, inner_me, gain_me, PNS_me, unb_me,
                                  nuc_me)
         else:

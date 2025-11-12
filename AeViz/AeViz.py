@@ -24,6 +24,10 @@ class AeViz(Plotting):
             self.__load_simulation_methods()
         else:
             raise ValueError('Data type not recognized.')
+    
+    ## QOF
+    def neglect_new(self):
+        self.loaded_data.neglect_new()
 
     @fig_window_open
     def movie(self, qt1=None, qt2=None, qt3=None, qt4=None, top_qt=None,

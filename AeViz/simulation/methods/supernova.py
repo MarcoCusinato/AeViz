@@ -105,7 +105,7 @@ def PNS_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     Returns: radius(phi, theta), max_radius, min_radius,
              average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'PNS', save_checkpoints)
+    data = calculate_radius(self, 'PNS', save_checkpoints, no_new=self.no_new)
     if rad is None:
         return data
     if rad == 'full':
@@ -134,7 +134,8 @@ def shock_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     Returns: time, radius(phi, theta), max_radius, min_radius,
                 average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'shock', save_checkpoints, rmax)
+    data = calculate_radius(self, 'shock', save_checkpoints, rmax=rmax,
+                            no_new=self.no_new)
     if rad is None:
         return data
     if rad == 'full':
@@ -164,7 +165,7 @@ def neutrino_spheres(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
                 average_radius, number of ghost cells
     Radii are returned as disctionaries of nue, nua and nux
     """
-    data = calculate_radius(self, 'neutrino', save_checkpoints)
+    data = calculate_radius(self, 'neutrino', save_checkpoints, no_new=self.no_new)
     if comp != 'all':
         data = [dd[comp] if comp in dd else dd for dd in data]
     if rad is None:
@@ -194,7 +195,7 @@ def gain_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     Returns: time, radius(phi, theta), max_radius, min_radius,
                 average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'gain', save_checkpoints)
+    data = calculate_radius(self, 'gain', save_checkpoints, no_new=self.no_new)
     if rad is None:
         return data
     if rad == 'full':
@@ -222,7 +223,8 @@ def PNS_nucleus_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=Non
     Returns: time, radius(phi, theta), max_radius, min_radius,
                 average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'nucleus', save_checkpoints)
+    data = calculate_radius(self, 'nucleus', save_checkpoints,
+                            no_new=self.no_new)
     if rad is None:
         return data
     if rad == 'full':
@@ -250,7 +252,8 @@ def innercore_radius(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=None,
     Returns: time, radius(phi, theta), max_radius, min_radius,
                 average_radius, number of ghost cells
     """
-    data = calculate_radius(self, 'innercore', save_checkpoints)
+    data = calculate_radius(self, 'innercore', save_checkpoints,
+                            no_new=self.no_new)
     if rad is None:
         return data
     if rad == 'full':
@@ -283,7 +286,8 @@ def isodensities_lines(self, rad:Literal['full', 'min', 'max', 'avg', 'all']=Non
     if comp == '1e+11':
         return self.PNS_radius(rad=rad)
     else:
-        data = calculate_radius(self, 'isodensity', save_checkpoints)
+        data = calculate_radius(self, 'isodensity', save_checkpoints,
+                                no_new=self.no_new)
         if rad == 'full':
             return data[0][comp], data[-1]
         elif rad == 'min':
@@ -316,7 +320,8 @@ def PNS_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
                 rotational energy, gravitational energy, total energy,
                 convective energy, T/W
     """
-    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints,
+                                                  no_new=self.no_new)
     if comp is None:
         TW = data['rotational_ene'] / np.abs(data['grav_ene'])
         TW.data.set(label=r'$T/|W|_\mathrm{PNS}$', cmap=None, limits=[0, 0.05],
@@ -356,7 +361,8 @@ def PNS_angular_mom(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=None,
     during the calculation.
     Returns: time, Lx, Ly, Lz, L_tot
     """
-    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints,
+                                                  no_new=self.no_new)
     if comp is None:
         return [data['L']['Lx'], data['L']['Ly'], data['L']['Lz'],
                 data['L']['L_tot']]
@@ -382,7 +388,7 @@ def PNS_angular_momentum_neutrinos(self, comp:Literal['Lx', 'Ly', 'Lz', 'Ltot']=
         The momentum Lx, Ly and Lz are dictionaries
     """
     Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot = \
-        calculate_angular_mom_PNS_nu(self, save_checkpoints)
+        calculate_angular_mom_PNS_nu(self, save_checkpoints, no_new=self.no_new)
     if comp is None:
         return [Lx, Ly, Lz, Lx_tot, Ly_tot, Lz_tot, L_tot]
     elif comp == 'Ltot':
@@ -410,7 +416,8 @@ def inertia_moment(self, comp:Literal['1e+08', '1e+09', '1e+10', '1e+11',
                                       '1e+12', '1e+13', '1e+14', 'PNS']='PNS',
                    tob_corrected=True, save_checkpoints=True, **kwargs):
     i14, i13, i12, i11, i10, i9, i8 = calculate_moment_inertia(self,
-                                                               save_checkpoints)
+                                                               save_checkpoints,
+                                                               no_new=self.no_new)
     if comp == '1e+08':
         return i8
     elif comp == '1e+09':
@@ -439,7 +446,8 @@ def explosion_mass_ene(self, comp:Literal['mass', 'tot', 'kin', 'mag', 'ratio']=
     Returns: time, unbound mass, energy, and 
         kinetic energy, magnetic energy of unbounded material
     """
-    _, _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    _, _, _, _, data, *_ = calculate_masses_energies(self, save_checkpoints,
+                                                     no_new=self.no_new)
     if comp is None:
         return [data['mass'], data['energy'], data['kinetic_ene'],
             data['magnetic_ene']]
@@ -471,7 +479,7 @@ def gain_mass_nu_heat(self, comp:Literal['mass', 'heath']=None,
     Returns: time, mass, neutrino heating
     """
     _, _, data, *_ = \
-        calculate_masses_energies(self, save_checkpoints)
+        calculate_masses_energies(self, save_checkpoints, no_new=self.no_new)
     if comp is None:
         return [data['mass'], data['heating_ene']]
     elif comp == 'mass':
@@ -494,7 +502,8 @@ def innercore_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
                 rotational energy, gravitational energy, total energy,
                 T/W
     """
-    _, data, *_ = calculate_masses_energies(self, save_checkpoints)
+    _, data, *_ = calculate_masses_energies(self, save_checkpoints,
+                                            no_new=self.no_new)
     if comp is None:    
         return [data['mass'], data['kinetic_ene'], data['magnetic_ene'],
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
@@ -530,7 +539,7 @@ def PNS_core_mass_ene(self, comp:Literal['mass', 'kin', 'mag', 'rot',
                 T/W
     """
     _, _, _, _, _, data = \
-        calculate_masses_energies(self, save_checkpoints)
+        calculate_masses_energies(self, save_checkpoints, no_new=self.no_new)
     if comp is None:    
         return [data['mass'], data['kinetic_ene'], data['magnetic_ene'],
                 data['rotational_ene'], data['grav_ene'], data['total_ene'],
@@ -562,7 +571,8 @@ def mass_accretion_500km(self, tob_corrected=True, save_checkpoints=True,
     bounce.
     Returns: time, mass accretion rate
     """
-    data, *_ = calculate_masses_energies(self, save_checkpoints)
+    data, *_ = calculate_masses_energies(self, save_checkpoints,
+                                         no_new=self.no_new)
     return data
 
 @get_grid
@@ -575,7 +585,7 @@ def mass_flux(self, file_name, **kwargs):
     rho = self.rho(file_name)
     radius = self.cell.radius(self.ghost)
     vr = self.radial_velocity(file_name)
-    mflux = -(rho * radius ** 2 * vr).to(u.M_sun / u.s)
+    mflux = (rho * radius ** 2 * vr).to(u.M_sun / u.s)
     mflux.set(name='mass_flux', label=r'$\dot{M}$', limits=[-1, 1],
              log=False, cmap='Spectral_r')
     return mflux
@@ -597,7 +607,7 @@ def PNS_kick_velocity(self, comp:Literal['x', 'y', 'z', 'tot']=None,
     during the calculation.
     """
     hydro, nue, nua, nux, h_tot, nue_tot, nua_tot, nux_tot, nu_tot, tot =\
-          calculate_kick(self, save_checkpoints)
+          calculate_kick(self, save_checkpoints, no_new=self.no_new)
     if comp is None:
         return [hydro, nue, nua, nux, h_tot, nue_tot, nua_tot, nux_tot, tot]
     elif comp =='tot':
@@ -634,7 +644,8 @@ def PNS_kick_velocity(self, comp:Literal['x', 'y', 'z', 'tot']=None,
 def total_neutrino_luminosity(self, tob_corrected=True, save_checkpoints=True,
                               comp:Literal['nue', 'nua', 'nux', 'all']='all', 
                               rmax=5e7, **kwargs):
-    data = calculate_luminosity(self, save_checkpoints, rmax, **kwargs)
+    data = calculate_luminosity(self, save_checkpoints, rmax, no_new=self.no_new,
+                                **kwargs)
 
     if comp == 'nue':
         return data[0]

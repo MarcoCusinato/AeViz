@@ -122,7 +122,7 @@ def velocity_kick(simulation, file_name, PNS_radius, gcells, dV, dOmega, r400):
     
     return [-vx, -vy, -vz], nue_flux, nua_flux, nux_flux
 
-def calculate_kick(simulation, save_checkpoints=True):
+def calculate_kick(simulation, save_checkpoints=True, no_new=False):
     PNSmass = simulation.PNS_mass_ene(comp='mass').data
     if check_existence(simulation, 'kick_velocity.h5'):
         time, hydro_v, nu_flux, processed_hdf = \
@@ -142,7 +142,8 @@ def calculate_kick(simulation, save_checkpoints=True):
                 hydro_v = 0
                 nu_flux = 0
                 processed_hdf = []
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return integrate_momenta(time, PNSmass, hydro_v, nu_flux['nue'],
                                          nu_flux['nua'], nu_flux['nux'])
         else:

@@ -8,7 +8,7 @@ from AeViz.utils.files.file_utils import save_hdf, create_series
 
 FILE_H5 = 'neutrino_luminosity.h5'
 
-def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
+def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, no_new=False,
                             **kwargs):
     if check_existence(simulation, FILE_H5):
         time, L, processed_hdf, r_lum = read_luminosity(simulation)
@@ -16,7 +16,8 @@ def calculate_luminosity(simulation, save_checkpoints=True, rmax=5e7, \
         if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
           and r_lum == rmax:
             return create_series(time, L['nue'], L['nua'], L['nux'])
-        elif processed_hdf[-1].decode("utf-8") != simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") != simulation.hdf_file_list[-1] \
+            or no_new:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
             print('Checkpoint found for neutrino luminosity, starting' \

@@ -16,12 +16,13 @@ def compute_inertia(simulation, inertia_density, radius, radius_limit, gcell):
                                                           **gcell)[..., None])
     return np.sum(inertia_density[mask])
 
-def calculate_moment_inertia(simulation, save_checkpoints=True):
+def calculate_moment_inertia(simulation, save_checkpoints=True, no_new=False):
     if check_existence(simulation, 'inertia_moment.h5'):
         time, iso14, iso13, iso12, iso11, iso10, iso9, iso8, \
             processed_hdf = \
             read_inertia_moment(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return create_series(time, iso14, iso13, iso12, iso11, iso10, iso9,
                                  iso8)
         else:
