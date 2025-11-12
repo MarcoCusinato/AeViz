@@ -77,6 +77,7 @@ class Simulation:
         self.__load_THD_methods()
         self.__load_composition_methods()
         self.__load_global_methods()
+        self.not_new = False ## We do not compute the new postprocessing
         if self.evolved_qts['magdim'] > 0:
             self.__load_magnetic_fields_methods()
         if self.evolved_qts['neudim'] > 0:
@@ -147,6 +148,10 @@ class Simulation:
                       cmap='seismic', limits=[1, 1e3], log=True),
             time = aerray(data[:,2], u.s, 'time', r'$t$', None,
                           [0, data[-1, 2]], False))
+    
+    ## QOF
+    def neglect_new(self):
+        self.no_new = not self.not_new
 
     ## TIME
     @hdf_isopen
@@ -161,6 +166,7 @@ class Simulation:
             data.set('time', r'$t-t_\mathrm{b}$')
         return data
     
+    ## METHOD LOADING
     def __load_hydro_methods(self):
         import AeViz.simulation.methods.hydro
         funcs = list_module_functions(AeViz.simulation.methods.hydro)

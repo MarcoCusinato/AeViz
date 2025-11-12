@@ -34,7 +34,7 @@ save_names = {
 def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain', 
                                              'neutrino', 'shock', 'nucleus',
                                              'isodensity'],
-                     save_checkpoints=True, rmax=None):
+                     save_checkpoints=True, rmax=None, no_new=False):
     """
     Calculates the selected radius for each timestep of the simulation.
     In case of neutrinos, since in some cases are not saved for each
@@ -70,7 +70,8 @@ def calculate_radius(simulation, radius:Literal['PNS', 'innercore', 'gain',
                 avg_radius = 0
                 ghost_cells = 0
                 processed_hdf = []
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return create_series(time, full_radius, max_radius,
                                         min_radius, avg_radius, ghost_cells)
         else:

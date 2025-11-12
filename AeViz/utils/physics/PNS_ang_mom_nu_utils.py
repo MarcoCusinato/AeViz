@@ -111,14 +111,16 @@ def PNS_angular_momentum_neutrinos(simulation, file_name, PNS_radius,
     
     return Lx, Ly, Lz
 
-def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True):
+def calculate_angular_mom_PNS_nu(simulation, save_checkpoints=True,
+                                 no_new=False):
     if simulation.dim == 1:
         print('No angular momentum calculation for 1D simulations.')
         return None
     if check_existence(simulation, 'PNS_angular_momentum_nu.h5'):
         time, Lx, Ly, Lz, processed_hdf = \
             read_angular_mom_PNS_nu(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return create_aerrays(time, Lx, Ly, Lz)
         else:
             start_point = len(processed_hdf)
