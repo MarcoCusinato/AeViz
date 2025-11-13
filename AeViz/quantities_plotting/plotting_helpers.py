@@ -3,6 +3,7 @@ from AeViz.utils.math_utils import function_average
 from AeViz.quantities_plotting import TERMINAL
 from AeViz.units import u
 import numpy as np
+import re
 
 def recognize_quantity(qt1, qt2, qt3, qt4, pars):
     """
@@ -360,7 +361,10 @@ def remove_labelling(data, no_nu):
                        ]
     for symb in remove_symbols:
         new_label = new_label.replace(symb, '')
-
+    if len(new_label.split('/')) == 2:
+        new_label = new_label.split('/')
+        new_label[0] = re.sub(r'_\{.*?\}', '', new_label[0])
+        new_label = "/".join(new_label)
     data.data.set(label=new_label)
     if no_nu:
         return data, label

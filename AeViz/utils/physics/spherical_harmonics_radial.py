@@ -3,11 +3,10 @@ import numpy as np
 import scipy.special as sp
 from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
 from AeViz.utils.files.file_utils import save_hdf
-from AeViz.grid.grid import grid
 import os, h5py
 from AeViz.units import u
-from AeViz.cell.cell_methods.spherical_methods import dr_integration, dVolume_integration
-from AeViz.cell.ghost import ghost
+from typing import Literal
+from AeViz.units import aerray, aeseries
 
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
@@ -35,7 +34,8 @@ def Harmonics_decomposition_rho_msum(simulation, file_name, theta, phi, dOmega,
         harm_index += 1
     return out_array
    
-def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
+def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False,
+                                no_new=False):
     if msum:
         lmax = 40
         fname = 'rho_decomposition_SpH_msum.h5'
@@ -45,7 +45,8 @@ def calculate_rho_decomposition(simulation, save_checkpoints=True, msum=False):
     if check_existence(simulation, fname):
         time, decomposition, processed_hdf = read_rho_decomposition(simulation, 
                                                                     lmax, msum)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
             return True
         else:
             start_point = len(processed_hdf)
@@ -245,4 +246,121 @@ def get_data_for_barcode(simulation, lmax=None, lmin=None, rhomin=None,
                 else:
                     data = np.concatenate((data, rlm[None, ...]), axis=0)
     return time, Yscale, data
+    
+def Fourier_amplitude(simulation, save_checkpoints=True, no_new=False):
+    """
+    Computes the fourier amplitude for the first 20 ms in a 3D simulation
+    """
+    if check_existence(simulation, 'rho_fourier.h5'):
+        time, rhom_series, processed_hdf = read_rho_fourier(simulation)
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or no_new:
+            return True
+        else:
+            start_point = len(processed_hdf)
+            processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
+            print('Checkpoint found for the Fourier coefficients file, ' \
+                  'starting from the checkpoint.\nPlease wait...')
+    else:
+        start_point = 0
+        processed_hdf = []
+        print('No checkpoint found for the Fourier coefficients file, ' \
+              'starting from the beginning.\nPlease wait...')
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    dtheta = simulation.cell.dtheta_integration(simulation.ghost).value
+    N_theta = len(dtheta) // 2
+    dtheta = dtheta[None, N_theta-2:N_theta+2, None]
+    theta_norm = dtheta.sum()
+    phi = simulation.cell.phi(simulation.ghost).value[:, None, None]
+    dphi = simulation.cell.dphi(simulation.ghost).value[:, None, None]
+    findex = start_point
+    check_index = 0
+    progress_index = 0
+    ## Compute all the stuff we can just one time
+    mexp = {}
+    for m in range(11):
+        mexp[m] = np.exp(1.j * m * phi) * dphi / theta_norm * dtheta
+    total_points = len(simulation.hdf_file_list) - start_point
+    for file in simulation.hdf_file_list[start_point:]:
+        progressBar(progress_index, total_points,
+                    suffix='Computing Fourier coefficients')
+        rho = simulation.rho(file).value[:, N_theta-2:N_theta+2, :]
+        ## Compute the radial m coefficients
+        rhom = {}
+        for m in range(11):
+            rhom[m] = np.sum(mexp[m] * rho, axis=(0, 1))
+        tm = simulation.time(file)
+        try:
+            time = np.concatenate((time, tm))
+            for m in range(11):
+                rhom_series[m] = np.concatenate((rhom_series[m],
+                                                 rhom[m][..., None]), axis=-1)
+        except Exception as e:
+            print(e)
+            time = tm
+            rhom_series = {}
+            for m in range(11):
+                rhom_series[m] = rhom[m][..., None]
+
+        processed_hdf.append(file)
+        if (check_index >= checkpoint and save_checkpoints):
+            print('Checkpoint reached, saving...\n')
+            save_hdf(os.path.join(simulation.storage_path, 'rho_fourier.h5'),
+                     ['time', 'Pm', 'processed'],
+                     [time, rhom_series, processed_hdf])
+            check_index = 0
+        check_index += 1
+        progress_index += 1
+    print('Computation complete, saving...\n')
+    save_hdf(os.path.join(simulation.storage_path, 'rho_fourier.h5'),
+                     ['time', 'Pm', 'processed'],
+                     [time, rhom_series, processed_hdf])
+    return True
+
+def read_rho_fourier(simulation):
+    fourier_data = h5py.File(os.path.join(simulation.storage_path, 
+                                                'rho_fourier.h5'), 'r')
+    data = [
+        (fourier_data['time'][...] * u.s)
+    ]
+
+    Pm = {}
+    for m in range(11):
+        Pm[m] = fourier_data[f'Pm/{m}'][...]
+    data.append(Pm)
+    data.append(fourier_data['processed'][...])
+    fourier_data.close()
+    return data
+
+def get_rho_fourier(simulation, m, mode:Literal['phase', 'amplitude']='amplitude',
+                    r=None, zero_norm=True):
+    time, Pms, _ = read_rho_fourier(simulation)
+    radius = simulation.cell.radius(simulation.ghost)
+    time.set(name='time', label=r'$t-t_\mathrm{b}$', cmap=None, log=False,
+             limits=[-0.005, time.value.max()])
+    P0 = np.abs(Pms[0])
+    Pm = Pms[m]
+    if mode == 'phase':
+        outdata = aerray(np.angle(Pm), u.radian, name=f'phase_{m}',
+                    label=f'$\\phi_{m}$', cmap='rainbow', limits=[-np.pi, np.pi])
+    elif mode == 'amplitude':
+        if zero_norm:
+            outdata = aerray(np.abs(Pm)/P0, u.dimensionless_unscaled, name=f'ampl_{m}',
+                    label=r'$\tilde{P}_{%d}/\tilde{P}_{0}$' % m, cmap='cividis',
+                    limits=[(np.abs(Pm)/P0).min() * 1.1, (np.abs(Pm)/P0).max() * 0.9])
+        
+        else:
+            outdata = aerray(np.abs(Pm), u.dimensionless_unscaled, name=f'ampl_{m}',
+                    label=r'$\\tilde{P}'+f'_{m}$', cmap='cividis',
+                    limits=[np.abs(Pm).min() * 1.1, np.abs(Pm).max() * 0.9])
+    if r is not None:
+        rindex = np.argmax(radius >= r)
+        outdata = outdata[rindex, ...]
+        return aeseries(outdata, time=time)
+    else:
+        return aeseries(outdata, time=time, radius=radius)
+        
     

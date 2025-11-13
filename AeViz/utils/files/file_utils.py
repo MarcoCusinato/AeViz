@@ -135,14 +135,22 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
                     subgroup = group.create_group(k)
                     for (kk, vv) in v.items():
                         if isinstance(vv, aerray):
-                            subgroup.create_dataset(kk, data = vv.value)
+                            subgroup.create_dataset(
+                                kk if isinstance(kk, str) else str(kk),
+                                data = vv.value)
                         else:
-                            subgroup.create_dataset(kk, data = vv)
+                            subgroup.create_dataset(
+                                kk if isinstance(kk, str) else str(kk),
+                                data = vv)
                 else:
                     if isinstance(v, aerray):
-                        group.create_dataset(k, data = v.value)
+                        group.create_dataset(
+                            k if isinstance(k, str) else str(k),
+                            data = v.value)
                     else:
-                        group.create_dataset(k, data = v)
+                        group.create_dataset(
+                            k if isinstance(k, str) else str(k),
+                            data = v)
         else:
             file_out.create_dataset(key, data = value)
     file_out.close()

@@ -77,7 +77,7 @@ class Simulation:
         self.__load_THD_methods()
         self.__load_composition_methods()
         self.__load_global_methods()
-        self.no_new = False ## We do not compute the new postprocessing
+        self.no_new = True ## We do not compute the new postprocessing
         if self.evolved_qts['magdim'] > 0:
             self.__load_magnetic_fields_methods()
         if self.evolved_qts['neudim'] > 0:
