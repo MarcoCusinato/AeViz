@@ -97,6 +97,8 @@ class Data(object):
         elif self.data_type == 'sim':
             if name == 'rho_spherical_harmonics':
                 return self.loaded_data.rho_spherical_harmonics(**kwargs)
+            elif name == 'fourier_amplitude':
+                return self.loaded_data.fourier_amplitude(**kwargs)
             else:
                 return self.loaded_data.radial_profile(name, **kwargs)
 

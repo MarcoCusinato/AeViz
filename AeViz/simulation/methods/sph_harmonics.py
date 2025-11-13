@@ -2,7 +2,9 @@ from AeViz.simulation.methods import *
 from AeViz.utils.physics.spherical_harmonics_radial import (calculate_rho_decomposition,
                                                     get_sph_profile,
                                                     get_sph_profiles_r,
-                                                    get_data_for_barcode)
+                                                    get_data_for_barcode,
+                                                    Fourier_amplitude,
+                                                    get_rho_fourier)
 """
 Functions to handle spherical harmonics decomposition of the density
 data from a simulation in spherical coordinates.
@@ -19,17 +21,19 @@ def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
                             rhomin=None, rhomax=None, r=None,
                             save_checkpoints=True, mode='radius', **kwargs):
     if m is None:
-        calculate_rho_decomposition(self, save_checkpoints, msum=True)
+        calculate_rho_decomposition(self, save_checkpoints, msum=True,
+                                    no_new=self.no_new)
         if zero_norm:
             lb = r'$\tilde{\rho}_{%d}/\tilde{\rho}_{00}$' % l
         else:
             lb = r'$\tilde{\rho}_{%d}$' % l
     else:
-        calculate_rho_decomposition(self, save_checkpoints)
+        calculate_rho_decomposition(self, save_checkpoints,
+                                    no_new=self.no_new)
         if zero_norm:
-            lb = r'$\tilde{\rho}_{%d,%d}/\tilde{\rho}_{00}$' % (l, m)
+            lb = r'$\tilde{\rho}_{%d%d}/\tilde{\rho}_{00}$' % (l, m)
         else:
-            lb = r'$\tilde{\rho}_{%d,%d}$' % (l, m)
+            lb = r'$\tilde{\rho}_{%d%d}$' % (l, m)
     if [rhomin, rhomax, r] == [None, None, None]:
         radius = self.cell.radius(self.ghost)
         time, rlm = get_sph_profile(self, l, m)
@@ -58,6 +62,16 @@ def rho_spherical_harmonics(self, l=0, m=None, zero_norm=True,
                      [rlm.min() * 1.1, rlm.max() * 0.9], False)
         return aeseries(rlm, time=time)
 
+@smooth
+def fourier_amplitude(self, m=0, r=None, mode:Literal['phase', 'amplitude']='amplitude',
+                      save_checkpoints=True, **kwargs):
+    if self.dim < 3:
+        return None
+    Fourier_amplitude(self, save_checkpoints, no_new=self.no_new)
+    kwargs.setdefault('zero_norm', True)
+    zero_norm = kwargs['zero_norm']
+    return get_rho_fourier(self, m, mode, r, zero_norm)
+
 def data_for_barcode(self, lmin=None, lmax=None, msum=False,
                         r=None, rhomin=None, rhomax=None, save_checkpoints=True,
                         zero_norm=True, mode:Literal['radius', 'mass']='radius',
@@ -66,7 +80,8 @@ def data_for_barcode(self, lmin=None, lmax=None, msum=False,
     Returns the data for the barcode plot. The data is the spherical
     harmonics decomposition of the density.
     """
-    calculate_rho_decomposition(self, save_checkpoints, msum=True)
+    calculate_rho_decomposition(self, save_checkpoints, msum=True,
+                                no_new=self.no_new)
     time, Y, data = get_data_for_barcode(self, lmax=lmax, lmin=lmin, msum=msum,
                                 r=r, rhomin=rhomin, rhomax=rhomax,
                                 zero_norm=zero_norm, mode=mode)
