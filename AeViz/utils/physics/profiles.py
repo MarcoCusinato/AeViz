@@ -27,7 +27,7 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
             return derive_profile(simulation, 'BV_frequency', **kwargs)
         else:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
-    elif profile in ['radial_velocity', 'phi_velocity', 'theta_velocity'] and \
+    elif profile in ['radial_velocity', 'phi_velocity', 'theta_velocity', 'omega'] and \
         ((kwargs['diff'] and kwargs['rms'] and not kwargs['norm']) or \
          (not kwargs['diff'] and not kwargs['rms'])):
         return read_velocity_profile(simulation, profile, kwargs['rms'],
@@ -50,7 +50,8 @@ def read_profile(simulation, profile, save_checkpoints):
             data.close()
             data = h5py.File(os.path.join(simulation.storage_path,
                                           'profiles.h5'), 'r')
-        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or simulation.no_new:
             t, pr = data['time'][...], data['profiles/' + profile][...]
             data.close()
             return make_series(t, simulation.cell.radius(simulation.ghost), pr,
@@ -69,7 +70,8 @@ def read_velocity_profile(simulation, profile, rms, save_checkpoints):
     if check_existence(simulation, 'velocity_profiles.h5'):
         data = h5py.File(os.path.join(simulation.storage_path,
                                       'velocity_profiles.h5'), 'r')
-        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or simulation.no_new:
             prname = f'profiles/{profile}'
             prname = prname + '_rms' if rms else prname 
             t, pr = data['time'][...], data[prname][...]
