@@ -275,7 +275,9 @@ def derive_velocity_profiles(simulation, data, save_checkpoints):
                     'theta_velocity': data['profiles/theta_velocity'][...] * u.cm / u.s,
                     'theta_velocity_rms': data['profiles/theta_velocity_rms'][...] * u.cm / u.s,
                     'phi_velocity': data['profiles/phi_velocity'][...] * u.cm / u.s,
-                    'phi_velocity_rms': data['profiles/phi_velocity_rms'][...] * u.cm / u.s
+                    'phi_velocity_rms': data['profiles/phi_velocity_rms'][...] * u.cm / u.s,
+                    'omega': data['profiles/omega'][...] * 1 / u.s,
+                    'omega_rms': data['profiles/omega_rms'][...] * 1 / u.s,
                     }
         data.close()
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
@@ -303,15 +305,25 @@ def derive_velocity_profiles(simulation, data, save_checkpoints):
                     simulation.dim, 'Omega', dOmega))[..., None]
             vph_av = function_average(simulation.phi_velocity(file),
                                       simulation.dim, 'Omega', dOmega)[..., None]
-            vph_rms_av = function_average(simulation.theta_velocity(file),
+            vph_rms_av = np.sqrt(function_average(
+                simulation.theta_velocity(file, diff=True, norm=False) ** 2,
                                           simulation.dim, 'Omega',
-                                          dOmega)[..., None]
+                                          dOmega))[..., None]
+            omg_av = function_average(simulation.omega(file),
+                                      simulation.dim, 'Omega', dOmega)[..., None]
+            omg_rms_av = np.sqrt(
+                function_average(
+                    simulation.omega(file, diff=True, norm=False) ** 2,
+                                     simulation.dim, 'Omega',
+                                     dOmega))[..., None]
         else:
             vr_rms_av = np.zeros(vr_av.shape)
             vth_av = np.zeros(vr_av.shape)
             vth_rms_av = np.zeros(vr_av.shape)
             vph_av = np.zeros(vr_av.shape)
             vth_rms_av = np.zeros(vr_av.shape)
+            omg_av = np.zeros(vr_av.shape)
+            omg_rms_av = np.zeros(vr_av.shape)
         try:
             time = np.concatenate((time, t_loc))
             profiles = {
@@ -324,7 +336,11 @@ def derive_velocity_profiles(simulation, data, save_checkpoints):
                                                vth_rms_av), axis=-1),
                 'phi_velocity': np.concatenate((profiles['phi_velocity'], vph_av), axis=-1),
                 'phi_velocity_rms': np.concatenate((profiles['phi_velocity_rms'], vph_rms_av),
-                                          axis=-1)
+                                          axis=-1),
+                'omega': np.concatenate((profiles['omega'], omg_av),
+                                          axis=-1),
+                'omega_rms': np.concatenate((profiles['omega_rms'], omg_rms_av),
+                                          axis=-1),
             }
         except Exception as e:
             print(e)
@@ -335,7 +351,9 @@ def derive_velocity_profiles(simulation, data, save_checkpoints):
                 'theta_velocity': vth_av,
                 'theta_velocity_rms': vth_rms_av,
                 'phi_velocity': vph_av,
-                'phi_velocity_rms': vph_rms_av
+                'phi_velocity_rms': vph_rms_av,
+                'omega': omg_av,
+                'omega_rms': omg_rms_av
             }
         processed_hdf.append(file)
         if checkpoint_index >= checkpoint:
@@ -407,6 +425,9 @@ def make_velocity_series(time, radius, prof, name, rms):
         elif name == 'phi_velocity':
             pr = aerray(prof, u.cm / u.s, 'phi_velocity_profile',
                         r'$\langle v_\phi \rangle_\Omega$', 'cividis', [1e7, 3e10], True)
+        elif name == 'omega':
+            pr = aerray(prof, 1 / u.s, 'omega_profile',
+                        r'$\langle \Omega \rangle_\Omega$', 'cividis', [1e0, 1e3], True)
     else:
         if name == 'radial_velocity':
             pr = aerray(prof, u.cm / u.s, 'radial_velocity_rms_profile',
@@ -421,4 +442,8 @@ def make_velocity_series(time, radius, prof, name, rms):
             pr = aerray(prof, u.cm / u.s, 'phi_velocity_rms_profile',
                         r'$\sqrt{\langle (\delta v_\phi)^2 \rangle}_\Omega$',
                         'turbo', [1e7, 3e10], True)
+        elif name == 'omega':
+            pr = aerray(prof, 1 / u.s, 'omega_rms_profile',
+                        r'$\sqrt{\langle (\delta \Omega_\phi)^2 \rangle}_\Omega$',
+                        'turbo', [1e0, 1e3], True)
     return aeseries(pr, time=t, radius=radius)
