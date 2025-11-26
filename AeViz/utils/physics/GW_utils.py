@@ -16,7 +16,8 @@ from typing import Literal
 ## GW strain
 ## ---------------------------------------------------------------------
 
-def GW_strain(sim_dim, column_change, data, index, ref, distance):
+def GW_strain(sim_dim, column_change, data, index, ref, distance,
+              return_components=False):
     assert sim_dim in [1, 2, 3], "Simulation MUST be 1, 2 or 3D."
     if distance:
         if not isinstance(distance, aerray):
@@ -26,7 +27,9 @@ def GW_strain(sim_dim, column_change, data, index, ref, distance):
     elif sim_dim == 2:
         return correct_zero(2, GW_strain_2D(data[::ref, :], distance), index)
     else:
-        GWs = GW_strain_3D(data, distance)
+        GWs = GW_strain_3D(data, distance, return_components, ref)
+        if return_components:
+            return GWs
         if column_change is not None:    
             GWs[0].data[:column_change] = GW_strain_2D(data, distance).data[:column_change]
             for hh in range(1, len(GWs)):
@@ -62,9 +65,14 @@ def GW_strain_2D(data, distance):
                      limits=lm)
     return GWs
 
-def GW_strain_3D(data, distance):
+def GW_strain_3D(data, distance, return_components=False, ref=None):
+    if return_components and ref:
+        data = data[::ref, :]
     time = aerray(data[:, 2], u.s, 'time', r'$t$', None, [0, data[-1, 2]])
     const = 1 #8 * np.sqrt(np.pi / 15)
+    if return_components:
+        return time, [IDL_derivative(time, (data[:, i] * u.cm * u.s)) 
+                      for i in [9, 13, 17, 10, 11, 14]]
     hD_pl_p = 2. * ( data[:,9] - data[:,13] )
     hD_pl_e = 2. * ( data[:,17] - data[:,13] )
     hD_cr_p = 2. * ( data[:,10] + data[:,12] )
@@ -172,22 +180,27 @@ def GWs_energy_2D(GWs):
         IDL_derivative(GWs.time, GWs.data) ** 2 * const,
         time = GWs.time
     )
-    ene.data.set(name='EGWs', label=r'$E_\mathrm{GW}$', cmap='Spectral',
+    ene.data.set(name='EGWs', label=r'$L_\mathrm{GW}$', cmap='Spectral',
                  limits=[1e45, 1e48], log=True)
     return ene.to(u.erg / u.s)
 
 def GWs_energy_3D(GWs):
     """
     Calculates the energy of the GWs in 3D
+    Formulae from `10.1051/0004-6361:20078577` eq: (13)
     """
-    const = 8 / 15 * c.c ** 3 / (16 * np.pi * c.G)
-    ene = aeseries(IDL_derivative(GWs[0].time, GWs[0].data) ** 2,
-                   time=GWs[0].time)
-    for h in GWs[1:]:
-        ene += IDL_derivative(h.time, h.data) ** 2
+    const = 2 * c.c ** 3 / 15 / c.G
+    time, series = GWs
+    for i, h in enumerate(series):
+        series[i] = IDL_derivative(time, h)
+    hxx, hyy, hzz, hxy, hxz, hyz = series
+    ene = hxx ** 2 + hyy ** 2 + hzz ** 2 - \
+        (hxx * hyy + hxx * hzz + hyy * hzz) + \
+            3 * (hxy **2 + hxz ** 2 + hyz ** 2)
     ene *= const
-    ene.data.set(name='EGWs', label=r'$E_\mathrm{GW}$', cmap='Spectral',
+    ene.set(name='EGWs', label=r'$L_\mathrm{GW}$', cmap='Spectral',
             limits=[1e45, 1e48], log=True)
+    ene = aeseries(np.where(ene <= (1e51*u.erg/u.s), ene, 0), time = time)
     return ene.to(u.erg / u.s)
 
 def GWs_energy_per_frequency(GWs, sim_dim, time_range=None, windowing='hanning'):
@@ -549,7 +562,8 @@ def NE220_2D_timeseries(simulation, save_checkpoints, D, radii):
             start_point = 0
             processed_hdf = []
             print("No checkpoint found. Starting from step 0")
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] or \
+            simulation.no_new:
             return calculate_strain_2D(simulation, D, time,
                                        simulation.cell.radius(simulation.ghost),
                                        NE220, full_NE220, nuc_NE220,
@@ -862,7 +876,8 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii):
             start_point = 0
             processed_hdf = []
             print("No checkpoint found. Starting from step 0")
-        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        elif processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] or \
+            simulation.no_new:
             return calculate_strain_3D(simulation, D, THETA, PHI, time,
                                        simulation.cell.radius(simulation.ghost),
                                        Qdot_radial, Qdot_total, Qdot_inner,

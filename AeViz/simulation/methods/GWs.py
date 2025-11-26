@@ -75,7 +75,11 @@ def GW_Amplitudes(self, distance=None, tob_corrected=True,
         index = np.argmax((data[:, 2] - self.tob) >= -0.01)
     else:
         index = None
-    GWs = GW_strain(self.dim, column_change, data, index, n, distance)
+    if 'return_components' in kwargs and self.dim == 3:
+        GWs = GW_strain(self.dim, column_change, data, index, n, distance,
+                        kwargs['return_components'])
+    else:
+        GWs = GW_strain(self.dim, column_change, data, index, n, distance)
     if GWs is None:
         return None
     if self.dim > 2:
@@ -238,12 +242,19 @@ def GWs_peak_frequencies(self, peak:Literal['bounce', 'highest']='bounce',
     return return_list
 
 @smooth
-def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True):
+@subtract_tob
+def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True, **kwargs):
     """
     Returns the energy carried away by the GWs in erg/s
     """
-    GWs = self.GW_Amplitudes(tob_corrected=tob_corrected,
+    if self.dim == 3:
+        GWs = self.GW_Amplitudes(tob_corrected=False,
+                                lower_refinement=lower_refinement,
+                                return_components=True)
+    else:
+        GWs = self.GW_Amplitudes(tob_corrected=False,
                                 lower_refinement=lower_refinement)
+    
     return GWs_energy(GWs, self.dim)
 
 @smooth
