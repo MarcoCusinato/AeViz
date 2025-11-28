@@ -105,7 +105,8 @@ def solve_tidal_love_profile(simulation, save_checkpoints=True):
     if check_existence(simulation, 'tidal.h5'):
         time, pns, core, processed_hdf = \
             read_tidal(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1]:
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] or \
+            simulation.no_new:
             time = aerray(time, u.s, name='time', label=r'$t-t_\mathrm{b}$',
                           limits=[-0.05, time[-1]])
             lambda_pns = aerray(pns['lambda'], u.dimensionless_unscaled,
