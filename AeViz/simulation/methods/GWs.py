@@ -141,18 +141,14 @@ def hchar(self, tob_corrected=True, time_range=None, windowing='hanning',
                                    **kw)
     hchar = characteristic_strain(GW_strain, self.dim, time_range, windowing,
                                   distance, divide_by_frequency)
-    if self.dim > 2:
+    if self.dim == 3:
         if 'comp' in kwargs:
             if kwargs['comp'] == 'all':
                 pass
-            elif kwargs['comp'] == 'h+eq':
+            elif kwargs['comp'] in ['h+eq', 'hxeq', 'heq']:
                 return hchar[0]
-            elif kwargs['comp'] == 'h+pol':
+            elif kwargs['comp'] in ['h+pol', 'hxpol', 'hpol']:
                 return hchar[1]
-            elif kwargs['comp'] == 'hxeq':
-                return hchar[2]
-            elif kwargs['comp'] == 'hxpol':
-                return hchar[3]
             else:
                 raise TypeError("GW component not recognized")
     return hchar

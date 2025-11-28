@@ -234,20 +234,35 @@ def GWs_energy_per_frequency_2D(GWs, time_range=None, windowing='hanning'):
     )
 
 def GWs_energy_per_frequency_3D(GWs, time_range=None, windowing='hanning'):
-    dE_df = []
-    const = c.c ** 3 / (16 * np.pi * c.G)
-    names = ['dE_df_h+eq', 'dE_df_h+pol', 'dE_df_hxeq', 'dE_df_hxpol']
-    labels = [r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,eq}$',
-              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{+,pol}$',
-              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{\times,pol}$',
-              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{\times,pol}$']
-    for i, GW in enumerate(GWs):
-        spectro = GW.rfft(norm='forward', time_range=time_range,
-                       windowing=windowing)
-        dedf = const * (2 * np.pi * spectro.frequency) ** 2 * \
-               np.abs(spectro.data ** 2)
-        dedf.set(name=names[i], label=labels[i], log=True)
-        dE_df.append(aeseries(dedf, frequency=spectro.frequency.copy()))
+    """
+    Computed for the two observers, polar and equatorial following the
+    formulation in Kuroda et al 2014. Eq (45). `1304.4372`
+    """
+    const = np.pi * c.c ** 3 / (4 * c.G)
+    names = ['dE_df_heq', 'dE_df_hpol']
+    labels = [r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{eq}$',
+              r'$\frac{\mathrm{d}E}{\mathrm{d}f}_\mathrm{pol}$']
+    spectro_eq_pl = GWs[0].rfft(norm='forward', time_range=time_range,
+                                windowing=windowing)
+    spectro_eq_cr = GWs[2].rfft(norm='forward', time_range=time_range,
+                                windowing=windowing)
+    dE_df_eq = const * spectro_eq_pl.frequency ** 2 * (
+        np.abs(spectro_eq_pl.data ** 2) + np.abs(spectro_eq_cr.data ** 2)
+    )
+    dE_df_eq.set(name=names[0], label=labels[0], log=True)
+    spectro_pol_pl = GWs[1].rfft(norm='forward', time_range=time_range,
+                                windowing=windowing)
+    spectro_pol_cr = GWs[3].rfft(norm='forward', time_range=time_range,
+                                windowing=windowing)
+    dE_df_pol = const * spectro_pol_pl.frequency ** 2 * (
+        np.abs(spectro_pol_pl.data ** 2) + np.abs(spectro_pol_cr.data ** 2)
+    )
+    dE_df_pol.set(name=names[1], label=labels[1], log=True)
+
+    dE_df = [
+        aeseries(dE_df_eq, frequency=spectro_eq_cr.frequency.copy()),
+        aeseries(dE_df_pol, frequency=spectro_pol_cr.frequency.copy())
+    ]
     return dE_df
 
 ## ---------------------------------------------------------------------
@@ -293,24 +308,28 @@ def characteristic_strain_2D(GWs, time_range, windowing, distance,
 
 def characteristic_strain_3D(GWs, time_range, windowing, distance,
                              divide_by_frequency):
-    const = 1 / (distance.to(GWs[0].data.unit) * c.c * np.pi) * np.sqrt(2 * c.G / c.c)
+    """
+    Computes the GWs characteristic frequency from Kuroda et al 2014,
+    Eq (44)
+    """
+    const = 2 / np.pi ** 2 * c.G / c.c ** 3 / distance ** 2
     dE_df = GWs_energy_per_frequency_3D(GWs, time_range, windowing)
-    names = ['hchar+eq', 'hchar+pol', 'hcharxeq', 'hcharxpol']
-    labels = [r'$h_\mathrm{char,+,eq}$',
-              r'$h_\mathrm{char,+,pol}$',
-              r'$h_\mathrm{char,\times,eq}$',
-              r'$h_\mathrm{char,\times,pol}$']
+    names = ['hchar_eq', 'hchar_pol']
+    labels = [r'$h_\mathrm{char,eq}$',
+              r'$h_\mathrm{char,pol}$']
+    to_unit = u.dimensionless_unscaled
     if divide_by_frequency:
         labels = [merge_strings(lb, r'$\sqrt{f}$') for lb in labels]
+        to_unit = u.Hz ** -0.5
     hchar = []
     for i, dedf in enumerate(dE_df):
-        hhchar = const * np.sqrt(dedf.data)
+        hhchar = np.sqrt(dedf.data * const)
         if divide_by_frequency:
             hhchar /= np.sqrt(dedf.frequency)
         hhchar.set(name=names[i], label=labels[i], log=True,
               limits=[np.nanmin(hhchar), np.nanmax(hhchar)])
         dedf.frequency.set(limits=[1, 4000], log=True)
-        hchar.append(aeseries(hhchar.to((u.Hz ** -0.5)),
+        hchar.append(aeseries(hhchar.to(to_unit),
                               frequency=dedf.frequency.copy()))
     return hchar
 
