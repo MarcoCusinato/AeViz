@@ -1,3 +1,6 @@
+## LEGACY CLASS DO NOT USE
+
+
 class units:
     """
     Class with the various conversion units and constants in cgs.
