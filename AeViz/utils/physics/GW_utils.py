@@ -296,15 +296,17 @@ def characteristic_strain_2D(GWs, time_range, windowing, distance,
         np.sqrt(2 * c.G / c.c)
     dE_df = GWs_energy_per_frequency_2D(GWs, time_range, windowing)
     hchar = const * np.sqrt(dE_df.data)
+    to_unit = u.dimensionless_unscaled
     if divide_by_frequency:
         hchar /= np.sqrt(dE_df.frequency)
         hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}/\sqrt{f}$', log=True,
               limits=[np.nanmin(hchar), np.nanmax(hchar)])
+        to_unit = u.Hz ** -0.5
     else:
         hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}$', log=True,
               limits=[np.nanmin(hchar), np.nanmax(hchar)])
     dE_df.frequency.set(limits=[1, 4000], log=True)
-    return aeseries(hchar.to((u.Hz ** -0.5)), frequency=dE_df.frequency.copy())
+    return aeseries(hchar.to(to_unit), frequency=dE_df.frequency.copy())
 
 def characteristic_strain_3D(GWs, time_range, windowing, distance,
                              divide_by_frequency):
@@ -1442,3 +1444,55 @@ def calculate_strain_3D(simulation, D, THETA, PHI, time, radius, Qdot_radial, Qd
            aeseries(data=hcross_radial, time=T.copy(), radius=R.copy()), \
            return_3D_strains(time, hcross_tot, hcross_nuc, hcross_inn,
                              hcross_out, partialQ_cross, radii)
+
+def compute_SNR(simulation, detector, comp, distance=(u.kpc *10),
+                time_range=None):
+    """
+    Computes the SNR as in Moore 2015. Please be careful, for this to be
+    done correctly, the signal should be zero padded and the frequency
+    range on which to integrate over should be carefully selected.
+    However, the method proposed here is automatized and does not
+    deviate from the true value by that much.
+    """
+    def interpolate_ASD(ASD, freq):
+        new_ASD =  np.interp(freq, ASD.frequency, ASD.data)
+        new_ASD = new_ASD.data
+        new_ASD = aerray(new_ASD, (u.Hz**-0.5), '', r'$ASD_\mathrm{' + ASD.data.name + '}$')
+        ASD = aeseries(
+            new_ASD,
+            frequency = freq.copy()
+        )
+        return ASD
+    ## Compute the characteristic strain wich is dimensionless
+    hchar = simulation.hchar(comp=comp, distance=distance,
+                             time_range=time_range, divide_by_frequency=False)
+    ## Load the selected ASD
+    ASD = simulation.ASD(detector)
+    ## Now we need the ASD and the characteristic strain to have the same
+    ## frequency range. So we cut one or the other frequency series.
+    if ASD.frequency[-1] > hchar.frequency[-1]:
+        iend = np.argmax(ASD.frequency >= hchar.frequency[-1])
+        ASD = ASD[:iend]
+    else:
+        iend = np.argmax(hchar.frequency >= ASD.frequency[-1])
+        hchar[:iend]
+    if ASD.frequency[0] < hchar.frequency[0]:
+        istart = np.argmax(ASD.frequency >= hchar.frequency[0])
+        ASD = ASD[istart:]
+    else:
+        istart = np.argmax(hchar.frequency >= ASD.frequency[0])
+        hchar = hchar[istart:]
+    
+    ## Now we have to interpolate the ASD (since is smoother) to the
+    ## frequency range of the characteristic strain
+    ASD = interpolate_ASD(ASD, hchar.frequency)
+    ## Now we proceed with the actual computation of the SNR
+    ## We assume constant spacing in the frequency domain
+    df = np.mean(np.diff(hchar.frequency))
+    SNR = 4 * df * hchar.data ** 2 / (ASD.data ** 2 * ASD.frequency ** 2)
+    ##Consistency check
+    if SNR.unit != u.dimensionless_unscaled:
+        raise ValueError("Units mismatch")
+    return np.sqrt(np.sum(SNR.value)), detector
+
+
