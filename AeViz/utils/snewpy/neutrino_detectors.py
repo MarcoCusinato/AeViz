@@ -41,11 +41,11 @@ class NeutrinoDetector:
 superk = NeutrinoDetector("Super-Kamiokande",
                           "Japan",
                           "wc100kt30prct",
-                          32,
+                          32.5,
                           100,
                           "10.1016/S0168-9002(03)00425-X")
 
-hyper = NeutrinoDetector("Hyper-Kamiokande",
+hyperk = NeutrinoDetector("Hyper-Kamiokande",
                          "Japan",
                          "wc100kt30prct",
                          220,

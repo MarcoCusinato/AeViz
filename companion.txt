@@ -1,4 +1,4 @@
 ## Needed for the EMD and EEMD Analysis
 git+https://github.com/laszukdawid/PyEMD.git
 sparse
-git+git@github.com:MarcoCusinato/snewpy.git
+git+https://github.com/MarcoCusinato/snewpy.git
