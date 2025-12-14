@@ -1,0 +1,296 @@
+#!/usr/bin/env python
+"""
+This script creates data to be used with the SNEWPY package and then to
+be run with SNOwGLoBES.
+The data that are needed are: neutrino luminosities, mean energies, and
+mean square energies, which have to be computed from the non-gray
+neutrinos .
+"""
+from AeViz.simulation import Simulation
+from AeViz.units import u
+import argparse
+import numpy as np
+import os
+parser = argparse.ArgumentParser()
+parser.add_argument('--sim-name', type=str, required=True,
+                    help="Name of the simulation of which postprocessing ' \
+                        'will be done.")
+parser.add_argument('--sim-path', type=str, default=None, required=False,
+                    help="Path of the simulation.")
+parser.add_argument('--los', type=str, nargs='+', default='all',
+                    help="The line of sight to compute the equivalent" \
+                    "neutrino emission of: possible values \['all'," \
+                    "eq, pol, avg\]")
+parser.add_argument('--tend', type=float, default=None,
+                    help="Time up until to compute the series, in [s].")
+args = parser.parse_args()
+
+los = args.los
+if not isinstance(los, list):
+    los = [los]
+
+if 'all' in los:
+    los = ['avg', 'eq', 'pol']
+
+assert all(aa in ['avg', 'eq', 'pol'] for aa in los), "los must be in \['all'," \
+                    "eq, pol, avg\]"
+## Load the simulation data
+sim = Simulation(args.sim_name, args.sim_path)
+if sim.dim == 1:
+    los = ['avg']
+
+## Create the save folder
+save_path = os.path.join(sim.storage_path, 'snewpy_files')
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+
+## get the initial file index and the file list
+_, istart =sim.find_file_from_time(-0.015, return_index=True)
+file_list = sim.hdf_file_list[istart:]
+if args.tend is not None:
+    _, iend =sim.find_file_from_time(args.tend, return_index=True)
+    file_list = file_list[:iend-istart]
+else:
+    iend = len(file_list)
+
+## Write header
+
+header = 'Neutrino data computed along the DIRECTION at 500 km from ' \
+    'the center for FLAVOUR\ntime [s]\tL_nu [fos/s]\t<e> [MeV]\t<e^2> [MeV^2]' 
+feq = iend
+favg = iend
+fpol = iend
+
+for ll in los:
+    pp = os.path.join(save_path, f'{args.sim_name}_nue_{ll}.txt')
+    if ll == 'avg':
+        favg = 0
+        if os.path.exists(pp):
+            data_nue_avg = np.loadtxt(pp)
+            data_nua_avg = np.loadtxt(pp.replace('_nue_', '_nua_'))
+            data_nux_avg = np.loadtxt(pp.replace('_nue_', '_nux_'))
+            _, start =sim.find_file_from_time(data_nue_avg[-1, 0],
+                                              return_index=True)
+            favg = start - istart
+    if ll == 'eq':
+        feq = 0
+        if os.path.exists(pp):
+            data_nue_eq = np.loadtxt(pp)
+            data_nua_eq = np.loadtxt(pp.replace('_nue_', '_nua_'))
+            data_nux_eq = np.loadtxt(pp.replace('_nue_', '_nux_'))
+            _, start =sim.find_file_from_time(data_nue_eq[-1, 0],
+                                              return_index=True)
+            feq = start - istart
+    if ll == 'pol':
+        fpol = 0
+        if os.path.exists(pp):
+            data_nue_pol = np.loadtxt(pp)
+            data_nua_pol = np.loadtxt(pp.replace('_nue_', '_nua_'))
+            data_nux_pol = np.loadtxt(pp.replace('_nue_', '_nux_'))
+            _, start =sim.find_file_from_time(data_nue_pol[-1, 0],
+                                              return_index=True)
+            fpol = start - istart
+findex = min(favg, feq, fpol)
+start = findex
+
+## Extract the mandatory parameters
+dOmega = sim.cell.dOmega(sim.ghost)
+radius = sim.cell.radius(sim.ghost)
+theta = sim.cell.theta(sim.ghost)
+j = np.argmax(theta >= (6 * u.deg))
+j1 = np.argmax(theta >= (86 * u.deg))
+j2 = np.argmax(theta >= (94 * u.deg))
+if sim.dim == 3:
+    phi = sim.cell.phi(sim.ghost)
+    k = np.argmax(theta >= (8 * u.deg))
+## We extract the luminosities at 500 km
+irad = np.argmax(radius >= (500 * u.km))
+r500 = radius[irad]
+## fACTOR TO COMPUTE THE EQUIVALENT LUMINOSITY
+factor = r500 ** 2 * dOmega
+if sim.dim > 1:
+    factor = (r500 ** 2 * dOmega)[..., None]
+ene = sim.cell.E_nu()
+while ene.ndim < sim.dim:
+    ene = ene[None, ...]
+
+for i, f in enumerate(file_list[start:]):
+    ## Extract the energy dependent neutrino flux
+    try:
+        nu = sim.neutrino_momenta(f)
+    except Exception as e:
+        print(e)
+        findex += 1
+        continue
+    time = sim.time(f).value
+    ## Get the radial flux for each flavour at 500 km
+    nue = nu[0][..., irad, :, 0] * factor
+    nua = nu[1][..., irad, :, 0] * factor
+    nux = nu[2][..., irad, :, 0] * factor
+    ## Compute the luminosity and the mean energies
+    num_nue = (nue / ene).sum(axis=-1)
+    num_nua = (nua / ene).sum(axis=-1)
+    num_nux = (nux / ene).sum(axis=-1)
+    L_nue = (nue.sum(axis=-1))    
+    L_nua = (nua.sum(axis=-1))
+    L_nux = (nux.sum(axis=-1))
+    L2_nue = (nue * ene).sum(axis=-1)    
+    L2_nua = (nua * ene).sum(axis=-1)    
+    L2_nux = (nux * ene).sum(axis=-1)
+
+    ## Compute avg data
+    if 'avg' in los and findex >= favg:
+        summ_num_nue = num_nue.sum()
+        summ_num_nua = num_nua.sum()
+        summ_num_nux = num_nux.sum()
+        summ_lnue = L_nue.sum()
+        summ_lnua = L_nua.sum()
+        summ_lnux = L_nux.sum()
+        nue_ = np.array([time, summ_lnue.to(u.Bethe/u.s).value,
+                         (summ_lnue/summ_num_nue).to(u.MeV).value,
+                         (L2_nue.sum()/summ_num_nue).to(u.MeV**2).value])
+        nua_ = np.array([time, summ_lnua.to(u.Bethe/u.s).value,
+                         (summ_lnua/summ_num_nua).to(u.MeV).value,
+                         (L2_nua.sum()/summ_num_nua).to(u.MeV**2).value])
+        nux_ = np.array([time, summ_lnux.to(u.Bethe/u.s).value,
+                         (summ_lnux/summ_num_nux).to(u.MeV).value,
+                         (L2_nux.sum()/summ_num_nux).to(u.MeV**2).value])
+        try:
+            data_nue_avg = np.vstack((data_nue_avg, nue_))
+            data_nua_avg = np.vstack((data_nua_avg, nua_))
+            data_nux_avg = np.vstack((data_nux_avg, nux_))
+        except Exception as e:
+            print(e)
+            data_nue_avg = nue_
+            data_nua_avg = nua_
+            data_nux_avg = nux_
+    if 'pol' in los and findex >= fpol:
+        den = dOmega[..., :j].sum()
+        summ_num_nue = num_nue[..., :j].sum()
+        summ_num_nua = num_nua[..., :j].sum()
+        summ_num_nux = num_nux[..., :j].sum()
+        summ_lnue = L_nue[..., :j].sum()
+        summ_lnua = L_nua[..., :j].sum()
+        summ_lnux = L_nux[..., :j].sum()
+        nue_ = np.array([time,
+                         4*np.pi*((summ_lnue)/den).to(u.Bethe/u.s).value,
+                         (summ_lnue/summ_num_nue).to(u.MeV).value,
+                         (L2_nue[..., :j].sum()/summ_num_nue).to(u.MeV**2).value])
+        nua_ = np.array([time,
+                         4*np.pi*(summ_lnua/den).to(u.Bethe/u.s).value,
+                         (summ_lnua/summ_num_nua).to(u.MeV).value,
+                         (L2_nua[..., :j].sum()/summ_num_nua).to(u.MeV**2).value])
+        nux_ = np.array([time,
+                         4*np.pi*(summ_lnux/den).to(u.Bethe/u.s).value,
+                         (summ_lnux/summ_num_nux.sum()).to(u.MeV).value,
+                         (L2_nux[..., :j].sum()/summ_num_nux).to(u.MeV**2).value])
+        try:
+            data_nue_pol = np.vstack((data_nue_pol, nue_))
+            data_nua_pol = np.vstack((data_nua_pol, nua_))
+            data_nux_pol = np.vstack((data_nux_pol, nux_))
+        except Exception as e:
+            print(e)
+            data_nue_pol = nue_
+            data_nua_pol = nua_
+            data_nux_pol = nux_
+
+    if 'eq' in los and findex >= feq:
+        if sim.dim == 2:
+            den = dOmega[j1:j2].sum()
+            summ_num_nue = num_nue[j1:j2].sum()
+            summ_num_nua = num_nua[j1:j2].sum()
+            summ_num_nux = num_nux[j1:j2].sum()
+            summ_lnue = L_nue[j1:j2].sum()
+            summ_lnua = L_nua[j1:j2].sum()
+            summ_lnux = L_nux[j1:j2].sum()
+            summ_l2nue = L2_nue[j1:j2].sum()
+            summ_l2nua = L2_nua[j1:j2].sum()
+            summ_l2nux = L2_nux[j1:j2].sum()
+        elif sim.dim == 3:
+            den = dOmega[:k, j1:j2].sum()
+            summ_num_nue = num_nue[:k, j1:j2].sum()
+            summ_num_nua = num_nua[:k, j1:j2].sum()
+            summ_num_nux = num_nux[:k, j1:j2].sum()
+            summ_lnue = L_nue[:k, j1:j2].sum()
+            summ_lnua = L_nua[:k, j1:j2].sum()
+            summ_lnux = L_nux[:k, j1:j2].sum()
+            summ_l2nue = L2_nue[:k, j1:j2].sum()
+            summ_l2nua = L2_nua[:k, j1:j2].sum()
+            summ_l2nux = L2_nux[:k, j1:j2].sum()
+        nue_ = np.array([time, 4*np.pi * (summ_lnue/den).to(u.Bethe/u.s).value,
+                         (summ_lnue/summ_num_nue).to(u.MeV).value,
+                         (summ_l2nue/summ_num_nue).to(u.MeV**2).value])
+        nua_ = np.array([time, 4*np.pi * (summ_lnua/den).to(u.Bethe/u.s).value,
+                         (summ_lnua/summ_num_nua).to(u.MeV).value,
+                         (summ_l2nua/summ_num_nua).to(u.MeV**2).value])
+        nux_ = np.array([time, 4*np.pi * (summ_lnux/den).to(u.Bethe/u.s).value,
+                         (summ_lnux/summ_num_nux).to(u.MeV).value,
+                         (summ_l2nux/summ_num_nux).to(u.MeV**2).value])
+
+        try:
+            data_nue_eq = np.vstack((data_nue_eq, nue_))
+            data_nua_eq = np.vstack((data_nua_eq, nua_))
+            data_nux_eq = np.vstack((data_nux_eq, nux_))
+        except Exception as e:
+            print(e)
+            data_nue_eq  = nue_
+            data_nua_eq  = nua_
+            data_nux_eq  = nux_
+
+        
+
+    findex += 1
+    if findex % 10 == 0 and findex > 0:
+        for ll in los:
+            nue_name = os.path.join(save_path, f'{args.sim_name}_nue_{ll}.txt')
+            nua_name = os.path.join(save_path, f'{args.sim_name}_nua_{ll}.txt')
+            nux_name = os.path.join(save_path, f'{args.sim_name}_nux_{ll}.txt')
+            if ll == 'avg':
+                np.savetxt(nue_name, data_nue_avg, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+                np.savetxt(nua_name, data_nua_avg, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+                np.savetxt(nux_name, data_nux_avg, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
+            elif ll == 'eq':
+                np.savetxt(nue_name, data_nue_eq, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+                np.savetxt(nua_name, data_nua_eq, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+                np.savetxt(nux_name, data_nux_eq, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
+            elif ll == 'pol':
+                np.savetxt(nue_name, data_nue_pol, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+                np.savetxt(nua_name, data_nua_pol, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+                np.savetxt(nux_name, data_nux_pol, 
+                    header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
+        
+
+
+for ll in los:
+        nue_name = os.path.join(save_path, f'{args.sim_name}_nue_{ll}.txt')
+        nua_name = os.path.join(save_path, f'{args.sim_name}_nua_{ll}.txt')
+        nux_name = os.path.join(save_path, f'{args.sim_name}_nux_{ll}.txt')
+        if ll == 'avg':
+            np.savetxt(nue_name, data_nue_avg, 
+            header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+            np.savetxt(nua_name, data_nua_avg, 
+            header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+            np.savetxt(nux_name, data_nux_avg, 
+            header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
+        elif ll == 'eq':
+            np.savetxt(nue_name, data_nue_eq, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+            np.savetxt(nua_name, data_nua_eq, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+            np.savetxt(nux_name, data_nux_eq, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
+        elif ll == 'pol':
+            np.savetxt(nue_name, data_nue_pol, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nue'))
+            np.savetxt(nua_name, data_nua_pol, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
+            np.savetxt(nux_name, data_nux_pol, 
+                header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))

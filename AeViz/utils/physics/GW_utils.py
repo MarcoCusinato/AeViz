@@ -296,15 +296,17 @@ def characteristic_strain_2D(GWs, time_range, windowing, distance,
         np.sqrt(2 * c.G / c.c)
     dE_df = GWs_energy_per_frequency_2D(GWs, time_range, windowing)
     hchar = const * np.sqrt(dE_df.data)
+    to_unit = u.dimensionless_unscaled
     if divide_by_frequency:
         hchar /= np.sqrt(dE_df.frequency)
         hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}/\sqrt{f}$', log=True,
               limits=[np.nanmin(hchar), np.nanmax(hchar)])
+        to_unit = u.Hz ** -0.5
     else:
         hchar.set(name='hchar', label=r'$h_\mathrm{char,+,eq}$', log=True,
               limits=[np.nanmin(hchar), np.nanmax(hchar)])
     dE_df.frequency.set(limits=[1, 4000], log=True)
-    return aeseries(hchar.to((u.Hz ** -0.5)), frequency=dE_df.frequency.copy())
+    return aeseries(hchar.to(to_unit), frequency=dE_df.frequency.copy())
 
 def characteristic_strain_3D(GWs, time_range, windowing, distance,
                              divide_by_frequency):
@@ -319,7 +321,7 @@ def characteristic_strain_3D(GWs, time_range, windowing, distance,
               r'$h_\mathrm{char,pol}$']
     to_unit = u.dimensionless_unscaled
     if divide_by_frequency:
-        labels = [merge_strings(lb, r'$\sqrt{f}$') for lb in labels]
+        labels = [merge_strings(lb, r'$/\sqrt{f}$') for lb in labels]
         to_unit = u.Hz ** -0.5
     hchar = []
     for i, dedf in enumerate(dE_df):
@@ -545,19 +547,23 @@ def calculate_h(simulation, D=1, THETA=np.pi/2, PHI=0,
     r1 = kwargs.setdefault("r1", None)
     r2 = kwargs.setdefault("r2", None)
     r3 = kwargs.setdefault("r3", None)
+    apply_correction = kwargs.setdefault("apply_correction", True)
     radii = [r1, r2, r3]
     radii = [r for r in radii if r is not None]
     if simulation.dim == 1:
         print("No GWs for you :'(")
         return None
     elif simulation.dim == 2:
-        return NE220_2D_timeseries(simulation, save_checkpoints, D, radii)
+        return NE220_2D_timeseries(simulation, save_checkpoints, D, radii,
+                                   apply_correction)
     elif simulation.dim == 3:
-        return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii)
+        return Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii,
+                               apply_correction)
 
 ## 2D
 
-def NE220_2D_timeseries(simulation, save_checkpoints, D, radii):
+def NE220_2D_timeseries(simulation, save_checkpoints, D, radii,
+                        apply_correction):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
@@ -873,7 +879,8 @@ def get_correction_evolution(simulation, r, radius, amplitude):
     return corr, rindex
 ## 3D
 
-def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii):
+def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii,
+                    apply_correction):
     """
     Calculates the NE220 from density and velocities for every timestep
     of a 2D simulation. It also calculates the full, nucleus, convection
@@ -900,7 +907,8 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii):
             return calculate_strain_3D(simulation, D, THETA, PHI, time,
                                        simulation.cell.radius(simulation.ghost),
                                        Qdot_radial, Qdot_total, Qdot_inner,
-                                       Qdot_nucleus, Qdot_outer, Qdot_corr, radii)
+                                       Qdot_nucleus, Qdot_outer, Qdot_corr, radii,
+                                       apply_correction)
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
@@ -980,7 +988,8 @@ def Qdot_timeseries(simulation, save_checkpoints, D, THETA, PHI, radii):
     return calculate_strain_3D(simulation, D, THETA, PHI, time,
                                simulation.cell.radius(simulation.ghost),
                                Qdot_radial, Qdot_total, Qdot_inner,
-                               Qdot_nucleus, Qdot_outer, Qdot_corr, radii)
+                               Qdot_nucleus, Qdot_outer, Qdot_corr, radii,
+                               apply_correction)
 
 def Qdot_surface_correction(Qcorr, r1_ind, r2_ind):
     if r1_ind is None:
@@ -1106,7 +1115,8 @@ def read_Qdot(simulation):
             processed_hdf = None
     return time, Qdot_radial, Qcorr, Qdot_total, Qdot_inner, Qdot_nucleus, Qdot_outer, processed_hdf
 
-def compute_partial_corrected_Qdotdot(Qdot, Ylm, time, corr1, corr2, mask1, mask2):
+def compute_partial_corrected_Qdotdot(Qdot, Ylm, time, corr1, corr2, mask1, mask2,
+                                      apply_correction):
     Qdot_og = Qdot.copy()
     if corr1 is None:
         corr = corr2
@@ -1121,11 +1131,14 @@ def compute_partial_corrected_Qdotdot(Qdot, Ylm, time, corr1, corr2, mask1, mask
         Qdot_og[mask2:, :] = 0
     else:
         Qdot_og[~mask2] = 0
-    Qdot_og = np.sum(Qdot_og, axis=0) - corr
+    if apply_correction:
+        Qdot_og = np.sum(Qdot_og, axis=0) - corr
+    else:
+        Qdot_og = np.sum(Qdot_og, axis=0)
     return IDL_derivative(time, Qdot_og) * Ylm
 
 def compute_partial_Qdotdot_3D(simulation, radii, radius, Qdot_radial, Ylm,
-                               time, corrections, Qout):
+                               time, corrections, Qout, apply_correction):
     if len(radii) == 1:
         if radii[0] == 'PNS_nucleus_radius-full':
             return []
@@ -1133,7 +1146,8 @@ def compute_partial_Qdotdot_3D(simulation, radii, radius, Qdot_radial, Ylm,
             corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
                                                         radius, corrections)
             q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                   None, corr_r1, None, mask_r1)
+                                                   None, corr_r1, None, mask_r1,
+                                                   apply_correction)
             if len(Qout) == 0:
                 Qout = [q0]
             else:
@@ -1145,13 +1159,14 @@ def compute_partial_Qdotdot_3D(simulation, radii, radius, Qdot_radial, Ylm,
             corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
                                                         radius, corrections)
             q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                         None, corr_r1, None,
-                                                         mask_r1)
+                                                   None, corr_r1, None,
+                                                   mask_r1, apply_correction)
             corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1],
                                                         radius, corrections)
             q1 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                         corr_r1, corr_r2,
-                                                         mask_r1, mask_r2)
+                                                   corr_r1, corr_r2,
+                                                   mask_r1, mask_r2,
+                                                   apply_correction)
             if len(Qout) == 0:
                 Qout = [q0, q1]
             else:
@@ -1164,18 +1179,20 @@ def compute_partial_Qdotdot_3D(simulation, radii, radius, Qdot_radial, Ylm,
             corr_r1, mask_r1 = get_correction_evolution(simulation, radii[0],
                                                         radius, corrections)
             q0 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                         None, corr_r1, None,
-                                                         mask_r1)
+                                                   None, corr_r1, None,
+                                                   mask_r1, apply_correction)
             corr_r2, mask_r2 = get_correction_evolution(simulation, radii[1],
                                                         radius, corrections)
             q1 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                         corr_r1, corr_r2,
-                                                         mask_r1, mask_r2)
+                                                   corr_r1, corr_r2,
+                                                   mask_r1, mask_r2,
+                                                   apply_correction)
             corr_r3, mask_r3 = get_correction_evolution(simulation, radii[2],
                                                         radius, corrections)
             q2 = compute_partial_corrected_Qdotdot(Qdot_radial, Ylm, time,
-                                                         corr_r2, corr_r3,
-                                                         mask_r2, mask_r3)
+                                                   corr_r2, corr_r3,
+                                                   mask_r2, mask_r3,
+                                                   apply_correction)
             if len(Qout) == 0:
                 Qout = [q0, q1, q2]
             else:
@@ -1206,7 +1223,8 @@ def return_3D_strains(time, tot_st, cor_st, inn_st, out_st, oth_st, radii):
     return out
     
 def calculate_strain_3D(simulation, D, THETA, PHI, time, radius, Qdot_radial, Qdot_total,
-                        Qdot_inner, Qdot_nucleus, Qdot_outer, corrections, radii):
+                        Qdot_inner, Qdot_nucleus, Qdot_outer, corrections, radii,
+                        apply_correction):
     if D is not None:
         if not isinstance(D, aerray):
             D = D * u.cm
@@ -1221,7 +1239,8 @@ def calculate_strain_3D(simulation, D, THETA, PHI, time, radius, Qdot_radial, Qd
         Y22m = harmonics.spin_weighted_Ylm(-2, m-2, 2, THETA, PHI)
         partialQ = compute_partial_Qdotdot_3D(simulation, radii, radius,
                                               Qdot_radial[:, m, :], Y22m, time,
-                                              corrections[:, m, :], partialQ)
+                                              corrections[:, m, :], partialQ,
+                                              apply_correction)
         Qdot_radial[:, m, :] = IDL_derivative(time, Qdot_radial[:, m, :]) * \
             Y22m
         Qdot_total[m, :] = IDL_derivative(time, Qdot_total[m, :]) * Y22m
@@ -1425,3 +1444,55 @@ def calculate_strain_3D(simulation, D, THETA, PHI, time, radius, Qdot_radial, Qd
            aeseries(data=hcross_radial, time=T.copy(), radius=R.copy()), \
            return_3D_strains(time, hcross_tot, hcross_nuc, hcross_inn,
                              hcross_out, partialQ_cross, radii)
+
+def compute_SNR(simulation, detector, comp, distance=(u.kpc *10),
+                time_range=None):
+    """
+    Computes the SNR as in Moore 2015. Please be careful, for this to be
+    done correctly, the signal should be zero padded and the frequency
+    range on which to integrate over should be carefully selected.
+    However, the method proposed here is automatized and does not
+    deviate from the true value by that much.
+    """
+    def interpolate_ASD(ASD, freq):
+        new_ASD =  np.interp(freq, ASD.frequency, ASD.data)
+        new_ASD = new_ASD.data
+        new_ASD = aerray(new_ASD, (u.Hz**-0.5), '', r'$ASD_\mathrm{' + ASD.data.name + '}$')
+        ASD = aeseries(
+            new_ASD,
+            frequency = freq.copy()
+        )
+        return ASD
+    ## Compute the characteristic strain wich is dimensionless
+    hchar = simulation.hchar(comp=comp, distance=distance,
+                             time_range=time_range, divide_by_frequency=False)
+    ## Load the selected ASD
+    ASD = simulation.ASD(detector)
+    ## Now we need the ASD and the characteristic strain to have the same
+    ## frequency range. So we cut one or the other frequency series.
+    if ASD.frequency[-1] > hchar.frequency[-1]:
+        iend = np.argmax(ASD.frequency >= hchar.frequency[-1])
+        ASD = ASD[:iend]
+    else:
+        iend = np.argmax(hchar.frequency >= ASD.frequency[-1])
+        hchar[:iend]
+    if ASD.frequency[0] < hchar.frequency[0]:
+        istart = np.argmax(ASD.frequency >= hchar.frequency[0])
+        ASD = ASD[istart:]
+    else:
+        istart = np.argmax(hchar.frequency >= ASD.frequency[0])
+        hchar = hchar[istart:]
+    
+    ## Now we have to interpolate the ASD (since is smoother) to the
+    ## frequency range of the characteristic strain
+    ASD = interpolate_ASD(ASD, hchar.frequency)
+    ## Now we proceed with the actual computation of the SNR
+    ## We assume constant spacing in the frequency domain
+    df = np.mean(np.diff(hchar.frequency))
+    SNR = 4 * df * hchar.data ** 2 / (ASD.data ** 2 * ASD.frequency ** 2)
+    ##Consistency check
+    if SNR.unit != u.dimensionless_unscaled:
+        raise ValueError("Units mismatch")
+    return np.sqrt(np.sum(SNR.value)), detector
+
+

@@ -220,6 +220,15 @@ class Simulation:
         funcs = list_module_functions(AeViz.simulation.methods.neutrinos)
         for name, obj in funcs:
             setattr(self, name, types.MethodType(obj, self))
+        try:
+            import snewpy
+            import AeViz.simulation.methods.snewpy
+            funcs = list_module_functions(AeViz.simulation.methods.snewpy)
+            for name, obj in funcs:
+                setattr(self, name, types.MethodType(obj, self))
+        except:
+            pass
+
     
     def __load_magnetic_fields_methods(self):
         import AeViz.simulation.methods.magnetic_fields

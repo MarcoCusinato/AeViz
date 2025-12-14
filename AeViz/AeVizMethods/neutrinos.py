@@ -92,3 +92,8 @@ def global_neutrino_mean_energies(self, projection:Literal['1D', '2D']='1D',
         kwargs['comp'] = comp
         AeViz_plot_panel(self, 'global_neutrino_mean_energies', None, projection,
                         'time', **kwargs)
+
+@fig_window_open
+def neutrino_event_rate(self, projection:Literal['1D', '2D']='1D', **kwargs):
+    AeViz_plot_panel(self, 'neutrino_event_rate', None, projection,
+                        'time', **kwargs)

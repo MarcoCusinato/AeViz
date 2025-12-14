@@ -11,10 +11,11 @@ ktonne = u.def_unit('kt', 1e3 * u.tonne, format={'latex': 'kt'},
 u.add_enabled_units(new_units)
 setattr(u, 'kBol', kBol)
 setattr(u, 'bry', bry)
+setattr(u, 'ktonne', ktonne)
 u.set_enabled_equivalencies(u.dimensionless_angles())
 __all__ = ['u']
 
-from .aerray import aerray, apply_monkey_patch
+from .aerray import aerray, apply_monkey_patch, remove_monkey_patch
 from .aeseries import aeseries
 
 apply_monkey_patch()
