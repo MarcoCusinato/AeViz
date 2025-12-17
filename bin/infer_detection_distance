@@ -73,6 +73,7 @@ print(f'Model: {sim.simulation_name}')
 print(f'Channel: {args.channel}')
 print(f'Threshold: {args.threshold}')
 print(f'Detector: {det_name}')
+print(f'Line of sight: {args.los}')
 if args.channel == 'neutrinos':
     print(f'Transormation: {args.transformation}')
 print(f'Maximum detection distance: {max_distance.to(u.kpc).value:.3f} [kpc]')
