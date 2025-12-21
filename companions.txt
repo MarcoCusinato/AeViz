@@ -1,0 +1,4 @@
+## Needed for the EMD and EEMD Analysis
+PyEMD @ git+https://github.com/laszukdawid/PyEMD.git
+sparse
+SNEWPY @ git+https://github.com/MarcoCusinato/snewpy.git
