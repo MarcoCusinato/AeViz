@@ -23,7 +23,18 @@ parser.add_argument('--los', type=str, nargs='+', default='all',
                     "eq, pol, avg\]")
 parser.add_argument('--tend', type=float, default=None,
                     help="Time up until to compute the series, in [s].")
+parser.add_argument('--closure', type=str, default='MaxS', required=False,
+                    help='Selects the closuere relation to use for the ' \
+                        'computation of the neutrino pressure tensor.')
 args = parser.parse_args()
+
+
+## Functions
+def to_lab_frame(F, P, E, v):
+    return F + v[0] * E + \
+        (v[0] * P[..., 0] +  v[1] * P[..., 1] +  \
+            v[2] * P[..., 2])
+
 
 los = args.los
 if not isinstance(los, list):
@@ -34,8 +45,9 @@ if 'all' in los:
 
 assert all(aa in ['avg', 'eq', 'pol'] for aa in los), "los must be in \['all'," \
                     "eq, pol, avg\]"
+
 ## Load the simulation data
-sim = Simulation(args.sim_name, args.sim_path)
+sim = Simulation(args.sim_name, args.sim_path, dim=3)
 if sim.dim == 1:
     los = ['avg']
 
@@ -56,7 +68,7 @@ else:
 ## Write header
 
 header = 'Neutrino data computed along the DIRECTION at 500 km from ' \
-    'the center for FLAVOUR\ntime [s]\tL_nu [fos/s]\t<e> [MeV]\t<e^2> [MeV^2]' 
+    'the center for FLAVOUR\ntime [s]\tL_nu [foe/s]\t<e> [MeV]\t<e^2> [MeV^2]' 
 feq = iend
 favg = iend
 fpol = iend
@@ -71,7 +83,7 @@ for ll in los:
             data_nux_avg = np.loadtxt(pp.replace('_nue_', '_nux_'))
             _, start =sim.find_file_from_time(data_nue_avg[-1, 0],
                                               return_index=True)
-            favg = start - istart
+            favg = start - istart + 1
     if ll == 'eq':
         feq = 0
         if os.path.exists(pp):
@@ -80,7 +92,7 @@ for ll in los:
             data_nux_eq = np.loadtxt(pp.replace('_nue_', '_nux_'))
             _, start =sim.find_file_from_time(data_nue_eq[-1, 0],
                                               return_index=True)
-            feq = start - istart
+            feq = start - istart + 1
     if ll == 'pol':
         fpol = 0
         if os.path.exists(pp):
@@ -89,7 +101,7 @@ for ll in los:
             data_nux_pol = np.loadtxt(pp.replace('_nue_', '_nux_'))
             _, start =sim.find_file_from_time(data_nue_pol[-1, 0],
                                               return_index=True)
-            fpol = start - istart
+            fpol = start - istart + 1
 findex = min(favg, feq, fpol)
 start = findex
 
@@ -117,16 +129,37 @@ while ene.ndim < sim.dim:
 for i, f in enumerate(file_list[start:]):
     ## Extract the energy dependent neutrino flux
     try:
-        nu = sim.neutrino_momenta(f)
+        Fnu = sim.neutrino_momenta(f)
     except Exception as e:
         print(e)
         findex += 1
         continue
     time = sim.time(f).value
     ## Get the radial flux for each flavour at 500 km
-    nue = nu[0][..., irad, :, 0] * factor
-    nua = nu[1][..., irad, :, 0] * factor
-    nux = nu[2][..., irad, :, 0] * factor
+    Fnue = Fnu[0][..., irad, :, 0]
+    Fnua = Fnu[1][..., irad, :, 0]
+    Fnux = Fnu[2][..., irad, :, 0]
+    ## Get the neutrino energy density
+    Enu = sim.neutrino_energy_density(f)
+    Enue = Enu[0][..., irad, :]
+    Enua = Enu[1][..., irad, :]
+    Enux = Enu[2][..., irad, :]
+    ## Get the neutrino pressure tensor
+    Pnu = sim.neutrino_pressure_tensor(f)
+    Pnue = Pnu[0][..., irad, :, 0, :]
+    Pnua = Pnu[1][..., irad, :, 0, :]
+    Pnux = Pnu[2][..., irad, :, 0, :]
+    ## Get the velocities
+    vr = sim.radial_velocity(f)[..., irad, None]
+    vt = sim.phi_velocity(f)[..., irad, None]
+    vp = sim.theta_velocity(f)[..., irad, None]
+    v = [vr, vt, vp]
+    ## To the Petercopt..., ehm ehm, I mean, to the lab frame!!
+    nue = to_lab_frame(Fnue, Pnue, Enue, v) * factor
+    nua = to_lab_frame(Fnua, Pnua, Enua, v) * factor
+    nux = to_lab_frame(Fnux, Pnux, Enux, v) * factor
+    
+        
     ## Compute the luminosity and the mean energies
     num_nue = (nue / ene).sum(axis=-1)
     num_nua = (nua / ene).sum(axis=-1)
@@ -193,7 +226,6 @@ for i, f in enumerate(file_list[start:]):
             data_nue_pol = nue_
             data_nua_pol = nua_
             data_nux_pol = nux_
-
     if 'eq' in los and findex >= feq:
         if sim.dim == 2:
             den = dOmega[j1:j2].sum()
@@ -238,9 +270,8 @@ for i, f in enumerate(file_list[start:]):
             data_nux_eq  = nux_
 
         
-
-    findex += 1
-    if findex % 10 == 0 and findex > 0:
+    if findex % 4 == 0:
+        print('Checkpoint reached, saving...')
         for ll in los:
             nue_name = os.path.join(save_path, f'{args.sim_name}_nue_{ll}.txt')
             nua_name = os.path.join(save_path, f'{args.sim_name}_nua_{ll}.txt')
@@ -266,7 +297,7 @@ for i, f in enumerate(file_list[start:]):
                     header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nua'))
                 np.savetxt(nux_name, data_nux_pol, 
                     header=header.replace('DIRECTION', ll).replace('FLAVOUR', 'nux'))
-        
+    findex += 1
 
 
 for ll in los:
