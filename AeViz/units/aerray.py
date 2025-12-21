@@ -399,8 +399,11 @@ class aerray(np.ndarray):
         new_label = r'%s$^{%d}$' % (self.label, exponent)
         # Check that none of the limits is NaN
         if self.limits is not None:
-            new_limits = [self.limits[0] ** exponent, \
+            try:
+                new_limits = [self.limits[0] ** exponent, \
                           self.limits[1] ** exponent]
+            except:
+                new_limits = self.limits
         else:
             new_limits = self.limits
 

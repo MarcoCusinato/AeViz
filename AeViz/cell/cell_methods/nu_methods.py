@@ -1,5 +1,7 @@
 from AeViz.units.aerray import aerray
 from AeViz.units import u
+from AeViz.units.constants import constants as c
+import numpy as np
 
 def E_nu_left(self):
     """
@@ -43,3 +45,10 @@ def dE_nu(self):
     dE = self.E_nu_right() - self.E_nu_left()
     dE.set(name='dE', label=r'$\mathrm{d}E$')
     return dE
+
+    
+def e(self):
+    """
+    Computes the small e for the neutrino fluxes
+    """
+    return (c.h  * c.c / (self.E_nu() * 4 * np.pi)) ** 3

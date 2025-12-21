@@ -473,3 +473,86 @@ def neutrino_energy_density_BB(self, file_name, **kwargs):
                   r'$E_{\nu_\mathrm{x}}^\mathrm{BB}$', 'plasma', [1e28, 1e32], 
                   True)
             )
+
+def flux_modulo(self, file_name, **kwargs):
+    """
+    Modulo of the non-grey neutrino fluxes
+    """
+    neu = self.neutrino_momenta(file_name)
+    if self.dim == 1:
+        nu_mod = [np.abs(neu[0]),
+                 np.abs(neu[1]),
+                 np.abs(neu[2])]
+    else:
+        nu_mod = [np.sqrt(neu[0][..., 0] ** 2 + neu[0][..., 1] ** 2  + \
+                  neu[0][..., 2] ** 2),
+                 np.sqrt(neu[1][..., 0] ** 2 + neu[1][..., 1] ** 2  + \
+                  neu[1][..., 2] ** 2),
+                 np.sqrt(neu[2][..., 0] ** 2 + neu[2][..., 1] ** 2  + \
+                  neu[2][..., 2] ** 2)]
+    return nu_mod
+
+def flux_direction(self, file_name, **kwargs):
+    neu = self.neutrino_momenta(file_name)
+    if 'neu_mod' in kwargs:
+        nu_mod = kwargs['neu_mod']
+    else:
+        nu_mod = self.flux_modulo(file_name)
+    return [np.nan_to_num(nn / nm[..., None]) for nn, nm in zip(neu, nu_mod)]
+
+def neutrino_flux_factor(self, file_name, **kwargs):
+    if 'neu_mod' in kwargs:
+        nu_mod = kwargs['neu_mod']
+    else:
+        nu_mod = self.flux_modulo(file_name)
+    E = self.neutrino_energy_density(file_name)
+    return [nn / (c.c * ee) for nn, ee in zip(nu_mod, E)]
+    
+
+def eddington_factor(self, file_name, closure:Literal['Minerbo', 'M1',
+                                                      'Janka', 'MaxS']='MaxS',
+                     **kwargs):
+    """
+    Computes the M1 closure relation as in Just et al., 2015
+    """
+    def sigma(x):
+        return np.nan_to_num(x ** 2 * (3 - x + 3 * x ** 2) / 5)
+    one = 1 * u.dimensionless_unscaled
+    if 'neu_mod' in kwargs:
+        ff = self.neutrino_flux_factor(file_name, neu_mod=kwargs['neu_mod'])
+    else: 
+        ff = self.neutrino_flux_factor(file_name)
+    if closure == 'Minerbo':
+        return [1/3 + 1/15 * (6 * f **2 - 2 * f **3 + 6 * f **4) for f in ff]
+    elif closure == 'M1':
+        return [(3 * one + 4 * f ** 2) / (5 + 2 * np.sqrt(4 - 3 * f ** 2)) for f in ff]
+    elif closure == 'Janka':
+        return [1/3 * (one + 0.5 * f ** (1.31) + 1.5 * f ** (3.56)) for f in ff]
+    elif closure == 'MaxS':
+        e = self.cell.e() / self.cell.dE_nu()
+        E = self.neutrino_energy_density(file_name)
+        while e.ndim < ff[0].ndim:
+            e = e[None, ...]
+        e = [e * EE for EE in E]
+        return [2/3 * (one - ee) * (one - 2 * ee) * sigma((f / (one - ee))) + 1/3 \
+            for f, ee in zip(ff, e)]
+
+def neutrino_pressure_tensor(self, file_name, closure:Literal['Minerbo', 'M1',
+                                                      'Janka', 'MaxS']='MaxS',
+                    **kwargs):
+    """
+    Computes the approximated pressure moments with the selected closure.
+    """
+    neu_mod = self.flux_modulo(file_name)
+    chi = self.eddington_factor(file_name, closure=closure, neu_mod=neu_mod)
+    chi = [cc[..., None, None] for cc in chi]
+    n = self.flux_direction(file_name, neu_mod=neu_mod)
+    eden = self.neutrino_energy_density(file_name)
+    eden = [ee[..., None, None] for ee in eden]
+    delta = np.eye(3, 3)
+    pnu = []
+    for inu in range(3):
+        pnu.append(eden[inu] * (0.5 * (1 - chi[inu]) * delta + \
+            0.5 * (3 * chi[inu] - 1) * n[inu][..., :, None] * n[inu][..., None, :]))
+    return pnu
+    
