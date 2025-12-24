@@ -1489,7 +1489,7 @@ def compute_SNR(simulation, detector, comp, distance=(u.kpc *10),
     ## Now we proceed with the actual computation of the SNR
     ## We assume constant spacing in the frequency domain
     df = np.mean(np.diff(hchar.frequency))
-    SNR = 4 * df * hchar.data ** 2 / (ASD.data ** 2 * ASD.frequency ** 2)
+    SNR = df * hchar.data ** 2 / (ASD.data ** 2 * ASD.frequency ** 2)
     ##Consistency check
     if SNR.unit != u.dimensionless_unscaled:
         raise ValueError("Units mismatch")

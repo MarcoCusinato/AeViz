@@ -474,13 +474,15 @@ class aeseries:
                                 np.argmax(self.time >= time_range[1]), 1)
         if windowing is None:
             window = 1.
+            wind_norm = 1.
         else:
             window = getattr(np, windowing)(indices[1] - indices[0])
+            wind_norm = np.sum(window) / len(window)
         dt = (self.time[indices][-1] - self.time[indices][0]).value
         freq = np.fft.fftfreq(len(self.time[indices]),
                               np.mean(np.diff(self.time[indices].to(u.s).value)))
         tilde_signal = np.abs(np.fft.fft(self.data[indices].value * window,
-                                         norm=norm, axis=axis)) * dt
+                                         norm=norm, axis=axis) / wind_norm) * dt
         if norm_by_max:
             tilde_signal /= np.abs(tilde_signal).max()
             units = u.dimensionless_unscaled
@@ -536,12 +538,14 @@ class aeseries:
         dt = (self.time[indices][-1] - self.time[indices][0]).value
         if windowing is None:
             window = 1.
+            wind_norm = 1.
         else:
             window = getattr(np, windowing)(len(self.time[indices]))
+            wind_norm = np.sum(window) / len(window)
         freq = np.fft.rfftfreq(len(self.time[indices]),
                               np.mean(np.diff(self.time[indices].to(u.s).value)))
         tilde_signal = np.abs(np.fft.rfft(self.data[indices].value * window,
-                                          norm=norm, axis=axis)) * dt
+                                          norm=norm, axis=axis) / wind_norm) * dt
         if norm_by_max:
             tilde_signal /= np.abs(tilde_signal).max()
             units = u.dimensionless_unscaled
