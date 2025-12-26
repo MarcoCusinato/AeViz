@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools >= 77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "AeViz"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+description = "Library to analyze data from simulation of core collapse supernovae done with Aenus-ALCAR."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Marco Cusinato", email = "marco.cusinato@uv.es"},
+]
+keywords = ["Aenus-ALCAR",
+            "astrophysics",
+            "supernovae",
+            "gravitational waves",
+            "neutrinos",
+            "data analysis"]
+classifiers = [
+    "Development Status :: 5 - Stable",
+    "Programming Language :: Python",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Topic :: Scientific/Engineering :: Astrophysics"
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+[project.urls]
+Repository = "https://github.com/MarcoCusinato/AeViz"
+
+[tool.setuptools.dynamic]
+version = { file = "__version__" }
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies.companion = { file = ["companions.txt"] }
+
+[tool.setuptools]
+script-files = ["bin/add_Aenus_sim_paths",
+                "bin/create_EEMD",
+                "bin/create_GREAT_profiles",
+                "bin/create_snewpy_data",
+                "bin/delete_Aenus_postprocessing",
+                "bin/get_notrino_coefficients",
+                "bin/infer_detection_distance",
+                "bin/run_comparison",
+                "bin/run_postprocessing"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["bin"]
