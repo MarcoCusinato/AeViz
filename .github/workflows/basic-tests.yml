@@ -32,7 +32,7 @@ jobs:
     
     - name: Install the companion packages
       run: |
-        pip install -r companion.txt
+        pip install -r companions.txt
 
     - name: Install the package
       run: |
