@@ -27,6 +27,8 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
             return derive_profile(simulation, 'BV_frequency', **kwargs)
         else:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
+    elif profile in ['internal_energy', 'gravitational_potential', 'soundspeed']:
+        return read_other_profile(simulation, profile, save_checkpoints)
     elif profile in ['radial_velocity', 'phi_velocity', 'theta_velocity', 'omega'] and \
         ((kwargs['diff'] and kwargs['rms'] and not kwargs['norm']) or \
          (not kwargs['diff'] and not kwargs['rms'])):
@@ -84,6 +86,34 @@ def read_velocity_profile(simulation, profile, rms, save_checkpoints):
     else:
         derive_velocity_profiles(simulation, None, save_checkpoints)
         return read_velocity_profile(simulation, profile, rms, save_checkpoints)
+
+def read_other_profile(simulation, profile, save_checkpoints):
+    """
+    Reads the radial profile saved in the profiles.h5 file.
+    """
+    if check_existence(simulation, 'additional_profiles.h5'):
+        data = h5py.File(os.path.join(simulation.storage_path, 'additional_profiles.h5'), 'r')
+        if not 'processed' in data.keys():
+            data.close()
+            data = h5py.File(os.path.join(simulation.storage_path,
+                                          'additional_profiles.h5'), 'r+')
+            data.create_dataset('processed',
+                                data=simulation.hdf_file_list[:len(data['time'][...])])
+            data.close()
+            data = h5py.File(os.path.join(simulation.storage_path,
+                                          'additional_profiles.h5'), 'r')
+        if data['processed'][-1].decode("utf-8") == simulation.hdf_file_list[-1] \
+            or simulation.no_new:
+            t, pr = data['time'][...], data['profiles/' + profile][...]
+            data.close()
+            return make_other_series(t, simulation.cell.radius(simulation.ghost), pr,
+                               profile)
+        else:
+            derive_other_profiles(simulation, data, save_checkpoints)
+            return read_other_profile(simulation, profile, save_checkpoints)
+    else:
+        derive_other_profiles(simulation, None, save_checkpoints)
+        return read_other_profile(simulation, profile, save_checkpoints)
 
 def derive_profile(simulation, profile, **kwargs):
     """
@@ -372,6 +402,77 @@ def derive_velocity_profiles(simulation, data, save_checkpoints):
                                                   processed_hdf])
     print('Velocity profiles saved.')
 
+def derive_other_profiles(simulation, data, save_checkpoints):
+    """
+    Calculates and saves the graviational potential, internal energy and
+    soundspeed radial profiles in an hdf file.
+    """
+    if data is None:
+        start_point = 0
+        processed_hdf = []
+    else:
+        time = data['time'][...] * u.s
+        start_point = len(data['processed'][...])
+        processed_hdf = [ff.decode("utf-8") for ff in data['processed'][...]]
+        print('Checkpoint found. Starting from timestep', start_point)
+        profiles = {
+            'gravitational_potential': data['profiles/gravitational_potential'][...] * u.erg / u.g,
+            'internal_energy': data['profiles/internal_energy'][...] * u.erg / u.cm**3,
+            'soundspeed': data['profiles/soundspeed'][...] * u.cm / u.s
+                    }
+        data.close()
+    
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    dOmega = simulation.cell.dOmega(simulation.ghost)
+    checkpoint_index = 0
+    progress_index = 0
+    total_points = len(simulation.hdf_file_list) - start_point
+    for file in simulation.hdf_file_list[start_point:]:
+        t_file = simulation.time(file, True)
+        gpot_av = function_average(simulation.gravitational_potential(file),
+                                   simulation.dim, 'Omega', dOmega)[..., None]
+        eint_av = function_average(simulation.internal_energy(file),
+                                   simulation.dim, 'Omega', dOmega)[..., None]
+        cs_av = function_average(simulation.soundspeed(file), simulation.dim,
+                                'Omega', dOmega)[..., None]        
+
+        try:
+            time = np.concatenate((time, t_file))
+            profiles = {
+                'gravitational_potential': np.concatenate((profiles['gravitational_potential'],
+                                                gpot_av), axis=-1),
+                'internal_energy': np.concatenate((profiles['internal_energy'],
+                                                 eint_av), axis=-1),
+                'soundspeed': np.concatenate((profiles['soundspeed'], cs_av), axis=-1),
+            }
+        except Exception as e:
+            print(e)
+            time = t_file
+            profiles = {
+                'gravitational_potential': gpot_av,
+                'internal_energy': eint_av,
+                'soundspeed': cs_av
+            }
+        processed_hdf.append(file)
+        if checkpoint_index >= checkpoint:
+            checkpoint_index = 0
+            print('Saving checkpoint...')
+            save_hdf(os.path.join(simulation.storage_path,
+                                  'additional_profiles.h5'),
+                     ['time', 'profiles', 'processed'],
+                     [time, profiles, processed_hdf])
+        
+        progressBar(progress_index, total_points, 'Calculating profiles...')
+        progress_index += 1
+        checkpoint_index += 1
+    save_hdf(os.path.join(simulation.storage_path, 'additional_profiles.h5'),
+             ['time', 'profiles', 'processed'],  [time, profiles,
+                                                  processed_hdf])
+    print('Profiles saved.')
+
 def make_series(time, radius, prof, name):
     """
     Returns a series of profiles for a given time.
@@ -448,4 +549,23 @@ def make_velocity_series(time, radius, prof, name, rms):
             pr = aerray(prof, 1 / u.s, 'omega_rms_profile',
                         r'$\sqrt{\langle (\delta \Omega_\phi)^2 \rangle}_\Omega$',
                         'turbo', [1e0, 1e3], True)
+    return aeseries(pr, time=t, radius=radius)
+
+def make_other_series(time, radius, prof, name):
+    """
+    Returns a series of profiles for a given time.
+    """
+    t = aerray(time, u.s, 'time', r'$t-t_\mathrm{b}$', None, [-0.005, time[-1]])
+    if name == 'soundspeed':
+        pr = aerray(prof, u.cm / u.s, 'soundspeed_profile',
+                    r'$\langle c_\mathrm{s}\rangle_\Omega$', 'nipy_spectral',
+                    [1e8, 1e10], True)
+    elif name == 'internal_energy':
+        pr = aerray(prof, u.erg / u.cm**3, 'internal_energy_profile',
+                    r'$\langle E_\mathrm{int}\rangle_\Omega$', 'nipy_spectral',
+                    [1e24, 1e35], log=True)
+    elif name == 'gravitational_potential':
+        pr = aerray(prof, u.erg / u.g, 'gravitational_potential_profile',
+                    r'$\langle \Phi\rangle_\Omega$', 'magma', 
+                    [-1e22, -1e15], True)
     return aeseries(pr, time=t, radius=radius)

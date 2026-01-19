@@ -8,6 +8,7 @@ import h5py, os
 import numpy as np
 from AeViz.simulation.methods.other_spherical_sym import radial_profile
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--sim-name', type=str, required=True,
                     help="Name of the simulation of which postprocessing ' \
@@ -17,8 +18,6 @@ parser.add_argument('--sim-path', type=str, default=None, required=False,
 parser.add_argument('--tob', default=None, type=float, required=False,
                     help="Sets the time of bounce manually and stores it into \
                         a file")
-parser.add_argument('--last-cell', type=str, default='shock',
-                    help="Sets the last cell of the analysis")
 args = parser.parse_args()
 sim = Simulation(args.sim_name, args.sim_path)
 if args.tob:
@@ -31,45 +30,29 @@ if args.tob:
 rho = sim.radial_profile('rho', tob_corrected=False)
 time = rho.time
 radius = rho.radius
-rho = rho.data * c.G / c.c ** 2
-BV = sim.radial_profile('BV_frequency').data / c.c ** 2
-csound = sim.radial_profile('soundspeed').data ** 2 / c.c ** 2
-p = sim.radial_profile('gas_pressure').data.to(u.g/u.s**2/u.cm) * c.G / c.c ** 4
-eps = sim.radial_profile('specific_internal_energy').data / c.c ** 2
-lapse = sim.radial_profile('lapse_function').data
+rho = rho.data
+csound = sim.radial_profile('soundspeed').data 
+p = sim.radial_profile('gas_pressure').data.to(u.dyn/u.cm**2) 
+eps = sim.radial_profile('internal_energy').data 
 temp = sim.radial_profile('temperature').data
 ye = sim.radial_profile('Ye').data
-vr = sim.radial_profile('radial_velocity').data / c.c
-phi = sim.radial_profile('gravitational_potential').data / c.c ** 2
-gamma = csound * rho / p
+vr = sim.radial_profile('radial_velocity').data 
+phi = sim.radial_profile('gravitational_potential').data 
+gamma = csound ** 2 * rho / p
 
-## Select the radius index
-if args.last_cell == 'shock':
-    rr = sim.shock_radius(rad='avg')
-elif args.last_cell == 'PNS':
-    rr = sim.PNS_radius(rad='avg')
-elif args.last_cell == 'innercore':
-    rr = sim.innercore_radius(rad='avg')
-else:
-    raise TypeError("Not recognized")
-
-indices = np.argmax(radius[:, None] >= rr[None, :], axis=0)
 path = os.path.join(sim.storage_path, 'GREAT_profiles.h5')
 
 with h5py.File(path, 'w') as f:
     f.create_dataset('radius', data=radius.value)
     f.create_dataset('time', data=time.value)
     f.create_dataset('density', data=rho.value)
-    f.create_dataset('BV', data=BV.value)
-    f.create_dataset('soundspeed2', data=csound.value)
+    f.create_dataset('soundspeed', data=csound.value)
     f.create_dataset('pressure', data=p.value)
     f.create_dataset('internal_energy', data=eps.value)
-    f.create_dataset('lapse', data=lapse.value)
     f.create_dataset('temperature', data=temp.value)
     f.create_dataset('Ye', data=ye.value)
     f.create_dataset('vr', data=vr.value)
     f.create_dataset('gamma', data=gamma.value)
-    f.create_dataset('phi', data=phi.value)
-    f.create_dataset('iR', data=indices, dtype=int)
+    f.create_dataset('g', data=phi.value)
     
 print("GREAT creation!")
