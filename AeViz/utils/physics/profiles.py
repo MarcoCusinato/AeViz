@@ -27,7 +27,8 @@ def calculate_profile(simulation, profile, save_checkpoints, **kwargs):
             return derive_profile(simulation, 'BV_frequency', **kwargs)
         else:
             return read_profile(simulation, 'BV_frequency', save_checkpoints)
-    elif profile in ['internal_energy', 'gravitational_potential', 'soundspeed']:
+    elif profile in ['internal_energy', 'gravitational_potential', 'soundspeed',
+                     'total_magnetic_field']:
         return read_other_profile(simulation, profile, save_checkpoints)
     elif profile in ['radial_velocity', 'phi_velocity', 'theta_velocity', 'omega'] and \
         ((kwargs['diff'] and kwargs['rms'] and not kwargs['norm']) or \
@@ -418,7 +419,8 @@ def derive_other_profiles(simulation, data, save_checkpoints):
         profiles = {
             'gravitational_potential': data['profiles/gravitational_potential'][...] * u.erg / u.g,
             'internal_energy': data['profiles/internal_energy'][...] * u.erg / u.cm**3,
-            'soundspeed': data['profiles/soundspeed'][...] * u.cm / u.s
+            'soundspeed': data['profiles/soundspeed'][...] * u.cm / u.s,
+            'total_magnetic_field': data['profiles/total_magnetic_field'][...] * u.G
                     }
         data.close()
     
@@ -437,7 +439,9 @@ def derive_other_profiles(simulation, data, save_checkpoints):
         eint_av = function_average(simulation.internal_energy(file),
                                    simulation.dim, 'Omega', dOmega)[..., None]
         cs_av = function_average(simulation.soundspeed(file), simulation.dim,
-                                'Omega', dOmega)[..., None]        
+                                'Omega', dOmega)[..., None]
+        bfield_av = function_average(simulation.total_magnetic_field(file),
+                                  simulation.dim, 'Omega', dOmega)[..., None]     
 
         try:
             time = np.concatenate((time, t_file))
@@ -447,6 +451,7 @@ def derive_other_profiles(simulation, data, save_checkpoints):
                 'internal_energy': np.concatenate((profiles['internal_energy'],
                                                  eint_av), axis=-1),
                 'soundspeed': np.concatenate((profiles['soundspeed'], cs_av), axis=-1),
+                'total_magnetic_field': np.concatenate((profiles['total_magnetic_field'], bfield_av), axis=-1),
             }
         except Exception as e:
             print(e)
@@ -454,7 +459,8 @@ def derive_other_profiles(simulation, data, save_checkpoints):
             profiles = {
                 'gravitational_potential': gpot_av,
                 'internal_energy': eint_av,
-                'soundspeed': cs_av
+                'soundspeed': cs_av,
+                'total_magnetic_field': bfield_av
             }
         processed_hdf.append(file)
         if checkpoint_index >= checkpoint:
@@ -568,4 +574,8 @@ def make_other_series(time, radius, prof, name):
         pr = aerray(prof, u.erg / u.g, 'gravitational_potential_profile',
                     r'$\langle \Phi\rangle_\Omega$', 'magma', 
                     [-1e22, -1e15], True)
+    elif name == 'total_magnetic_field':
+        pr = aerray(prof, u.G, 'B_tot_profile',
+                    r'$\langle B_\mathrm{tot}\rangle_\Omega$', 'magma', 
+                    [1e0, 1e15], True)
     return aeseries(pr, time=t, radius=radius)

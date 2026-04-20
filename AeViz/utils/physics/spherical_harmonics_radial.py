@@ -8,6 +8,35 @@ from AeViz.units import u
 from typing import Literal
 from AeViz.units import aerray, aeseries
 
+def get_radius_indices(simulation, r, radius):
+    if isinstance(r, str):
+        rs = r.split('-')
+        if len(rs) == 1:
+            rr = rs[0]
+            rt = 'avg'
+            rc = None
+        elif len(rs) == 2:
+            rr = rs[0]
+            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else 'avg'
+            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else None
+        elif len(rs) == 3:
+            rr = rs[0]
+            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else rs[2] \
+                if rs[2] in ['avg', 'max', 'min'] else 'avg'
+            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else \
+                rs[2] if rs[2] not in ['avg', 'max', 'min', 'full'] else None
+        r = getattr(simulation, rr)(rad=rt) if rc is None else \
+            getattr(simulation, rr)(rad=rt, comp=rc)
+        rindex = np.argmax(radius[:, None] >= r.data[None, :], axis=0)
+    else:
+        if r >= radius[-1]:
+            rindex = -1
+        elif r <= radius[0]:
+            rindex = 0
+        else:
+            rindex = np.argmax(radius >= r)
+    return rindex
+
 def Harmonics_decomposition_rho(simulation, file_name, theta, phi, dOmega, SpH,
                                 lmax = 4):
     rho = simulation.rho(file_name)
@@ -187,8 +216,11 @@ def get_sph_profiles_r(simulation, l, m=None, zero_norm=True,
         rlm /= r00
     if r is not None:
         radius = simulation.cell.radius(simulation.ghost)
-        rindex = np.argmax(radius >= r)
-        return time, rlm[rindex, ...]
+        rindex = get_radius_indices(simulation, r, radius)
+        try:
+            return time, rlm[rindex, np.arange(len(rindex))]
+        except:
+            return time, rlm[rindex, ...]
     else:
         rho = simulation.radial_profile('rho').data.value
         if rhomin is None:

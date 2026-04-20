@@ -68,6 +68,18 @@ def poloidal_magnetic_fields(self, file_name, **kwargs):
 @smooth
 @derive
 @finite_differences
+def total_magnetic_field(self, file_name, **kwargs):
+    Br, Btheta, Bphi = self.magnetic_fields(file_name)
+    data = np.sqrt(Br ** 2 + Btheta ** 2 + Bphi ** 2)
+    data.set(label=r'$B_\mathrm{tot}$', name='B_tot', limits=[1e0, 1e15],
+             log=True, cmap='inferno')
+    return data
+
+@get_grid
+@mask_points
+@smooth
+@derive
+@finite_differences
 def toroidal_magnetic_fields(self, file_name, **kwargs):
     _, _, Bphi = self.magnetic_fields(file_name)
     return Bphi

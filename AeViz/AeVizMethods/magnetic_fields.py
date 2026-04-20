@@ -50,3 +50,9 @@ def magnetic_energy(self, file=None, projection:Literal['1D', '2D']='1D',
         kwargs['comp'] = comp
         AeViz_plot_panel(self, 'magnetic_energy', file, projection,
                          plane, **kwargs)
+
+@fig_window_open   
+def total_magnetic_field(self, file=None, projection:Literal['1D', '2D']='1D',
+                           plane='radius', **kwargs):
+    AeViz_plot_panel(self, 'total_magnetic_field', file, projection,
+                         plane, **kwargs)
