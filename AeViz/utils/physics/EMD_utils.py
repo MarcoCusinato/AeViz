@@ -26,15 +26,28 @@ def polish_signal(GWs, frequency_cut):
     GWs.data[:] = filtfilt(b, a, GWs.data.value)
     return GWs, frequency_cut
 
-def remove_residuals(GWs):
+def remove_residuals(GWs, time=None):
     """
     Remove residuals from the signal.
     """
     emd = EMD()
-    
-    emd.emd(GWs.data.value, GWs.time.value)
-    _, residual = emd.get_imfs_and_residue()
-    GWs.data -= (residual * GWs.data.unit)
+    if isinstance(GWs, aeseries):
+        emd.emd(GWs.data.value, GWs.time.value)
+        _, residual = emd.get_imfs_and_residue()
+        GWs.data -= (residual * GWs.data.unit)
+    elif time is not None:
+        if isinstance(GWs, aerray) and isinstance(time, aerray):
+            emd.emd(GWs.value, time.value)
+            _, residual = emd.get_imfs_and_residue()
+            lb, lm, nm = GWs.label, GWs.limits, GWs.name
+            GWs -= (residual * GWs.unit)
+            GWs.set(label=lb, limits=lm, name=nm)
+        elif isinstance(GWs, np.ndarray) and isinstance(time, np.ndarray):
+            emd.emd(GWs, GWs)
+            _, residual = emd.get_imfs_and_residue()
+            GWs -= residual
+        else:
+            raise TypeError("Not supported.")
     return GWs
 
 def save_IMFs(res, path, time, IMFs, residue, args):
