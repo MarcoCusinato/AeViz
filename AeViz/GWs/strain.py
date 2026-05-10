@@ -11,6 +11,7 @@ from numpy.fft import rfftfreq, rfft
 from AeViz.utils.files.string_utils import merge_strings, apply_symbol
 from AeViz.utils.math_utils import IDL_derivative
 import copy
+import inspect
 
 class GWstrain:
     """
@@ -130,9 +131,9 @@ class GWstrain:
         if kwargs.keys() == self.quadrupole_set:
             self.has_tensor = True
             if strain_units == u.dimensionless_unscaled:
-                uu = self.distance.to(u.cm)
+                uu = self.distance.to(u.cm) * u.cm
             else:
-                uu = strain_units.to(u.cm)
+                uu = strain_units.to(u.cm) * u.cm
             for name, value in kwargs.items():
                 vv = (value * uu)
                 vv.set(name=name, label=r'$\ddot{t}_{' + name[1:] + '}$')
@@ -234,7 +235,7 @@ class GWstrain:
             n = len(self.time)
         new_time = np.linspace(self.time[0].value, self.time[-1].value, n,
                         endpoint=True)
-        self.ref_time = aerray(
+        self.time_ref = aerray(
             new_time,
             self.time.unit, self.time.name, self.time.label,
             limits=self.time.limits
@@ -268,10 +269,15 @@ class GWstrain:
                 win = getattr(scipy.signal.windows, self.fft_config['window_type'])
             except:
                 win = getattr(np, self.fft_config['window_type'])
+            win_kwargs = inspect.signature(win).parameters
+            window_kwargs = {
+                k: v for k, v in self.fft_config['window_kwargs'].items()
+                if k in win_kwargs
+            }
             try:
-                win = win(len(self.ref_time), **self.fft_config['window_kwargs'])
+                win = win(len(self.time_ref), **window_kwargs)
             except:
-                win = win(len(self.ref_time))
+                win = win(len(self.time_ref))
         ## renormalise the window to account for the lost power
         wind_norm = np.sqrt(np.sum(win ** 2) / len(win))
         win = win / wind_norm
@@ -292,8 +298,8 @@ class GWstrain:
         up.
         """
         length = self.fft_config['pad_length'].to(self.time.unit)
-        if hasattr(self, 'ref_time'):
-            time = self.ref_time
+        if hasattr(self, 'time_ref'):
+            time = self.time_ref
         else:
             time = self.time.copy()
         dt = time[1] - time[0]
@@ -344,7 +350,7 @@ class GWstrain:
             setattr(self, f'{hh}_ref', getattr(self, hh).copy())
         if self.fft_config['regularise']:
             self.__regularise()
-        if self.fft_config['window']:
+        if self.fft_config['apply_window']:
             self.__windowing()
         if self.fft_config['pad']:
             self.__pad()
@@ -355,7 +361,8 @@ class GWstrain:
             u.Hz,
             'frequency',
             r'$f$',
-            limits=[1e1, 1e4]
+            limits=[1e1, 1e4],
+            log=True
         )
         ## Compute the real fourier transform of the signal
         for hh in ['hple_ref', 'hplp_ref', 'hcre_ref', 'hcrp_ref']:
@@ -398,8 +405,8 @@ class GWstrain:
                        pad: bool = False,
                        pad_value: float | list = 0,
                        pad_length: aerray=(1*u.s),
-                       window: bool = True,
-                       window_type: str = 'hann',
+                       apply_window: bool = True,
+                       window_type: str = 'hanning',
                        **window_kwargs
                        ) -> None:
         """
@@ -435,8 +442,8 @@ class GWstrain:
             'n': n,
             'pad': pad,
             'pad_value': pad_value,
-            'pad_lenght': pad_length,
-            'window': window,
+            'pad_length': pad_length,
+            'apply_window': apply_window,
             'window_type': window_type,
             'window_kwargs': window_kwargs             
         }
@@ -837,7 +844,7 @@ class GWstrain:
             nm, lb = hchar.name, hchar.label
             lb = merge_strings(lb, r'$/\sqrt{f}$')
             hchar /= np.sqrt(self.frequency)
-            hchar.set(name=nm, label=lb)
+            hchar.set(name=nm, label=lb, log=True)
         return aeseries(
             hchar,
             frequency = self.frequency
@@ -862,6 +869,10 @@ class GWstrain:
             new_ASD = aerray(new_ASD, (u.Hz**-0.5), ASD.data.name,
                              r'$ASD_\mathrm{' + ASD.data.name + '}$')
             return new_ASD
+        
+        if not self.is_detrended:
+            warnings.warn("The strain is not detrended, "\
+                "this may cause the SNR to be larger.")
         if not hasattr(self, 'hchar_eq_ene'):
             self.compute_characteristic_strain()
         df = (self.frequency[1] - self.frequency[0]) / self.frequency ** 2
