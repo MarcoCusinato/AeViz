@@ -11,7 +11,7 @@ from AeViz.utils.files.path_utils import (pltf, simulation_local_storage_folder,
                                           local_storage_folder, 
                                           find_simulation)
 from AeViz.utils.decorators.simulation import hdf_isopen
-from AeViz.utils.files.file_utils import list_module_functions
+from AeViz.utils.files.file_utils import list_module_functions, load_file
 from AeViz.utils.utils import time_array
 import numpy as np
 import types, os
@@ -147,7 +147,10 @@ class Simulation:
     
     @subtract_tob
     def global_error(self, tob_corrected=True, **kwargs):
-        data = np.loadtxt(os.path.join(self.__log_path, self.__erg_data))
+        if not self.__erg_data in self.__loaded_files:
+            self.__loaded_files[self.__erg_data] = \
+                load_file(self.__log_path, self.__erg_data)
+        data = self.__loaded_files[self.__erg_data]
         return aeseries(
             aerray(data[:, -1], u.dimensionless_unscaled, 'error', 
                       r'$\mathrm{Error cells}$',
