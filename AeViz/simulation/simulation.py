@@ -68,6 +68,12 @@ class Simulation:
         self.__mag_data = 'mag.dat'
         self.__erg_data = 'erg.dat'
         self.__vel_data = 'vel.dat'
+        ## Dictionary containing the opened log files. Useful especially
+        ## when working remote
+        self.__loaded_files = {}
+        ## store the gws parameters and the gws strain class
+        self.__gws = None
+        self.__gws_param = {}
         ## Opened file name
         self.__data_h5 = None
         self.__opened_hdf_file = ''
