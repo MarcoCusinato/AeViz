@@ -85,14 +85,27 @@ def load_file(path_folder, file_name):
                         
     return data
 
-def find_column_changing_line(path_folder, file_name, column=None):
+def find_column_changing_line(path_folder: str,
+                              file_name: str) -> list:
     """
-    Loads a data file and returns the number of the line at which
-    there is a numbero of columns change.
+    Loads a data file and returns the list of line numbers at which
+    number of the line at which the number of columns changes.
+
+    Parameters
+    ----------
+    path_folder : str
+        path of the folder in which the file is located
+    file_name : str
+        name of the file to load
+
+    Returns
+    -------
+    list
+        list of row numbers
     """
-    default_column = 0
-    if column is None:
-        column = default_column
+    #default_column = 0
+    #if column is None:
+    #    column = default_column
     path = os.path.join(path_folder, file_name)
     assert os.path.exists(path), "Selected file does not exists"
     number_of_colums = None
@@ -109,13 +122,13 @@ def find_column_changing_line(path_folder, file_name, column=None):
                 line_change.append(line_number)
                 #break
             line_number += 1
-    if len(line_change) > 1:
-        line_number = line_change[column]
-    if len(line_change) == 1:
-        line_number = line_change[0]
-    if line_number < 3:
-        line_number = None
-    return line_number
+    #if len(line_change) > 1:
+    #    line_number = line_change[column]
+    #if len(line_change) == 1:
+    #    line_number = line_change[0]
+    #if line_number < 3:
+    #    line_number = None
+    return line_change
 
 def save_hdf(save_path, dataset_keywords, dataset_values):
     """

@@ -29,6 +29,9 @@ parser.add_argument('--threshold', type=float, default=15,
                     help="SNR or detection rate threshold.")
 parser.add_argument('--detector', type=str, required=True,
                     help="The name of the neutrino or GW wave detector to use.")
+parser.add_argument('--mode', type=str, required=False, default='energy',
+                    help="The computation of the characteristic GW strain "\
+                        "available modes ['fft', 'energy']")
 parser.add_argument('--transformation', type=str, default='NoTransformation',
                     help="The flavour transformation to use in the neutrino " \
                     "detection.")
@@ -60,9 +63,11 @@ elif args.channel == "GWs":
         args.time_range = None 
     snr, det_name = compute_SNR(sim,
                                 args.detector,
-                                'h'+args.los,
+                                args.los,
                                 distance=ref_distance,
-                                time_range=args.time_range)
+                                time_range=args.time_range,
+                                mode=args.mode,
+                                evolution=False)
     max_distance = ref_distance * snr / args.threshold
 else:
     raise TypeError("Channel not recognized.")

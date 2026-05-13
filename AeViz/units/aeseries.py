@@ -45,7 +45,7 @@ def get_selection_indices(a, b):
     return tuple(selection)
 
 
-class aeseries:    
+class aeseries:
     def __init__(self, data, **kwargs):
         assert isinstance(data, aerray), "The main quantity has to " \
             "be an array"

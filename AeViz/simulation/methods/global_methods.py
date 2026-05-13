@@ -26,8 +26,11 @@ def global_neutrino_luminosity(self, tob_corrected=True,
     luminosity flux nua  6: number luminosity flux nua
     luminosity flux nux  7: number luminosity flux nux
     """
-    nu_tmp = load_file(self._Simulation__log_path,
+    if not self._Simulation__integrated_nu_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__integrated_nu_path] = \
+            load_file(self._Simulation__log_path,
                        self._Simulation__integrated_nu_path)
+    nu_tmp = self._Simulation__loaded_files[self._Simulation__integrated_nu_path]
     time = aerray(nu_tmp[:,2], u.s, 'time', r'$t$', None, [0, nu_tmp[-1, 2]], False)
     if comp == 'all':
         return [aeseries(
@@ -69,8 +72,11 @@ def global_neutrino_number_luminosity(self, tob_corrected=True,
     number luminosity flux nua
     number luminosity flux nux
     """
-    nu_tmp = load_file(self._Simulation__log_path,
+    if not self._Simulation__integrated_nu_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__integrated_nu_path] = \
+            load_file(self._Simulation__log_path,
                        self._Simulation__integrated_nu_path)
+    nu_tmp = self._Simulation__loaded_files[self._Simulation__integrated_nu_path]
     time = aerray(nu_tmp[:,2], u.s, 'time', r'$t$', None, [0, nu_tmp[-1, 2]], False)
     if comp == 'all':
         return [aeseries(
@@ -143,7 +149,11 @@ def total_mass(self, tob_corrected=True, **kwargs):
     """
     Aeseries with mass in solar masses
     """
-    file = load_file(self._Simulation__log_path, self._Simulation__rho_max_path)
+    if not self._Simulation__rho_max_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__rho_max_path] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__rho_max_path)
+    file = self._Simulation__loaded_files[self._Simulation__rho_max_path]
     M = aerray(file[:, 4], u.g, 'mtot', r'$M_\mathrm{tot}$', limits=[0, 10]).to(u.M_sun)
     time = aerray(file[:, 2], u.s, 'time', r'$t$', None, [0, file[-1, 2]], False)
     return aeseries(M, time=time)
@@ -158,7 +168,11 @@ def global_rho(self, tob_corrected=True, comp:Literal['max', 'min']='max',
     1: time
     2: rho max
     """
-    rho = load_file(self._Simulation__log_path, self._Simulation__rho_max_path)
+    if not self._Simulation__rho_max_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__rho_max_path] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__rho_max_path)
+    rho = self._Simulation__loaded_files[self._Simulation__rho_max_path]
     time = aerray(rho[:,2], u.s, 'time', r'$t$', None, [0, rho[-1, 2]], False)       
     if comp == 'max':
         return aeseries(
@@ -178,7 +192,11 @@ def global_rho(self, tob_corrected=True, comp:Literal['max', 'min']='max',
 @subtract_tob
 def global_Ye(self, tob_corrected=True, comp:Literal['max', 'min', 'cent']='cent',
               **kwargs):
-    Ye = load_file(self._Simulation__log_path, self._Simulation__rho_max_path)
+    if not self._Simulation__rho_max_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__rho_max_path] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__rho_max_path)
+    Ye = self._Simulation__loaded_files[self._Simulation__rho_max_path]
     time = aerray(Ye[:,2], u.s, 'time', r'$t$', None, [0, Ye[-1, 2]], False)
     if comp == 'max':
         return aeseries(
@@ -205,7 +223,11 @@ def global_Ye(self, tob_corrected=True, comp:Literal['max', 'min', 'cent']='cent
 def global_temperature(self, tob_corrected=True, comp:Literal['max', 'min',
                                                               'cent']='max',
               **kwargs):
-    T = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    T = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(T[:,2], u.s, 'time', r'$t$', None, [0, T[-1, 2]], False)
     if comp == 'max':
         return aeseries(
@@ -232,7 +254,11 @@ def global_temperature(self, tob_corrected=True, comp:Literal['max', 'min',
 def global_entropy(self, tob_corrected=True, comp:Literal['max', 'min',
                                                               'cent']='max',
               **kwargs):
-    T = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    T = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(T[:,2], u.s, 'time', r'$t$', None, [0, T[-1, 2]], False)
     if comp == 'max':
         return aeseries(
@@ -258,7 +284,11 @@ def global_entropy(self, tob_corrected=True, comp:Literal['max', 'min',
 @subtract_tob
 def global_gas_pressure(self, tob_corrected=True, comp:Literal['max', 'min']='max',
               **kwargs):
-    T = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    T = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(T[:,2], u.s, 'time', r'$t$', None, [0, T[-1, 2]], False)
     if comp == 'max':
         return aeseries(
@@ -277,7 +307,11 @@ def global_gas_pressure(self, tob_corrected=True, comp:Literal['max', 'min']='ma
 @derive
 @subtract_tob
 def global_radial_velocity(self, tob_corrected=True, **kwargs):
-    v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
+    if not self._Simulation__vel_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__vel_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__vel_data)
+    v = self._Simulation__loaded_files[self._Simulation__vel_data]
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
     return aeseries(
             aerray(v[:, -3], u.cm / u.s, 'vrmax',
@@ -289,7 +323,11 @@ def global_radial_velocity(self, tob_corrected=True, **kwargs):
 @derive
 @subtract_tob
 def global_theta_velocity(self, tob_corrected=True, **kwargs):
-    v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
+    if not self._Simulation__vel_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__vel_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__vel_data)
+    v = self._Simulation__loaded_files[self._Simulation__vel_data]
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
     return aeseries(
             aerray(v[:, -2], u.cm / u.s, 'vthetamax',
@@ -301,7 +339,11 @@ def global_theta_velocity(self, tob_corrected=True, **kwargs):
 @derive
 @subtract_tob
 def global_theta_velocity(self, tob_corrected=True, **kwargs):
-    v = load_file(self._Simulation__log_path, self._Simulation__vel_data)
+    if not self._Simulation__vel_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__vel_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__vel_data)
+    v = self._Simulation__loaded_files[self._Simulation__vel_data]
     time = aerray(v[:,2], u.s, 'time', r'$t$', None, [0, v[-1, 2]], False)
     return aeseries(
             aerray(v[:, -1], u.cm / u.s, 'vphimax',
@@ -317,7 +359,11 @@ def global_rotational_energy(self, tob_corrected=True, **kwargs):
     1: time
     2: total rotational energy
     """
-    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    en = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     return aeseries(
         aerray(en[:, 10], u.erg, 'Erottot',
@@ -329,7 +375,11 @@ def global_rotational_energy(self, tob_corrected=True, **kwargs):
 @derive
 @subtract_tob
 def global_internal_energy(self, tob_corrected=True, **kwargs):
-    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    en = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     return aeseries(
         aerray(en[:, 4], u.erg, 'internal_energy',
@@ -343,7 +393,11 @@ def global_internal_energy(self, tob_corrected=True, **kwargs):
 def global_magnetic_energy(self, comp: Literal['tot', 'pol', 'tor', 'r',
                                                'th', 'ph']='tot',
                            tob_corrected=True, **kwargs):
-    en = load_file(self._Simulation__log_path, self._Simulation__mag_data)
+    if not self._Simulation__mag_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__mag_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__mag_data)
+    en = self._Simulation__loaded_files[self._Simulation__mag_data]
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     if comp == 'tot':
         return aeseries(
@@ -393,7 +447,11 @@ def global_magnetic_energy(self, comp: Literal['tot', 'pol', 'tor', 'r',
 @subtract_tob
 def global_kinetic_energy(self, comp: Literal['tot', 'r', 'th', 'ph']='tot',
                            tob_corrected=True, **kwargs):
-    en = load_file(self._Simulation__log_path, self._Simulation__erg_data)
+    if not self._Simulation__erg_data in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__erg_data] = \
+            load_file(self._Simulation__log_path,
+                       self._Simulation__erg_data)
+    en = self._Simulation__loaded_files[self._Simulation__erg_data]
     time = aerray(en[:, 2], u.s, 'time', r'$t$', None, [0, en[-1, 2]], False)
     if comp == 'tot':
         return aeseries(

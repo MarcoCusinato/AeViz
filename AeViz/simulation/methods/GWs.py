@@ -1,10 +1,6 @@
 from AeViz.simulation.methods import *
-from AeViz.utils.physics.GW_utils import (GW_strain, GWs_energy, calculate_h,
-                                  GWs_spectrogram, GWs_peak_indices,
-                                  GWs_fourier_transform,
-                                  GWs_frequency_peak_indices,
-                                  characteristic_strain,
-                                  GWs_energy_per_frequency,
+from AeViz.utils.physics.GW_utils import (GW_strain, calculate_h,
+                                  GWs_spectrogram,
                                   universal_modes_relation,
                                   get_spherical_harmonics)
 from AeViz.utils.files.string_utils import merge_strings
@@ -12,7 +8,6 @@ from AeViz.utils.files.file_utils import (load_file, find_column_changing_line,
                                           load_asd)
 from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from typing import Literal
-from AeViz.simulation.methods.other_spherical_sym import radial_profile
 
 """
 Function to process gravitational waves data from a simulation in
@@ -27,167 +22,265 @@ imported into the Simulation class.
 
 @smooth
 @derive
-@subtract_tob
-def GW_Amplitudes(self, distance=None, tob_corrected=True, 
-                    zero_correction=True, lower_refinement=False,
-                    **kwargs):
+@sum_tob
+def GW_Amplitudes(self, distance: aerray | None = None,
+                  tob_corrected: bool = True, 
+                  zero_correction: bool = True,
+                  lower_refinement: bool = False,
+                  **kwargs) -> aeseries | list[aeseries]:
     """
-    Params:
-        distance: distance of the observer from the GW source
-        zero_correction: shifts up or down the amplitude to make it
-        centred with zero
-        lower_refinement: on fine timestep refinements GWs are
-        usually noisy, so we take 
-        one every n points. n defined as the number to reach 0.1 ms
-    Returns GWs amplitudes:
-    1D:
-        No GWs in spherical symmetry
-    2D:
-        Column 1: time
-        Column 2: + ploarization
-    3D:
-        Column 1: time
-        Column 2: + polarization equatorial plane
-        Column 3: + polarization polar plane
-        Column 4: x polarization equatorial plane
-        Column 5: x polarization polar plane
+    Extract the GW strains from a simulation
+    
+    Parameters
+    ----------
+    distance : aerray | None, optional
+        distance of the observer from the GW source, by default None
+    tob_corrected : bool, optional
+        centres the time to the core bounce time, by default True
+    zero_correction : bool, optional
+        sets the beginning of the evolution to zero, by default True
+    lower_refinement : bool, optional
+        decimates the sampling to 5e-5 s, by default False
+    kwargs:
+        components to extract
+
+    Returns
+    -------
+    aeseries | list[aeseries]
+        aeseries containing the selected polarisation or the list of all
+        polarisations
     """
-    data = load_file(self._Simulation__log_path, self._Simulation__grw_path)
+    if not self._Simulation__grw_path in self._Simulation__loaded_files:
+        self._Simulation__loaded_files[self._Simulation__grw_path] = \
+            load_file(self._Simulation__log_path, self._Simulation__grw_path)
+        self._Simulation__gws_param['col_change'] = \
+            find_column_changing_line(self._Simulation__log_path,
+                                      self._Simulation__grw_path)
+        if 'column_index' in kwargs:
+            self._Simulation__gws_param['col'] = kwargs['column_index']
+        else:
+            self._Simulation__gws_param['col'] = 0
+        self._Simulation__gws_param['lower_refinement'] = lower_refinement
+        self._Simulation__gws_param['zero_correction'] = zero_correction
     
-    n = 1
-    if lower_refinement:
-        dt = data[1, 2] - data[0, 2]
-        new_dt = dt
-        n=1
-        while new_dt < 5e-5:
-            new_dt += dt
-            n += 1
-    
+    low_ref = self._Simulation__gws_param['lower_refinement']
+    ze_corr = self._Simulation__gws_param['zero_correction']
     if 'column_index' in kwargs:
         col = kwargs['column_index']
     else:
-        col = None
+        col = self._Simulation__gws_param['col']
+    ccol = self._Simulation__gws_param['col']
     
-    column_change = find_column_changing_line(self._Simulation__log_path,
-                                                self._Simulation__grw_path,
-                                                col)
-    if zero_correction:
-        index = np.argmax((data[:, 2] - self.tob) >= -0.01)
+    if (self._Simulation__gws is None or low_ref != lower_refinement or
+        ze_corr != zero_correction or col != ccol):
+        ## get the data, to avoid spikes at the end we neglect the last points
+        data = self._Simulation__loaded_files[self._Simulation__grw_path][:-50, :]
+        column_change_list = self._Simulation__gws_param['col_change']
+        ## update the parameters
+        self._Simulation__gws_param['col'] = col
+        self._Simulation__gws_param['lower_refinement'] = lower_refinement
+        self._Simulation__gws_param['zero_correction'] = zero_correction
+    
+        if len(column_change_list) > 1:
+            column_change = column_change_list[col]
+        elif len(column_change_list) == 1:
+            column_change = column_change_list[0]
+        else:
+            column_change = None
+        if column_change < 3:
+            column_change = None
+    
+        n = 1
+        if lower_refinement:
+            dt = data[1, 2] - data[0, 2]
+            new_dt = dt
+            n=1
+            while new_dt < 5e-5:
+                new_dt += dt
+                n += 1
+    
+        if zero_correction:
+            index = np.argmax((data[:, 2] - self.tob) >= -0.01)
+        else:
+            index = None
+        self._Simulation__gws = GW_strain(self.dim,
+                                          column_change,
+                                          data,
+                                          index,
+                                          n,
+                                          distance,
+                                          self.tob)
+    GWs = self._Simulation__gws
+    if not 'comp' in kwargs:
+        kwargs['comp'] = 'all'
+    if distance:
+        if not isinstance(distance, aerray):
+            distance *= GWs.hple.unit
+        GWs.set_distance(distance)
+        return GWs.get_polarisation(kwargs['comp'], True)
     else:
-        index = None
-    if 'return_components' in kwargs and self.dim == 3:
-        GWs = GW_strain(self.dim, column_change, data, index, n, distance,
-                        kwargs['return_components'])
-    else:
-        GWs = GW_strain(self.dim, column_change, data, index, n, distance)
-    if GWs is None:
-        return None
-    if self.dim > 2:
-        if 'comp' in kwargs:
-            if kwargs['comp'] == 'all':
-                pass
-            elif kwargs['comp'] == 'h+eq':
-                return GWs[0]
-            elif kwargs['comp'] == 'h+pol':
-                return GWs[1]
-            elif kwargs['comp'] == 'hxeq':
-                return GWs[2]
-            elif kwargs['comp'] == 'hxpol':
-                return GWs[3]
-            else:
-                raise TypeError("GW component not recognized")
-    return GWs
+        return GWs.get_polarisation(kwargs['comp'], False)
 
 @smooth
 @derive
-def GWs_dE_df(self, tob_corrected=True, time_range=None, windowing='hanning',
-              **kwargs):
-    kw = {'zero_correction': True,
-          'lower_refinement': False}
-    if 'lower_refinement' in kwargs:
-        kw['lower_refinement'] = kwargs['lower_refinement']
-    if 'zero_correction' in kwargs:
-        kw['zero_correction'] = kwargs['zero_correction']
-    GW_strain = self.GW_Amplitudes(tob_corrected=tob_corrected, comp='all',
-                                   **kw)
-    dedf = GWs_energy_per_frequency(GW_strain, self.dim, time_range, windowing)
-    if self.dim > 2:
-        if 'comp' in kwargs:
-            if kwargs['comp'] == 'all':
-                pass
-            elif kwargs['comp'] == 'h+eq':
-                return dedf[0]
-            elif kwargs['comp'] == 'h+pol':
-                return dedf[1]
-            elif kwargs['comp'] == 'hxeq':
-                return dedf[2]
-            elif kwargs['comp'] == 'hxpol':
-                return dedf[3]
-            else:
-                raise TypeError("GW component not recognized")
-    return dedf
+def GWs_dE_df(self,
+              comp:Literal['eq', 'h+eq', 'hxeq',
+                           'pol' 'h+pol', 'hxpol'] = 'eq',
+              time_range: list | None = None,
+              window_type:str | None = 'hanning',
+              **kwargs) -> aeseries:
+    """
+    Computes and returns the energy spectra over per frequency for
+    a chosen line of sight
+
+    Parameters
+    ----------
+    comp : Literal['eq', 'h+eq', 'hxeq', 'pol' 'h+pol', 'hxpol'], optional
+        line of sight. Can also be given the polarisation and it changes
+        automatically to the los, by default 'eq'
+    time_range : list | None, optional
+        if given cuts considers  only that interval, by default None
+    window_type : str, optional
+        if not None applies a window to the signal before
+        performing a FFT, by default 'hanning'
+    **kwargs
+
+    Returns
+    -------
+    aeseries
+        energy spectra and frequency for that los
+
+    """
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes()
+    GWs = self._Simulation__gws
+    kwargs['apply_window'] = True if window_type is not None else False
+    kwargs['window_type'] = window_type
+    
+    GWs.set_fft_config(**kwargs)
+    if 'eq' in comp:
+        los = 'eq'
+    else:
+        los = 'pol'
+    if time_range:
+        istart = np.argmax(GWs.time >= time_range[0])
+        istop = np.argmax(GWs.time >= time_range[1])
+        return GWs[istart:istop].get_dEdf(los=los)
+    return GWs.get_dEdf(los=los)
 
 @smooth
 @derive
-def hchar(self, tob_corrected=True, time_range=None, windowing='hanning',
-          distance=(10 * u.kpc), divide_by_frequency=True, **kwargs):
-    kw = {'zero_correction': True,
-          'lower_refinement': False}
-    if 'lower_refinement' in kwargs:
-        kw['lower_refinement'] = kwargs['lower_refinement']
-    if 'zero_correction' in kwargs:
-        kw['zero_correction'] = kwargs['zero_correction']
-    GW_strain = self.GW_Amplitudes(tob_corrected=tob_corrected, comp='all',
-                                   **kw)
-    hchar = characteristic_strain(GW_strain, self.dim, time_range, windowing,
-                                  distance, divide_by_frequency)
-    if self.dim == 3:
-        if 'comp' in kwargs:
-            if kwargs['comp'] == 'all':
-                pass
-            elif kwargs['comp'] in ['h+eq', 'hxeq', 'heq']:
-                return hchar[0]
-            elif kwargs['comp'] in ['h+pol', 'hxpol', 'hpol']:
-                return hchar[1]
-            else:
-                raise TypeError("GW component not recognized")
-    return hchar
-
-def GW_spectrogram(self, distance=None, window_size=aerray(10, u.ms),
-                   tob_corrected=True,
-                   scale_to:Literal['magnitude', 'psd']='magnitude',
-                    **kwargs):
+def hchar(self,
+          comp:Literal['eq', 'h+eq', 'hxeq',
+                       'pol' 'h+pol', 'hxpol'] = 'eq',
+          time_range: list | None = None,
+          window_type:str | None = 'hanning',
+          distance: aerray = (10 * u.kpc),
+          divide_by_frequency: bool = True,
+          type: str = 'fft',
+          **kwargs) -> aeseries:
     """
-    Parameters:
-        distance: distance of the observer from the GW source
-        tob_corrected: if the returned timeseries has to be 
-        corrected for the tob
-        window_size: size of the time window in which to perform the sft,
-                    can be aerray or scalar. If scalar the uniit is the
-                    one from time
-        time_range: list of float or aerrays, crop the signal between
-                    the two times
-        check_spacing: if true check if the time array is equally spaced,
-                       can cause issue for small timesteps
-        windowing{'bartlett', 'blackman', 'hamming', 'hanning', 'kaiser'}:
-                Window to apply to the signal, default is hann
-        scale_to{'magnitude', 'psd'} default magnitude. Each STFT column
-                represents either a 'magnitude' or a power spectral
-                density ('psd') spectrum
-    Returns:
-        time: timeseries in s
-        frequency: aray of the frequencies in Hz
-        Zxx: magnitude
-    In 3D simulations:
-        h_pl_e, h_pl_p, h_cr_e, h_cr_p
-    """
-    GW_strain = self.GW_Amplitudes(distance=distance,
-                                   tob_corrected=tob_corrected, **kwargs)
-    return GWs_spectrogram(self.dim, GW_strain, window_size, scale_to, **kwargs)
+    Computes the characteristic strain of the GW signal
 
-def Deltah(self, peak:Literal['bounce', 'highest']='bounce',
-            interval=[None, None], min_time=1.75, max_time=2, distance=1, 
-            coordinates=False, tob_corrected=True):
+    Parameters
+    ----------
+    comp : Literal['eq', 'h+eq', 'hxeq', 'pol' 'h+pol', 'hxpol'], optional
+        line of sight. Can also be given the polarisation and it changes
+        automatically to the los, by default 'eq'
+    time_range : list | None, optional
+        if given cuts considers  only that interval, by default None
+    window_type : str, optional
+        if not None applies a window to the signal before
+        performing a FFT, by default 'hanning'
+    distance : aerray, optional
+        distance of the observer from the GW source, 
+        by default (10 * u.kpc)
+    divide_by_frequency : bool, optional
+        if True returns the characteristic strain divided by the sqrt of
+        the frequency, by default True
+    type : str, optional
+        type of characteristic strain to return 'fft' or 'energy,
+        by default 'fft'
+
+    Returns
+    -------
+    aeseries
+        characteristic strain and frequency
+    """
+
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes()
+    GWs = self._Simulation__gws
+    GWs.set_distance(distance)
+    kwargs['apply_window'] = True if window_type is not None else False
+    kwargs['window_type'] = window_type
+    
+    GWs.set_fft_config(**kwargs)
+    if 'eq' in comp:
+        los = 'eq'
+    else:
+        los = 'pol'
+    if time_range:
+        istart = np.argmax(GWs.time >= time_range[0])
+        istop = np.argmax(GWs.time >= time_range[1])
+        return GWs[istart:istop].get_characteristic_strain(los=los,
+                                                           mode=type,
+                                                           divide_by_frequency=divide_by_frequency)
+    return GWs.get_characteristic_strain(los=los,
+                                         mode=type,
+                                         divided_by_frequency=divide_by_frequency)
+
+@sum_tob
+def GW_spectrogram(self,
+                   distance: aerray | None = None,
+                   window_size: aerray = aerray(10, u.ms),
+                   tob_corrected: bool = True,
+                   scale_to:Literal['magnitude', 'psd'] = 'magnitude',
+                    **kwargs) -> aeseries | list[aeseries]:
+    """
+    Computes the spectrograms of the GW strain(s).
+
+    Parameters
+    ----------
+    distance : aerray | None, optional
+        distance of the observer from the GW source, by default None
+    window_size : aerray, optional
+        size of the window for the STFT, by default aerray(10, u.ms)
+    tob_corrected : bool, optional
+        centres the time to the core bounce time, by default True
+    scale_to : Literal['magnitude', 'psd'], optional
+        how to scale the STFT, by default 'magnitude'
+
+    Returns
+    -------
+    aeseries | list[aeseries]
+        list of series containing the spectrograms of the four or single
+        polarisations. Each aeseries contains:
+            time: timeseries in s
+            frequency: aray of the frequencies in Hz
+            Zxx: magnitude
+        In the 3D simulation the polarisations are ordered as:
+            h_pl_e, h_pl_p, h_cr_e, h_cr_p
+    """
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes() 
+    GW_strain = self._Simulation__gws
+    if distance is not None:
+        GW_strain.set_distance(distance)
+        return GW_spectrogram(self.dim, GW_strain.get_polarisation(comp='all',
+                                                                   dimensionless=True),
+                              window_size, scale_to, **kwargs)
+    return GWs_spectrogram(self.dim, GW_strain.get_polarisation(comp='all'),
+                           window_size, scale_to, **kwargs)
+
+def Deltah(self,
+           peak: Literal['bounce', 'max'] ='bounce',
+           comp: Literal['h+eq', 'h+pol','hxeq', 'hxpol']='h+eq',
+           time_range: list[aerray|float] | None = None,
+           tol: float = 0.05,
+           distance: aerray | None = None,
+           return_indices: Literal[True, False] = False,
+           detrend: bool = True) -> aerray | tuple[aerray, list[int]]:
     """
     Returns the Delta h of the gravitational wave strain as defined
     in Richers et al. 2017 (https://arxiv.org/pdf/1701.02752.pdf).
@@ -195,64 +288,167 @@ def Deltah(self, peak:Literal['bounce', 'highest']='bounce',
     postbounce, the first peak that appears is not considered.
     In case the highest peak is selected the amplitude returned is 
     the maxima between left and right.
-    min and max time are windows in which to search the low and high
-    peaks in the strain
-    Return:
-        amplitude in cm
-        if coordinates
-            time, h of the highest and lowest peak
-    """
-    GWs = self.GW_Amplitudes(distance, tob_corrected)
-    indices = GWs_peak_indices(GWs, peak, interval, min_time, max_time)
-    Deltah = np.abs(GWs[indices[1], 1] - GWs[indices[2], 1])
-    if coordinates:
-        x = [GWs[indices[1], 0], GWs[indices[2], 0]]
-        y = [GWs[indices[1], 1], GWs[indices[2], 1]]
-        return Deltah, np.array(x), np.array(y)
-    return Deltah
+    
+    Parameters
+        ----------
+        peak : Literal['bounce', 'max'], optional
+            peak to find, if bounce is selected the time interval is 
+            neglected, otherwise the most prominent in the selected 
+            interval will be considered by default 'bounce'
+        comp : str, optional
+            the strain to use, possibilities ['h+eq', 'h+pol',
+            'hxeq', 'hxpol', 'all'], by default 'h+eq'
+        time_range : list[aerray | float] | None, optional
+            time range to considered to find the peak. If None the full
+            strain is analysed, by default None
+        tol : float, optional
+            used by the maximum peak. If a secondary crest of valley if
+            lower (in absolute value) of this percentage of the maximum
+            then it is treated as no intersection with zero was found,
+            by default 0.05
+        distance : aerray | None, optional
+            returns the value at that given distance,
+            by default None
+        return_indices : Literal[False], optional
+            If the indices have to be returned, by default False
+        detrend : bool, optional
+            If the strain has to be detrended of any  memory effect before
+            proceeding
 
-def GWs_peak_frequencies(self, peak:Literal['bounce', 'highest']='bounce',
-                            min_time=1.75, max_time=2, interval=[None, None],
-                            return_intensities=False, return_fourier=False):
+        Returns
+        -------
+        aerray | tuple[aerray, list[int]]
+            returns the value of the range strain width as an aerray. If
+            the flag return_indices is set to True returns also the indices
+            of the intersections
     """
-    Calculates the dominant and the second dominant frequency of a GWs peak
-    Return:
-        frequencies: dominat, second dominant
-        if return intensities
-            intensities: dominant, second dominant
-        if return return fourier
-            frequencies array
-            htilde
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes()
+    
+    GW_strain = self._Simulation__gws
+    if detrend:
+        GW_strain = GW_strain.copy()
+        GW_strain.detrend()
+    if distance is not None:
+        GW_strain.set_distance(distance)
+        dimensionless = True
+    else:
+        dimensionless = False
+        
+    return GW_strain.range_strain_width(peak = peak,
+                                        comp = comp,
+                                        time_range = time_range,
+                                        tol = tol,
+                                        dimensionless = dimensionless,
+                                        return_indices = return_indices)
+
+def GWs_peak_frequencies(self, 
+                         peak: Literal['bounce', 'max'] = 'bounce',
+                         comp: Literal['h+eq', 'h+pol', 'hxeq', 'hxpol'] = 'h+eq',
+                         time_range: list[aerray|float] | None = None,
+                         tol: float = 0.05,
+                         normalised: bool = False,
+                         return_max: Literal[False]=False,
+                         detrend: bool = True) -> aeseries | aerray:
     """
-    GWs = self.GW_Amplitudes()
-    indices = GWs_peak_indices(GWs, peak, interval, min_time, max_time)
-    frequency, htilde = GWs_fourier_transform(GWs, indices)
-    indices = GWs_frequency_peak_indices(frequency, htilde)
-    return_list = [frequency[indices]]
-    if return_intensities:
-        return_list.append(htilde[indices])
-    if return_fourier:
-        return_list.append([frequency, htilde])
-    if len(return_list) == 1:
-        return return_list[0]
-    return return_list
+    Computes the frequency of of the oscillation associated with the
+    strain range width.
+    
+    Parameters
+    ----------
+    peak : Literal['bounce', 'max'], optional
+        peak to find, if bounce is selected the time interval is 
+        neglected, otherwise the most prominent in the selected 
+        interval will be considered by default 'bounce'
+    comp : str, optional
+        the strain to use, possibilities ['h+eq', 'h+pol',
+        'hxeq', 'hxpol', 'all'], by default 'h+eq'
+    time_range : list[aerray | float] | None, optional
+        time range to considered to find the peak. If None the full
+        strain is analysed, by default None
+    tol : float, optional
+        used by the maximum peak. If a secondary crest of valley if
+        lower (in absolute value) of this percentage of the maximum
+        then it is treated as no intersection with zero was found,
+        by default 0.05
+    normalised : bool, optional
+        the fourier transform is normalised by its maximum,
+        by default False
+    return_max : Literal[False], optional
+        If True returns only the maximum value of the frequency. In
+        the other case the full Fourier transform is returned.
+        by default False
+    detrend : bool, optional
+            If the strain has to be detrended of any  memory effect before
+            proceeding
+
+    Returns
+    -------
+    aeseries | aerray
+        aseseries of the Fourier transform containing the frequency
+        and the absolute value of the spectrum. aerray of the maximum
+        frequency of the oscillation
+    """
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes()
+    
+    GW_strain = self._Simulation__gws
+    if detrend:
+        GW_strain = GW_strain.copy()
+        GW_strain.detrend()
+    return GW_strain.frequency_of_peak(peak = peak,
+                                       comp = comp,
+                                       time_range = time_range,
+                                       normalised = normalised,
+                                       return_max = return_max)
 
 @smooth
-@subtract_tob
-def GWs_dE_dt(self, lower_refinement=False, tob_corrected=True, **kwargs):
+@derive
+@sum_tob
+def GWs_luminosity(self,
+              tob_corrected: bool = True,
+              **kwargs) -> aeseries:
     """
-    Returns the energy carried away by the GWs in erg/s
-    """
-    if self.dim == 3:
-        GWs = self.GW_Amplitudes(tob_corrected=False,
-                                lower_refinement=lower_refinement,
-                                return_components=True)
-    else:
-        GWs = self.GW_Amplitudes(tob_corrected=False,
-                                lower_refinement=lower_refinement)
-    
-    return GWs_energy(GWs, self.dim)
+    Computes the GW luminosity in erg/s
 
+    Parameters
+    ----------
+    tob_corrected : bool, optional
+        centres the time to the core bounce time, by default True
+
+    Returns
+    -------
+    aeseries
+        Contains the GW luminosity evolution over time
+    """
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes() 
+    GW_strain = self._Simulation__gws
+    return GW_strain.get_luminosity()
+
+@smooth
+@sum_tob
+def GWs_energy(self,
+               tob_corrected: bool = True,
+              **kwargs) -> aeseries:
+    """
+    Computes the energy carried away as GWs
+
+    Parameters
+    ----------
+    tob_corrected : bool, optional
+        centres the time to the core bounce time, by default True
+
+    Returns
+    -------
+    aeseries
+        contains the evolution time and the GW energy.
+    """
+    if self._Simulation__gws is None:
+        self.GW_Amplitudes() 
+    GW_strain = self._Simulation__gws
+    return GW_strain.get_energy()
+ 
 @smooth
 @sum_tob
 def hydro_strain(self, tob_corrected=True, D=None, theta=np.pi/2, phi=0,
