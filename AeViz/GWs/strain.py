@@ -113,16 +113,16 @@ class GWstrain:
 
         self.hple.set(name='GW strain h+eq',
                       label=r'$\mathcal{D}h_{+,\mathrm{eq}}$',
-                      limits=[-150, 150])
+                      limits=[-150, 150], cmap='Spectral_r')
         self.hplp.set(name='GW strain h+pol',
                       label=r'$\mathcal{D}h_{+,\mathrm{pol}}$',
-                      limits=[-150, 150])
+                      limits=[-150, 150], cmap='Spectral_r')
         self.hcre.set(name='GW strain hxeq',
                       label=r'$\mathcal{D}h_{\times,\mathrm{eq}}$',
-                      limits=[-150, 150])
+                      limits=[-150, 150], cmap='Spectral_r')
         self.hcrp.set(name='GW strain hxpol',
                       label=r'$\mathcal{D}h_{\times,\mathrm{pol}}$',
-                      limits=[-150, 150])
+                      limits=[-150, 150], cmap='Spectral_r')
 
         ## Load the components of the quadrupole moment if present
         self.quadrupole_set = {'txx', 'tyy', 'tzz',
@@ -211,12 +211,13 @@ class GWstrain:
         """
         strain = getattr(self, key).copy()
         if dimensionless:
-            lb, nm, lm = strain.label, strain.name, strain.limits
+            lb, nm, lm, cm = strain.label, strain.name, strain.limits, \
+                strain.cmap
             lb = lb.replace(r'\mathcal{D}', '')
             lm = [(lm[0] * strain.unit / self.distance).to(u.dimensionless_unscaled).value,
                   (lm[1] * strain.unit / self.distance).to(u.dimensionless_unscaled).value]
             outstrain = (strain / self.distance).to(u.dimensionless_unscaled)
-            outstrain.set(label=lb, name=nm, limits=lm)
+            outstrain.set(label=lb, name=nm, limits=lm, cmap=cm)
             return outstrain
         return strain   
     
@@ -243,9 +244,9 @@ class GWstrain:
         for hh in ['hple_ref', 'hplp_ref', 'hcre_ref', 'hcrp_ref']:
             h = getattr(self, hh)
             ## Save the stuff
-            lb, nm, lm = h.label, h.name, h.limits
+            lb, nm, lm, cm = h.label, h.name, h.limits, h.cmap
             h = np.interp(new_time, self.time.value, h.value) * h.unit
-            h.set(name=nm, label=lb, limits=lm)
+            h.set(name=nm, label=lb, limits=lm, cmap=cm)
             setattr(self, hh, h)
         
         if self.has_tensor:
@@ -285,9 +286,9 @@ class GWstrain:
         for hh in ['hple_ref', 'hplp_ref', 'hcre_ref', 'hcrp_ref']:
             h = getattr(self, hh)
             ## Save the stuff
-            lb, nm, lm = h.label, h.name, h.limits
+            lb, nm, lm, cm = h.label, h.name, h.limits, h.cmap
             h = win * h
-            h.set(name=nm, label=lb, limits=lm)
+            h.set(name=nm, label=lb, limits=lm, cmap=cm)
             setattr(self, hh, h)
         self.is_windowed = True
 
@@ -331,11 +332,11 @@ class GWstrain:
         for hh in ['hple_ref', 'hplp_ref', 'hcre_ref', 'hcrp_ref']:
             h = getattr(self, hh)
             ## Save the stuff
-            lb, nm, lm = h.label, h.name, h.limits
+            lb, nm, lm, cm = h.label, h.name, h.limits, h.cmap
             h = np.concatenate((
                 padding_left, h, padding_right
             ))
-            h.set(name=nm, label=lb, limits=lm)
+            h.set(name=nm, label=lb, limits=lm, cmap=cm)
             setattr(self, hh, h)
 
         self.is_padded = True
@@ -367,7 +368,7 @@ class GWstrain:
         ## Compute the real fourier transform of the signal
         for hh in ['hple_ref', 'hplp_ref', 'hcre_ref', 'hcrp_ref']:
             h = getattr(self, hh)
-            fft = rfft(getattr(self, hh)) * dt
+            fft = rfft(h) * dt
             fft.set(name=f'FFT {h.name}', label=merge_strings(
                 r'$\mathcal{D}$', apply_symbol(h.label.replace(r'\mathcal{D}',
                                                                ''))
@@ -394,7 +395,7 @@ class GWstrain:
         Returns
         -------
         GWstrain
-            Return a GWStrain object
+            Returns a GWStrain object
         """
         return copy.deepcopy(self)
     
@@ -603,9 +604,11 @@ class GWstrain:
         
         if not self.is_detrended:
             if pyemd and mode == 'emd':
-                for hh in ['hple', 'hplp', 'hcre', 'hcrp']:
+                for hh in ['hple', 'hplp', 'hcre', 'hcrp']: 
                     h = getattr(self, hh)
+                    lb, nm, lm, cm = h.label, h.name, h.limits, h.cmap
                     h = remove_residuals(h, self.time)
+                    h.set(label=lb, name=nm, limits=lm, cmap=cm)
                     setattr(self, hh, h)
             else:
                 dt = self.time[1] - self.time[0]
@@ -616,6 +619,7 @@ class GWstrain:
                 bi = np.argmax(self.time >= 0)
                 for hh in ['hple', 'hplp', 'hcre', 'hcrp']:
                     h = getattr(self, hh)
+                    lb, nm, lm, cm = h.label, h.name, h.limits, h.cmap
                     ## Remove high frequencies from the strain. 50 Hz 
                     ## is a pretty safe bet, since then the signal should
                     ## change that much over time
@@ -651,9 +655,13 @@ class GWstrain:
                                                p0 = [L.value, k.value, t0.value])
                         L, k, t0 = popt
                         h_fit = logistic_function(self.time.value, L, k, t0) * h.unit
-                        setattr(self, hh, h - h_fit)
+                        hcorr = h - h_fit
+                        hcorr.set(label=lb, name=nm, limits=lm, cmap=cm)
+                        setattr(self, hh, hcorr)
                     except:
-                        setattr(self, hh, h - h_fit_heu)
+                        hcorr = h - h_fit_heu
+                        hcorr.set(label=lb, name=nm, limits=lm, cmap=cm)
+                        setattr(self, hh, hcorr)
             self.is_detrended = True
     
     def compute_luminosity(self) -> None:
@@ -791,7 +799,7 @@ class GWstrain:
         From the fourier transform following Moore et al 2015,
         https://doi.org/10.1103/PhysRevD.89.044011:
         ..math:: 
-            h_{\rm char} = 2 f^2 |\tilde h(f)|
+            h_{\rm char} = 2 f |\tilde h(f)|
         """
         if not hasattr(self, 'frequency'):
             self.compute_dEdf()

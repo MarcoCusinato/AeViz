@@ -381,28 +381,31 @@ def compute_SNR(simulation: Simulation,
     if time_range is not None:
         istart = np.argmax(GW_strain.time >= time_range[0])
         istop = np.argmax(GW_strain.time >= time_range[1])
+        if istop == 0:
+            istop = len(GW_strain.time)
         GW_strain = GW_strain[istart:istop]
     GW_strain.set_distance(distance)
     ## set some default parameters for the kwargs
-    kwargs.set_default('regularise', True)
-    kwargs.set_default('dt', None)
-    kwargs.set_default('n', None)
-    kwargs.set_default('pad', True)
-    kwargs.set_default('pad_value', 0)
-    kwargs.set_default('pad_length', (1*u.s))
-    kwargs.set_default('apply_window', 'hanning')
-    kwargs.set_default('detrend', True)
+    kwargs.setdefault('regularise', True)
+    kwargs.setdefault('dt', None)
+    kwargs.setdefault('n', None)
+    kwargs.setdefault('pad', True)
+    kwargs.setdefault('pad_value', 0)
+    kwargs.setdefault('pad_length', (1*u.s))
+    kwargs.setdefault('apply_window', True)
+    kwargs.setdefault('window_type', 'hann')
+    
+    kwargs.setdefault('detrend', True)
     ## Detrend the  GW strain
     if kwargs['detrend']:
         GW_strain.detrend()
-    
     ## set up the fft configuration
     GW_strain.set_fft_config(**kwargs)
     ## get the detector and load it
     ASD = simulation.ASD(detector)
     GW_strain.load_asd(ASD)
     
-    return (GW_strain.get_SNR(detector = ASD.name,
+    return (GW_strain.get_SNR(detector = ASD.data.name,
                               los = comp,
                               mode = mode,
                               evolution = evolution),
