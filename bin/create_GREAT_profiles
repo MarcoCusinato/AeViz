@@ -6,7 +6,9 @@ from AeViz.units.constants import constants as c
 from AeViz.units import u
 import h5py, os
 import numpy as np
-from AeViz.simulation.methods.other_spherical_sym import radial_profile
+"""
+Computes the spherical profiles needed to run GREAT.
+"""
 
 
 parser = argparse.ArgumentParser()
