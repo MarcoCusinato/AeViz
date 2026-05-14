@@ -214,7 +214,8 @@ def load_asd(path, detector):
         'VirgoO5High': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
         'KAGRA': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt",
         'KAGRA80': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_80Mpc.txt",
-        'ET': "https://apps.et-gw.eu/tds/?call_file=ET-0000A-18_ETDSensitivityCurveTxtFile.txt"
+        'ET': "https://apps.et-gw.eu/tds/?call_file=ET-0000A-18_ETDSensitivityCurveTxtFile.txt",
+        'CE': ""
     }
     assert detector in url.keys(), f"The detector should be one of {list(url.keys())}"
     file_path = os.path.join(path, 'psds', detector + '.txt')
