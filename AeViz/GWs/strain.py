@@ -821,7 +821,7 @@ class GWstrain:
     
     def get_characteristic_strain(self, los:Literal['eq', 'pol']='eq',
                                   mode:Literal['energy', 'fft']='fft',
-                                  divided_by_frequency:bool=True) -> aeseries:
+                                  divide_by_frequency:bool=True) -> aeseries:
         """
         Extract the characteristic strain for the selected line of sight.
 
@@ -832,7 +832,7 @@ class GWstrain:
         mode : Literal['energy', 'fft'], optional
             computation of the characteristic strain with the
             energy spectrum or the fft, by default 'fft'
-        divided_by_frequency : bool
+        divide_by_frequency : bool
             divides the characteristc strain by the square root of the 
             frequency, useful for comparing with the detector psd,
             by default True
@@ -848,7 +848,7 @@ class GWstrain:
         mode = 'ene' if mode == 'energy' else mode
         nm = f'hchar_{los}_{mode}'
         hchar = getattr(self, nm).copy()
-        if divided_by_frequency:
+        if divide_by_frequency:
             nm, lb = hchar.name, hchar.label
             lb = merge_strings(lb, r'$/\sqrt{f}$')
             hchar /= np.sqrt(self.frequency)
