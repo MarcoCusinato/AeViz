@@ -552,7 +552,7 @@ class GWstrain:
                 )
     
     def set_distance(self, distance: aerray) -> None:
-        """
+        r"""
         Set the distance at which to get the dimensionless strain
 
         Parameters
@@ -562,7 +562,7 @@ class GWstrain:
         self.distance = distance
     
     def detrend(self, mode:Literal['emd', 'analytical'] = 'emd') -> None:
-        """
+        r"""
         Removes a possible trend in each polarisation. This will
         overwrite the polarisations.
         If you need the original please
@@ -665,7 +665,7 @@ class GWstrain:
             self.is_detrended = True
     
     def compute_luminosity(self) -> None:
-        """
+        r"""
         Computes the GW luminosity and energy for 2 and 3D simulations.
         In 2D simulations we have,
         from https://iopscience.iop.org/article/10.1086/379822:
@@ -943,7 +943,7 @@ class GWstrain:
         return SNR[-1].value
     
     def compute_modes(self) -> None:
-        """
+        r"""
         Computes the right and left-handed modes for the GW signal for 
         both the equatorial and polar lines of sight.
         The right-handed mode is defined as
@@ -1043,13 +1043,13 @@ class GWstrain:
         """
         hp = getattr(self, f'hpl{los[0]}').copy()
         hc = getattr(self, f'hcr{los[0]}').copy()
+        tm = self.time.copy()
         if time_range is not None:
             ini = np.argmax(self.time>=time_range[0])
             isto = np.argmax(self.time>=time_range[1]) + 1
-            tm = self.time[ini:isto]
+            tm = tm[ini:isto]
             hp = hp[ini:isto]
             hc = hc[ini:isto]
-            
         dt = (tm[1] - tm[0]).to(u.s)
         fs = (1 / dt).to(u.Hz)
         ## Get the window
@@ -1061,14 +1061,15 @@ class GWstrain:
             except:
                 win = getattr(np, window)
         if spectrogram:
-            win_len = int((window_size / dt).to(u.dimensionless_unscaled).value)
-            hop = overlap * win_len
+            win_len = int(np.ceil((window_size / 
+                                   dt).to(u.dimensionless_unscaled).value))
+            hop = int(overlap * win_len)
             try:
-                win = win(hop, **kwargs)
+                win = win(win_len, **kwargs)
             except:
-                win = win(hop)
+                win = win(win_len)
             
-            SFT = scipy.signal.ShortTimeFFT(win, hop, fs,
+            SFT = scipy.signal.ShortTimeFFT(win, hop, fs.value,
                                             scale_to='magnitude')
             frequency = aerray(SFT.f, u.Hz, 'frequency', r'$f$', 
                                None, [0, 2000], False)
