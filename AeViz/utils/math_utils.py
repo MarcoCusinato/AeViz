@@ -353,3 +353,47 @@ def strfct2D(b, cell, ghost, plane):
         F = strfunction2D(b1, b2, ax, ay, az, lx, ly, lz, plane)  
 
     return F
+
+def martin_smooth(quantity: aerray,
+                  dim: int) -> aerray:
+    """
+    Takes a 1, 2 or 3D array and applies a in place smoothing such as
+    .. math:
+        f_i = \\frac{1}{4}(f_{i-1} + 2 f_i + f_{i+1})
+    done three times in the radial direction.
+
+    Parameters
+    ----------
+    quantity : aerray
+        array to smooth
+    dim : int
+        dimension of the simulation
+
+    Returns
+    -------
+    aerray
+        smoothed array
+    """
+    nm, lb, lm, lg, cm = (quantity.name, quantity.label, quantity.limits,
+                          quantity.log, quantity.cmap)
+    qt_out = quantity.copy()
+    for _ in range(3):
+        if dim == 1:
+            for i in range(1, len(qt_out[:]) - 1):
+                qt_out[i] = 0.25 * (qt_out[i-1] + 
+                                    2 * qt_out[i] + 
+                                    qt_out[i+1])
+        if dim == 2:
+            for i in range(1, len(qt_out[0, :]) - 1):
+                qt_out[:, i] = 0.25 * (qt_out[:, i-1] + 
+                                       2 * qt_out[:, i] + 
+                                       qt_out[:, i+1])
+        if dim == 3:
+            for i in range(1, len(qt_out[0, 0, :]) - 1):
+                qt_out[:, :, i] = 0.25 * (qt_out[:, :, i-1] + 
+                                          2 * qt_out[:, :, i] + 
+                                          qt_out[:, :, i+1])
+    qt_out.set(name=nm, label=lb, limits=lm, cmap=cm, log=lg)
+    return qt_out
+    
+    
