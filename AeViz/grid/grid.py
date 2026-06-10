@@ -309,7 +309,7 @@ class grid:
             ph * sinp
         Y = r * sint * sinp + \
             th * cost * sinp + \
-            ph * sinp
+            ph * cosp
         Z = r * cost - \
             th * sint
         return X, Y, Z

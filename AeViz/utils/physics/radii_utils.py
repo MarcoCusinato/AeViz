@@ -155,7 +155,7 @@ def shock_radius_2D(simulation, file_name, rmax):
     shock_r.fill(np.nan)
     for it in range(dP.shape[0]):
         for ir in range(dP.shape[1]):
-            if r[it, ir] > rmax:
+            if r[ir] > rmax:
                 continue
             if (dS[it, ir] < -0.25 and vr[it, ir] > 5e-7 and dvr[it, ir] < -1
                 and dP[it, ir] < -10 and 
