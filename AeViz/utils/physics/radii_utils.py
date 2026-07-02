@@ -1,5 +1,5 @@
 import numpy as np
-from AeViz.utils.math_utils import IDL_derivative
+from AeViz.utils.math_utils import IDL_derivative, martin_smooth
 from scipy.interpolate import griddata
 from AeViz.units import u
 
@@ -129,36 +129,37 @@ def shock_radius(simulation, file_name, rmax=None):
    
 def shock_radius_1D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
-    vr = simulation.radial_velocity(file_name)
+    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 1))
+    p = martin_smooth(simulation.gas_pressure(file_name), 1)
     s = simulation.entropy(file_name)
-    p = simulation.gas_pressure(file_name)
-    dS = IDL_derivative(r, s) * r / s
-    dvr = IDL_derivative(r, vr) * r / np.abs(vr)
-    dP = IDL_derivative(r, p) * r / p
-    for ir in range(len(dS) - 1):
+    dS = IDL_derivative(r, s) * np.abs(r / s)
+    dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
+    dP = IDL_derivative(r, p) * np.abs(r / p)
+    for ir in range(len(dS)):
         if r[ir] > rmax:
             continue
-        if dS[ir] < -7.5 and np.any(dvr[ir-5:ir+6] < -20) \
-            and dP[ir] < -10:
+        if (dS[ir] < -0.25 and vr[ir] > 5e-7 and dvr[ir] < -1 and dP[ir] < -10 and 
+            vr[max(0, ir-10)] > vr[min(len(r)-1, ir+10)]):
             return r[ir]
     return 0.0 * r.unit
 
 def shock_radius_2D(simulation, file_name, rmax):
-    vr = simulation.radial_velocity(file_name)
     r = simulation.cell.radius(simulation.ghost)
-    p = simulation.gas_pressure(file_name)
-    dP = IDL_derivative(r, p) * r / p
-    dvr = IDL_derivative(r, vr) * r / np.abs(vr)
+    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 2))
+    p = martin_smooth(simulation.gas_pressure(file_name), 2)
     s = simulation.entropy(file_name)
+    dS = IDL_derivative(r, s) * np.abs(r / s)
+    dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
+    dP = IDL_derivative(r, p) * np.abs(r / p)
     shock_r = np.empty(dP.shape[0])
     shock_r.fill(np.nan)
     for it in range(dP.shape[0]):
-        for ir in reversed(range(dP.shape[1] - 1)):
+        for ir in range(dP.shape[1]):
             if r[ir] > rmax:
                 continue
-            if (dP[it, ir] < -10) and \
-                (np.any(dvr[it, max(0,ir-5):min(ir+6, dP.shape[1]-1)] < -20)) \
-                and (np.abs(vr[it, ir]) > 1e8) and s[it, ir] < 400 :
+            if (dS[it, ir] < -0.25 and vr[it, ir] > 5e-7 and dvr[it, ir] < -1
+                and dP[it, ir] < -10 and 
+                vr[it, max(0, ir-10)] > vr[it, min(len(r)-1, ir+10)]):
                 shock_r[it] = r[ir]
                 break
     ## COPY over the gcells
@@ -171,25 +172,24 @@ def shock_radius_3D(simulation, file_name, rmax):
     Copied from Martin's IDL script.
     """
     r = simulation.cell.radius(simulation.ghost)
-    p = simulation.gas_pressure(file_name)
-    vr = simulation.radial_velocity(file_name)
-    entr = simulation.entropy(file_name)
-    dP = IDL_derivative(r, p) * np.abs(r / p)
+    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 3))
+    p = martin_smooth(simulation.gas_pressure(file_name), 3)
+    s = simulation.entropy(file_name)
+    dS = IDL_derivative(r, s) * np.abs(r / s)
     dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
-    ds = IDL_derivative(r, entr) * np.abs(r / entr)
+    dP = IDL_derivative(r, p) * np.abs(r / p)
+    shock_r = np.empty(dP.shape[0])
+    shock_r.fill(np.nan)
     shock_r = np.empty((dP.shape[0], dP.shape[1]))
     shock_r.fill(np.nan)
     for ip in range(dP.shape[0]):
         for it in range(dP.shape[1]):
-            for ir in range(dP.shape[2] - 1):
+            for ir in range(dP.shape[2]):
                 if r[ir] > rmax:
                     continue
-                if (ds[ip, it, ir] < -0.15) and \
-                    (vr[ip, it, ir] >= 1) and \
-                    (dvr[ip, it, ir] <= -0.7) and \
-                    (dP[ip, it, ir] <= -0.7) and \
-                    (vr[ip, it, max(0, ir-10)] >= vr[ip, it, min(vr.shape[2],
-                                                                 ir+10)]):
+                if (dS[ip, it, ir] < -0.25 and vr[ip, it, ir] > 5e-7 and
+                    dvr[ip, it, ir] < -1 and dP[ip, it, ir] < -10 and 
+                    vr[ip, it, max(0, ir-10)] > vr[ip, it, min(len(r)-1, ir+10)]):
                     shock_r[ip, it] = r[ir]
                     break
     return shock_r * r.unit
