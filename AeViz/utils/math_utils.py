@@ -354,7 +354,7 @@ def strfct2D(b, cell, ghost, plane):
 
     return F
 
-def martin_smooth(quantity: aerray,
+def inplace_smooth(quantity: aerray,
                   dim: int) -> aerray:
     """
     Takes a 1, 2 or 3D array and applies a in place smoothing such as

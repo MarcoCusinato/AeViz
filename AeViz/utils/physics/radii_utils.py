@@ -1,5 +1,5 @@
 import numpy as np
-from AeViz.utils.math_utils import IDL_derivative, martin_smooth
+from AeViz.utils.math_utils import IDL_derivative, inplace_smooth
 from scipy.interpolate import griddata
 from AeViz.units import u
 
@@ -88,7 +88,7 @@ def neutrino_sphere_radii(simulation, file_name):
     return [np.flip(simulation.cell.radius(simulation.ghost))\
                                 [np.argmax(ka >= tau, axis=-1)] for ka in k]
 
-def PNS_nucleus(simulation, file_name):
+def PNS_core(simulation, file_name):
     """
     Calculates the radius of the PNS nucleus for each timestep.
     Employed method: entropy jump at s=4kb from the inside out.
@@ -129,8 +129,8 @@ def shock_radius(simulation, file_name, rmax=None):
    
 def shock_radius_1D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
-    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 1))
-    p = martin_smooth(simulation.gas_pressure(file_name), 1)
+    vr = np.abs(inplace_smooth(simulation.radial_velocity(file_name), 1))
+    p = inplace_smooth(simulation.gas_pressure(file_name), 1)
     s = simulation.entropy(file_name)
     dS = IDL_derivative(r, s) * np.abs(r / s)
     dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
@@ -145,8 +145,8 @@ def shock_radius_1D(simulation, file_name, rmax):
 
 def shock_radius_2D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
-    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 2))
-    p = martin_smooth(simulation.gas_pressure(file_name), 2)
+    vr = np.abs(inplace_smooth(simulation.radial_velocity(file_name), 2))
+    p = inplace_smooth(simulation.gas_pressure(file_name), 2)
     s = simulation.entropy(file_name)
     dS = IDL_derivative(r, s) * np.abs(r / s)
     dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
@@ -172,8 +172,8 @@ def shock_radius_3D(simulation, file_name, rmax):
     Copied from Martin's IDL script.
     """
     r = simulation.cell.radius(simulation.ghost)
-    vr = np.abs(martin_smooth(simulation.radial_velocity(file_name), 3))
-    p = martin_smooth(simulation.gas_pressure(file_name), 3)
+    vr = np.abs(inplace_smooth(simulation.radial_velocity(file_name), 3))
+    p = inplace_smooth(simulation.gas_pressure(file_name), 3)
     s = simulation.entropy(file_name)
     dS = IDL_derivative(r, s) * np.abs(r / s)
     dvr = IDL_derivative(r, vr) * r / np.abs(simulation.soundspeed(file_name))
@@ -193,30 +193,6 @@ def shock_radius_3D(simulation, file_name, rmax):
                     shock_r[ip, it] = r[ir]
                     break
     return shock_r * r.unit
-    
-def shock_radius_3D_OLD(simulation, file_name):
-    dP = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                        simulation.gas_pressure(file_name)) * \
-                            simulation.cell.radius(simulation.ghost) / \
-                            simulation.gas_pressure(file_name)
-    dvr = IDL_derivative(simulation.cell.radius(simulation.ghost),
-                         simulation.radial_velocity(file_name)) * \
-                             simulation.cell.radius(simulation.ghost) / \
-                             np.abs(simulation.radial_velocity(file_name))
-    s = simulation.entropy(file_name)
-    shock_r = np.empty((dP.shape[0], dP.shape[1]))
-    shock_r.fill(np.nan)
-    for ip in range(dP.shape[0]):
-        for it in range(dP.shape[1]):
-            for ir in range(dP.shape[2] - 1):
-                if (dP[ip, it, ir] < -500) and \
-                (np.any(dvr[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)] 
-                    < -20)) and \
-                (np.all(s[ip, it, max(0,ir-5):min(ir+6, dP.shape[2] - 1)]
-                        < 100)):
-                    shock_r[ip, it] = simulation.cell.radius(simulation.ghost)[ir]
-                    break
-    return shock_r
 
 def hampel_filter(shock_radius, sigma=3):
     """

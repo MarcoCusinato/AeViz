@@ -1,5 +1,11 @@
+from __future__ import annotations
+from AeViz.units.aerray import aerray
+from AeViz.utils.files.file_utils import save_hdf
+from AeViz.units import u
+import numpy as np
 import h5py
 import os
+import re
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
 checkpoints = {
@@ -35,11 +41,6 @@ def time_array(simulation):
     """
     Get the time array of the local simulation output.
     """
-    from AeViz.units.aerray import aerray
-    from AeViz.utils.files.file_utils import save_hdf
-    from AeViz.units import u
-    import numpy as np
-    import h5py
     if check_existence(simulation, 'time.h5'):
         data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
         time_array = aerray(data['time'][...], u.s, 'time', r'$t$', None,
@@ -76,6 +77,64 @@ def time_array(simulation):
              ['time', 'processed'], [time_array.value, processed_hdf])
     time_array.set('time', r'$t$', None, [None, None])
     return time_array
+
+def units_from_string(string: str) -> u:
+    """
+    _summary_
+
+    Parameters
+    ----------
+    string : str
+        _description_
+
+    Returns
+    -------
+    u
+        _description_
+    """
+    unit = u.dimensionless_unscaled
+    if len(string) == 0:
+        return unit
+    
+    units = string.split(' / ')
+    if len(units) == 1:
+        num_unit = unit[0]
+        den_unit = ''
+    else:
+        num_unit = unit[0]
+        den_unit = unit[1]
+    if den_unit.startswith('(') and den_unit.endswith(')'):
+        den_unit = den_unit[1:-1]
+    num_unit = num_unit.split(' ')
+    den_unit = den_unit.split(' ')
+    num_unit = [nu for nu in num_unit if len(nu) > 0]
+    den_unit = [du for du in den_unit if len(du) > 0]
+    pattern = re.compile(r"^([A-Za-z]+)(?:\(([^)]+)\)|(\d+(?:\.\d+)?))?$")
+    for uu in num_unit:
+        m = pattern.fullmatch(uu)
+        uuu = m.group(1)
+        exp = m.group(2) or m.group(3)
+        if exp is None:
+            exp = 1
+        elif "/" in exp:
+            a, b = exp.split("/")
+            exp = float(a) / float(b)
+        else:
+            exp = float(exp)
+        unit *= getattr(u, uuu) ** exp
+    for uu in num_unit:
+        m = pattern.fullmatch(uu)
+        uuu = m.group(1)
+        exp = m.group(2) or m.group(3)
+        if exp is None:
+            exp = 1
+        elif "/" in exp:
+            a, b = exp.split("/")
+            exp = float(a) / float(b)
+        else:
+            exp = float(exp)
+        unit /= getattr(u, uuu) ** exp
+    return unit
 
 def restart_from(simulation, file_name):
     def cut_and_replace_dset(group, key, index):

@@ -25,6 +25,7 @@ class grid:
         self.radius = radius
         self.theta = theta
         self.phi = phi
+        self.__cart_grid = None 
         if self.dim == 1:
             self.__default_grid_parameters = {'interpolation_method': 'cubic',
                                     'r_0': self.radius[0],
@@ -62,12 +63,17 @@ class grid:
         mehgrid).
         Returns  1, 2 or 3 arrays depending on the simulation dimension.
         """
+        if self.__cart_grid is not None:
+            return self.__cart_grid
         if self.dim == 1:
-            return self.__1D_cartesian_grid(self.radius)
+            self.__cart_grid = self.__1D_cartesian_grid(self.radius).value
         elif self.dim == 2:
-            return self.__2D_cartesian_grid(self.radius, self.theta, 'xz')
+            X, Y =  self.__2D_cartesian_grid(self.radius, self.theta, 'xz')
+            self.__cart_grid = np.array([X.value, Y.value])
         else:
-            return self.__3D_cartesian_grid(self.radius, self.theta, self.phi)
+            X, Y, Z = self.__3D_cartesian_grid(self.radius, self.theta, self.phi)
+            self.__cart_grid = np.array([X.value, Y.value, Z.value])
+        return self.__cart_grid
     
     def velocity_sph_to_cart(self, v_r=None, v_theta=None, v_phi=None):
         """

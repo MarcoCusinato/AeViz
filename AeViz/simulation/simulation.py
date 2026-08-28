@@ -1,4 +1,5 @@
 from AeViz.cell.cell import cell
+from AeViz.grid.grid import grid
 from AeViz.cell.ghost import ghost
 from AeViz.units import u
 from AeViz.units.aerray import aerray
@@ -41,6 +42,9 @@ class Simulation:
         self.hydroTHD_index = get_indices_from_parfile(parfile)
         self.cell = cell(self.path, self.dim, geom=self.GEOM,
                          neu=self.evolved_qts['neudim'])
+        self.grid = grid(self.dim, self.cell.radius(self.ghost),
+                         self.cell.theta(self.ghost),
+                         self.cell.phi(self.ghost))
         self.ghost = ghost(self.ghost_cells)
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)
