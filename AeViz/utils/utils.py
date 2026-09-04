@@ -80,17 +80,17 @@ def time_array(simulation):
 
 def units_from_string(string: str) -> u:
     """
-    _summary_
+    Convert strings into unit
 
     Parameters
     ----------
     string : str
-        _description_
+        string containing the unit as given by str(Unit)
 
     Returns
     -------
     u
-        _description_
+        unit
     """
     unit = u.dimensionless_unscaled
     if len(string) == 0:

@@ -10,7 +10,7 @@ from AeViz.utils.utils import check_existence, units_from_string
 from AeViz.utils.files.file_utils import save_hdf
 
 def declare_PNS_dictionary(dim: int,
-                         magdim: int) -> dict:
+                           magdim: int) -> dict:
     """
     _summary_
 
@@ -36,6 +36,7 @@ def declare_PNS_dictionary(dim: int,
             'eg': [],
             'ei': [],
             'I' : [],
+            'mflux': []
             },
         'local': {
             's': [],
@@ -75,48 +76,15 @@ def declare_PNS_dictionary(dim: int,
             PNS_dictionary['local']['bpol'] = []   
     return PNS_dictionary    
 
-def load_PNS_file(simulation: Simulation) -> tuple[aerray, dict[aerray]]:
-    with h5py.File(simulation.storage_path, 'PNS_postprocessing.h5') as f:
-        time = aerray(f['time'][:], units_from_string(f['time'].attrs['unit']),
-                      f['time'].attrs['name'], f['time'].attrs['label'],
-                      f['time'].attrs['cmap'], [f['time'].attrs['lim0'],
-                                                f['time'].attrs['lim1']],
-                      f['time'].attrs['log'])
-    PNS_dictionary = {'global': {},
-                      'local': {}}
-    for key in f['global'].keys():
-        att = f[f'global/{key}'].attrs
-        PNS_dictionary['global'][key] = aerray(f[f'global/{key}'][:],
-                                               units_from_string(att['unit']),
-                                               att['name'],
-                                               att['label'],
-                                               att['cmap'],
-                                               [att['lim0'], att['lim1']],
-                                               att['log'])
-    for key in f['local'].keys():
-        att = f[f'local/{key}'].attrs
-        PNS_dictionary['local'][key] = aerray(f[f'local/{key}'][...],
-                                                units_from_string(att['unit']),
-                                                att['name'],
-                                                att['label'],
-                                                att['cmap'],
-                                                [att['lim0'], att['lim1']],
-                                                att['log'])
-    return time, PNS_dictionary
-
-def save_PNS_file(simulation: Simulation,
-                  time: aerray,
-                  PNS_dictionary: dict) -> None:
-    pass
 def compute_PNS_postprocessing(PNS_dictionary: dict,
                                simulation: Simulation,
                                file_name: str,
                                gcells: dict,
                                dV: aerray,
                                dOmega: aerray,
-                               Lx: aerray,
-                               Ly: aerray,
-                               Lz: aerray,
+                               Lx: aerray | None,
+                               Ly: aerray | None,
+                               Lz: aerray | None,
                                I: aerray) -> None:
     """
     _summary_
@@ -135,11 +103,11 @@ def compute_PNS_postprocessing(PNS_dictionary: dict,
         _description_
     dOmega : aerray
         _description_
-    Lx : aerray
+    Lx : aerray | None
         _description_
-    Ly : aerray
+    Ly : aerray | None
         _description_
-    Lz : aerray
+    Lz : aerray | None
         _description_
     I : aerray
         _description_
@@ -157,7 +125,7 @@ def compute_PNS_postprocessing(PNS_dictionary: dict,
         while r.ndim <= PNSr.ndim:
             r = r[None, :]
         ixd_pns = np.argmax(r >= PNSr[..., None], axis=-1)
-    dmass = simulation.rho(file_name) * dV
+    dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     __compute_1D_global_local_quantities(PNS_dictionary,
                                          simulation,
                                          file_name,
@@ -168,23 +136,25 @@ def compute_PNS_postprocessing(PNS_dictionary: dict,
                                          PNSr,
                                          I,
                                          dmass)
-    __compute_2D_global_local_quantities(PNS_dictionary,
-                                         simulation,
-                                         file_name,
-                                         PNSmask,
-                                         idx_pns,
-                                         dV,
-                                         Lx,
-                                         Ly,
-                                         Lz,
-                                         dmass)
-    __compute_3D_global_local_quantities(PNS_dictionary,
-                                         simulation,
-                                         file_name,
-                                         PNSmask,
-                                         idx_pns,
-                                         dmass,
-                                         dV)
+    if simulation.dim > 1:
+        __compute_2D_global_local_quantities(PNS_dictionary,
+                                            simulation,
+                                            file_name,
+                                            PNSmask,
+                                            idx_pns,
+                                            dV,
+                                            Lx,
+                                            Ly,
+                                            Lz,
+                                            dmass)
+    if simulation.dim == 3:
+        __compute_3D_global_local_quantities(PNS_dictionary,
+                                            simulation,
+                                            file_name,
+                                            PNSmask,
+                                            idx_pns,
+                                            dmass,
+                                            dV)
 
 def __compute_1D_global_local_quantities(PNS_dictionary: dict,
                                        simulation: Simulation,
@@ -254,6 +224,8 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['local']['vr'].append(vr[indx_pns])
         PNS_dictionary['local']['mflux'].append(mflux[indx_pns])
         PNS_dictionary['local']['m'].append(np.nansum(dmass[indx_pns]))
+        PNS_dictionary['global']['mflux'].append(np.nansum(mflux[indx_pns] *
+                                                           dOmega))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
         PNS_dictionary['local']['s'].append(s[itheta, indx_pns])
@@ -265,6 +237,9 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['local']['m'].append(np.nancumsum(dmass[indx_pns],
                                                          axis=-1)[itheta,
                                                             indx_pns])
+        PNS_dictionary['global']['mflux'].append(np.nansum(mflux[itheta,
+                                                                 indx_pns] *
+                                                                   dOmega))
     elif simulation.dim == 3:
             itheta = np.arange(p.shape[1])
             iphi = np.arange(p.shape[0])
@@ -273,11 +248,16 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
             PNS_dictionary['local']['t'].append(t[iphi, itheta, indx_pns])
             PNS_dictionary['local']['p'].append(p[iphi, itheta, indx_pns])
             PNS_dictionary['local']['vr'].append(vr[iphi, itheta, indx_pns])
-            PNS_dictionary['local']['mflux'].append(mflux[itheta, indx_pns])
+            PNS_dictionary['local']['mflux'].append(mflux[iphi, itheta, 
+                                                          indx_pns])
             PNS_dictionary['local']['m'].append(np.nancumsum(dmass[indx_pns],
                                                                 axis=-1)[iphi,
                                                                          itheta,
                                                                         indx_pns])
+            PNS_dictionary['global']['mflux'].append(np.nansum(mflux[iphi,
+                                                                     itheta,
+                                                                     indx_pns] *
+                                                                       dOmega))
             
 def __compute_2D_global_local_quantities(PNS_dictionary: dict,
                                        simulation: Simulation,
@@ -315,8 +295,6 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
     dmass : aerray
         _description_
     """
-    if simulation.dim == 1:
-        return None
     vth = simulation.theta_velocity(file_name)
     vph = simulation.phi_velocity(file_name)
     jx = np.nansum(Lx[PNS_mask])
@@ -384,8 +362,6 @@ def __compute_3D_global_local_quantities(PNS_dictionary: dict,
     dV : aerray
         _description_
     """
-    if simulation.dim < 3:
-        return None
     jtot = PNS_dictionary['global']['jtot'][-1].value
     nx = PNS_dictionary['global']['jx'][-1] / jtot
     ny = PNS_dictionary['global']['jy'][-1] / jtot

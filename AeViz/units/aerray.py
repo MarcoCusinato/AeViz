@@ -577,6 +577,25 @@ class aerray(np.ndarray):
                       arrays[0].log)
     
     @staticmethod
+    def _stack(arrays, axis=0):
+        """Custom `stack' implementation for aerrays"""
+        # Ensure all elements are `aerray`
+        if not all(isinstance(arr, aerray) for arr in arrays):
+            raise TypeError("All inputs to concatenate must be aerray instances.")
+
+        # Ensure all units match
+        units = {arr.unit for arr in arrays}
+        if len(units) > 1:
+            arrays = [arr.to(arrays[0].unit) for arr in arrays]
+        # Concatenate raw values and return a new `aerray`
+        stacked_values = np.stack([[arr.value]
+                                                if arr.ndim == 0 else
+                                                arr.value
+                                                for arr in arrays], axis=axis)
+        return aerray(stacked_values, arrays[0].unit, arrays[0].name,
+                        arrays[0].label, arrays[0].cmap, arrays[0].limits,
+                        arrays[0].log)
+    @staticmethod
     def _moveaxis(array, source, destination):
         """Custom moveaxis fiunction for the aerray"""
         if not isinstance(array, aerray):

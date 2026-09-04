@@ -1,9 +1,12 @@
+from __future__ import annotations
 import os, h5py
 import numpy as np
 import pandas as pd
 import inspect
 from AeViz.units import aeseries, aerray, u
 import requests
+from AeViz.utils.utils import units_from_string, check_existence
+from AeViz.simulation.simulation import Simulation
 
 def list_module_functions(module):
     """
@@ -137,37 +140,195 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
     dataset_values: list of whatever you want, these are the values for
                     the datasets
     """
+    def save_with_attr(arr, key, group):
+        d = group.create_dataset(key if isinstance(key, str) else str(key),
+                                 data = arr.value)
+        d.attrs['name'] = arr.name
+        d.attrs['label'] = arr.label
+        d.attrs['cmap'] = arr.cmap
+        d.attrs['lim0'] = arr.limits[0]
+        d.attrs['lim1'] = arr.limits[1]
+        d.attrs['log'] = arr.log
+        d.attrs['unit'] = str(arr.unit)
     assert len(dataset_keywords) == len(dataset_values), \
         "Number of keywords and values do not match"
-    file_out = h5py.File(save_path, 'w')
-    for (key, value) in zip(dataset_keywords, dataset_values):
-        if type(value) == dict:
-            group = file_out.create_group(key)
-            for (k, v) in value.items():
-                if type(v) == dict:
-                    subgroup = group.create_group(k)
-                    for (kk, vv) in v.items():
-                        if isinstance(vv, aerray):
-                            subgroup.create_dataset(
-                                kk if isinstance(kk, str) else str(kk),
-                                data = vv.value)
-                        else:
-                            subgroup.create_dataset(
-                                kk if isinstance(kk, str) else str(kk),
-                                data = vv)
-                else:
-                    if isinstance(v, aerray):
-                        group.create_dataset(
-                            k if isinstance(k, str) else str(k),
-                            data = v.value)
+    with h5py.File(save_path, 'w') as file_out:
+        for (key, value) in zip(dataset_keywords, dataset_values):
+            if type(value) == dict:
+                group = file_out.create_group(key)
+                for (k, v) in value.items():
+                    if type(v) == dict:
+                        subgroup = group.create_group(k)
+                        for (kk, vv) in v.items():
+                            if isinstance(vv, aerray):
+                                save_with_attr(vv, kk, subgroup)
+                            else:
+                                subgroup.create_dataset(
+                                    kk if isinstance(kk, str) else str(kk),
+                                    data = vv)
                     else:
-                        group.create_dataset(
-                            k if isinstance(k, str) else str(k),
-                            data = v)
-        else:
-            file_out.create_dataset(key, data = value)
-    file_out.close()
+                        if isinstance(v, aerray):
+                            save_with_attr(v, k, group)
+                        else:
+                            group.create_dataset(
+                                k if isinstance(k, str) else str(k),
+                                data = v)
+            elif isinstance(value, aerray):
+                save_with_attr(value, key, file_out)
+            else:
+                file_out.create_dataset(key, data = value)
+
+def save_merge_dictionary_hdf(simulation: Simulation,
+                              value_dictionary: dict,
+                              save_path: str,
+                              file_name: str,
+                              **kwargs
+                              ) -> None:
+    """
+    Merges the postprocessing located in a file with the newly run one.
+    In case no postprocessing is found, the file is created.
+    The output file needs to be organised as follows: two lists
+    containing time and processed_hdf files, a dictionary containing
+    local and global dictionaries of lists.
     
+
+    Parameters
+    ----------
+    simulation : Simulation
+        simulation object, needed to save in the correct path
+    value_dictionary : dict
+        time, dictionary of quantities, file processed list
+    save_path : str
+        path to the save folder
+    file_name : str
+        name of the file to load and save
+    """
+    time, out_dictionary, processed_hdf = value_dictionary
+    time = np.concatenate(time)
+    out_dictionary['global'] = {kk: np.concatenate(vv) for (kk, vv) 
+                                in out_dictionary['global'].items()}
+    out_dictionary['local'] = {kk: np.stack(vv, axis=-1) for (kk, vv) 
+                                    in out_dictionary['local'].items()}
+    if check_existence(simulation, os.path.join(save_path, file_name)):
+        old_t, old_dict, old_proc = load_hdf_to_dictionary(save_path,
+                                                           file_name)
+        processed_hdf = old_proc.extend(processed_hdf)
+        nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
+        time = np.concatenate(old_t, time)
+        time.set(limits = [-0.005, time.value[-1]])
+        time.set(name=nm, label=lb, limits=lm, cmap=cm, log=lg)
+        for key in out_dictionary['global'].keys():
+            nm = old_dict['global'][key].name
+            lb = old_dict['global'][key].label
+            lm = old_dict['global'][key].limits
+            lg = old_dict['global'][key].log
+            cm = old_dict['global'][key].cmap
+            out_dictionary['global'][key] = \
+                np.concatenate(old_dict['global'][key],
+                               out_dictionary['global'][key])
+        for key in out_dictionary['local'].keys():
+            nm = old_dict['local'][key].name
+            lb = old_dict['local'][key].label
+            lm = old_dict['local'][key].limits
+            lg = old_dict['local'][key].log
+            cm = old_dict['local'][key].cmap
+            out_dictionary['local'][key] = \
+                np.concatenate(old_dict['local'][key],
+                                out_dictionary['local'][key])
+    else:
+        time.set(name='time', label=r'$t-t_{\rm b}$',
+                 limits=[-0.005, time.value[-1]], log=False)
+        for key in out_dictionary['global'].keys():
+            out_dictionary['global'][key].set(**kwargs['global'][key])
+        for key in out_dictionary['local'].keys():
+            out_dictionary['local'][key].set(**kwargs['local'][key])
+            
+    save_hdf(os.path.join(save_path, file_name),
+             ['time', 'local', 'global', 'processed_hdf'],
+             [time, out_dictionary['local'], out_dictionary['global'],
+              processed_hdf])
+
+def load_hdf_to_dictionary(path: str,
+                           file_name:str
+                           ) -> tuple[aerray, dict[aerray], list[str]]:
+    """
+    Loads a hdf file split into 'global' and 'local' datasets into a
+    dictionary of aerrays.
+
+    Parameters
+    ----------
+    path : str
+        path to the file to load
+    file_name : str
+        name of the file to load
+
+    Returns
+    -------
+    tuple[aerray, dict[aerray], list[str]]
+        aerray containing the time and a dictionary containing two
+        dictionaries of aerrays.
+    """
+    with h5py.File(os.path.join(path, file_name), 'r') as f:
+        time = aerray(f['time'][:], units_from_string(f['time'].attrs['unit']),
+                        f['time'].attrs['name'], f['time'].attrs['label'],
+                        f['time'].attrs['cmap'], [f['time'].attrs['lim0'],
+                                                f['time'].attrs['lim1']],
+                        f['time'].attrs['log'])
+        out_dictionary = {'global': {},
+                            'local': {}}
+        for key in f['global'].keys():
+            att = f[f'global/{key}'].attrs
+            out_dictionary['global'][key] = aerray(f[f'global/{key}'][:],
+                                                    units_from_string(att['unit']),
+                                                    att['name'],
+                                                    att['label'],
+                                                    att['cmap'],
+                                                    [att['lim0'], att['lim1']],
+                                                    att['log'])
+        for key in f['local'].keys():
+            att = f[f'local/{key}'].attrs
+            out_dictionary['local'][key] = aerray(f[f'local/{key}'][...],
+                                                    units_from_string(att['unit']),
+                                                    att['name'],
+                                                    att['label'],
+                                                    att['cmap'],
+                                                    [att['lim0'], att['lim1']],
+                                                    att['log'])
+        processed_hdf = [ff.decode("utf-8") for ff in f['processed_hdf']]
+    return time, out_dictionary, processed_hdf
+
+def load_dataset(path: str,
+              file_name: str,
+              dset_name: str,
+              return_series: bool = True) -> aerray | aeseries:
+    with h5py.File(os.path.join(path, file_name), 'r') as f:
+        dset = f[dset_name]
+        if len(dset.attrs) > 0:
+            att = dset.attrs
+            arr = aerray(dset[...],
+                         units_from_string(att['unit']),
+                         att['name'],
+                         att['label'],
+                         att['cmap'],
+                         [att['lim0'], att['lim1']],
+                         att['log'])
+        else:
+            arr = dset[...]
+            if all((isinstance(a, bytes) for a in arr)):
+                arr = [a.decode("utf-8") for a in arr]
+        if isinstance(arr, aerray) and return_series:
+            dset = f['time']
+            att = dset.attrs
+            time = aerray(dset[...],
+                            units_from_string(att['unit']),
+                            att['name'],
+                            att['label'],
+                            att['cmap'],
+                            [att['lim0'], att['lim1']],
+                            att['log'])
+            return create_series(time, arr)
+        return arr
+
 def create_series(time, *args):
     """
     Creates as many aeseries as argument.
