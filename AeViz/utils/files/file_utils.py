@@ -210,9 +210,8 @@ def save_merge_dictionary_hdf(simulation: Simulation,
     out_dictionary['local'] = {kk: np.stack(vv, axis=-1) for (kk, vv) 
                                     in out_dictionary['local'].items()}
     if check_existence(simulation, os.path.join(save_path, file_name)):
-        old_t, old_dict, old_proc = load_hdf_to_dictionary(save_path,
+        old_t, old_dict, _ = load_hdf_to_dictionary(save_path,
                                                            file_name)
-        processed_hdf = old_proc.extend(processed_hdf)
         nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
         time = np.concatenate(old_t, time)
         time.set(limits = [-0.005, time.value[-1]])
