@@ -541,6 +541,8 @@ class aerray(np.ndarray):
         """Intercept NumPy functions."""
         if func == np.concatenate:
             return aerray._concatenate(*args, **kwargs)
+        elif func == np.stack:
+            return aerray._stack(*args, **kwargs)
         elif func == np.moveaxis:
             return aerray._moveaxis(*args, **kwargs)
         elif func in [np.argmax, np.nanargmax, np.argmin, np.nanargmin, 

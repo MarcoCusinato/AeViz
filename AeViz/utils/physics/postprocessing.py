@@ -6,7 +6,6 @@ import os
 from AeViz.utils.physics.PNS_postprocessing import (declare_PNS_dictionary,
                                                     compute_PNS_postprocessing,
                                                     PNS_quantity_metadata)
-from AeViz.units import u
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 
@@ -42,7 +41,8 @@ def supernova_postprocessing(simulation: Simulation,
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
-    PNS_dict = declare_PNS_dictionary(simulation.dim, simulation.magdim)
+    PNS_dict = declare_PNS_dictionary(simulation.dim,
+                                      simulation.evolved_qts['magdim'] > 0)
     pns_metadata = PNS_quantity_metadata()
     pns_time = []
     check_index = 0
@@ -95,7 +95,8 @@ def supernova_postprocessing(simulation: Simulation,
                                       simulation.storage_path,
                                       'PNS_postprocessing.h5', **pns_metadata)
             check_index = 0
-            PNS_dict = declare_PNS_dictionary(simulation.dim, simulation.magdim)
+            PNS_dict = declare_PNS_dictionary(simulation.dim,
+                                              simulation.evolved_qts['magdim'])
             pns_time = []
         else:
             check_index += 1

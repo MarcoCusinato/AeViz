@@ -1,6 +1,5 @@
 from __future__ import annotations
 from AeViz.units.aerray import aerray
-from AeViz.utils.files.file_utils import save_hdf
 from AeViz.units import u
 import numpy as np
 import h5py
@@ -9,7 +8,7 @@ import re
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
 checkpoints = {
-    1: False,
+    1: 50,
     2: 400,
     3: 20
 }
@@ -41,6 +40,7 @@ def time_array(simulation):
     """
     Get the time array of the local simulation output.
     """
+    from AeViz.utils.files.file_utils import save_hdf
     if check_existence(simulation, 'time.h5'):
         data = h5py.File(os.path.join(simulation.storage_path, 'time.h5'), 'r')
         time_array = aerray(data['time'][...], u.s, 'time', r'$t$', None,
@@ -98,11 +98,11 @@ def units_from_string(string: str) -> u:
     
     units = string.split(' / ')
     if len(units) == 1:
-        num_unit = unit[0]
+        num_unit = units[0]
         den_unit = ''
     else:
-        num_unit = unit[0]
-        den_unit = unit[1]
+        num_unit = units[0]
+        den_unit = units[1]
     if den_unit.startswith('(') and den_unit.endswith(')'):
         den_unit = den_unit[1:-1]
     num_unit = num_unit.split(' ')
@@ -122,7 +122,7 @@ def units_from_string(string: str) -> u:
         else:
             exp = float(exp)
         unit *= getattr(u, uuu) ** exp
-    for uu in num_unit:
+    for uu in den_unit:
         m = pattern.fullmatch(uu)
         uuu = m.group(1)
         exp = m.group(2) or m.group(3)

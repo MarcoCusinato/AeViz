@@ -1,5 +1,5 @@
 from AeViz.utils.physics.radii_utils import (PNS_radius, innercore_radius, gain_radius,
-                                     neutrino_sphere_radii, PNS_nucleus,
+                                     neutrino_sphere_radii, PNS_core,
                                      shock_radius, isodensity_radii)
 from AeViz.utils.files.file_utils import save_hdf, create_series
 import numpy as np
@@ -17,7 +17,7 @@ functions = {
     'gain': gain_radius,
     'neutrino': neutrino_sphere_radii,
     'shock': shock_radius,
-    'nucleus': PNS_nucleus,
+    'nucleus': PNS_core,
     'isodensity': isodensity_radii
 }
 

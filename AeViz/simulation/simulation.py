@@ -42,10 +42,10 @@ class Simulation:
         self.hydroTHD_index = get_indices_from_parfile(parfile)
         self.cell = cell(self.path, self.dim, geom=self.GEOM,
                          neu=self.evolved_qts['neudim'])
-        self.grid = grid(self.dim, self.cell.radius(self.ghost),
-                         self.cell.theta(self.ghost),
-                         self.cell.phi(self.ghost))
         self.ghost = ghost(self.ghost_cells)
+        self.grid = grid(self.dim, self.cell.radius(self.ghost),
+                                 self.cell.theta(self.ghost),
+                                 self.cell.phi(self.ghost))
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)
         self.utils_path = os.path.join(local_storage_folder(pltf()), '.utils')

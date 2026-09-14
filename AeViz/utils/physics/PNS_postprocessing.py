@@ -97,17 +97,17 @@ def PNS_quantity_metadata() -> dict:
                            cmap="viridis",
                            log=False),
             "rmax":   dict(name="PNS_radius_max",
-                           label=r"$R_{\rm PNS, max}$",
+                           label=r"$R_{\rm PNS,max}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
             "rmin":   dict(name="PNS_radius_min",
-                           label=r"$R_{\rm PNS, min}$",
+                           label=r"$R_{\rm PNS,min}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
             "ravg":   dict(name="PNS_radius_avg",
-                           label=r"$\langle R_{\rm PNS}\rangle$",
+                           label=r"$R_{\rm PNS,avg}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
@@ -466,7 +466,7 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
                                                                    simulation.dim,
                                                                    dOmega))
     PNS_dictionary['global']['er'].append(np.nansum(0.5 * dmass[PNS_mask] * 
-                                                    vr[PNS_mask] ** 2))
+                                                    vr[PNS_mask] ** 2).to(u.erg))
     PNS_dictionary['global']['eg'].append(np.nansum(grav_en[PNS_mask]))
     PNS_dictionary['global']['ei'].append(np.nansum(int_en[PNS_mask]))
     PNS_dictionary['global']['yeavg'].append(np.nansum(ye[PNS_mask] * dmass[PNS_mask]) /
@@ -491,7 +491,7 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['global']['mflux'].append(np.nansum(mflux[indx_pns] *
                                                            dOmega))
         rperp2 = simulation.cell.radius(simulation.ghost) ** 2
-        PNS_dictionary['global']['I'].append(np.nansum((dmass * 
+        PNS_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
                                                         rperp2)[PNS_mask]))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
@@ -569,9 +569,9 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
     jz = np.nansum(Lz[PNS_mask])
     jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
     PNS_dictionary['global']['et'].append(np.nansum(0.5 * dmass[PNS_mask] * 
-                                                    vth[PNS_mask] ** 2))
+                                                    vth[PNS_mask] ** 2).to(u.erg))
     PNS_dictionary['global']['ep'].append(np.nansum(0.5 * dmass[PNS_mask] *
-                                                    vph[PNS_mask] ** 2))
+                                                    vph[PNS_mask] ** 2).to(u.erg))
     PNS_dictionary['global']['jx'].append(jx)
     PNS_dictionary['global']['jy'].append(jy)
     PNS_dictionary['global']['jz'].append(jz)
@@ -584,7 +584,7 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['local']['vt'].append(vth[itheta, indx_pns])
         PNS_dictionary['local']['vp'].append(vph[itheta, indx_pns])
         PNS_dictionary['local']['omg'].append(omg[itheta, indx_pns])
-        PNS_dictionary['global']['I'].append(np.nansum((dmass * 
+        PNS_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
                                                         rperp2)[PNS_mask]))
     elif simulation.dim == 3:
         iphi = np.arange(vth.shape[0])[:, None]
@@ -689,12 +689,12 @@ def __compute_3D_global_local_quantities(PNS_dictionary: dict,
         omg = (vrot / R) * vel_unit / simulation.grid.radius.unit
         vturb = np.nansum((v - vrot * e_rot) ** 2, axis=0) * vel_unit ** 2
         vrot = vrot * vel_unit
-    PNS_dictionary['global']['I'].append(np.nansum((dmass * 
+    PNS_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
                                                     R ** 2)[PNS_mask]))
     PNS_dictionary['global']['erot'].append(np.nansum(0.5 * (vrot ** 2 * 
-                                                             dmass)[mask]))
+                                                             dmass)[mask]).to(u.erg))
     PNS_dictionary['global']['eres'].append(np.nansum(0.5 * (vturb *
-                                                             dmass)[mask]))
+                                                             dmass)[mask]).to(u.erg))
     PNS_dictionary['local']['vrot'].append(vrot[iphi, itheta, indx_pns])
     PNS_dictionary['local']['omg'].append(omg[iphi, itheta, indx_pns])
     if simulation.evolved_qts['magdim'] > 0:

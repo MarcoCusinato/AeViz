@@ -6,7 +6,9 @@ import inspect
 from AeViz.units import aeseries, aerray, u
 import requests
 from AeViz.utils.utils import units_from_string, check_existence
-from AeViz.simulation.simulation import Simulation
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from AeViz.simulation.simulation import Simulation
 
 def list_module_functions(module):
     """
@@ -145,7 +147,7 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
                                  data = arr.value)
         d.attrs['name'] = arr.name
         d.attrs['label'] = arr.label
-        d.attrs['cmap'] = arr.cmap
+        d.attrs['cmap'] = arr.cmap if arr.cmap is not None else 'inferno'
         d.attrs['lim0'] = arr.limits[0]
         d.attrs['lim1'] = arr.limits[1]
         d.attrs['log'] = arr.log
@@ -213,9 +215,9 @@ def save_merge_dictionary_hdf(simulation: Simulation,
         old_t, old_dict, _ = load_hdf_to_dictionary(save_path,
                                                            file_name)
         nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
-        time = np.concatenate(old_t, time)
-        time.set(limits = [-0.005, time.value[-1]])
-        time.set(name=nm, label=lb, limits=lm, cmap=cm, log=lg)
+        time = np.concatenate((old_t, time))
+        time.set(name=nm, label=lb, cmap=cm, log=lg,
+                 limits=[-0.005, time.value[-1]])
         for key in out_dictionary['global'].keys():
             nm = old_dict['global'][key].name
             lb = old_dict['global'][key].label
@@ -223,8 +225,8 @@ def save_merge_dictionary_hdf(simulation: Simulation,
             lg = old_dict['global'][key].log
             cm = old_dict['global'][key].cmap
             out_dictionary['global'][key] = \
-                np.concatenate(old_dict['global'][key],
-                               out_dictionary['global'][key])
+                np.concatenate((old_dict['global'][key],
+                               out_dictionary['global'][key]))
         for key in out_dictionary['local'].keys():
             nm = old_dict['local'][key].name
             lb = old_dict['local'][key].label
@@ -232,8 +234,8 @@ def save_merge_dictionary_hdf(simulation: Simulation,
             lg = old_dict['local'][key].log
             cm = old_dict['local'][key].cmap
             out_dictionary['local'][key] = \
-                np.concatenate(old_dict['local'][key],
-                                out_dictionary['local'][key])
+                np.concatenate((old_dict['local'][key],
+                                out_dictionary['local'][key]))
     else:
         time.set(name='time', label=r'$t-t_{\rm b}$',
                  limits=[-0.005, time.value[-1]], log=False)
