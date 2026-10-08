@@ -6,6 +6,9 @@ import os
 from AeViz.utils.physics.PNS_postprocessing import (declare_PNS_dictionary,
                                                     compute_PNS_postprocessing,
                                                     PNS_quantity_metadata)
+from AeViz.utils.physics.PNS_core_postprocessing import (declare_PNScore_dictionary,
+                                                         compute_PNScore_postprocessing,
+                                                         PNScore_quantity_metadata)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 
@@ -41,10 +44,15 @@ def supernova_postprocessing(simulation: Simulation,
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
+    ## PNS declaration part
     PNS_dict = declare_PNS_dictionary(simulation.dim,
-                                      simulation.evolved_qts['magdim'] > 0)
+                                      simulation.evolved_qts['magdim'])
     pns_metadata = PNS_quantity_metadata()
-    pns_time = []
+    ## PNS core declaration part
+    PNS_core_dict = declare_PNScore_dictionary(simulation.dim,
+                                               simulation.evolved_qts['magdim'])
+    pnscore_metadata = PNScore_quantity_metadata()
+    global_time = []
     check_index = 0
     for findex, file_name in enumerate(file_list):
         progressBar(findex, tot_points, 'Computing PNS postprocessing...')
@@ -87,16 +95,23 @@ def supernova_postprocessing(simulation: Simulation,
         compute_PNS_postprocessing(PNS_dict, simulation, file_name,
                                    dV, dOmega,
                                    jx, jy, jz)
-        pns_time.append(time)
+        compute_PNScore_postprocessing(PNS_core_dict, simulation,
+                                       file_name, dV, dOmega,
+                                       jx, jy, jz)
+        global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving files...\n')
-            save_merge_dictionary_hdf(simulation, (pns_time, PNS_dict, pns_processed),
+            save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
                                       simulation.storage_path,
                                       'PNS_postprocessing.h5', **pns_metadata)
+            save_merge_dictionary_hdf(simulation, (global_time, PNS_core_dict,
+                                                   pns_processed),
+                                      simulation.storage_path,
+                                      'PNScore_postprocessing.h5', **pnscore_metadata)
             check_index = 0
             PNS_dict = declare_PNS_dictionary(simulation.dim,
                                               simulation.evolved_qts['magdim'])
-            pns_time = []
+            global_time = []
         else:
             check_index += 1
