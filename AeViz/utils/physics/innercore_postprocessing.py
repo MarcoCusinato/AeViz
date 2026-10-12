@@ -41,6 +41,7 @@ def declare_innercore_dictionary(dim: int,
         'local': {
             'r': [],
             's': [],
+            'rho': [],
             'ye': [],
             't': [],
             'p': [],
@@ -86,254 +87,259 @@ def declare_innercore_dictionary(dim: int,
 
 def innercore_quantity_metadata() -> dict:
     """
-    Metadata for PNS post-processing quantities.
+    Metadata for innercore post-processing quantities.
     """
 
     meta = {
         "global": {
-            "mass":   dict(name="PNS_mass",
-                           label=r"$M_{\rm PNS}$",
+            "mass":   dict(name="innercore_mass",
+                           label=r"$M_{\rm inn}$",
                            limits=[1.0, 2.5],
                            cmap="viridis",
                            log=False),
-            "rmax":   dict(name="PNS_radius_max",
-                           label=r"$R_{\rm PNS,max}$",
+            "rmax":   dict(name="innercore_radius_max",
+                           label=r"$R_{\rm inn,max}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
-            "rmin":   dict(name="PNS_radius_min",
-                           label=r"$R_{\rm PNS,min}$",
+            "rmin":   dict(name="innercore_radius_min",
+                           label=r"$R_{\rm inn,min}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
-            "ravg":   dict(name="PNS_radius_avg",
-                           label=r"$R_{\rm PNS,avg}$",
+            "ravg":   dict(name="innercore_radius_avg",
+                           label=r"$R_{\rm inn,avg}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
-            "mflux":  dict(name="PNS_mass_flux",
-                           label=r"$\dot{M}_{\rm PNS}$",
+            "mflux":  dict(name="innercore_mass_flux",
+                           label=r"$\dot{M}_{\rm inn}$",
                            limits=[1e-4, 5],
                            cmap="cividis",
                            log=True),
             "er":     dict(name="radial_kinetic_energy",
-                           label=r"$E_{\rm PNS,kin,r}$",
+                           label=r"$E_{\rm inn,kin,r}$",
                            limits=[1e46, 1e52],
                            cmap="inferno",
                            log=True),
             "et":     dict(name="theta_kinetic_energy",
-                           label=r"$E_{\rm PNS,kin,\theta}$",
+                           label=r"$E_{\rm inn,kin,\theta}$",
                            limits=[1e46, 1e52],
                            cmap="inferno",
                            log=True),
             "ep":     dict(name="phi_kinetic_energy",
-                           label=r"$E_{\rm PNS,kin,\phi}$",
+                           label=r"$E_{\rm inn,kin,\phi}$",
                            limits=[1e46, 1e52],
                            cmap="inferno",
                            log=True),
             "eg":     dict(name="gravitational_energy",
-                           label=r"$E_{\rm PNS,grav}$",
+                           label=r"$E_{\rm inn,grav}$",
                            limits=[-5e53, -1e51],
                            cmap="magma",
                            log=False),
             "ei":     dict(name="internal_energy",
-                           label=r"$E_{\rm PNS,int}$",
+                           label=r"$E_{\rm inn,int}$",
                            limits=[1e50, 5e53],
                            cmap="hot",
                            log=True),
             "I":      dict(name="moment_of_inertia",
-                           label=r"$I_{\rm PNS}$",
+                           label=r"$I_{\rm inn}$",
                            limits=[1e43, 5e45],
                            cmap="Greens",
                            log=True),
             "yeavg":  dict(name="Ye_average",
-                           label=r"$\langle Y_e\rangle_{\rm PNS}$",
+                           label=r"$\langle Y_e\rangle_{\rm inn}$",
                            limits=[0.0, 0.5],
                            cmap="RdYlBu",
                            log=False),
             "tavg":   dict(name="temperature_average",
-                           label=r"$\langle T\rangle_{\rm PNS}$",
+                           label=r"$\langle T\rangle_{\rm inn}$",
                            limits=[1, 60],
                            cmap="afmhot",
                            log=False),
             "savg":   dict(name="entropy_average",
-                           label=r"$\langle s\rangle_{\rm PNS}$",
+                           label=r"$\langle s\rangle_{\rm inn}$",
                            limits=[0, 30],
                            cmap="Spectral",
                            log=False),
             "jx":   dict(name="Jx",
-                         label=r"$J_{x,\rm PNS}$",
+                         label=r"$J_{x,\rm inn}$",
                          limits=[-5e49, 5e49],
                          cmap="coolwarm",
                          log=False),
             "jy":   dict(name="Jy",
-                         label=r"$J_{y,\rm PNS}$",
+                         label=r"$J_{y,\rm inn}$",
                          limits=[-5e49, 5e49],
                          cmap="coolwarm",
                          log=False),
             "jz":   dict(name="Jz",
-                         label=r"$J_{z,\rm PNS}$",
+                         label=r"$J_{z,\rm inn}$",
                          limits=[-5e49, 5e49],
                          cmap="coolwarm",
                          log=False),
             "jtot": dict(name="Jtot",
-                         label=r"$|\mathbf{J}|_{\rm PNS}$",
+                         label=r"$|\mathbf{J}|_{\rm inn}$",
                          limits=[1e46, 1e50],
                          cmap="viridis",
                          log=True),
             "ebr": dict(name="magnetic_energy_radial",
-                        label=r"$E_{\rm mag,r,PNS}$",
+                        label=r"$E_{\rm mag,r,inn}$",
                         limits=[1e42, 1e51],
                         cmap="PuBuGn",
                         log=True),
             "ebt": dict(name="magnetic_energy_theta",
-                        label=r"$E_{\rm mag,\theta,PNS}$",
+                        label=r"$E_{\rm mag,\theta,inn}$",
                         limits=[1e42, 1e51],
                         cmap="PuBuGn",
                         log=True),
             "ebp": dict(name="magnetic_energy_phi",
-                        label=r"$E_{\rm mag,\phi,PNS}$",
+                        label=r"$E_{\rm mag,\phi,inn}$",
                         limits=[1e42, 1e51],
                         cmap="PuBuGn",
                         log=True),
             "bmax": dict(name="maximum_magnetic_field",
-                         label=r"$B_{\rm max,PNS}$",
+                         label=r"$B_{\rm max,inn}$",
                          limits=[1e10, 1e17],
                          cmap="PuRd",
                          log=True),
             "bavg": dict(name="average_magnetic_field",
-                         label=r"$\langle B\rangle_{\rm PNS}$",
+                         label=r"$\langle B\rangle_{\rm inn}$",
                          limits=[1e9, 1e16],
                          cmap="PuRd",
                          log=True),
             "erot": dict(name="rotational_energy",
-                         label=r"$E_{\rm rot,PNS}$",
+                         label=r"$E_{\rm rot,inn}$",
                          limits=[1e46, 1e53],
                          cmap="Oranges",
                          log=True),
             "eres": dict(name="turbulent_energy",
-                         label=r"$E_{\rm turb,PNS}$",
+                         label=r"$E_{\rm turb,inn}$",
                          limits=[1e46, 1e53],
                          cmap="YlOrBr",
                          log=True),
             "cmass_x": dict(name="center_of_mass_x",
-                            label=r"$x_{\rm COM,PNS}$",
+                            label=r"$x_{\rm COM,inn}$",
                             limits=[-20, 20],
                             cmap="coolwarm",
                             log=False),
             "cmass_y": dict(name="center_of_mass_y",
-                            label=r"$y_{\rm COM,PNS}$",
+                            label=r"$y_{\rm COM,inn}$",
                             limits=[-20, 20],
                             cmap="coolwarm",
                             log=False),
             "cmass_z": dict(name="center_of_mass_z",
-                            label=r"$z_{\rm COM,PNS}$",
+                            label=r"$z_{\rm COM,inn}$",
                             limits=[-20, 20],
                             cmap="coolwarm",
                             log=False),
             "ebpol": dict(name="poloidal_magnetic_energy",
-                            label=r"$E_{\rm mag,pol,PNS}$",
+                            label=r"$E_{\rm mag,pol,inn}$",
                             limits=[1e42, 1e51],
                             cmap="PuBuGn",
                             log=True),
             "ebtor": dict(name="toroidal_magnetic_energy",
-                            label=r"$E_{\rm mag,tor,PNS}$",
+                            label=r"$E_{\rm mag,tor,inn}$",
                             limits=[1e42, 1e51],
                             cmap="PuBuGn",
                             log=True),
         },
 
         "local": {
-            "r":      dict(name="PNS_radius_surface",
-                           label=r"$R_{\rm PNS}$",
+            "r":      dict(name="innercore_radius_surface",
+                           label=r"$R_{\rm inn}$",
                            limits=[5, 60],
                            cmap="plasma",
                            log=False),
             "s":      dict(name="surface_entropy",
-                           label=r"$s_{\rm PNS}$",
+                           label=r"$s_{\rm inn}$",
                            limits=[0, 40],
                            cmap="Spectral",
                            log=False),
+            "rho":      dict(name="surface_density",
+                           label=r"$\rho_{\rm inn}$",
+                           limits=[1e6, 1e10],
+                           cmap="Spectral",
+                           log=True),
             "ye":     dict(name="surface_Ye",
-                           label=r"$Y_{e,\rm PNS}$",
+                           label=r"$Y_{e,\rm inn}$",
                            limits=[0, 0.6],
                            cmap="RdYlBu",
                            log=False),
             "t":      dict(name="surface_temperature",
-                           label=r"$T_{\rm PNS}$",
+                           label=r"$T_{\rm inn}$",
                            limits=[1, 60],
                            cmap="afmhot",
                            log=False),
             "p":      dict(name="surface_pressure",
-                           label=r"$P_{\rm gas,PNS}$",
+                           label=r"$P_{\rm gas,inn}$",
                            limits=[1e27, 1e35],
                            cmap="magma",
                            log=True),
             "vr":     dict(name="surface_radial_velocity",
-                           label=r"$v_{r,\rm PNS}$",
+                           label=r"$v_{r,\rm inn}$",
                            limits=[-0.5, 0.5],
                            cmap="coolwarm",
                            log=False),
             "mflux":  dict(name="surface_mass_flux",
-                           label=r"$\dot{M}_{\rm PNS}$",
+                           label=r"$\dot{M}_{\rm inn}$",
                            limits=[1e-4, 5],
                            cmap="cividis",
                            log=True),
             "m":      dict(name="enclosed_mass",
-                           label=r"$M(<R_{\rm PNS})$",
+                           label=r"$M(<R_{\rm inn})$",
                            limits=[1.0, 2.5],
                            cmap="viridis",
                            log=False),
             "vt":  dict(name="surface_theta_velocity",
-                        label=r"$v_{\theta,\rm PNS}$",
+                        label=r"$v_{\theta,\rm inn}$",
                         limits=[-0.5, 0.5],
                         cmap="coolwarm",
                         log=False),
             "vp":  dict(name="surface_phi_velocity",
-                        label=r"$v_{\phi,\rm PNS}$",
+                        label=r"$v_{\phi,\rm inn}$",
                         limits=[-0.5, 0.5],
                         cmap="coolwarm",
                         log=False),
             "omg": dict(name="surface_omega",
-                        label=r"$\Omega_{\rm PNS}$",
+                        label=r"$\Omega_{\rm inn}$",
                         limits=[1, 1e4],
                         cmap="twilight",
                         log=True),
             "br": dict(name="surface_Br",
-                       label=r"$B_{r,\rm PNS}$",
+                       label=r"$B_{r,\rm inn}$",
                        limits=[-1e16, 1e16],
                        cmap="RdBu_r",
                        log=False),
             "bt": dict(name="surface_Btheta",
-                       label=r"$B_{\theta,\rm PNS}$",
+                       label=r"$B_{\theta,\rm inn}$",
                        limits=[-1e16, 1e16],
                        cmap="RdBu_r",
                        log=False),
             "bp": dict(name="surface_Bphi",
-                       label=r"$B_{\phi,\rm PNS}$",
+                       label=r"$B_{\phi,\rm inn}$",
                        limits=[-1e16, 1e16],
                        cmap="RdBu_r",
                        log=False),
             "beta": dict(name="surface_plasma_beta",
-                         label=r"$\beta_{\rm PNS}$",
+                         label=r"$\beta_{\rm inn}$",
                          limits=[1e-2, 1e4],
                          cmap="viridis",
                          log=True),
             "vrot": dict(
                         name="surface_rotational_velocity",
-                        label=r"$v_{\rm rot,PNS}$",
+                        label=r"$v_{\rm rot,inn}$",
                         limits=[0, 0.5],
                         cmap="twilight_shifted",
                         log=False,
                         ),
             "bpol": dict(name="surface_Bpol",
-                         label=r"$B_{\rm pol,PNS}$",
+                         label=r"$B_{\rm pol,inn}$",
                          limits=[0, 1e16],
                          cmap="PuRd",
                          log=True),
             
             "btor": dict(name="surface_Btor",
-                         label=r"$B_{\rm tor,PNS}$",
+                         label=r"$B_{\rm tor,inn}$",
                          limits=[0, 1e16],
                          cmap="PuRd",
                          log=True),   
@@ -373,32 +379,32 @@ def compute_innercore_postprocessing(innercore_dictionary: dict,
         _description_
     """
     ## compute the radius
-    PNSr = innercore_radius(simulation, file_name)
+    innercorer = innercore_radius(simulation, file_name)
     r = simulation.cell.radius(simulation.ghost)
     if simulation.dim == 1:
-        PNSmask = (r <= PNSr)
-        idx_pns = np.argmax(r >= PNSr)
+        innercoremask = (r <= innercorer)
+        idx_innercore = np.argmax(r >= innercorer)
     else:
-        while r.ndim <= PNSr.ndim:
+        while r.ndim <= innercorer.ndim:
             r = r[None, :]
-        PNSmask = (r <= PNSr)
-        idx_pns = np.argmax(r >= PNSr[..., None], axis=-1)
+        innercoremask = (r <= innercorer)
+        idx_innercore = np.argmax(r >= innercorer[..., None], axis=-1)
     dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     __compute_1D_global_local_quantities(innercore_dictionary,
                                          simulation,
                                          file_name,
                                          dV,
                                          dOmega,
-                                         PNSmask,
-                                         idx_pns,
-                                         PNSr,
+                                         innercoremask,
+                                         idx_innercore,
+                                         innercorer,
                                          dmass)
     if simulation.dim > 1:
         __compute_2D_global_local_quantities(innercore_dictionary,
                                             simulation,
                                             file_name,
-                                            PNSmask,
-                                            idx_pns,
+                                            innercoremask,
+                                            idx_innercore,
                                             dV,
                                             Lx,
                                             Ly,
@@ -408,8 +414,8 @@ def compute_innercore_postprocessing(innercore_dictionary: dict,
         __compute_3D_global_local_quantities(innercore_dictionary,
                                             simulation,
                                             file_name,
-                                            PNSmask,
-                                            idx_pns,
+                                            innercoremask,
+                                            idx_innercore,
                                             dmass,
                                             dV)
 
@@ -418,9 +424,9 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
                                        file_name: str,
                                        dV: aerray,
                                        dOmega: aerray,
-                                       PNS_mask: np.array[bool],
-                                       indx_pns: np.array[int],
-                                       PNS_radius: aerray,
+                                       innercore_mask: np.array[bool],
+                                       indx_innercore: np.array[int],
+                                       innercore_radius: aerray,
                                        dmass:aerray) -> None:
     """
     _summary_
@@ -437,11 +443,11 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
         _description_
     dOmega : aerray
         _description_
-    PNS_mask : np.array[bool]
+    innercore_mask : np.array[bool]
         _description_
-    indx_pns : np.array[int]
+    indx_innercore : np.array[int]
         _description_
-    PNS_radius : aerray
+    innercore_radius : aerray
         _description_
     I : aerray
         _description_
@@ -453,84 +459,88 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
     int_en = simulation.internal_energy(file_name) * dV
     vr = simulation.radial_velocity(file_name)
     s = simulation.entropy(file_name)
+    rho = simulation.rho(file_name)
     ye = simulation.Ye(file_name)
     t = simulation.temperature(file_name)
     p = simulation.gas_pressure(file_name)
 
-    mass = np.nansum(dmass[PNS_mask])
+    mass = np.nansum(dmass[innercore_mask])
     ## add the global variables
     innercore_dictionary['global']['mass'].append(mass)
-    innercore_dictionary['global']['rmax'].append(np.nanmax(PNS_radius))
-    innercore_dictionary['global']['rmin'].append(np.nanmin(PNS_radius))
-    innercore_dictionary['global']['ravg'].append(function_average_radii(PNS_radius,
+    innercore_dictionary['global']['rmax'].append(np.nanmax(innercore_radius))
+    innercore_dictionary['global']['rmin'].append(np.nanmin(innercore_radius))
+    innercore_dictionary['global']['ravg'].append(function_average_radii(innercore_radius,
                                                                    simulation.dim,
                                                                    dOmega))
-    innercore_dictionary['global']['er'].append(np.nansum(0.5 * dmass[PNS_mask] * 
-                                                    vr[PNS_mask] ** 2).to(u.erg))
-    innercore_dictionary['global']['eg'].append(np.nansum(grav_en[PNS_mask]))
-    innercore_dictionary['global']['ei'].append(np.nansum(int_en[PNS_mask]))
-    innercore_dictionary['global']['yeavg'].append(np.nansum(ye[PNS_mask] * dmass[PNS_mask]) /
+    innercore_dictionary['global']['er'].append(np.nansum(0.5 * dmass[innercore_mask] * 
+                                                    vr[innercore_mask] ** 2).to(u.erg))
+    innercore_dictionary['global']['eg'].append(np.nansum(grav_en[innercore_mask]))
+    innercore_dictionary['global']['ei'].append(np.nansum(int_en[innercore_mask]))
+    innercore_dictionary['global']['yeavg'].append(np.nansum(ye[innercore_mask] * dmass[innercore_mask]) /
                                              mass)
-    innercore_dictionary['global']['savg'].append(np.nansum(s[PNS_mask] * dmass[PNS_mask]) /
+    innercore_dictionary['global']['savg'].append(np.nansum(s[innercore_mask] * dmass[innercore_mask]) /
                                                  mass)
-    innercore_dictionary['global']['tavg'].append(np.nansum(t[PNS_mask] * dmass[PNS_mask]) /
+    innercore_dictionary['global']['tavg'].append(np.nansum(t[innercore_mask] * dmass[innercore_mask]) /
                                                      mass)
 
     
     
     ## add variables at the surface
-    innercore_dictionary['local']['r'].append(PNS_radius)
+    innercore_dictionary['local']['r'].append(innercore_radius)
     if simulation.dim == 1:
-        innercore_dictionary['local']['s'].append(s[indx_pns])
-        innercore_dictionary['local']['ye'].append(ye[indx_pns])
-        innercore_dictionary['local']['t'].append(t[indx_pns])
-        innercore_dictionary['local']['p'].append(p[indx_pns])
-        innercore_dictionary['local']['vr'].append(vr[indx_pns])
-        innercore_dictionary['local']['mflux'].append(mflux[indx_pns])
+        innercore_dictionary['local']['s'].append(s[indx_innercore])
+        innercore_dictionary['local']['rho'].append(rho[indx_innercore])
+        innercore_dictionary['local']['ye'].append(ye[indx_innercore])
+        innercore_dictionary['local']['t'].append(t[indx_innercore])
+        innercore_dictionary['local']['p'].append(p[indx_innercore])
+        innercore_dictionary['local']['vr'].append(vr[indx_innercore])
+        innercore_dictionary['local']['mflux'].append(mflux[indx_innercore])
         innercore_dictionary['local']['m'].append(mass)
-        innercore_dictionary['global']['mflux'].append(np.nansum(mflux[indx_pns] *
+        innercore_dictionary['global']['mflux'].append(np.nansum(mflux[indx_innercore] *
                                                            dOmega))
         rperp2 = simulation.cell.radius(simulation.ghost) ** 2
         innercore_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
-                                                        rperp2)[PNS_mask]))
+                                                        rperp2)[innercore_mask]))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
-        innercore_dictionary['local']['s'].append(s[itheta, indx_pns])
-        innercore_dictionary['local']['ye'].append(ye[itheta, indx_pns])
-        innercore_dictionary['local']['t'].append(t[itheta, indx_pns])
-        innercore_dictionary['local']['p'].append(p[itheta, indx_pns])
-        innercore_dictionary['local']['vr'].append(vr[itheta, indx_pns])
-        innercore_dictionary['local']['mflux'].append(mflux[itheta, indx_pns])
+        innercore_dictionary['local']['s'].append(s[itheta, indx_innercore])
+        innercore_dictionary['local']['rho'].append(rho[itheta, indx_innercore])
+        innercore_dictionary['local']['ye'].append(ye[itheta, indx_innercore])
+        innercore_dictionary['local']['t'].append(t[itheta, indx_innercore])
+        innercore_dictionary['local']['p'].append(p[itheta, indx_innercore])
+        innercore_dictionary['local']['vr'].append(vr[itheta, indx_innercore])
+        innercore_dictionary['local']['mflux'].append(mflux[itheta, indx_innercore])
         innercore_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                          axis=-1)[itheta,
-                                                            indx_pns])
+                                                            indx_innercore])
         innercore_dictionary['global']['mflux'].append(np.nansum(mflux[itheta,
-                                                                 indx_pns] *
+                                                                 indx_innercore] *
                                                                    dOmega))
     elif simulation.dim == 3:
             itheta = np.arange(p.shape[1])
             iphi = np.arange(p.shape[0])
-            innercore_dictionary['local']['s'].append(s[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['ye'].append(ye[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['t'].append(t[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['p'].append(p[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['vr'].append(vr[iphi, itheta, indx_pns])
+            innercore_dictionary['local']['s'].append(s[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['rho'].append(rho[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['ye'].append(ye[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['t'].append(t[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['p'].append(p[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['vr'].append(vr[iphi, itheta, indx_innercore])
             innercore_dictionary['local']['mflux'].append(mflux[iphi, itheta, 
-                                                          indx_pns])
+                                                          indx_innercore])
             innercore_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                              axis=-1)[iphi,
                                                                       itheta,
-                                                                      indx_pns])
+                                                                      indx_innercore])
             innercore_dictionary['global']['mflux'].append(np.nansum(mflux[iphi,
                                                                      itheta,
-                                                                     indx_pns] *
+                                                                     indx_innercore] *
                                                                        dOmega))
-            
+
 def __compute_2D_global_local_quantities(innercore_dictionary: dict,
                                        simulation: Simulation,
                                        file_name: str,
-                                       PNS_mask: np.array[bool],
-                                       indx_pns: np.array[int],
+                                       innercore_mask: np.array[bool],
+                                       indx_innercore: np.array[int],
                                        dV: aerray,
                                        Lx: aerray,
                                        Ly: aerray,
@@ -547,9 +557,9 @@ def __compute_2D_global_local_quantities(innercore_dictionary: dict,
         _description_
     file_name : str
         _description_
-    PNS_mask : np.array[bool]
+    innercore_mask : np.array[bool]
         _description_
-    indx_pns : np.array[int]
+    indx_innercore : np.array[int]
         _description_
     dV : aerray
         _description_
@@ -564,14 +574,14 @@ def __compute_2D_global_local_quantities(innercore_dictionary: dict,
     """
     vth = simulation.theta_velocity(file_name)
     vph = simulation.phi_velocity(file_name)
-    jx = np.nansum(Lx[PNS_mask])
-    jy = np.nansum(Ly[PNS_mask])
-    jz = np.nansum(Lz[PNS_mask])
+    jx = np.nansum(Lx[innercore_mask])
+    jy = np.nansum(Ly[innercore_mask])
+    jz = np.nansum(Lz[innercore_mask])
     jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
-    innercore_dictionary['global']['et'].append(np.nansum(0.5 * dmass[PNS_mask] * 
-                                                    vth[PNS_mask] ** 2).to(u.erg))
-    innercore_dictionary['global']['ep'].append(np.nansum(0.5 * dmass[PNS_mask] *
-                                                    vph[PNS_mask] ** 2).to(u.erg))
+    innercore_dictionary['global']['et'].append(np.nansum(0.5 * dmass[innercore_mask] * 
+                                                    vth[innercore_mask] ** 2).to(u.erg))
+    innercore_dictionary['global']['ep'].append(np.nansum(0.5 * dmass[innercore_mask] *
+                                                    vph[innercore_mask] ** 2).to(u.erg))
     innercore_dictionary['global']['jx'].append(jx)
     innercore_dictionary['global']['jy'].append(jy)
     innercore_dictionary['global']['jz'].append(jz)
@@ -581,49 +591,49 @@ def __compute_2D_global_local_quantities(innercore_dictionary: dict,
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
                           np.sin(simulation.cell.theta(simulation.ghost))[:, None]) ** 2
         omg = simulation.omega(file_name)
-        innercore_dictionary['local']['vt'].append(vth[itheta, indx_pns])
-        innercore_dictionary['local']['vp'].append(vph[itheta, indx_pns])
-        innercore_dictionary['local']['omg'].append(omg[itheta, indx_pns])
+        innercore_dictionary['local']['vt'].append(vth[itheta, indx_innercore])
+        innercore_dictionary['local']['vp'].append(vph[itheta, indx_innercore])
+        innercore_dictionary['local']['omg'].append(omg[itheta, indx_innercore])
         innercore_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
-                                                        rperp2)[PNS_mask]))
+                                                        rperp2)[innercore_mask]))
     elif simulation.dim == 3:
         iphi = np.arange(vth.shape[0])[:, None]
         itheta = np.arange(vth.shape[1])[None, :]
-        innercore_dictionary['local']['vt'].append(vth[iphi, itheta, indx_pns])
-        innercore_dictionary['local']['vp'].append(vph[iphi, itheta, indx_pns])
+        innercore_dictionary['local']['vt'].append(vth[iphi, itheta, indx_innercore])
+        innercore_dictionary['local']['vp'].append(vph[iphi, itheta, indx_innercore])
     if simulation.evolved_qts['magdim'] > 0:
         br, bt, bp = simulation.magnetic_fields(file_name, comp='all')
         btot = np.sqrt(br ** 2 + bt ** 2 + bp ** 2)
         p = simulation.gas_pressure(file_name)
         if simulation.dim == 2:
-            innercore_dictionary['local']['br'].append(br[itheta, indx_pns])
-            innercore_dictionary['local']['bt'].append(bt[itheta, indx_pns])
-            innercore_dictionary['local']['bp'].append(bp[itheta, indx_pns])
-            innercore_dictionary['local']['beta'].append(p[itheta, indx_pns] / 
-                                                   (0.5 * btot[itheta, indx_pns] ** 2 /
+            innercore_dictionary['local']['br'].append(br[itheta, indx_innercore])
+            innercore_dictionary['local']['bt'].append(bt[itheta, indx_innercore])
+            innercore_dictionary['local']['bp'].append(bp[itheta, indx_innercore])
+            innercore_dictionary['local']['beta'].append(p[itheta, indx_innercore] / 
+                                                   (0.5 * btot[itheta, indx_innercore] ** 2 /
                                                     c.mu0))
         elif simulation.dim == 3:
-            innercore_dictionary['local']['br'].append(br[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['bt'].append(bt[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['bp'].append(bp[iphi, itheta, indx_pns])
-            innercore_dictionary['local']['beta'].append(p[iphi, itheta, indx_pns] / 
-                                                  (0.5 * btot[iphi, itheta, indx_pns] ** 2 /
+            innercore_dictionary['local']['br'].append(br[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['bt'].append(bt[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['bp'].append(bp[iphi, itheta, indx_innercore])
+            innercore_dictionary['local']['beta'].append(p[iphi, itheta, indx_innercore] / 
+                                                  (0.5 * btot[iphi, itheta, indx_innercore] ** 2 /
                                                    c.mu0))
-        innercore_dictionary['global']['ebr'].append(np.nansum(0.5 * br[PNS_mask] ** 2 
-                                                         * dV[PNS_mask] / c.mu0))
-        innercore_dictionary['global']['ebt'].append(np.nansum(0.5 * bt[PNS_mask] ** 2 
-                                                         * dV[PNS_mask] / c.mu0))
-        innercore_dictionary['global']['ebp'].append(np.nansum(0.5 * bp[PNS_mask] ** 2 
-                                                         * dV[PNS_mask] / c.mu0))
-        innercore_dictionary['global']['bmax'].append(np.nanmax(btot[PNS_mask]))
-        innercore_dictionary['global']['bavg'].append(np.nansum(btot[PNS_mask] * dmass[PNS_mask]) /
+        innercore_dictionary['global']['ebr'].append(np.nansum(0.5 * br[innercore_mask] ** 2 
+                                                         * dV[innercore_mask] / c.mu0))
+        innercore_dictionary['global']['ebt'].append(np.nansum(0.5 * bt[innercore_mask] ** 2 
+                                                         * dV[innercore_mask] / c.mu0))
+        innercore_dictionary['global']['ebp'].append(np.nansum(0.5 * bp[innercore_mask] ** 2 
+                                                         * dV[innercore_mask] / c.mu0))
+        innercore_dictionary['global']['bmax'].append(np.nanmax(btot[innercore_mask]))
+        innercore_dictionary['global']['bavg'].append(np.nansum(btot[innercore_mask] * dmass[innercore_mask]) /
                                                 innercore_dictionary['global']['mass'][-1])
-        
+
 def __compute_3D_global_local_quantities(innercore_dictionary: dict,
                                          simulation: Simulation,
                                          file_name: str,
-                                         PNS_mask: np.array[bool],
-                                         indx_pns: np.array[int],
+                                         innercore_mask: np.array[bool],
+                                         indx_innercore: np.array[int],
                                          dmass: aerray,
                                          dV: aerray) -> None:
     """
@@ -637,9 +647,9 @@ def __compute_3D_global_local_quantities(innercore_dictionary: dict,
         _description_
     file_name : str
         _description_
-    PNS_mask : np.array[bool]
+    innercore_mask : np.array[bool]
         _description_
-    indx_pns : np.array[int]
+    indx_innercore : np.array[int]
         _description_
     dmass : aerray
         _description_
@@ -660,24 +670,24 @@ def __compute_3D_global_local_quantities(innercore_dictionary: dict,
     itheta = np.arange(vr.shape[1])[None, :]
     X = simulation.grid.cartesian_grid()
     x, y, z = X[0] * u.cm, X[1] * u.cm, X[2] * u.cm
-    innercore_dictionary['global']['cmass_x'].append(np.nansum(x[PNS_mask] * dmass[PNS_mask]) / 
+    innercore_dictionary['global']['cmass_x'].append(np.nansum(x[innercore_mask] * dmass[innercore_mask]) / 
                                                innercore_dictionary['global']['mass'][-1])
-    innercore_dictionary['global']['cmass_y'].append(np.nansum(y[PNS_mask] * dmass[PNS_mask]) / 
+    innercore_dictionary['global']['cmass_y'].append(np.nansum(y[innercore_mask] * dmass[innercore_mask]) / 
                                                innercore_dictionary['global']['mass'][-1])
-    innercore_dictionary['global']['cmass_z'].append(np.nansum(z[PNS_mask] * dmass[PNS_mask]) / 
+    innercore_dictionary['global']['cmass_z'].append(np.nansum(z[innercore_mask] * dmass[innercore_mask]) / 
                                                innercore_dictionary['global']['mass'][-1])
     if n[2] >= 0.99:
         vrot = vp
         vturb = vt ** 2 + vr ** 2
         omg = simulation.omega(file_name)
-        mask = PNS_mask
+        mask = innercore_mask
         R = (simulation.cell.radius(simulation.ghost)[None, None, :] * 
                  np.sin(simulation.cell.theta(simulation.ghost))[None, :, None])
     else:
         X_perp = X - np.tensordot(n, X, axes=(0, 0))[None, ...] * \
             n[:, None, None, None]
         R = np.linalg.norm(X_perp, axis=0) + 1e-12
-        mask = ((R > simulation.grid.radius[0].value) & (PNS_mask))
+        mask = ((R > simulation.grid.radius[0].value) & (innercore_mask))
         e_R = X_perp / (R)
         e_rot = np.cross(n[:, None, None, None], e_R, axis=0)
         vel_unit = vr.unit
@@ -690,13 +700,13 @@ def __compute_3D_global_local_quantities(innercore_dictionary: dict,
         vturb = np.nansum((v - vrot * e_rot) ** 2, axis=0) * vel_unit ** 2
         vrot = vrot * vel_unit
     innercore_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
-                                                    R ** 2)[PNS_mask]))
+                                                    R ** 2)[innercore_mask]))
     innercore_dictionary['global']['erot'].append(np.nansum(0.5 * (vrot ** 2 * 
                                                              dmass)[mask]).to(u.erg))
     innercore_dictionary['global']['eres'].append(np.nansum(0.5 * (vturb *
                                                              dmass)[mask]).to(u.erg))
-    innercore_dictionary['local']['vrot'].append(vrot[iphi, itheta, indx_pns])
-    innercore_dictionary['local']['omg'].append(omg[iphi, itheta, indx_pns])
+    innercore_dictionary['local']['vrot'].append(vrot[iphi, itheta, indx_innercore])
+    innercore_dictionary['local']['omg'].append(omg[iphi, itheta, indx_innercore])
     if simulation.evolved_qts['magdim'] > 0:
         br, bt, bp = simulation.magnetic_fields(file_name)
         if n[2] >= 0.995:
@@ -717,5 +727,5 @@ def __compute_3D_global_local_quantities(innercore_dictionary: dict,
         innercore_dictionary['global']['ebtor'].append(np.nansum(0.5 * (btor ** 2 * 
                                                                     dV)[mask]) 
                                                          / c.mu0)
-        innercore_dictionary['local']['bpol'].append(bpol[iphi, itheta, indx_pns])
-        innercore_dictionary['local']['btor'].append(btor[iphi, itheta, indx_pns])
+        innercore_dictionary['local']['bpol'].append(bpol[iphi, itheta, indx_innercore])
+        innercore_dictionary['local']['btor'].append(btor[iphi, itheta, indx_innercore])

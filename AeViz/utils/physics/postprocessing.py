@@ -9,6 +9,9 @@ from AeViz.utils.physics.PNS_postprocessing import (declare_PNS_dictionary,
 from AeViz.utils.physics.PNS_core_postprocessing import (declare_PNScore_dictionary,
                                                          compute_PNScore_postprocessing,
                                                          PNScore_quantity_metadata)
+from AeViz.utils.physics.innercore_postprocessing import (declare_innercore_dictionary,
+                                                          compute_innercore_postprocessing,
+                                                          innercore_quantity_metadata)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 
@@ -44,14 +47,18 @@ def supernova_postprocessing(simulation: Simulation,
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
-    ## PNS declaration part
-    PNS_dict = declare_PNS_dictionary(simulation.dim,
-                                      simulation.evolved_qts['magdim'])
-    pns_metadata = PNS_quantity_metadata()
     ## PNS core declaration part
     PNS_core_dict = declare_PNScore_dictionary(simulation.dim,
                                                simulation.evolved_qts['magdim'])
     pnscore_metadata = PNScore_quantity_metadata()
+    ## PNS declaration part
+    PNS_dict = declare_PNS_dictionary(simulation.dim,
+                                      simulation.evolved_qts['magdim'])
+    pns_metadata = PNS_quantity_metadata()
+    ## innercore declaration part
+    innercore_dict = declare_innercore_dictionary(simulation.dim,
+                                                 simulation.evolved_qts['magdim'])
+    innercore_metadata = innercore_quantity_metadata()
     global_time = []
     check_index = 0
     for findex, file_name in enumerate(file_list):
@@ -98,6 +105,9 @@ def supernova_postprocessing(simulation: Simulation,
         compute_PNScore_postprocessing(PNS_core_dict, simulation,
                                        file_name, dV, dOmega,
                                        jx, jy, jz)
+        compute_innercore_postprocessing(innercore_dict, simulation,
+                                         file_name, dV, dOmega,
+                                         jx, jy, jz)
         global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
