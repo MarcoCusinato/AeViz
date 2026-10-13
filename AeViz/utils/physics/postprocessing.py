@@ -59,6 +59,7 @@ def supernova_postprocessing(simulation: Simulation,
     innercore_dict = declare_innercore_dictionary(simulation.dim,
                                                  simulation.evolved_qts['magdim'])
     innercore_metadata = innercore_quantity_metadata()
+    ## shock declaration part
     global_time = []
     check_index = 0
     for findex, file_name in enumerate(file_list):
@@ -66,6 +67,7 @@ def supernova_postprocessing(simulation: Simulation,
         ## Compute the angular momentum
         dmass = simulation.rho(file_name) * dV
         time = simulation.time(file_name)
+        ## Compute angular momentum
         if simulation.dim == 1:
             jx, jy, jz = None, None, None
             jtot = None
@@ -112,13 +114,17 @@ def supernova_postprocessing(simulation: Simulation,
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving files...\n')
-            save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
-                                      simulation.storage_path,
-                                      'PNS_postprocessing.h5', **pns_metadata)
             save_merge_dictionary_hdf(simulation, (global_time, PNS_core_dict,
                                                    pns_processed),
                                       simulation.storage_path,
                                       'PNScore_postprocessing.h5', **pnscore_metadata)
+            save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
+                                      simulation.storage_path,
+                                      'PNS_postprocessing.h5', **pns_metadata)
+            save_merge_dictionary_hdf(simulation, (global_time, innercore_dict,
+                                                   pns_processed),
+                                      simulation.storage_path,
+                                      'innercore_postprocessing.h5', **innercore_metadata)
             check_index = 0
             PNS_dict = declare_PNS_dictionary(simulation.dim,
                                               simulation.evolved_qts['magdim'])
