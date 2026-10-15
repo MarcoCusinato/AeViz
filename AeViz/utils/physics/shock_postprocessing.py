@@ -40,7 +40,11 @@ def declare_shock_dictionary(dim: int,
             'nu_heat': [],
             'nu_heat_unb': [],
             'I' : [],
-            'I_unb': []
+            'I_unb': [],
+            'ej_ye_045': [],
+            'ej_ye_045' :[],
+            'ej_rye_045': [],
+            'ej_rye_055': [],
             },
         'local': {
             'r': [],
@@ -70,6 +74,8 @@ def declare_shock_dictionary(dim: int,
         shock_dictionary['global']['jy_unb'] = []
         shock_dictionary['global']['jz_unb'] = []
         shock_dictionary['global']['jtot_unb'] = []
+        shock_dictionary['global']['alpha_mom'] = []
+        shock_dictionary['global']['alpha_ej'] = []
         shock_dictionary['local']['et'] = []
         shock_dictionary['local']['ep'] = []
         shock_dictionary['local']['et_unb'] = []
@@ -254,6 +260,19 @@ def shock_quantity_metadata() -> dict:
             "ebtor_unb": dict(name="shock_unbound_toroidal_magnetic_energy",
                               label=r"$E_{\rm mag,tor,sh,unb}$",
                               limits=[1e42, 1e51], cmap="PuBuGn", log=True),
+            "ej_ye_045": dict(name="ye_ejection_tail_0.45",
+                              label=r"$M_{Y_e\leq0.45}$",
+                              limits=[1e-5, 1], cmap="PuBuGn", log=True),
+            "ej_ye_055": dict(name="ye_ejection_tail_0.45",
+                              label=r"$M_{Y_e\geq0.55}$",
+                              limits=[1e-5, 1], cmap="PuBuGn", log=True),
+            "ej_rye_045": dict(name="centroid_ye_ejection_tail_0.45",
+                              label=r"$\langle r\rangle_{Y_e\leq0.45}$",
+                              limits=[1e4, 1e8], cmap="PuBuGn", log=True),
+            "ej_rye_055": dict(name="centroid_ye_ejection_tail_0.55",
+                              label=r"$\langle r\rangle_{Y_e\geq0.55}$",
+                              limits=[1e4, 1e8], cmap="PuBuGn", log=True),
+                              
         },
 
         "local": {
@@ -316,6 +335,12 @@ def shock_quantity_metadata() -> dict:
             "ebp_unb": dict(name="shock_unbound_magnetic_energy_phi_prof",
                             label=r"$E_{\rm mag,\phi,sh,unb}$",
                             limits=[1e42, 1e51], cmap="PuBuGn", log=True),
+            "alpha_ej": dict(name="momentum_asymmetry",
+                              label=r"$\alpha_{\rm mom}$",
+                              limits=[-1, 1], cmap="PuBuGn", log=False),
+            "alpha_mom": dict(name="mass_asymmetry",
+                              label=r"$\alpha_{\rm mom}$",
+                              limits=[-1, 1], cmap="PuBuGn", log=False),
         },
     }
 
@@ -328,7 +353,9 @@ def compute_shock_postprocessing(shock_dictionary: dict,
                                dOmega: aerray,
                                Lx: aerray | None,
                                Ly: aerray | None,
-                               Lz: aerray | None) -> None:
+                               Lz: aerray | None,
+                               pns_radius: aerray,
+                               innercore_radius: aerray) -> None:
     """
     _summary_
 
@@ -352,7 +379,8 @@ def compute_shock_postprocessing(shock_dictionary: dict,
         _description_
     """
     ## compute the radius
-    shockr = shock_radius(simulation, file_name)
+    shockr = shock_radius(simulation, file_name,
+                          pns_radius, innercore_radius)
     r = simulation.cell.radius(simulation.ghost)
     if simulation.dim == 1:
         shockmask = (r <= shockr)
@@ -440,6 +468,7 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
     vr = simulation.radial_velocity(file_name)
     mhd_ene = simulation.MHD_energy(file_name)
     nu_heat = simulation.nu_heat(file_name)
+    ye = simulation(file_name)
 
     ## add the global variables
     shock_dictionary['global']['mass'].append(np.nansum(dmass[shock_mask]))
@@ -464,8 +493,14 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
                                                            dV[shock_mask]))
     shock_dictionary['global']['nu_heat_unb'].append(np.nansum(nu_heat[unbound_mask] *
                                                                dV[unbound_mask]))
-        
-    
+    ## ejecta
+    shock_dictionary['global']['ej_ye_045'].append(np.nansum(dmass[unbound_mask & (ye <= 0.45)]))
+    shock_dictionary['global']['ej_ye_055'].append(np.nansum(dmass[unbound_mask & (ye >= 0.55)]))
+    centroid = dmass * simulation.cell.radius(simulation.ghost)
+    shock_dictionary['global']['ej_rye_045'].append(np.nansum(centroid[unbound_mask & (ye <= 0.45)]) / 
+                                                    shock_dictionary['global']['ej_ye_045'][-1])
+    shock_dictionary['global']['ej_rye_055'].append(np.nansum(centroid[unbound_mask & (ye >= 0.55)]) / 
+                                                    shock_dictionary['global']['ej_ye_055'][-1])
     ## add variables at the surface
     shock_dictionary['local']['r'].append(shock_radius)
     if simulation.dim == 1:
@@ -598,8 +633,24 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
     dmass : aerray
         _description_
     """
-    eth = (0.5 * simulation.theta_velocity(file_name) ** 2 * dV).to(u.erg)
-    eph = (0.5 * simulation.phi_velocity(file_name) ** 2 * dV).to(u.erg)
+    vr = simulation.radial_velocity(file_name)
+    vt = simulation.theta_velocity(file_name)
+    vp = simulation.phi_velocity(file_name)
+    vtot = np.sqrt(vr ** 2 + vt ** 2 + vp ** 2)
+    rr = vr / vtot
+    rt = vt / vtot
+    rp = vp / vtot
+    alpha_ej = np.sqrt(np.nansum(dmass[unbound_mask] * rr[unbound_mask]) ** 2 + 
+                       np.nansum(dmass[unbound_mask] * rt[unbound_mask]) ** 2 +
+                       np.nansum(dmass[unbound_mask] * rp[unbound_mask]) ** 2) / \
+                shock_dictionary['local']['m_unb'][-1]
+    Pej = np.sqrt(np.nansum((dmass[unbound_mask] * vr[unbound_mask])) ** 2 +
+                  np.nansum((dmass[unbound_mask] * vt[unbound_mask])) ** 2 +
+                  np.nansum((dmass[unbound_mask] * vp[unbound_mask])) ** 2) / \
+                  np.nansum(dmass[unbound_mask] * vtot[unbound_mask])
+    
+    eth = (0.5 * vt ** 2 * dV).to(u.erg)
+    eph = (0.5 * vp ** 2 * dV).to(u.erg)
     jx = np.nansum(Lx[shock_mask])
     jy = np.nansum(Ly[shock_mask])
     jz = np.nansum(Lz[shock_mask])
@@ -620,6 +671,8 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
     shock_dictionary['global']['jy_unb'].append(jy_unb)
     shock_dictionary['global']['jz_unb'].append(jz_unb)
     shock_dictionary['global']['jtot_unb'].append(jtot_unb)
+    shock_dictionary['global']['alpha_ej'].append(alpha_ej)
+    shock_dictionary['global']['alpha_mom'].append(Pej)
     shock_dictionary['local']['et_unb'].append(np.nansum(np.where(unbound_mask,
                                                                   eth, 0), axis=-1))
     shock_dictionary['local']['ep_unb'].append(np.nansum(np.where(unbound_mask,

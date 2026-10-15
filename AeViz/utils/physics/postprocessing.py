@@ -12,6 +12,9 @@ from AeViz.utils.physics.PNS_core_postprocessing import (declare_PNScore_diction
 from AeViz.utils.physics.innercore_postprocessing import (declare_innercore_dictionary,
                                                           compute_innercore_postprocessing,
                                                           innercore_quantity_metadata)
+from AeViz.utils.physics.shock_postprocessing import (declare_shock_dictionary,
+                                                      compute_shock_postprocessing,
+                                                      shock_quantity_metadata)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 
@@ -60,10 +63,13 @@ def supernova_postprocessing(simulation: Simulation,
                                                  simulation.evolved_qts['magdim'])
     innercore_metadata = innercore_quantity_metadata()
     ## shock declaration part
+    shock_dict = declare_shock_dictionary(simulation.dim,
+                                          simulation.evolved_qts['magdim'])
+    shock_metadata = shock_quantity_metadata()
     global_time = []
     check_index = 0
     for findex, file_name in enumerate(file_list):
-        progressBar(findex, tot_points, 'Computing PNS postprocessing...')
+        progressBar(findex, tot_points, '...Computing postprocessing...')
         ## Compute the angular momentum
         dmass = simulation.rho(file_name) * dV
         time = simulation.time(file_name)
@@ -110,6 +116,11 @@ def supernova_postprocessing(simulation: Simulation,
         compute_innercore_postprocessing(innercore_dict, simulation,
                                          file_name, dV, dOmega,
                                          jx, jy, jz)
+        compute_shock_postprocessing(shock_dict, simulation,
+                                     file_name, dV, dOmega,
+                                     jx, jy, jz,
+                                     PNS_dict['r'][-1],
+                                     innercore_dict['r'][-1])
         global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
@@ -125,9 +136,36 @@ def supernova_postprocessing(simulation: Simulation,
                                                    pns_processed),
                                       simulation.storage_path,
                                       'innercore_postprocessing.h5', **innercore_metadata)
+            save_merge_dictionary_hdf(simulation, (global_time, shock_dict,
+                                                   pns_processed),
+                                      simulation.storage_path,
+                                      'shock_postprocessing.h5', **shock_metadata)
             check_index = 0
+            PNS_core_dict = declare_PNScore_dictionary(simulation.dim,
+                                               simulation.evolved_qts['magdim'])
             PNS_dict = declare_PNS_dictionary(simulation.dim,
                                               simulation.evolved_qts['magdim'])
+            innercore_dict = declare_innercore_dictionary(simulation.dim,
+                                                         simulation.evolved_qts['magdim'])
+            shock_dict = declare_shock_dictionary(simulation.dim,
+                                                  simulation.evolved_qts['magdim'])
             global_time = []
         else:
             check_index += 1
+
+    print('Done, saving files...\n')
+    save_merge_dictionary_hdf(simulation, (global_time, PNS_core_dict,
+                                            pns_processed),
+                                simulation.storage_path,
+                                'PNScore_postprocessing.h5', **pnscore_metadata)
+    save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
+                                simulation.storage_path,
+                                'PNS_postprocessing.h5', **pns_metadata)
+    save_merge_dictionary_hdf(simulation, (global_time, innercore_dict,
+                                            pns_processed),
+                                simulation.storage_path,
+                                'innercore_postprocessing.h5', **innercore_metadata)
+    save_merge_dictionary_hdf(simulation, (global_time, shock_dict,
+                                            pns_processed),
+                                simulation.storage_path,
+                                'shock_postprocessing.h5', **shock_metadata)

@@ -99,7 +99,7 @@ def PNS_core(simulation, file_name):
     S4Kb = np.argmax(s >= (4 * u.kBol / u.bry), axis=-1)
     return radius[S4Kb]
 
-def shock_radius(simulation, file_name, rmax=None):
+def shock_radius(simulation, file_name, pns_radius, innercore_radius):
     """
     Calculates the shock radius for each timestep.
     Employed method: first jump in pressure and radial velocity after
@@ -113,19 +113,23 @@ def shock_radius(simulation, file_name, rmax=None):
         return np.zeros(simulation.cell.dVolume_integration(
             simulation.ghost).shape[:-1]) * \
                 simulation.cell.radius(simulation.ghost).unit
+    fallback_radius = np.where(pns_radius < innercore_radius,
+                               innercore_radius,
+                               pns_radius)
     if simulation.dim == 1:
-        return shock_radius_1D(simulation, file_name, rmax)
+        shock_r = shock_radius_1D(simulation, file_name, rmax)
     elif simulation.dim == 2:
-        return interpol_1D(hampel_filter(
+        shock_r = interpol_1D(hampel_filter(
             shock_radius_2D(simulation, file_name, rmax)),
                            simulation.cell.theta(simulation.ghost))
     elif simulation.dim == 3:
         Theta, Phi = np.meshgrid(simulation.cell.theta(simulation.ghost), 
                                  simulation.cell.phi(simulation.ghost))
-        return interpol_2D(shock_radius_3D(simulation, file_name, rmax),
+        shock_r = interpol_2D(shock_radius_3D(simulation, file_name, rmax),
                            Theta, Phi)
     else:
         raise ValueError("Invalid dimension")
+    return np.where(shock_r > fallback_radius, shock_r, fallback_radius)
    
 def shock_radius_1D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
