@@ -102,9 +102,11 @@ def supernova_postprocessing(simulation: Simulation,
             ny[mm] = 0.
             nz[mm] = 1.
             n = np.array([nx, ny, nz])
-            X_perp = np.linalg.norm((grid - np.einsum('ir,iptr->ptr', n, grid)[None, ...]
-                                      * n[:, None, None, :]), axis=0) + 1e-12
-            X_perp2 = np.where((n[2] >= .99)[None, None, :], rperp2, X_perp ** 2)
+            X_perp_vec = (grid - np.einsum('ir,iptr->ptr', n, grid)[None, ...]
+                            * n[:, None, None, :])
+            X_perp = np.linalg.norm(X_perp_vec, axis=0) + 1e-12
+            eR = X_perp_vec / X_perp[None, ...]
+            X_perp2 = np.where((n[2] >= .995)[None, None, :], rperp2, X_perp ** 2)
             Inertia = dmass * X_perp2
 
         compute_PNS_postprocessing(PNS_dict, simulation, file_name,
