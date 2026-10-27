@@ -62,7 +62,7 @@ def convective_velocity(self, file_name, **kwargs):
     vr = self.radial_velocity(file_name)
     vrave = function_average(vr * rho, self.dim, 'Omega', dOmega) / \
         function_average(rho, self.dim, 'Omega', dOmega)
-    vconv = function_average((vr - vrave), self.dim, 'Omega', dOmega)
+    vconv = np.sqrt(function_average((vr - vrave) ** 2, self.dim, 'Omega', dOmega))
     vconv.set(name='vconv', label=r'$v_\mathrm{conv}$',
            cmap='Spectral_r', log=True, limits=[-1e9, 1e9])
     return vconv
@@ -131,7 +131,7 @@ def Rossby_number(self, file_name, lenghtscale=True, **kwargs):
     ross = self.convective_velocity(file_name) / (self.cell.radius(
         self.ghost) * self.omega(file_name) * H) * u.radian
     ross.set(name='Rossby', label=r'$Ro$',
-           cmap='RdYlBu_r', log=True, limits=[-1e-4, 1e-4])
+           cmap='RdYlBu_r', log=False, limits=[0, 1])
     return ross
     
 
