@@ -3,7 +3,7 @@ from AeViz.units import u
 from  AeViz.units.aerray import aerray
 
 #radius methods
-def radius_left(self, ghost):
+def radius_left(self, ghost=None):
     """
     Method that returns an array with the 'left' coordinates of the
     radius, with the selected number of ghost cells
@@ -12,12 +12,15 @@ def radius_left(self, ghost):
     Results:
         left radius coordinates: (numpy array)
     """
-    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 0], self.dim,
-                                    'radius')
+    if ghost:
+        radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 0],
+                                          self.dim, 'radius')
+    else:
+        radius = self._cell__radius_file[:, 0]
     return aerray(radius, u.cm, name='radius_left', label=r'$r_\mathrm{l}$',
                   log=True)
 
-def radius_right(self, ghost):
+def radius_right(self, ghost=None):
     """
     Method that returns an array with the 'right' coordinates of the 
     radius, with the selected number of ghost cells
@@ -26,12 +29,15 @@ def radius_right(self, ghost):
     Results:
         right radius coordinates: (numpy array)
     """
-    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 2], self.dim,
-                                    'radius')
+    if ghost:
+        radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 2],
+                                          self.dim, 'radius')
+    else:
+        radius = self._cell__radius_file[:, 2]
     return aerray(radius, u.cm, name='radius_right', label=r'$r_\mathrm{r}$',
                   log=True)
 
-def radius(self, ghost):
+def radius(self, ghost=None):
     """
     Method that returns an array with the 'center' coordinates of the
     radius, with the selected number of ghost cells
@@ -40,12 +46,15 @@ def radius(self, ghost):
     Results:
         center radius coordinates: (numpy array)
     """
-    radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 1], self.dim,
-                                    'radius')
+    if ghost:
+        radius = ghost.remove_ghost_cells(self._cell__radius_file[:, 1],
+                                          self.dim, 'radius')
+    else:
+        radius = self._cell__radius_file[:, 1]
     return aerray(radius, u.cm, name='radius', label=r'$r$', log=True,
                   limits=[radius.min(), radius.max()])
 
-def dr(self, ghost):
+def dr(self, ghost=None):
     """
     Method that returns an array with the lenght of each radial cell
     Parameters:
@@ -59,7 +68,7 @@ def dr(self, ghost):
     
 
 #theta angle methods
-def theta_left(self, ghost):
+def theta_left(self, ghost=None):
     """
     Method that returns an array with the 'left' coordinates of the 
     theta angle, with the selected number of ghost cells
@@ -69,13 +78,16 @@ def theta_left(self, ghost):
         left theta coordinates: (numpy array)
     """
     try:
-        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 0],
-                                        self.dim, 'theta')
+        if ghost:
+            theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 0],
+                                            self.dim, 'theta')
+        else:
+            theta = self._cell__theta_file[:, 0]
     except:
         theta = self._cell__theta_file[0]
     return aerray(theta, u.radian, name='theta_l', label=r'$\theta_\mathrm{l}$')
 
-def theta_right(self, ghost):
+def theta_right(self, ghost=None):
     """
     Method that returns an array with the 'right' coordinates of the
     theta angle, with the selected number of ghost cells
@@ -85,14 +97,17 @@ def theta_right(self, ghost):
         right theta coordinates: (numpy array)
     """
     try:
-        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 2],
-                                        self.dim, 'theta')
+        if ghost:
+            theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 2],
+                                            self.dim, 'theta')
+        else:
+            theta = self._cell__theta_file[:, 2]
     except:
         theta = self._cell__theta_file[2]
     return aerray(theta, u.radian, name='theta_r', label=r'$\theta_\mathrm{r}$')
  
 
-def theta(self, ghost):
+def theta(self, ghost=None):
     """
     Method that returns an array with the 'central' coordinates of the
     theta angle, with the selected number of ghost cells
@@ -102,14 +117,17 @@ def theta(self, ghost):
         central theta coordinates: (numpy array)
     """
     try:
-        theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 1],
-                                        self.dim, 'theta')
+        if ghost:
+            theta = ghost.remove_ghost_cells(self._cell__theta_file[:, 1],
+                                            self.dim, 'theta')
+        else:
+            theta = self._cell__theta_file[:, 1]
     except:
         theta = self._cell__theta_file[1]
     
     return aerray(theta, u.radian, name='theta', label=r'$\theta$', limits=[0, 3.14])
 
-def dtheta(self, ghost):
+def dtheta(self, ghost=None):
     """
     Method that returns an array with the angular (theta) lenght of each
     cell
@@ -123,7 +141,7 @@ def dtheta(self, ghost):
     return theta
 
     #phi angle methods
-def phi_left(self, ghost):
+def phi_left(self, ghost=None):
     """
     Method that returns an array with the 'left' coordinates of the phi
     angle, with the selected number of ghost cells
@@ -133,13 +151,16 @@ def phi_left(self, ghost):
         left phi coordinates: (numpy array)
     """
     try:
-        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 0],
-                                        self.dim, 'phi')
+        if ghost:
+            phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 0],
+                                            self.dim, 'phi')
+        else:
+            phi = self._cell__phi_file[:, 0]
     except:
         phi = self._cell__phi_file[0]
     return aerray(phi, u.radian, name='phi_l', label=r'$\phi_\mathrm{l}$')
 
-def phi_right(self, ghost):
+def phi_right(self, ghost=None):
     """
     Method that returns an array with the 'left' coordinates of the phi
     angle, with the selected number of ghost cells
@@ -149,13 +170,16 @@ def phi_right(self, ghost):
         right phi coordinates: (numpy array)
     """
     try:
-        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 2],
-                                        self.dim, 'phi')
+        if ghost:
+            phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 2],
+                                            self.dim, 'phi')
+        else:
+            phi = self._cell__phi_file[:, 2]
     except:
         phi = self._cell__phi_file[2]
     return aerray(phi, u.radian, name='phi_r', label=r'$\phi_\mathrm{r}$')
 
-def phi(self, ghost):
+def phi(self, ghost=None):
     """
     Method that returns an array with the 'left' coordinates of the phi
     angle, with the selected number of ghost cells
@@ -165,13 +189,16 @@ def phi(self, ghost):
         central phi coordinates: (numpy array)
     """
     try:
-        phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 1], self.dim,
-                                        'phi')
+        if ghost:
+            phi = ghost.remove_ghost_cells(self._cell__phi_file[:, 1], self.dim,
+                                            'phi')
+        else:
+            phi = self._cell__phi_file[:, 1]
     except:
         phi = self._cell__phi_file[1]
     return aerray(phi, u.radian, name='phi', label=r'$\phi$')
 
-def dphi(self, ghost):
+def dphi(self, ghost=None):
     """
     Method that returns an array with the integration angular (phi) element in
     every dimension.
@@ -188,7 +215,7 @@ def dphi(self, ghost):
     return dp
 
 #lenght methods
-def lx(self, ghost):
+def lx(self, ghost=None):
     """
     Method that gives an array of cell's radial lengths.
     Parameters:
@@ -206,7 +233,7 @@ def lx(self, ghost):
         phi = np.ones(self.phi(ghost).shape[0])
         return phi[:, None, None] * theta[None, :, None] * dr[None, None, :]
 
-def ly(self, ghost):
+def ly(self, ghost=None):
     """
     Method that gives an array of cell's theta angle lengths.
     Parameters:
@@ -224,7 +251,7 @@ def ly(self, ghost):
         phi = np.ones(self.phi(ghost).shape[0])
         return phi[:, None, None] * dtheta[None, :, None] * r[None, None, :]
 
-def lz(self, ghost):
+def lz(self, ghost=None):
     """
     Method that gives an array of cell's phi angle lengths.
     Parameters:
@@ -242,7 +269,7 @@ def lz(self, ghost):
     else:
         return dphi[:, None, None] * theta[None, :, None] * r[None, None, :]
 #surface methods
-def ax(self, ghost):
+def ax(self, ghost=None):
     """
     Method that gives an array of cell's surface normal to the radius.
     Parameters:
@@ -260,7 +287,7 @@ def ax(self, ghost):
     else:
         return dphi[:, None, None] * theta[None, :, None] * r[None, None, :]
 
-def ay(self, ghost):
+def ay(self, ghost=None):
     """
     Method that gives an array of cell's surface normal to the theta angle.
     Parameters:
@@ -278,7 +305,7 @@ def ay(self, ghost):
     else:
         return dphi[:, None, None] * theta[None, :, None] * r[None, None, :]
 
-def az(self, ghost):
+def az(self, ghost=None):
     """
     Method that gives an array of cell's surface normal to the phi angle.
     Parameters:
@@ -297,7 +324,7 @@ def az(self, ghost):
         return phi[:, None, None] * dtheta[None, :, None] * r[None, None, :]
 
 #integration methods
-def dVolume_integration(self, ghost):
+def dVolume_integration(self, ghost=None):
     dr = self.dr_integration(ghost)
     dtheta = self.dtheta_integration(ghost)
     dphi = self.dphi(ghost)
@@ -310,17 +337,7 @@ def dVolume_integration(self, ghost):
     dV.set(label=r'$\mathrm{d}V$', name='dV')
     return dV
 
-def dVolume_sum(self, ghost):
-    r = self.radius(ghost) ** 2
-    if self.dim == 1:
-        return 4 * np.pi * r
-    theta = np.sin(self.theta(ghost))
-    if self.dim == 2:
-        return 2 * theta[:, None] * r[None, :]
-    phi = self.phi(ghost)
-    return phi[:, None, None] * theta[None, :, None] * r[None, None, :]
-
-def dr_integration(self, ghost):
+def dr_integration(self, ghost=None):
     """
     Method that returns an array with the integration radial element
     Parameters:
@@ -332,7 +349,7 @@ def dr_integration(self, ghost):
     dr_.set(name='dr_int', label=r'$r^2\mathrm{d}r$')
     return dr_
 
-def dtheta_integration(self, ghost):
+def dtheta_integration(self, ghost=None):
     """
     Method that returns an array with the integration angular (theta)
     element in every dimension.
@@ -348,7 +365,7 @@ def dtheta_integration(self, ghost):
     dc.set(name='dcostheta', label=r'$\mathrm{d}\cos\theta$')
     return dc
 
-def dOmega(self, ghost):
+def dOmega(self, ghost=None):
     """
     Method that returns an array with the solid angle integration element.
     Parameters:
