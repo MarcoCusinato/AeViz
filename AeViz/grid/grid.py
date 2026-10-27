@@ -1,6 +1,8 @@
-from scipy.interpolate import (griddata, interp1d)
 import numpy as np
 from AeViz.units import aerray, u
+from AeViz.utils.math_utils import IDL_derivative
+from AeViz.utils.files.string_utils import merge_strings, apply_symbol
+import copy
 
 class grid:
     """
@@ -25,37 +27,25 @@ class grid:
         self.radius = radius
         self.theta = theta
         self.phi = phi
-        self.__cart_grid = None 
-        if self.dim == 1:
-            self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                    'r_0': self.radius[0],
-                                    'r_0_log': self.radius[50],
-                                    'r_max': self.radius[-1],
-                                    'n_r_lin': int(0.5*self.radius.shape[0]),
-                                    'n_r_log': int(0.5*self.radius.shape[0])}
-        elif self.dim == 2:
-            self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                    'r_0': self.radius[0],
-                                    'r_0_log': self.radius[50],
-                                    'r_max': self.radius[-1],
-                                    'n_r_lin': int(0.5*self.radius.shape[0]),
-                                    'n_r_log': int(0.5*self.radius.shape[0]),
-                                    'theta_0': self.theta[0],
-                                    'theta_max': self.theta[-1],
-                                    'n_theta': self.theta.shape[0]}
-        else:
-            self.__default_grid_parameters = {'interpolation_method': 'cubic',
-                                    'r_0': self.radius[0],
-                                    'r_0_log': self.radius[50],
-                                    'r_max': self.radius[-1],
-                                    'n_r_lin': int(0.5*self.radius.shape[0]),
-                                    'n_r_log': int(0.5*self.radius.shape[0]),
-                                    'theta_0': self.theta[0],
-                                    'theta_max': self.theta[-1],
-                                    'n_theta': self.theta.shape[0],
-                                    'phi_0': self.phi[0],
-                                    'phi_max': self.phi[-1],
-                                    'n_phi': self.phi.shape[0]}
+        self.__cart_grid = None
+        self.__cell = None
+        self.__ghost = None
+
+    @classmethod
+    def from_cell(cls, cl, gh):
+        if cl.geom != 2:
+            raise NotImplementedError("grid only supports spherical geometry.")
+        gr = cls(cl.dim, cl.radius(gh),
+                   cl.theta(gh) if cl.dim > 1 else None,
+                   cl.phi(gh) if cl.dim > 2 else None)
+        gr.__cell = cl
+        gr.__ghost = copy(gh)
+        return gr
+
+    def _metric(self):
+        if self.__cell is None:
+            return TypeError("Grid built from raw coordinates. No cell support.")
+        return self.__cell
 
     def cartesian_grid(self):
         """
@@ -74,17 +64,7 @@ class grid:
             X, Y, Z = self.__3D_cartesian_grid(self.radius, self.theta, self.phi)
             self.__cart_grid = np.array([X.value, Y.value, Z.value])
         return self.__cart_grid
-    
-    def velocity_sph_to_cart(self, v_r=None, v_theta=None, v_phi=None):
-        """
-        Returns the cartesian components of the velocity.
-        """
-        if self.dim == 1:
-            return v_r, 0, 0
-        if self.dim == 2:
-            return self.__2D_velocity_sph_to_cart(v_r, v_theta, v_phi)
-        return self.__3D_velocity_sph_to_cart(v_r, v_theta, v_phi)
-    
+
     def spherical_to_cartesian(self, r=None, th=None, ph=None,
                                add_front=0, add_back=0):
         """
@@ -102,47 +82,6 @@ class grid:
             return self.__2D_spherical_to_cartesian(r, th, ph, add_front,
                                                      add_back)
         return self.__3D_spherical_to_cartesian(r, th, ph, add_front, add_back)
-
-    def new_cartesian_grid(self, **kwargs):
-        """
-        Returns a cartesian grid with the options provided.
-        Possible options:
-        'r_0': minimum radius value
-        'r_0_log': start value of logaritmic radius spacing
-        'r_max': maximum radius value
-        'n_r_lin': number of linear points
-        'n_r_log': number of logaritmic points
-        'theta_0': minimum value of the azimuthal angle
-        'theta_max': maximum value of the azimuthal angle
-        'n_theta': number of azimuthal points
-        'phi_0': minimum value of the polar angle
-        'phi_max': maximum value of the polar angle
-        'n_phi': number of polar points
-        """
-        if not kwargs:
-            return self.cartesian_grid()
-        updated_parameters = self.__default_grid_parameters.copy()
-        updated_parameters.update(kwargs) 
-        r_new = self.__new_radius(updated_parameters)
-        if self.dim == 1:
-            return self.__1D_cartesian_grid(r_new)
-        theta_new = self.__new_theta(updated_parameters)
-        if self.dim == 2:
-            return self.__2D_cartesian_grid(r_new, theta_new)
-        phi_new = self.__new_phi(updated_parameters)
-        return self.__3D_cartesian_grid(r_new, theta_new, phi_new)
-    
-    def interpolate_quantity(self, grid, quantity, new_grid):
-        if self.dim == 1:
-            f = interp1d(grid, quantity, 'cubic')
-            return f(new_grid)
-        if self.dim == 2:    
-            points = np.array( (grid[0].flatten(), grid[1].flatten()) ).T
-            values = (quantity.T).flatten()
-            return griddata(points, values, (new_grid[0], new_grid[1]),
-                            'cubic')
-        if self.dim == 3:
-            raise TypeError("Not implemented yet :\").")
     
     def cartesian_grid_2D(self, plane, theta_points=None):
         """
@@ -164,13 +103,60 @@ class grid:
         """
         assert theta_points is not None, "Theta angle MUST not be None."
         if self.dim == 1:
-            return np.tile(quantity)
+            return np.tile(quantity, (theta_points, 1))
         elif self.dim == 2:
             quantity = quantity[quantity.shape[0] // 2, :]
             return np.tile(quantity, (theta_points, 1))
         else:
             raise TypeError("Your simulation is 3D, you are not supposed to \
                             be here.")
+
+    def gradient(self, quantity, concatenate=False):
+        assert quantity.ndim == self.dim, "Dimension misatch."
+        gradient = []
+        gradient.append(IDL_derivative(self.radius, quantity, 'radius'))
+        if self.dim > 1:
+            gradient.append(1 / self.radius * IDL_derivative(self.theta, quantity, 'theta'))
+        if self.dim > 2:
+            gradient.append(1 / (self.radius * np.sin(self.theta)) * 
+                                IDL_derivative(self.phi, quantity, 'phi'))
+        if isinstance(quantity, aerray):
+            symb = [r'$r$', r'$\theta$', r'$\phi$']
+            for i in range(gradient):
+                gradient[i].set(name=f'gradient_{quantity.name}_{symb[i]}',
+                                label=merge_strings(r'$\nabla$', quantity.label, r'$\cdot$',
+                                                    apply_symbol(symb[i], '\hat')),
+                                log = quantity.log,
+                                limits=quantity.limits,
+                                cmap=quantity.cmap)
+        if len(gradient) == 1:
+            return gradient[0]
+        if concatenate:
+            np.concatenate(gradient, axis=0)
+        else:
+            return gradient
+
+    def divergence(self, quantity, concatenate=False):
+        if isinstance(quantity, list) or isinstance(quantity, tuple):
+            if not len(quantity) == self.dim:
+                raise ValueError("Dimension mismatch")
+        elif quantity.ndim != self.dim + 1:
+            raise ValueError("Dimension mismatch")
+        else:
+            raise NotImplementedError()
+        if isinstance(aerray, quantity) or isinstance(quantity[0], aerray):
+            isaerray = True
+            
+        else:
+            False
+        if (not (isinstance(quantity, list) or isinstance(quantity, tuple)) and 
+            self.dim > 1):
+            quantity = [quantity[i] for i in range(self.dim)]
+        if self.dim == 1 and not isinstance(quantity, list):
+            quantity = [quantity]
+        if not isinstance(quantity, list):
+            quantity = list(quantity)
+
 
     def __1D_cartesian_grid(self, radius):
         return radius
@@ -226,6 +212,8 @@ class grid:
             Y = radius[None, :] * np.cos(theta)[:, None]
             X.set(name='X', label=r'$X$', log=False, limits=[0, 1.5e7])
             Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
+        else:
+            TypeError(f"Plane {plane} not available.")
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
@@ -239,44 +227,7 @@ class grid:
         Y.set(name='Y', label=r'$Y$', log=False, limits=[-1.5e7, 1.5e7])
         Z.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         return X, Y, Z
-    
-    def __new_radius(par):
-        r = np.linspace(par['r_0'], par['r_0_log'], par['n_r_lin'],
-                        endpoint=False)
-        r_log = 10**np.linspace(np.log10(par['r_0_log']),
-                                np.log10(par['r_max_log']), 
-                                par['n_r_log']+1)
-        return np.concatenate((r, r_log))
-    
-    def __new_theta(par):
-        return np.linspace(par['theta_0'], par['theta_max'], par['n_theta'])
 
-    def __new_phi(par):
-        return np.linspace(par['phi_0'], par['phi_max'], par['n_phi'])
-    
-    def __2D_velocity_sph_to_cart(self, v_r, v_theta, v_phi):
-        Vx = v_r * np.sin(self.theta)[:, None] + \
-            v_theta * np.cos(self.theta)[:, None]
-        Vy = v_phi * np.sin(self.theta)[:, None]
-        Vz = v_r * np.cos(self.theta)[:, None] - \
-            v_theta * np.sin(self.theta)[:, None]
-        return Vx, Vy, Vz
-    
-    def __3D_velocity_sph_to_cart(self, v_r, v_theta, v_phi):
-        Vx = v_r * np.sin(self.theta)[None, :, None] * \
-                            np.cos(self.phi)[:, None, None] + \
-            v_theta * np.cos(self.theta)[None, :, None] * \
-                            np.cos(self.phi)[:, None, None] - \
-            v_phi * np.sin(self.phi)[:, None, None]
-        Vy = v_r * np.sin(self.theta)[None, :, None] * \
-                            np.sin(self.phi)[:, None, None] + \
-            v_theta * np.cos(self.theta)[None, :, None] * \
-                            np.sin(self.phi)[:, None, None] + \
-            v_phi * np.cos(self.phi)[:, None, None]
-        Vz = v_r * np.cos(self.theta)[None, :, None] - \
-            v_theta * np.sin(self.theta)[None, :, None]
-        return Vx, Vy, Vz
-    
     def __2D_spherical_to_cartesian(self, r, th, ph, add_front, add_back):
         sint = np.sin(self.theta)[:, None]
         cost = np.cos(self.theta)[:, None]
