@@ -171,23 +171,24 @@ def __compute_2D_global_local_quantities(profiles_dictionary: dict,
     profiles_dictionary['angular_momentum_y_profile'].append(jy)
     profiles_dictionary['angular_momentum_z_profile'].append(jz)
     profiles_dictionary['angular_momentum_tot_profile'].append(jtot)
-    kappa = simulation.epicyclic_frequency(file_name)
-    bv_freq = simulation.BV_frequency(file_name)
-    so_crit = function_average(kappa + bv_freq, simulation.dim,
-                                'Omega', dOmega)
-    kappa   = function_average(kappa, simulation.dim,
-                                'Omega', dOmega)
-    bv_freq = function_average(bv_freq, simulation.dim,
-                                'Omega', dOmega)
-    omega   = function_average(simulation.omega(file_name), simulation.dim,
-                                'Omega', dOmega)
-    rossby  = function_average(simulation.Rossby_number(file_name), simulation.dim,
-                                'Omega', dOmega)
-    profiles_dictionary['Solberg_Høiland_profile'].append(so_crit)
-    profiles_dictionary['omega_profile'].append(omega)
-    profiles_dictionary['Rossby_number'].append(rossby)
-    profiles_dictionary['BV_frequency_profile'].append(bv_freq)
-    profiles_dictionary['epicyclic_frequency_profile'].append(kappa)
+    if simulation.dim == 2:
+        kappa = simulation.epicyclic_frequency(file_name)
+        bv_freq = simulation.BV_frequency(file_name)
+        so_crit = function_average(kappa + bv_freq, simulation.dim,
+                                    'Omega', dOmega)
+        kappa   = function_average(kappa, simulation.dim,
+                                    'Omega', dOmega)
+        bv_freq = function_average(bv_freq, simulation.dim,
+                                    'Omega', dOmega)
+        omega   = function_average(simulation.omega(file_name), simulation.dim,
+                                        'Omega', dOmega)
+        rossby  = function_average(simulation.Rossby_number(file_name), simulation.dim,
+                                    'Omega', dOmega)
+        profiles_dictionary['omega_profile'].append(omega)
+        profiles_dictionary['Solberg_Høiland_profile'].append(so_crit)
+        profiles_dictionary['Rossby_number'].append(rossby)
+        profiles_dictionary['BV_frequency_profile'].append(bv_freq)
+        profiles_dictionary['epicyclic_frequency_profile'].append(kappa)
 
     if simulation.evolved_qts['magdim'] > 0:
         br, bt, bp = simulation.magnetic_fields(file_name, comp='all')
@@ -220,10 +221,28 @@ def __compute_3D_global_local_quantities(profiles_dictionary: dict,
     vr = simulation.radial_velocity(file_name)
     vt = simulation.theta_velocity(file_name)
     vp = simulation.phi_velocity(file_name)
-    omg_og = simulation.omega(file_name)
+    vconv = simulation.convective_velocity(file_name)
+    rho = simulation.rho(file_name)
+    kappa_og = simulation.epicyclic_frequency(file_name)
+    bv_freq = simulation.BV_frequency(file_name)
+    so_crit_og = function_average(kappa_og + bv_freq, simulation.dim,
+                                'Omega', dOmega)
+    kappa_og   = function_average(kappa_og, simulation.dim,
+                                'Omega', dOmega)
+    bv_freq = function_average(bv_freq, simulation.dim,
+                                'Omega', dOmega)
+    omega_og   = function_average(simulation.omega(file_name), simulation.dim,
+                                    'Omega', dOmega)
+    rossby_og  = function_average(simulation.Rossby_number(file_name), simulation.dim,
+                                'Omega', dOmega)
+    profiles_dictionary['omega_profile'].append(omega_og)
+    profiles_dictionary['Solberg_Høiland_profile'].append(so_crit_og)
+    profiles_dictionary['Rossby_number'].append(rossby_og)
+    profiles_dictionary['BV_frequency_profile'].append(bv_freq)
+    profiles_dictionary['epicyclic_frequency_profile'].append(kappa_og)
 
     r = simulation.cell.radius(simulation.ghost)
-
+    H = 1 / np.abs(IDL_derivative(r, rho) / rho * r)
     mask_z = (np.ones_like(vr.value) * n[2] > 0.995)
 
     vx, vy, vz = simulation.grid.spherical_to_cartesian(vr, vt, vp)
@@ -233,12 +252,13 @@ def __compute_3D_global_local_quantities(profiles_dictionary: dict,
     vres = np.where(mask_z, np.sqrt(vr ** 2 + vt ** 2),
                     np.sqrt(np.nansum((v_cart - (vrot.value[None, ...] * ephi)) ** 2,
                               axis=0)) * vr.unit)
-    omg = np.where(mask_z, omg_og, vrot / (X_perp * grid_unit))
-
+    omg = np.where(mask_z, omega_og, vrot / (X_perp * grid_unit))
+    ross = vconv / (r * omg * H) * u.radian
+    ross.set(name='Rossby', label=r'$Ro$',
+            cmap='RdYlBu_r', log=False, limits=[0, 1])
     domega_dr = IDL_derivative(r, omg)
-
     kappa2 = 2.0 * omg * (2.0 * omg + r[None, None, :] * domega_dr)
-    so = kappa2 + bv_freq
+    so_crit = kappa2 + bv_freq
     
 
 
