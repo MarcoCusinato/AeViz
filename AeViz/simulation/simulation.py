@@ -43,9 +43,6 @@ class Simulation:
         self.cell = cell(self.path, self.dim, geom=self.GEOM,
                          neu=self.evolved_qts['neudim'])
         self.ghost = ghost(self.ghost_cells)
-        self.grid = grid(self.dim, self.cell.radius(self.ghost),
-                                 self.cell.theta(self.ghost),
-                                 self.cell.phi(self.ghost))
         self.storage_path = simulation_local_storage_folder(pltf(), 
                                                 self.simulation_name, self.dim)
         self.utils_path = os.path.join(local_storage_folder(pltf()), '.utils')
@@ -53,6 +50,7 @@ class Simulation:
         if self.GEOM == 2:
             # if in spherical symmetry we suppose we are simulating a
             # SN, so try to load the information about the progenitor
+            self.grid = grid.from_cell(self.cell, self.ghost)
             try:
                 self.initial_parameters = get_initial_parameters(
                                                         os.path.join(self.path,
