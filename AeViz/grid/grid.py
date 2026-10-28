@@ -2,7 +2,7 @@ import numpy as np
 from AeViz.units import aerray, u
 from AeViz.utils.math_utils import IDL_derivative
 from AeViz.utils.files.string_utils import merge_strings, apply_symbol
-import copy
+from copy import copy
 
 class grid:
     """
@@ -31,6 +31,15 @@ class grid:
         self.__cell = None
         self.__ghost = None
 
+    @property
+    def shape(self):
+        s = (len(self.radius),)
+        if self.dim > 1:
+            s = (len(self.theta),) + s
+        if self.dim > 2:
+            s = (len(self.phi),) + s
+        return s
+
     @classmethod
     def from_cell(cls, cl, gh):
         if cl.geom != 2:
@@ -44,7 +53,7 @@ class grid:
 
     def _metric(self):
         if self.__cell is None:
-            return TypeError("Grid built from raw coordinates. No cell support.")
+            raise TypeError("Grid built from raw coordinates. No cell support.")
         return self.__cell
 
     def cartesian_grid(self):
@@ -111,52 +120,206 @@ class grid:
             raise TypeError("Your simulation is 3D, you are not supposed to \
                             be here.")
 
-    def gradient(self, quantity, concatenate=False):
+    def gradient(self, quantity, stack=False):
         assert quantity.ndim == self.dim, "Dimension misatch."
         gradient = []
         gradient.append(IDL_derivative(self.radius, quantity, 'radius'))
         if self.dim > 1:
             gradient.append(1 / self.radius * IDL_derivative(self.theta, quantity, 'theta'))
         if self.dim > 2:
-            gradient.append(1 / (self.radius * np.sin(self.theta)) * 
+            gradient.append(1 / (self.radius * np.sin(self.theta)[None, :, None]) * 
                                 IDL_derivative(self.phi, quantity, 'phi'))
         if isinstance(quantity, aerray):
             symb = [r'$r$', r'$\theta$', r'$\phi$']
-            for i in range(gradient):
+            for i in range(len(gradient)):
                 gradient[i].set(name=f'gradient_{quantity.name}_{symb[i]}',
                                 label=merge_strings(r'$\nabla$', quantity.label, r'$\cdot$',
-                                                    apply_symbol(symb[i], '\hat')),
+                                                    apply_symbol(symb[i], r'\hat')),
                                 log = quantity.log,
                                 limits=quantity.limits,
                                 cmap=quantity.cmap)
+        elif isinstance(gradient[0], aerray):
+            gradient = [gg.value for gg in gradient]
         if len(gradient) == 1:
             return gradient[0]
-        if concatenate:
-            np.concatenate(gradient, axis=0)
+        if stack:
+            return np.stack(gradient, axis=-1)
         else:
             return gradient
 
-    def divergence(self, quantity, concatenate=False):
+    def divergence(self, quantity):
         if isinstance(quantity, list) or isinstance(quantity, tuple):
             if not len(quantity) == self.dim:
                 raise ValueError("Dimension mismatch")
-        elif quantity.ndim != self.dim + 1:
+            if isinstance(quantity, tuple):
+                quantity = list(quantity)
+        elif (quantity.ndim != self.dim + 1) or self.dim == 1:
             raise ValueError("Dimension mismatch")
-        else:
-            raise NotImplementedError()
-        if isinstance(aerray, quantity) or isinstance(quantity[0], aerray):
+        
+        if isinstance(quantity, aerray) or isinstance(quantity[0], aerray):
             isaerray = True
-            
+            if isinstance(quantity, aerray):
+                qt = quantity
+            else:
+                qt = quantity[0]
+            name = f'divergence_{qt.name}'
+            label = merge_strings(r'$\nabla\cdot$', qt.label.replace('_r', ''))
+            limits = qt.limits
+            cmap = qt.cmap
+            log = qt.log
         else:
-            False
-        if (not (isinstance(quantity, list) or isinstance(quantity, tuple)) and 
-            self.dim > 1):
-            quantity = [quantity[i] for i in range(self.dim)]
+            isaerray = False
+        if not (isinstance(quantity, list) and self.dim > 1):
+            quantity = [quantity[..., i] for i in range(3)]
         if self.dim == 1 and not isinstance(quantity, list):
             quantity = [quantity]
-        if not isinstance(quantity, list):
-            quantity = list(quantity)
+        div = 1 / self.radius ** 2 * IDL_derivative(self.radius, quantity[0] * self.radius ** 2,
+                                                    'radius')
+        if self.dim > 1:
+            st = np.sin(self.theta)
+            if self.dim == 2:
+                st = st[:, None]
+            else:
+                st = st[None, :, None]
+            div += 1 / (self.radius * st) * IDL_derivative(self.theta,
+                                                           quantity[1] * st,
+                                                           'theta')
+        if self.dim > 2:
+            div += 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[2],
+                                                           'phi')
+        if isaerray:
+            div.set(name=name, label=label, limits=limits, cmap=cmap, log=log)
+        elif isinstance(div, aerray):
+            div = div.value
+        return div
 
+    def curl(self, quantity, stack=False):
+        if self.dim == 1:
+            if isinstance(quantity, aerray):
+                return np.zeros(len(quantity)) * quantity.unit / self.radius.unit
+            else:
+                return np.zeros(len(quantity))
+        if isinstance(quantity, list) or isinstance(quantity, tuple):
+            if not len(quantity) == self.dim:
+                raise ValueError("Dimension mismatch")
+            if isinstance(quantity, tuple):
+                quantity = list(quantity)
+        elif quantity.ndim != self.dim + 1:
+            raise ValueError("Dimension mismatch")
+        
+        if isinstance(quantity, aerray) or isinstance(quantity[0], aerray):
+            isaerray = True
+            if isinstance(quantity, aerray):
+                qt = quantity
+            else:
+                qt = quantity[0]
+            name = f'curl_{qt.name}'
+            label = merge_strings(r'$(\nabla\times$', qt.label.replace('_r', ''), r'$)$')
+            limits = qt.limits
+            cmap = qt.cmap
+            log = qt.log
+        else:
+            isaerray = False
+        if not (isinstance(quantity, list)):
+            quantity = [quantity[..., i] for i in range(3)]
+        st = np.sin(self.theta)
+        if self.dim == 2:
+            st = st[:, None]
+        else:
+            st = st[None, :, None]
+        crl = [
+            1 / (self.radius * st) * (IDL_derivative(self.theta, quantity[2] * st,
+                                                     'theta')),
+            - 1 / self.radius * IDL_derivative(self.radius, quantity[2] * self.radius,
+                                               'radius'),
+            1 / self.radius * (IDL_derivative(self.radius, quantity[1] * self.radius,
+                                              'radius') -
+                               IDL_derivative(self.theta, quantity[0], 'theta'))
+        ]
+        if self.dim > 2:
+            crl[0] -= 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[1], 'phi')
+            crl[1] += 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[0], 'phi')
+        if isaerray:
+            symb = [r'$r$', r'$\theta$', r'$\phi$']
+            for i in range(len(crl)):
+                crl[i].set(
+                    name = f'{name}_{symb[i]}',
+                    limits = limits,
+                    cmap = cmap,
+                    log = log,
+                    label = merge_strings(label, apply_symbol(symb[i], r"\hat"))
+                )
+        elif isinstance(crl[0], aerray):
+            crl = [cr.value for cr in crl]
+        if stack:
+            return np.stack(crl, axis=-1)
+        return crl
+
+    def volume_average(self, quantity):
+        dV = self._metric().dVolume_integration(self.__ghost)
+        mask = np.isfinite(quantity)
+        av = np.sum(quantity[mask] * dV[mask]) / np.sum(dV[mask])
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_vol_avg'), 
+                   label=merge_strings(r'$\langle $', quantity.label, 
+                                            r'$\rangle_V$'),
+                   log=quantity.log, limits=quantity.limits)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+
+    def omega_average(self, quantity):
+        if self.dim < 2:
+            return quantity
+        dOmega = self._metric().dOmega(self.__ghost)
+        dOmega = dOmega[..., None]
+        mask = np.isfinite(quantity)
+        av = np.nansum(quantity * dOmega * mask, axis=tuple(range(self.dim-1))) / \
+            np.sum(dOmega * mask, axis=tuple(range(self.dim-1)))
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_ang_avg'), 
+                   label=merge_strings(r'$\langle $', quantity.label, 
+                                        r'$\rangle_\Omega$'),
+                   log=quantity.log, limits=quantity.limits)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+
+    def project(self, quantity, axis):
+        def axis_vector(axis):
+            cart_axis = {'x': (1., 0., 0.),
+                         'y': (0., 1., 0.),
+                         'z': (0., 0., 1.)}
+            if isinstance(axis, str):
+                if axis.lower() not in cart_axis:
+                    raise ValueError(f"Axis '{axis}' not valid, use 'x', 'y', 'z' "
+                                    "or a tuple (nx, ny, nz).")
+                return np.array(cart_axis[axis.lower()])
+            n = np.asarray(axis, dtype=float)
+            if n.shape != (3,):
+                raise ValueError("A tuple axis must have 3 cartesian components.")
+            norm = np.linalg.norm(n)
+            if norm == 0:
+                raise ValueError("The axis vector cannot be null.")
+            return n / norm
+        
+        if self.dim == 1:
+            return quantity
+        n = axis_vector(axis)
+        components = self.__vector_components(quantity)
+        ccart = self.spherical_to_cartesian(components[0], components[1], components[2])
+        proj = n[0] * ccart[0] + n[1] * ccart[1] + n[2] * ccart[3]
+        if isinstance(components[0], aerray):
+            tag = axis.lower() if isinstance(axis, str) else 'n'
+            proj.set(name=f"{components[0].name}_proj_{tag}",
+                    label=merge_strings(components[0].label.replace('_r', '') if components[0].label is not None else '',
+                                        r'$\cdot$',
+                                        apply_symbol(f'${tag}$', r'\hat')),
+                    limits=components[0].limits, cmap=components[0].cmap,
+                    log=False)       # projections can change sign
+        elif isinstance(proj, aerray):
+            proj = proj.value
+        return proj
 
     def __1D_cartesian_grid(self, radius):
         return radius
@@ -213,7 +376,7 @@ class grid:
             X.set(name='X', label=r'$X$', log=False, limits=[0, 1.5e7])
             Y.set(name='Z', label=r'$Z$', log=False, limits=[-1.5e7, 1.5e7])
         else:
-            TypeError(f"Plane {plane} not available.")
+            raise TypeError(f"Plane {plane} not available.")
         return X, Y
 
     def __3D_cartesian_grid(self, radius, theta, phi):
@@ -270,3 +433,28 @@ class grid:
         Z = r * cost - \
             th * sint
         return X, Y, Z
+
+    def __vector_components(self, quantity):
+        """List of components from a list/tuple or an array with components
+        on the last axis. Checks count and shape against the grid."""
+        if isinstance(quantity, (list, tuple)):
+            comps = list(quantity)
+        else:
+            if quantity.ndim != self.dim + 1 and self.dim > 1:
+                raise ValueError("Dimension mismatch")
+            if self.dim == 1:
+                if not isinstance(quantity, list):
+                    comps = [quantity]
+                else:
+                    comps = quantity
+            else:
+                if quantity.shape[-1] != 3:
+                    raise ValueError(f"Expected at 3 components, "
+                                                f"got {quantity.shape[-1]}.")
+                comps = [quantity[..., i] for i in range(3)]            
+        for c in comps:
+            if c.shape != self.shape:
+                raise ValueError(f"Component shape {c.shape} does not match the "
+                                f"grid {self.shape}. Was it trimmed with the "
+                                "same ghost cells?")
+        return comps
