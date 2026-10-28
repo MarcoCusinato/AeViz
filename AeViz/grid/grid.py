@@ -125,7 +125,8 @@ class grid:
         gradient = []
         gradient.append(IDL_derivative(self.radius, quantity, 'radius'))
         if self.dim > 1:
-            gradient.append(1 / self.radius * IDL_derivative(self.theta, quantity, 'theta'))
+            gradient.append(1 / self.radius * IDL_derivative(self.theta,
+                                                             quantity,'theta'))
         if self.dim > 2:
             gradient.append(1 / (self.radius * np.sin(self.theta)[None, :, None]) * 
                                 IDL_derivative(self.phi, quantity, 'phi'))
@@ -133,8 +134,10 @@ class grid:
             symb = [r'$r$', r'$\theta$', r'$\phi$']
             for i in range(len(gradient)):
                 gradient[i].set(name=f'gradient_{quantity.name}_{symb[i]}',
-                                label=merge_strings(r'$\nabla$', quantity.label, r'$\cdot$',
-                                                    apply_symbol(symb[i], r'\hat')),
+                                label=merge_strings(r'$\nabla$', quantity.label,
+                                                    r'$\cdot$',
+                                                    apply_symbol(symb[i],
+                                                                 r'\hat')),
                                 log = quantity.log,
                                 limits=quantity.limits,
                                 cmap=quantity.cmap)
@@ -148,14 +151,7 @@ class grid:
             return gradient
 
     def divergence(self, quantity):
-        if isinstance(quantity, list) or isinstance(quantity, tuple):
-            if not len(quantity) == self.dim:
-                raise ValueError("Dimension mismatch")
-            if isinstance(quantity, tuple):
-                quantity = list(quantity)
-        elif (quantity.ndim != self.dim + 1) or self.dim == 1:
-            raise ValueError("Dimension mismatch")
-        
+        components = self.__vector_components(quantity)
         if isinstance(quantity, aerray) or isinstance(quantity[0], aerray):
             isaerray = True
             if isinstance(quantity, aerray):
@@ -169,11 +165,9 @@ class grid:
             log = qt.log
         else:
             isaerray = False
-        if not (isinstance(quantity, list) and self.dim > 1):
-            quantity = [quantity[..., i] for i in range(3)]
-        if self.dim == 1 and not isinstance(quantity, list):
-            quantity = [quantity]
-        div = 1 / self.radius ** 2 * IDL_derivative(self.radius, quantity[0] * self.radius ** 2,
+        
+        div = 1 / self.radius ** 2 * IDL_derivative(self.radius,
+                                                    components[0] * self.radius ** 2,
                                                     'radius')
         if self.dim > 1:
             st = np.sin(self.theta)
@@ -182,10 +176,10 @@ class grid:
             else:
                 st = st[None, :, None]
             div += 1 / (self.radius * st) * IDL_derivative(self.theta,
-                                                           quantity[1] * st,
+                                                           components[1] * st,
                                                            'theta')
         if self.dim > 2:
-            div += 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[2],
+            div += 1 / (self.radius * st) * IDL_derivative(self.phi, components[2],
                                                            'phi')
         if isaerray:
             div.set(name=name, label=label, limits=limits, cmap=cmap, log=log)
@@ -199,14 +193,7 @@ class grid:
                 return np.zeros(len(quantity)) * quantity.unit / self.radius.unit
             else:
                 return np.zeros(len(quantity))
-        if isinstance(quantity, list) or isinstance(quantity, tuple):
-            if not len(quantity) == self.dim:
-                raise ValueError("Dimension mismatch")
-            if isinstance(quantity, tuple):
-                quantity = list(quantity)
-        elif quantity.ndim != self.dim + 1:
-            raise ValueError("Dimension mismatch")
-        
+        components = self.__vector_components(quantity)
         if isinstance(quantity, aerray) or isinstance(quantity[0], aerray):
             isaerray = True
             if isinstance(quantity, aerray):
@@ -214,31 +201,36 @@ class grid:
             else:
                 qt = quantity[0]
             name = f'curl_{qt.name}'
-            label = merge_strings(r'$(\nabla\times$', qt.label.replace('_r', ''), r'$)$')
+            label = merge_strings(r'$(\nabla\times$',
+                                  qt.label.replace('_r', '') if qt.label is not None else '',
+                                  r'$)$')
             limits = qt.limits
             cmap = qt.cmap
             log = qt.log
         else:
             isaerray = False
-        if not (isinstance(quantity, list)):
-            quantity = [quantity[..., i] for i in range(3)]
+    
         st = np.sin(self.theta)
         if self.dim == 2:
             st = st[:, None]
         else:
             st = st[None, :, None]
         crl = [
-            1 / (self.radius * st) * (IDL_derivative(self.theta, quantity[2] * st,
+            1 / (self.radius * st) * (IDL_derivative(self.theta, components[2] * st,
                                                      'theta')),
-            - 1 / self.radius * IDL_derivative(self.radius, quantity[2] * self.radius,
+            - 1 / self.radius * IDL_derivative(self.radius, components[2] * self.radius,
                                                'radius'),
-            1 / self.radius * (IDL_derivative(self.radius, quantity[1] * self.radius,
+            1 / self.radius * (IDL_derivative(self.radius, components[1] * self.radius,
                                               'radius') -
-                               IDL_derivative(self.theta, quantity[0], 'theta'))
+                               IDL_derivative(self.theta, components[0], 'theta'))
         ]
         if self.dim > 2:
-            crl[0] -= 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[1], 'phi')
-            crl[1] += 1 / (self.radius * st) * IDL_derivative(self.phi, quantity[0], 'phi')
+            crl[0] -= 1 / (self.radius * st) * IDL_derivative(self.phi,
+                                                              components[1],
+                                                              'phi')
+            crl[1] += 1 / (self.radius * st) * IDL_derivative(self.phi,
+                                                              components[0],
+                                                              'phi')
         if isaerray:
             symb = [r'$r$', r'$\theta$', r'$\phi$']
             for i in range(len(crl)):
@@ -255,9 +247,12 @@ class grid:
             return np.stack(crl, axis=-1)
         return crl
 
-    def volume_average(self, quantity):
+    def volume_average(self, quantity, mask=None):
         dV = self._metric().dVolume_integration(self.__ghost)
-        mask = np.isfinite(quantity)
+        if mask:
+            mask = mask & np.isfinite(quantity)
+        else:
+            mask = np.isfinite(quantity)
         av = np.sum(quantity[mask] * dV[mask]) / np.sum(dV[mask])
         if isinstance(quantity, aerray):
             av.set(name=merge_strings(quantity.name, '_vol_avg'), 
@@ -274,8 +269,12 @@ class grid:
         dOmega = self._metric().dOmega(self.__ghost)
         dOmega = dOmega[..., None]
         mask = np.isfinite(quantity)
-        av = np.nansum(quantity * dOmega * mask, axis=tuple(range(self.dim-1))) / \
-            np.sum(dOmega * mask, axis=tuple(range(self.dim-1)))
+        if np.all(mask):
+            av = np.nansum(quantity * dOmega, axis=tuple(range(self.dim-1))) / \
+                            np.sum(dOmega)
+        else:
+            av = np.nansum(quantity * dOmega * mask, axis=tuple(range(self.dim-1))) / \
+                np.sum(dOmega * mask, axis=tuple(range(self.dim-1)))
         if isinstance(quantity, aerray):
             av.set(name=merge_strings(quantity.name, '_ang_avg'), 
                    label=merge_strings(r'$\langle $', quantity.label, 
@@ -284,7 +283,78 @@ class grid:
         elif isinstance(av, aerray):
             av = av.value
         return av
-
+    
+    def phi_average(self, quantity):
+        if self.dim < 3:
+            raise ValueError("Only available in 3D.")
+        mask = np.isfinite(quantity)
+        dV = self._metric().dVolume_integration(self.__ghost)
+        av = np.nansum(quantity * mask * dV, axis=0) / \
+            np.nansum(dV * mask, axis=0)
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_avg_phi'),
+               label=merge_strings(r'$\langle $', quantity.label,
+                                   r'$\rangle_\phi$'),
+               log=quantity.log, limits=quantity.limits, cmap=quantity.cmap)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+    
+    def theta_profile(self, quantity):
+        if self.dim < 2:
+            raise ValueError("Only available for multi D.")
+        if self.dim == 2:
+            axes = (-1, )
+        else:
+            axes = (0, 2)
+        mask = np.isfinite(quantity)
+        dV = self._metric().dVolume_integration(self.__ghost)
+        av = np.nansum(quantity * mask * dV, axis=axes) / \
+            np.nansum(dV * mask, axis=axes)
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_avg_r_phi'),
+               label=merge_strings(r'$\langle $', quantity.label,
+                                   r'$\rangle_{r,\phi}$'),
+               log=quantity.log, limits=quantity.limits, cmap=quantity.cmap)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+    
+    def theta_profile(self, quantity):
+        if self.dim < 2:
+            raise ValueError("Only available for multi D.")
+        if self.dim == 2:
+            axes = (-1, )
+        else:
+            axes = (1, 2)
+        mask = np.isfinite(quantity)
+        dV = self._metric().dVolume_integration(self.__ghost)
+        av = np.nansum(quantity * mask * dV, axis=axes) / \
+            np.nansum(dV * mask, axis=axes)
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_avg_r_theta'),
+               label=merge_strings(r'$\langle $', quantity.label,
+                                   r'$\rangle_{r,\theta}$'),
+               log=quantity.log, limits=quantity.limits, cmap=quantity.cmap)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+    
+    def radii_angular_average(self, quantity):
+        if self.dim == 1:
+            return quantity
+        dOmega = self._metric().dOmega(self.__ghost)
+        mask = np.isnan(quantity)
+        av =  np.nansum(quantity * dOmega) / (dOmega[~mask]).sum()
+        if isinstance(quantity, aerray):
+            av.set(name=merge_strings(quantity.name, '_ang_avg'), 
+                    label=merge_strings(r'$\langle $', quantity.label, 
+                                            r'$\rangle_\Omega$'),
+                    log=quantity.log, limits=quantity.limits)
+        elif isinstance(av, aerray):
+            av = av.value
+        return av
+    
     def project(self, quantity, axis):
         def axis_vector(axis):
             cart_axis = {'x': (1., 0., 0.),
@@ -302,21 +372,22 @@ class grid:
             if norm == 0:
                 raise ValueError("The axis vector cannot be null.")
             return n / norm
-        
         if self.dim == 1:
             return quantity
         n = axis_vector(axis)
         components = self.__vector_components(quantity)
-        ccart = self.spherical_to_cartesian(components[0], components[1], components[2])
+        ccart = self.spherical_to_cartesian(components[0], components[1],
+                                            components[2])
         proj = n[0] * ccart[0] + n[1] * ccart[1] + n[2] * ccart[3]
         if isinstance(components[0], aerray):
             tag = axis.lower() if isinstance(axis, str) else 'n'
             proj.set(name=f"{components[0].name}_proj_{tag}",
-                    label=merge_strings(components[0].label.replace('_r', '') if components[0].label is not None else '',
+                    label=merge_strings(components[0].label.replace('_r', '')
+                                        if components[0].label is not None else '',
                                         r'$\cdot$',
                                         apply_symbol(f'${tag}$', r'\hat')),
                     limits=components[0].limits, cmap=components[0].cmap,
-                    log=False)       # projections can change sign
+                    log=True)
         elif isinstance(proj, aerray):
             proj = proj.value
         return proj
