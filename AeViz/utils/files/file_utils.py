@@ -184,6 +184,7 @@ def save_merge_dictionary_hdf(simulation: Simulation,
                               value_dictionary: dict,
                               save_path: str,
                               file_name: str,
+                              keys: list[str] | None=None,
                               **kwargs
                               ) -> None:
     """
@@ -207,51 +208,68 @@ def save_merge_dictionary_hdf(simulation: Simulation,
     """
     time, out_dictionary, processed_hdf = value_dictionary
     time = np.concatenate(time)
-    out_dictionary['global'] = {kk: np.concatenate(vv) for (kk, vv) 
-                                in out_dictionary['global'].items()}
-    out_dictionary['local'] = {kk: np.stack(vv, axis=-1) for (kk, vv) 
-                                    in out_dictionary['local'].items()}
+    if keys is not None:
+        for key in keys:
+            out_dictionary[key] = {kk: np.concatenate(vv) for (kk, vv) 
+                                    in out_dictionary[key].items()}
+    else:
+        out_dictionary = {kk: np.stack(vv, axis=-1) for (kk, vv) 
+                          in out_dictionary.items()}
     if check_existence(simulation, os.path.join(save_path, file_name)):
         old_t, old_dict, _ = load_hdf_to_dictionary(save_path,
-                                                           file_name)
+                                                    file_name,
+                                                    keys)
         nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
         time = np.concatenate((old_t, time))
         time.set(name=nm, label=lb, cmap=cm, log=lg,
                  limits=[-0.005, time.value[-1]])
-        for key in out_dictionary['global'].keys():
-            nm = old_dict['global'][key].name
-            lb = old_dict['global'][key].label
-            lm = old_dict['global'][key].limits
-            lg = old_dict['global'][key].log
-            cm = old_dict['global'][key].cmap
-            out_dictionary['global'][key] = \
-                np.concatenate((old_dict['global'][key],
-                               out_dictionary['global'][key]))
-        for key in out_dictionary['local'].keys():
-            nm = old_dict['local'][key].name
-            lb = old_dict['local'][key].label
-            lm = old_dict['local'][key].limits
-            lg = old_dict['local'][key].log
-            cm = old_dict['local'][key].cmap
-            out_dictionary['local'][key] = \
-                np.concatenate((old_dict['local'][key],
-                                out_dictionary['local'][key]))
+        if keys is not None:
+            for key in keys:
+                for kk in out_dictionary[key].keys():
+                    nm = old_dict[key][kk].name
+                    lb = old_dict[key][kk].label
+                    lm = old_dict[key][kk].limits
+                    lg = old_dict[key][kk].log
+                    cm = old_dict[key][kk].cmap
+                    out_dictionary[key][kk] = \
+                        np.concatenate((old_dict[key][kk],
+                                       out_dictionary[key][kk]))
+                    out_dictionary[key][kk].set(name=nm, label=lb,
+                                                limits=lm, log=lg,
+                                                cmap=cm)
+        else:
+            for kk in out_dictionary.keys():
+                nm = old_dict[kk].name
+                lb = old_dict[kk].label
+                lm = old_dict[kk].limits
+                lg = old_dict[kk].log
+                cm = old_dict[kk].cmap
+                out_dictionary[kk] = \
+                    np.concatenate((old_dict[kk],
+                                    out_dictionary[kk]))
+                out_dictionary[kk].set(name=nm, label=lb,
+                                        limits=lm, log=lg,
+                                        cmap=cm)            
     else:
         time.set(name='time', label=r'$t-t_{\rm b}$',
                  limits=[-0.005, time.value[-1]], log=False)
-        for key in out_dictionary['global'].keys():
-            out_dictionary['global'][key].set(**kwargs['global'][key])
-        for key in out_dictionary['local'].keys():
-            out_dictionary['local'][key].set(**kwargs['local'][key])
-            
+        if keys is not None:
+            for key in keys:
+                for kk in out_dictionary[key].keys():
+                    out_dictionary[key][kk].set(**kwargs[key][kk])
+        else:
+            for key in out_dictionary.keys():
+                out_dictionary[key].set(**kwargs[key])
+    out_keys = ['time', 'processed_hdf']
+    out_keys.extend(list(out_dictionary.keys()))
+    out_dict = [time, processed_hdf]
+    out_dict.extend(list(out_dict.values()))
     save_hdf(os.path.join(save_path, file_name),
-             ['time', 'local', 'global', 'processed_hdf'],
-             [time, out_dictionary['local'], out_dictionary['global'],
-              processed_hdf])
+                out_keys, out_dict)
 
 def load_hdf_to_dictionary(path: str,
-                           file_name:str
-                           ) -> tuple[aerray, dict[aerray], list[str]]:
+                           file_name:str,
+                           keys=None) -> tuple[aerray, dict[aerray], list[str]]:
     """
     Loads a hdf file split into 'global' and 'local' datasets into a
     dictionary of aerrays.
@@ -275,26 +293,30 @@ def load_hdf_to_dictionary(path: str,
                         f['time'].attrs['cmap'], [f['time'].attrs['lim0'],
                                                 f['time'].attrs['lim1']],
                         f['time'].attrs['log'])
-        out_dictionary = {'global': {},
-                            'local': {}}
-        for key in f['global'].keys():
-            att = f[f'global/{key}'].attrs
-            out_dictionary['global'][key] = aerray(f[f'global/{key}'][:],
-                                                    units_from_string(att['unit']),
-                                                    att['name'],
-                                                    att['label'],
-                                                    att['cmap'],
-                                                    [att['lim0'], att['lim1']],
-                                                    att['log'])
-        for key in f['local'].keys():
-            att = f[f'local/{key}'].attrs
-            out_dictionary['local'][key] = aerray(f[f'local/{key}'][...],
-                                                    units_from_string(att['unit']),
-                                                    att['name'],
-                                                    att['label'],
-                                                    att['cmap'],
-                                                    [att['lim0'], att['lim1']],
-                                                    att['log'])
+        out_dictionary = {key: {} for key in keys} if keys is not None else {}
+        if keys is not None:
+            for key in keys:
+                for kk in f[key].keys():
+                    att = f[f'{key}/{kk}'].attrs
+                    out_dictionary[key][kk] = aerray(f[f'{key}/{kk}'][:],
+                                                              units_from_string(att['unit']),
+                                                              att['name'],
+                                                              att['label'],
+                                                              att['cmap'],
+                                                              [att['lim0'], att['lim1']],
+                                                              att['log'])
+        else:
+            for kk in f.keys():
+                if kk == 'time' or kk == 'processed_hdf':
+                    continue
+                att = f[f'{kk}'].attrs
+                out_dictionary[kk] = aerray(f[f'{kk}'][...],
+                                            units_from_string(att['unit']),
+                                            att['name'],
+                                            att['label'],
+                                            att['cmap'],
+                                            [att['lim0'], att['lim1']],
+                                            att['log'])
         processed_hdf = [ff.decode("utf-8") for ff in f['processed_hdf']]
     return time, out_dictionary, processed_hdf
 

@@ -3,7 +3,6 @@ from AeViz.simulation import Simulation
 from AeViz.units import u, aerray
 import numpy as np
 from AeViz.utils.physics.radii_utils import PNS_core_radius
-from AeViz.utils.math_utils import function_average_radii
 from AeViz.units.constants import constants as c
 
 def declare_PNScore_dictionary(dim: int,
@@ -463,9 +462,7 @@ def __compute_1D_global_local_quantities(PNScore_dictionary: dict,
     PNScore_dictionary['global']['mass'].append(mass)
     PNScore_dictionary['global']['rmax'].append(np.nanmax(PNScore_radius))
     PNScore_dictionary['global']['rmin'].append(np.nanmin(PNScore_radius))
-    PNScore_dictionary['global']['ravg'].append(function_average_radii(PNScore_radius,
-                                                                   simulation.dim,
-                                                                   dOmega))
+    PNScore_dictionary['global']['ravg'].append(simulation.grid.radii_angular_average(PNScore_radius))
     PNScore_dictionary['global']['er'].append(np.nansum(0.5 * dmass[PNScore_mask] * 
                                                     vr[PNScore_mask] ** 2))
     PNScore_dictionary['global']['eg'].append(np.nansum(grav_en[PNScore_mask]))

@@ -3,7 +3,6 @@ from AeViz.simulation import Simulation
 from AeViz.units import u, aerray
 import numpy as np
 from AeViz.utils.physics.radii_utils import innercore_radius
-from AeViz.utils.math_utils import function_average_radii
 from AeViz.units.constants import constants as c
 
 def declare_innercore_dictionary(dim: int,
@@ -469,9 +468,7 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
     innercore_dictionary['global']['mass'].append(mass)
     innercore_dictionary['global']['rmax'].append(np.nanmax(innercore_radius))
     innercore_dictionary['global']['rmin'].append(np.nanmin(innercore_radius))
-    innercore_dictionary['global']['ravg'].append(function_average_radii(innercore_radius,
-                                                                   simulation.dim,
-                                                                   dOmega))
+    innercore_dictionary['global']['ravg'].append(simulation.grid.radii_angular_average(innercore_radius))
     innercore_dictionary['global']['er'].append(np.nansum(0.5 * dmass[innercore_mask] * 
                                                     vr[innercore_mask] ** 2).to(u.erg))
     innercore_dictionary['global']['eg'].append(np.nansum(grav_en[innercore_mask]))

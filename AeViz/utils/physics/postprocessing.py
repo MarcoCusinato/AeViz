@@ -15,6 +15,9 @@ from AeViz.utils.physics.innercore_postprocessing import (declare_innercore_dict
 from AeViz.utils.physics.shock_postprocessing import (declare_shock_dictionary,
                                                       compute_shock_postprocessing,
                                                       shock_quantity_metadata)
+from AeViz.utils.physics.profiles_postprocessing import (declare_profiles_dictionary,
+                                                         create_profiles_metadata,
+                                                         compute_profiles_postprocessing)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 
@@ -50,6 +53,10 @@ def supernova_postprocessing(simulation: Simulation,
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
+    ## Profiles declaration
+    profiles_dict = declare_profiles_dictionary(simulation.dim,
+                                                simulation.evolved_qts['magdim'])
+    profiles_metadata = None
     ## PNS core declaration part
     PNS_core_dict = declare_PNScore_dictionary(simulation.dim,
                                                simulation.evolved_qts['magdim'])
@@ -93,6 +100,7 @@ def supernova_postprocessing(simulation: Simulation,
         ## Compute inertia moment
         if simulation.dim < 3:
             Inertia = dmass * rperp2
+            n, X_perp, eR = None, None, None
         else:
             nx = shell_jx / shell_jtot
             ny = shell_jy / shell_jtot
@@ -108,7 +116,10 @@ def supernova_postprocessing(simulation: Simulation,
             eR = X_perp_vec / X_perp[None, ...]
             X_perp2 = np.where((n[2] >= .995)[None, None, :], rperp2, X_perp ** 2)
             Inertia = dmass * X_perp2
-
+        compute_profiles_postprocessing(profiles_dict, simulation,
+                                        file_name, shell_jx,
+                                        shell_jy, shell_jz, shell_jtot,
+                                        Inertia, n, X_perp, eR, radius.unit)
         compute_PNS_postprocessing(PNS_dict, simulation, file_name,
                                    dV, dOmega,
                                    jx, jy, jz)
@@ -127,22 +138,35 @@ def supernova_postprocessing(simulation: Simulation,
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
             print('Checkpoint reached, saving files...\n')
+            if not profiles_metadata:
+                profiles_metadata = create_profiles_metadata(profiles_dict)
+            save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
+                                                   pns_processed),
+                                        simulation.storage_path,
+                                        'profiles_postprocessing.h5', None,
+                                        **profiles_metadata)
             save_merge_dictionary_hdf(simulation, (global_time, PNS_core_dict,
                                                    pns_processed),
                                       simulation.storage_path,
-                                      'PNScore_postprocessing.h5', **pnscore_metadata)
+                                      'PNScore_postprocessing.h5', ['global', 'local'],
+                                      **pnscore_metadata)
             save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
                                       simulation.storage_path,
-                                      'PNS_postprocessing.h5', **pns_metadata)
+                                      'PNS_postprocessing.h5', ['global', 'local'],
+                                      **pns_metadata)
             save_merge_dictionary_hdf(simulation, (global_time, innercore_dict,
                                                    pns_processed),
                                       simulation.storage_path,
-                                      'innercore_postprocessing.h5', **innercore_metadata)
+                                      'innercore_postprocessing.h5', ['global', 'local'],
+                                        **innercore_metadata)
             save_merge_dictionary_hdf(simulation, (global_time, shock_dict,
                                                    pns_processed),
                                       simulation.storage_path,
-                                      'shock_postprocessing.h5', **shock_metadata)
+                                      'shock_postprocessing.h5', ['global', 'local'],
+                                      **shock_metadata)
             check_index = 0
+            profiles_dict = declare_profiles_dictionary(simulation.dim,
+                                               simulation.evolved_qts['magdim'])
             PNS_core_dict = declare_PNScore_dictionary(simulation.dim,
                                                simulation.evolved_qts['magdim'])
             PNS_dict = declare_PNS_dictionary(simulation.dim,
@@ -156,6 +180,11 @@ def supernova_postprocessing(simulation: Simulation,
             check_index += 1
 
     print('Done, saving files...\n')
+    save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
+                                         pns_processed),
+                              simulation.storage_path,
+                              'profiles_postprocessing.h5', None,
+                              **profiles_metadata)
     save_merge_dictionary_hdf(simulation, (global_time, PNS_core_dict,
                                             pns_processed),
                                 simulation.storage_path,

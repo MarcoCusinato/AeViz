@@ -3,7 +3,6 @@ from AeViz.simulation import Simulation
 from AeViz.units import u, aerray
 import numpy as np
 from AeViz.utils.physics.radii_utils import shock_radius
-from AeViz.utils.math_utils import function_average_radii
 from AeViz.units.constants import constants as c
 
 def declare_shock_dictionary(dim: int,
@@ -475,9 +474,7 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
     shock_dictionary['global']['mass_unb'].append(np.nansum(dmass[unbound_mask]))
     shock_dictionary['global']['rmax'].append(np.nanmax(shock_radius))
     shock_dictionary['global']['rmin'].append(np.nanmin(shock_radius))
-    shock_dictionary['global']['ravg'].append(function_average_radii(shock_radius,
-                                                                   simulation.dim,
-                                                                   dOmega))
+    shock_dictionary['global']['ravg'].append(simulation.grid.radii_angular_average(shock_radius))
     shock_dictionary['global']['eunb'].append(np.nansum(
                                               mhd_ene[unbound_mask] * 
                                               dV[unbound_mask]).to(u.erg))
