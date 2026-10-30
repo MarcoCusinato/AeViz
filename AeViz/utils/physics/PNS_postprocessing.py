@@ -58,6 +58,10 @@ def declare_PNS_dictionary(dim: int,
         PNS_dictionary['local']['vt'] = []
         PNS_dictionary['local']['vp'] = []
         PNS_dictionary['local']['omg'] = []
+        PNS_dictionary['global']['vkick_x'] = []
+        PNS_dictionary['global']['vkick_y'] = []
+        PNS_dictionary['global']['vkick_z'] = []
+        PNS_dictionary['global']['vkick_tot'] = []
         if magdim > 0:
             PNS_dictionary['global']['ebr'] = []
             PNS_dictionary['global']['ebt'] = []
@@ -160,6 +164,19 @@ def PNS_quantity_metadata() -> dict:
                            limits=[0, 30],
                            cmap="Spectral",
                            log=False),
+            "vkick_x": dict(name="hydrodynamic_kick_velocity_x",
+                                   label=r"$v_{\rm kick,hydro,x}$",
+                                   limits=[-1000, 1000], cmap="coolwarm", log=False),
+            "vkick_y": dict(name="hydrodynamic_kick_velocity_y",
+                                   label=r"$v_{\rm kick,hydro,y}$",
+                                   limits=[-1000, 1000], cmap="coolwarm", log=False),
+            "vkick_z": dict(name="hydrodynamic_kick_velocity_z",
+                                   label=r"$v_{\rm kick,hydro,z}$",
+                                   limits=[-1000, 1000], cmap="coolwarm", log=False),
+            "vkick_tot": dict(name="hydrodynamic_kick_velocity_magnitude",
+                                    label=r"$|\mathbf{v}_{\rm kick,hydro}|$",
+                                    limits=[0, 1000], cmap="viridis", log=False),
+
             "jx":   dict(name="Jx",
                          label=r"$J_{x,\rm PNS}$",
                          limits=[-5e49, 5e49],
@@ -559,12 +576,19 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
     dmass : aerray
         _description_
     """
+    vr = simulation.radial_velocity(file_name)
     vth = simulation.theta_velocity(file_name)
     vph = simulation.phi_velocity(file_name)
     jx = np.nansum(Lx[PNS_mask])
     jy = np.nansum(Ly[PNS_mask])
     jz = np.nansum(Lz[PNS_mask])
     jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
+    px, py, pz = simulation.grid.spherical_to_cartesian(vr * dmass, vth * dmass, vph * dmass)
+    radius = simulation.grid.radius
+    while radius.ndim <= PNS_mask.ndim:
+        radius = radius[None, :]
+    kick_mask = np.logical_not(PNS_mask) & (radius <= 1e10)
+    vkickz = (-np.nansum(pz[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
     PNS_dictionary['global']['et'].append(np.nansum(0.5 * dmass[PNS_mask] * 
                                                     vth[PNS_mask] ** 2).to(u.erg))
     PNS_dictionary['global']['ep'].append(np.nansum(0.5 * dmass[PNS_mask] *
@@ -573,7 +597,10 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
     PNS_dictionary['global']['jy'].append(jy)
     PNS_dictionary['global']['jz'].append(jz)
     PNS_dictionary['global']['jtot'].append(jtot)
+    PNS_dictionary['global']['vkick_z'].append(vkickz)
     if simulation.dim == 2:
+        vkickx = 0 * u.cm / u.s
+        vkicky = 0 * u.cm / u.s
         itheta = np.arange(vth.shape[0])
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
                           np.sin(simulation.cell.theta(simulation.ghost))[:, None]) ** 2
@@ -584,6 +611,8 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
                                                         rperp2)[PNS_mask]))
     elif simulation.dim == 3:
+        vkickx = (-np.nansum(px[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
+        vkicky = (-np.nansum(py[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
         iphi = np.arange(vth.shape[0])[:, None]
         itheta = np.arange(vth.shape[1])[None, :]
         PNS_dictionary['local']['vt'].append(vth[iphi, itheta, indx_pns])
@@ -615,6 +644,10 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
         PNS_dictionary['global']['bmax'].append(np.nanmax(btot[PNS_mask]))
         PNS_dictionary['global']['bavg'].append(np.nansum(btot[PNS_mask] * dmass[PNS_mask]) /
                                                 PNS_dictionary['global']['mass'][-1])
+    vkick_tot = np.sqrt(vkickx ** 2 + vkicky ** 2 + vkickz ** 2)
+    PNS_dictionary['global']['vkick_x'].append(vkickx)
+    PNS_dictionary['global']['vkick_y'].append(vkicky)
+    PNS_dictionary['global']['vkick_tot'].append(vkick_tot)
         
 def __compute_3D_global_local_quantities(PNS_dictionary: dict,
                                          simulation: Simulation,
