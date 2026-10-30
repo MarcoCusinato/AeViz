@@ -51,8 +51,10 @@ def gain_radius(simulation, file_name, PNS_radius):
     while radius.ndim < neu_ene_dep.ndim:
         radius = radius[None, ...]
     neu_ene_dep = np.where(radius >= PNS_radius[..., None], neu_ene_dep,  0)
-    return simulation.cell.radius(simulation.ghost)[np.argmax(neu_ene_dep > 0,
-                                                              axis=-1)]
+    gain_r = simulation.cell.radius(simulation.ghost)[np.argmax(neu_ene_dep > 0,
+                                                      axis=-1)]
+    gain_r = np.where(gain_r <= PNS_radius, np.nan, gain_r)
+    return gain_r
 
 def neutrino_sphere_radii(simulation, file_name):
     """
