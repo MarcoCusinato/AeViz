@@ -386,7 +386,7 @@ def compute_innercore_postprocessing(innercore_dictionary: dict,
     else:
         while r.ndim <= innercorer.ndim:
             r = r[None, :]
-        innercoremask = (r <= innercorer)
+        innercoremask = (r <= innercorer[..., None])
         idx_innercore = np.argmax(r >= innercorer[..., None], axis=-1)
     dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     __compute_1D_global_local_quantities(innercore_dictionary,
@@ -483,7 +483,7 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
     
     
     ## add variables at the surface
-    innercore_dictionary['local']['r'].append(innercore_radius)
+    innercore_dictionary['local']['r'].append(innercore_radius[..., None])
     if simulation.dim == 1:
         innercore_dictionary['local']['s'].append(s[indx_innercore])
         innercore_dictionary['local']['rho'].append(rho[indx_innercore])
@@ -500,16 +500,16 @@ def __compute_1D_global_local_quantities(innercore_dictionary: dict,
                                                         rperp2)[innercore_mask]))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
-        innercore_dictionary['local']['s'].append(s[itheta, indx_innercore])
-        innercore_dictionary['local']['rho'].append(rho[itheta, indx_innercore])
-        innercore_dictionary['local']['ye'].append(ye[itheta, indx_innercore])
-        innercore_dictionary['local']['t'].append(t[itheta, indx_innercore])
-        innercore_dictionary['local']['p'].append(p[itheta, indx_innercore])
-        innercore_dictionary['local']['vr'].append(vr[itheta, indx_innercore])
-        innercore_dictionary['local']['mflux'].append(mflux[itheta, indx_innercore])
+        innercore_dictionary['local']['s'].append(s[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['rho'].append(rho[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['ye'].append(ye[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['t'].append(t[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['p'].append(p[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['vr'].append(vr[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['mflux'].append(mflux[itheta, indx_innercore][..., None])
         innercore_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                          axis=-1)[itheta,
-                                                            indx_innercore])
+                                                            indx_innercore][..., None])
         innercore_dictionary['global']['mflux'].append(np.nansum(mflux[itheta,
                                                                  indx_innercore] *
                                                                    dOmega))
@@ -588,9 +588,9 @@ def __compute_2D_global_local_quantities(innercore_dictionary: dict,
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
                           np.sin(simulation.cell.theta(simulation.ghost))[:, None]) ** 2
         omg = simulation.omega(file_name)
-        innercore_dictionary['local']['vt'].append(vth[itheta, indx_innercore])
-        innercore_dictionary['local']['vp'].append(vph[itheta, indx_innercore])
-        innercore_dictionary['local']['omg'].append(omg[itheta, indx_innercore])
+        innercore_dictionary['local']['vt'].append(vth[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['vp'].append(vph[itheta, indx_innercore][..., None])
+        innercore_dictionary['local']['omg'].append(omg[itheta, indx_innercore][..., None])
         innercore_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
                                                         rperp2)[innercore_mask]))
     elif simulation.dim == 3:
@@ -603,12 +603,12 @@ def __compute_2D_global_local_quantities(innercore_dictionary: dict,
         btot = np.sqrt(br ** 2 + bt ** 2 + bp ** 2)
         p = simulation.gas_pressure(file_name)
         if simulation.dim == 2:
-            innercore_dictionary['local']['br'].append(br[itheta, indx_innercore])
-            innercore_dictionary['local']['bt'].append(bt[itheta, indx_innercore])
-            innercore_dictionary['local']['bp'].append(bp[itheta, indx_innercore])
-            innercore_dictionary['local']['beta'].append(p[itheta, indx_innercore] / 
+            innercore_dictionary['local']['br'].append(br[itheta, indx_innercore][..., None])
+            innercore_dictionary['local']['bt'].append(bt[itheta, indx_innercore][..., None])
+            innercore_dictionary['local']['bp'].append(bp[itheta, indx_innercore][..., None])
+            innercore_dictionary['local']['beta'].append((p[itheta, indx_innercore] / 
                                                    (0.5 * btot[itheta, indx_innercore] ** 2 /
-                                                    c.mu0))
+                                                    c.mu0))[..., None])
         elif simulation.dim == 3:
             innercore_dictionary['local']['br'].append(br[iphi, itheta, indx_innercore])
             innercore_dictionary['local']['bt'].append(bt[iphi, itheta, indx_innercore])

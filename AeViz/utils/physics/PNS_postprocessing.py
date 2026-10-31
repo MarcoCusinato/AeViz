@@ -397,7 +397,7 @@ def compute_PNS_postprocessing(PNS_dictionary: dict,
     else:
         while r.ndim <= PNSr.ndim:
             r = r[None, :]
-        PNSmask = (r <= PNSr)
+        PNSmask = (r <= PNSr[..., None])
         idx_pns = np.argmax(r >= PNSr[..., None], axis=-1)
     dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     __compute_1D_global_local_quantities(PNS_dictionary,
@@ -490,10 +490,8 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
     PNS_dictionary['global']['tavg'].append(np.nansum(t[PNS_mask] * dmass[PNS_mask]) /
                                                      mass)
 
-    
-    
     ## add variables at the surface
-    PNS_dictionary['local']['r'].append(PNS_radius)
+    PNS_dictionary['local']['r'].append(PNS_radius[..., None])
     if simulation.dim == 1:
         PNS_dictionary['local']['s'].append(s[indx_pns])
         PNS_dictionary['local']['ye'].append(ye[indx_pns])
@@ -509,18 +507,18 @@ def __compute_1D_global_local_quantities(PNS_dictionary: dict,
                                                         rperp2)[PNS_mask]))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
-        PNS_dictionary['local']['s'].append(s[itheta, indx_pns])
-        PNS_dictionary['local']['ye'].append(ye[itheta, indx_pns])
-        PNS_dictionary['local']['t'].append(t[itheta, indx_pns])
-        PNS_dictionary['local']['p'].append(p[itheta, indx_pns])
-        PNS_dictionary['local']['vr'].append(vr[itheta, indx_pns])
-        PNS_dictionary['local']['mflux'].append(mflux[itheta, indx_pns])
+        PNS_dictionary['local']['s'].append(s[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['ye'].append(ye[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['t'].append(t[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['p'].append(p[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['vr'].append(vr[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['mflux'].append(mflux[itheta, indx_pns][..., None])
         PNS_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                          axis=-1)[itheta,
-                                                            indx_pns])
+                                                            indx_pns][..., None])
         PNS_dictionary['global']['mflux'].append(np.nansum(mflux[itheta,
                                                                  indx_pns] *
-                                                                   dOmega))
+                                                                   dOmega)[..., None])
     elif simulation.dim == 3:
             itheta = np.arange(p.shape[1])
             iphi = np.arange(p.shape[0])
@@ -585,10 +583,10 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
     jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
     px, py, pz = simulation.grid.spherical_to_cartesian(vr * dmass, vth * dmass, vph * dmass)
     radius = simulation.grid.radius
-    while radius.ndim <= PNS_mask.ndim:
+    while radius.ndim < PNS_mask.ndim:
         radius = radius[None, :]
     kick_mask = np.logical_not(PNS_mask) & (radius <= 1e10)
-    vkickz = (-np.nansum(pz[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
+    vkickz = (-np.nansum(pz[kick_mask]) / PNS_dictionary['global']['mass'][-1]).to(u.cm/u.s)
     PNS_dictionary['global']['et'].append(np.nansum(0.5 * dmass[PNS_mask] * 
                                                     vth[PNS_mask] ** 2).to(u.erg))
     PNS_dictionary['global']['ep'].append(np.nansum(0.5 * dmass[PNS_mask] *
@@ -605,14 +603,14 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
                           np.sin(simulation.cell.theta(simulation.ghost))[:, None]) ** 2
         omg = simulation.omega(file_name)
-        PNS_dictionary['local']['vt'].append(vth[itheta, indx_pns])
-        PNS_dictionary['local']['vp'].append(vph[itheta, indx_pns])
-        PNS_dictionary['local']['omg'].append(omg[itheta, indx_pns])
+        PNS_dictionary['local']['vt'].append(vth[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['vp'].append(vph[itheta, indx_pns][..., None])
+        PNS_dictionary['local']['omg'].append(omg[itheta, indx_pns][..., None])
         PNS_dictionary['global']['I'].append(np.nansum((dmass.to(u.g) * 
-                                                        rperp2)[PNS_mask]))
+                                                        rperp2)[PNS_mask])[..., None])
     elif simulation.dim == 3:
-        vkickx = (-np.nansum(px[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
-        vkicky = (-np.nansum(py[kick_mask]) / PNS_dictionary['global']['m'][-1]).to(u.cm/u.s)
+        vkickx = (-np.nansum(px[kick_mask]) / PNS_dictionary['global']['mass'][-1]).to(u.cm/u.s)
+        vkicky = (-np.nansum(py[kick_mask]) / PNS_dictionary['global']['mass'][-1]).to(u.cm/u.s)
         iphi = np.arange(vth.shape[0])[:, None]
         itheta = np.arange(vth.shape[1])[None, :]
         PNS_dictionary['local']['vt'].append(vth[iphi, itheta, indx_pns])
@@ -622,12 +620,12 @@ def __compute_2D_global_local_quantities(PNS_dictionary: dict,
         btot = np.sqrt(br ** 2 + bt ** 2 + bp ** 2)
         p = simulation.gas_pressure(file_name)
         if simulation.dim == 2:
-            PNS_dictionary['local']['br'].append(br[itheta, indx_pns])
-            PNS_dictionary['local']['bt'].append(bt[itheta, indx_pns])
-            PNS_dictionary['local']['bp'].append(bp[itheta, indx_pns])
-            PNS_dictionary['local']['beta'].append(p[itheta, indx_pns] / 
+            PNS_dictionary['local']['br'].append(br[itheta, indx_pns][..., None])
+            PNS_dictionary['local']['bt'].append(bt[itheta, indx_pns][..., None])
+            PNS_dictionary['local']['bp'].append(bp[itheta, indx_pns][..., None])
+            PNS_dictionary['local']['beta'].append((p[itheta, indx_pns] / 
                                                    (0.5 * btot[itheta, indx_pns] ** 2 /
-                                                    c.mu0))
+                                                    c.mu0))[..., None])
         elif simulation.dim == 3:
             PNS_dictionary['local']['br'].append(br[iphi, itheta, indx_pns])
             PNS_dictionary['local']['bt'].append(bt[iphi, itheta, indx_pns])

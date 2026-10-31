@@ -105,10 +105,10 @@ def supernova_postprocessing(simulation: Simulation,
                                                                 dmass * vp)
             jx, jy, jz = (vz * X - vy * Z), (vx * Z - vz * X), (vy * X - vx * Y)
             jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
-            shell_jx = np.nansum(jx, axis=range(simulation.dim - 1))
-            shell_jy = np.nansum(jy, axis=range(simulation.dim - 1))
-            shell_jz = np.nansum(jz, axis=range(simulation.dim - 1))
-            shell_jtot = np.nansum(jtot, axis=range(simulation.dim - 1))
+            shell_jx = np.nansum(jx, axis=tuple(range(simulation.dim - 1)))
+            shell_jy = np.nansum(jy, axis=tuple(range(simulation.dim - 1)))
+            shell_jz = np.nansum(jz, axis=tuple(range(simulation.dim - 1)))
+            shell_jtot = np.nansum(jtot, axis=tuple(range(simulation.dim - 1)))
         ## Compute inertia moment
         if simulation.dim < 3:
             Inertia = dmass * rperp2

@@ -271,6 +271,12 @@ def shock_quantity_metadata() -> dict:
             "ej_rye_055": dict(name="centroid_ye_ejection_tail_0.55",
                               label=r"$\langle r\rangle_{Y_e\geq0.55}$",
                               limits=[1e4, 1e8], cmap="PuBuGn", log=True),
+            "alpha_ej": dict(name="momentum_asymmetry",
+                              label=r"$\alpha_{\rm mom}$",
+                              limits=[-1, 1], cmap="PuBuGn", log=False),
+            "alpha_mom": dict(name="mass_asymmetry",
+                              label=r"$\alpha_{\rm mom}$",
+                              limits=[-1, 1], cmap="PuBuGn", log=False),
                               
         },
 
@@ -297,6 +303,12 @@ def shock_quantity_metadata() -> dict:
                        limits=[1e46, 1e52], cmap="inferno", log=True),
             "er_unb": dict(name="shock_unbound_radial_kinetic_energy_profile",
                            label=r"$E_{\rm kin,r,sh,unb}(r)$",
+                           limits=[1e46, 1e52], cmap="inferno", log=True),
+            "et_unb": dict(name="shock_unbound_theta_kinetic_energy_profile",
+                           label=r"$E_{\rm kin,\theta,sh,unb}$",
+                           limits=[1e46, 1e52], cmap="inferno", log=True),
+            "ep_unb": dict(name="shock_unbound_phi_kinetic_energy_profile",
+                           label=r"$E_{\rm kin,\phi,sh,unb}$",
                            limits=[1e46, 1e52], cmap="inferno", log=True),
             "eg": dict(name="shock_gravitational_energy_profile",
                        label=r"$E_{\rm grav,sh}(r)$",
@@ -334,12 +346,6 @@ def shock_quantity_metadata() -> dict:
             "ebp_unb": dict(name="shock_unbound_magnetic_energy_phi_prof",
                             label=r"$E_{\rm mag,\phi,sh,unb}$",
                             limits=[1e42, 1e51], cmap="PuBuGn", log=True),
-            "alpha_ej": dict(name="momentum_asymmetry",
-                              label=r"$\alpha_{\rm mom}$",
-                              limits=[-1, 1], cmap="PuBuGn", log=False),
-            "alpha_mom": dict(name="mass_asymmetry",
-                              label=r"$\alpha_{\rm mom}$",
-                              limits=[-1, 1], cmap="PuBuGn", log=False),
         },
     }
 
@@ -378,7 +384,8 @@ def compute_shock_postprocessing(shock_dictionary: dict,
     """
     ## compute the radius
     shockr = shock_radius(simulation, file_name,
-                          pns_radius, innercore_radius)
+                          pns_radius[..., 0],
+                          innercore_radius[..., 0])
     r = simulation.cell.radius(simulation.ghost)
     if simulation.dim == 1:
         shockmask = (r <= shockr)
@@ -386,7 +393,7 @@ def compute_shock_postprocessing(shock_dictionary: dict,
     else:
         while r.ndim <= shockr.ndim:
             r = r[None, :]
-        shockmask = (r <= shockr)
+        shockmask = (r <= shockr[..., None])
         idx_shock = np.argmax(r >= shockr[..., None], axis=-1)
     dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     mhd_ene = simulation.MHD_energy(file_name) + \
@@ -496,7 +503,7 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
     shock_dictionary['global']['ej_rye_055'].append(np.nansum(centroid[unbound_mask & (ye >= 0.55)]) / 
                                                     shock_dictionary['global']['ej_ye_055'][-1])
     ## add variables at the surface
-    shock_dictionary['local']['r'].append(shock_radius)
+    shock_dictionary['local']['r'].append(shock_radius[..., None])
     if simulation.dim == 1:
         shock_dictionary['local']['m'].append(shock_dictionary['global']['mass'][-1])
         shock_dictionary['local']['m_unb'].append(shock_dictionary['global']['mass_unb'][-1])
@@ -518,38 +525,38 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
         itheta = np.arange(vr.shape[0])
         shock_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                          axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['m_unb'].append(np.nansum(np.where(unbound_mask,
                                                                         dmass,
-                                                                        0), axis=-1))
+                                                                        0), axis=-1)[..., None])
         shock_dictionary['local']['eunb'].append(np.nansum(np.where(unbound_mask,
                                                                         mhd_ene * dV,
-                                                                        0), axis=-1))
+                                                                        0), axis=-1)[..., None])
         shock_dictionary['local']['ei'].append(np.nancumsum(int_en,
                                                          axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['ei_unb'].append(np.nansum(np.where(unbound_mask,
-                                                                        int_en, 0), axis=-1))
+                                                                        int_en, 0), axis=-1)[..., None])
         shock_dictionary['local']['er'].append(np.nancumsum(0.5 * dmass * 
                                                             vr ** 2,
                                                          axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['er_unb'].append(np.nansum(np.where(unbound_mask,
-                                                                        0.5 * dmass[unbound_mask] * 
-                                                                        vr[unbound_mask] ** 2,
-                                                                        0), axis=-1))
+                                                                        0.5 * dmass * 
+                                                                        vr ** 2,
+                                                                        0), axis=-1)[..., None])
         shock_dictionary['local']['eg'].append(np.nancumsum(grav_en,
                                                          axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['eg_unb'].append(np.nansum(np.where(unbound_mask,
                                                                          grav_en,
-                                                                        0), axis=-1))
+                                                                        0), axis=-1)[..., None])
         shock_dictionary['local']['nu_heat'].append(np.nancumsum(nu_heat * dV,
                                                          axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['nu_heat_unb'].append(np.nansum(np.where(unbound_mask,
                                                                          nu_heat * dV,
-                                                                        0), axis=-1))
+                                                                        0), axis=-1)[..., None])
     elif simulation.dim == 3:
         itheta = np.arange(vr.shape[1])
         iphi = np.arange(vr.shape[0])
@@ -574,8 +581,8 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
                                                             axis=-1)[iphi, itheta,
                                                             indx_shock])
         shock_dictionary['local']['er_unb'].append(np.nansum(np.where(unbound_mask,
-                                                                        0.5 * dmass[unbound_mask] * 
-                                                                        vr[unbound_mask] ** 2,
+                                                                        0.5 * dmass * 
+                                                                        vr ** 2,
                                                                         0), axis=-1))
         shock_dictionary['local']['eg'].append(np.nancumsum(grav_en,
                                                             axis=-1)[iphi, itheta,
@@ -643,8 +650,8 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
                   np.nansum((dmass[unbound_mask] * vp[unbound_mask])) ** 2) / \
                   np.nansum(dmass[unbound_mask] * vtot[unbound_mask])
     
-    eth = (0.5 * vt ** 2 * dV).to(u.erg)
-    eph = (0.5 * vp ** 2 * dV).to(u.erg)
+    eth = (0.5 * vt ** 2 * dmass).to(u.erg)
+    eph = (0.5 * vp ** 2 * dmass).to(u.erg)
     jx = np.nansum(Lx[shock_mask])
     jy = np.nansum(Ly[shock_mask])
     jz = np.nansum(Lz[shock_mask])
@@ -668,9 +675,9 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
     shock_dictionary['global']['alpha_ej'].append(alpha_ej)
     shock_dictionary['global']['alpha_mom'].append(Pej)
     shock_dictionary['local']['et_unb'].append(np.nansum(np.where(unbound_mask,
-                                                                  eth, 0), axis=-1))
+                                                                  eth, 0), axis=-1)[..., None])
     shock_dictionary['local']['ep_unb'].append(np.nansum(np.where(unbound_mask,
-                                                                  eph, 0), axis=-1))
+                                                                  eph, 0), axis=-1)[..., None])
     if simulation.dim == 2:
         itheta = np.arange(eth.shape[0])
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
@@ -680,9 +687,9 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
         shock_dictionary['global']['I_unb'].append(np.nansum((dmass.to(u.g) * 
                                                                 rperp2)[unbound_mask]))
         shock_dictionary['local']['et'].append(np.nancumsum(eth,axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
         shock_dictionary['local']['ep'].append(np.nancumsum(eph,axis=-1)[itheta,
-                                                            indx_shock])
+                                                            indx_shock][..., None])
 
     elif simulation.dim == 3:
         iphi = np.arange(eth.shape[0])[:, None]
@@ -704,16 +711,16 @@ def __compute_2D_global_local_quantities(shock_dictionary: dict,
         shock_dictionary['global']['ebr_unb'].append(np.nansum(ebr[unbound_mask]))
         shock_dictionary['global']['ebt_unb'].append(np.nansum(ebt[unbound_mask]))
         shock_dictionary['global']['ebp_unb'].append(np.nansum(ebp[unbound_mask]))
-        shock_dictionary['local']['ebr_unb'].append(np.nansum(ebr[unbound_mask], axis=-1))
-        shock_dictionary['local']['ebt_unb'].append(np.nansum(ebt[unbound_mask], axis=-1))
-        shock_dictionary['local']['ebp_unb'].append(np.nansum(ebp[unbound_mask], axis=-1))
+        shock_dictionary['local']['ebr_unb'].append(np.nansum(ebr[unbound_mask], axis=-1)[..., None])
+        shock_dictionary['local']['ebt_unb'].append(np.nansum(ebt[unbound_mask], axis=-1)[..., None])
+        shock_dictionary['local']['ebp_unb'].append(np.nansum(ebp[unbound_mask], axis=-1)[..., None])
         if simulation.dim == 2:
             shock_dictionary['local']['ebr'].append(np.nancumsum(ebr, axis=-1)[itheta,
-                                                                    indx_shock])
+                                                                    indx_shock][..., None])
             shock_dictionary['local']['ebt'].append(np.nancumsum(ebt, axis=-1)[itheta,
-                                                                    indx_shock])
+                                                                    indx_shock][..., None])
             shock_dictionary['local']['ebp'].append(np.nancumsum(ebp, axis=-1)[itheta,
-                                                                    indx_shock])
+                                                                    indx_shock][..., None])
         elif simulation.dim == 3:
             shock_dictionary['local']['ebr'].append(np.nancumsum(ebr,
                                                                 axis=-1)[iphi,

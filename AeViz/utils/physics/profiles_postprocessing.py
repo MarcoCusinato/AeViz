@@ -156,11 +156,11 @@ def __compute_2D_profiles(profiles_dictionary: dict,
     
     def rms_quantity(qt, simulation, file_name):
         quant = getattr(simulation, qt)(file_name, diff=True, norm=False)
-        nm, lb, cb, lm, lg = quant.name, quant.label, quant.cbar, quant.limits, quant.log
+        nm, lb, cb, lm, lg = quant.name, quant.label, quant.cmap, quant.limits, quant.log
         nm = 'profile_' + nm
         lb = merge_strings(r'$\sqrt{$', lb, r'$^2}$')
         qt_rms = np.sqrt(simulation.grid.omega_average(quant ** 2))
-        qt_rms.set(name=nm, label=lb, cbar=cb, limits=lm, log=lg)
+        qt_rms.set(name=nm, label=lb, cmap=cb, limits=lm, log=lg)
         return qt_rms
 
     vr = simulation.radial_velocity(file_name)

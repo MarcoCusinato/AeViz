@@ -376,7 +376,7 @@ class grid:
         components = self.__vector_components(quantity)
         ccart = self.spherical_to_cartesian(components[0], components[1],
                                             components[2])
-        proj = n[0] * ccart[0] + n[1] * ccart[1] + n[2] * ccart[3]
+        proj = n[0] * ccart[0] + n[1] * ccart[1] + n[2] * ccart[2]
         if isinstance(components[0], aerray):
             tag = axis.lower() if isinstance(axis, str) else 'n'
             proj.set(name=f"{components[0].name}_proj_{tag}",

@@ -9,7 +9,7 @@ import re
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
 checkpoints = {
     1: 50,
-    2: 400,
+    2: 50,
     3: 20
 }
 

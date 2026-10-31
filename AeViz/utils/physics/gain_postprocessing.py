@@ -87,8 +87,7 @@ def declare_gain_dictionary(dim: int,
                 gain_dictionary['global'][key] = []
                 gain_dictionary['local'][key] = []
 
-            for key in ('ebtot', 'ebtot_unb', 'ebpol', 'ebtor',
-                        'ebpol_unb', 'ebtor_unb'):
+            for key in ('ebtot', 'ebtot_unb'):
                 gain_dictionary['global'][key] = []
 
     return gain_dictionary
@@ -572,14 +571,14 @@ def compute_gain_postprocessing(gain_dictionary: dict,
                                 Lz: aerray | None,) -> None:
     gainr = gain_radius(simulation,
                         file_name,
-                        PNS_radius)
+                        PNS_radius[..., 0])
     radius = simulation.grid.radius
     if simulation.dim >1:
         while radius.ndim <= gainr.ndim:
             radius = radius[None, :]
     mhd_ene = simulation.MHD_energy(file_name) + \
             2 * simulation.gravitational_energy(file_name)
-    gain_mask = (radius >= gainr) & (radius <= shock_radius)
+    gain_mask = (radius >= gainr[..., None]) & (radius <= shock_radius)
     unbound_mask = gain_mask & (mhd_ene > 0) & \
         (simulation.radial_velocity(file_name) > 0)
     __compute_1D_global_local_quantities(gain_dictionary,
@@ -629,19 +628,19 @@ def __compute_1D_global_local_quantities(gain_dictionary: dict,
     gain_dictionary['global']['tadv'].append(simulation.grid.radii_angular_average(tadv_gain))
     gain_dictionary['global']['tadv_unb'].append(simulation.grid.radii_angular_average(tadv_unb))
 
-    gain_dictionary['local']['r'].append(gain_radius)
-    gain_dictionary['local']['er'].append(np.nansum(gain_mask * ekin_r * gain_mask, axis=-1))
-    gain_dictionary['local']['er_unb'].append(np.nansum(gain_mask * ekin_r * unbound_mask, axis=-1))
-    gain_dictionary['local']['eg'].append(np.nansum(gain_mask * grav_en * gain_mask, axis=-1))
-    gain_dictionary['local']['eg_unb'].append(np.nansum(gain_mask * grav_en * unbound_mask, axis=-1))
-    gain_dictionary['local']['ei'].append(np.nansum(gain_mask * int_en * gain_mask, axis=-1))
-    gain_dictionary['local']['ei_unb'].append(np.nansum(gain_mask * int_en * unbound_mask, axis=-1))
-    gain_dictionary['local']['nu_heat'].append(np.nansum(gain_mask * nu_heat * gain_mask, axis=-1))
-    gain_dictionary['local']['nu_heat_unb'].append(np.nansum(gain_mask * nu_heat * unbound_mask, axis=-1))
-    gain_dictionary['local']['tadv_unb'].append(tadv_unb)
-    gain_dictionary['local']['tadv'].append(tadv_gain)
-    gain_dictionary['local']['mass'].append(np.nansum(mass * gain_mask, axis=-1))
-    gain_dictionary['local']['mass_unb'].append(np.nansum(mass * unbound_mask, axis=-1))
+    gain_dictionary['local']['r'].append(gain_radius[..., None])
+    gain_dictionary['local']['er'].append(np.nansum(gain_mask * ekin_r * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['er_unb'].append(np.nansum(gain_mask * ekin_r * unbound_mask, axis=-1)[..., None])
+    gain_dictionary['local']['eg'].append(np.nansum(gain_mask * grav_en * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['eg_unb'].append(np.nansum(gain_mask * grav_en * unbound_mask, axis=-1)[..., None])
+    gain_dictionary['local']['ei'].append(np.nansum(gain_mask * int_en * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['ei_unb'].append(np.nansum(gain_mask * int_en * unbound_mask, axis=-1)[..., None])
+    gain_dictionary['local']['nu_heat'].append(np.nansum(gain_mask * nu_heat * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['nu_heat_unb'].append(np.nansum(gain_mask * nu_heat * unbound_mask, axis=-1)[..., None])
+    gain_dictionary['local']['tadv_unb'].append(tadv_unb[..., None])
+    gain_dictionary['local']['tadv'].append(tadv_gain[..., None])
+    gain_dictionary['local']['mass'].append(np.nansum(mass * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['mass_unb'].append(np.nansum(mass * unbound_mask, axis=-1)[..., None])
 
     gain_dictionary['global']['er'].append(np.nansum(gain_dictionary['local']['er'][-1]))
     gain_dictionary['global']['er_unb'].append(np.nansum(gain_dictionary['local']['er_unb'][-1]))
@@ -688,10 +687,10 @@ def __compute_2D_global_local_quantities(gain_dictionary: dict,
     gain_dictionary['global']['jz_unb'].append(jz_unb)
     gain_dictionary['global']['jtot_unb'].append(jtot_unb)
 
-    gain_dictionary['local']['et'].append(np.nansum(et * gain_mask, axis=-1))
-    gain_dictionary['local']['ep'].append(np.nansum(ep * gain_mask, axis=-1))
-    gain_dictionary['local']['et_unb'].append(np.nansum(et * unbound_mask, axis=-1))
-    gain_dictionary['local']['ep_unb'].append(np.nansum(ep * unbound_mask, axis=-1))
+    gain_dictionary['local']['et'].append(np.nansum(et * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['ep'].append(np.nansum(ep * gain_mask, axis=-1)[..., None])
+    gain_dictionary['local']['et_unb'].append(np.nansum(et * unbound_mask, axis=-1)[..., None])
+    gain_dictionary['local']['ep_unb'].append(np.nansum(ep * unbound_mask, axis=-1)[..., None])
 
     gain_dictionary['global']['et'].append(np.nansum(gain_dictionary['local']['et'][-1]))
     gain_dictionary['global']['ep'].append(np.nansum(gain_dictionary['local']['ep'][-1]))
@@ -704,12 +703,12 @@ def __compute_2D_global_local_quantities(gain_dictionary: dict,
         ebr = br ** 2 * 0.5 / c.mu0 * dV
         ebt = bt ** 2 * 0.5 / c.mu0 * dV
         ebp = bp ** 2 * 0.5 / c.mu0 * dV
-        gain_dictionary['local']['ebr'].append(np.nansum(ebr * gain_mask, axis=-1))
-        gain_dictionary['local']['ebt'].append(np.nansum(ebt * gain_mask, axis=-1))
-        gain_dictionary['local']['ebp'].append(np.nansum(ebp * gain_mask, axis=-1))
-        gain_dictionary['local']['ebr_unb'].append(np.nansum(ebr * unbound_mask, axis=-1))
-        gain_dictionary['local']['ebt_unb'].append(np.nansum(ebt * unbound_mask, axis=-1))
-        gain_dictionary['local']['ebp_unb'].append(np.nansum(ebp * unbound_mask, axis=-1))
+        gain_dictionary['local']['ebr'].append(np.nansum(ebr * gain_mask, axis=-1)[..., None])
+        gain_dictionary['local']['ebt'].append(np.nansum(ebt * gain_mask, axis=-1)[..., None])
+        gain_dictionary['local']['ebp'].append(np.nansum(ebp * gain_mask, axis=-1)[..., None])
+        gain_dictionary['local']['ebr_unb'].append(np.nansum(ebr * unbound_mask, axis=-1)[..., None])
+        gain_dictionary['local']['ebt_unb'].append(np.nansum(ebt * unbound_mask, axis=-1)[..., None])
+        gain_dictionary['local']['ebp_unb'].append(np.nansum(ebp * unbound_mask, axis=-1)[..., None])
 
         gain_dictionary['global']['ebr'].append(np.nansum(gain_dictionary['local']['ebr'][-1]))
         gain_dictionary['global']['ebt'].append(np.nansum(gain_dictionary['local']['ebt'][-1]))

@@ -376,11 +376,11 @@ def compute_PNScore_postprocessing(PNScore_dictionary: dict,
     r = simulation.cell.radius(simulation.ghost)
     if simulation.dim == 1:
         PNScmask = (r <= PNScr)
-        idx_pns = np.argmax(r >= PNScr)
+        idx_cpns = np.argmax(r >= PNScr)
     else:
         while r.ndim <= PNScr.ndim:
             r = r[None, :]
-        PNScmask = (r <= PNScr)
+        PNScmask = (r <= PNScr[..., None])
         idx_cpns = np.argmax(r >= PNScr[..., None], axis=-1)
     dmass = (simulation.rho(file_name) * dV).to(u.M_sun)
     __compute_1D_global_local_quantities(PNScore_dictionary,
@@ -389,7 +389,7 @@ def compute_PNScore_postprocessing(PNScore_dictionary: dict,
                                          dV,
                                          dOmega,
                                          PNScmask,
-                                         idx_pns,
+                                         idx_cpns,
                                          PNScr,
                                          dmass)
     if simulation.dim > 1:
@@ -397,7 +397,7 @@ def compute_PNScore_postprocessing(PNScore_dictionary: dict,
                                             simulation,
                                             file_name,
                                             PNScmask,
-                                            idx_pns,
+                                            idx_cpns,
                                             dV,
                                             Lx,
                                             Ly,
@@ -408,7 +408,7 @@ def compute_PNScore_postprocessing(PNScore_dictionary: dict,
                                             simulation,
                                             file_name,
                                             PNScmask,
-                                            idx_pns,
+                                            idx_cpns,
                                             dmass,
                                             dV)
 
@@ -477,7 +477,7 @@ def __compute_1D_global_local_quantities(PNScore_dictionary: dict,
     
     
     ## add variables at the surface
-    PNScore_dictionary['local']['r'].append(PNScore_radius)
+    PNScore_dictionary['local']['r'].append(PNScore_radius[..., None])
     if simulation.dim == 1:
         PNScore_dictionary['local']['rho'].append(rho[indx_pns])
         PNScore_dictionary['local']['ye'].append(ye[indx_pns])
@@ -493,22 +493,22 @@ def __compute_1D_global_local_quantities(PNScore_dictionary: dict,
                                                         rperp2)[PNScore_mask]))
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
-        PNScore_dictionary['local']['s'].append(rho[itheta, indx_pns])
-        PNScore_dictionary['local']['ye'].append(ye[itheta, indx_pns])
-        PNScore_dictionary['local']['t'].append(t[itheta, indx_pns])
-        PNScore_dictionary['local']['p'].append(p[itheta, indx_pns])
-        PNScore_dictionary['local']['vr'].append(vr[itheta, indx_pns])
-        PNScore_dictionary['local']['mflux'].append(mflux[itheta, indx_pns])
+        PNScore_dictionary['local']['rho'].append(rho[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['ye'].append(ye[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['t'].append(t[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['p'].append(p[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['vr'].append(vr[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['mflux'].append(mflux[itheta, indx_pns][..., None])
         PNScore_dictionary['local']['m'].append(np.nancumsum(dmass,
                                                          axis=-1)[itheta,
-                                                            indx_pns])
+                                                            indx_pns][..., None])
         PNScore_dictionary['global']['mflux'].append(np.nansum(mflux[itheta,
                                                                  indx_pns] *
-                                                                   dOmega))
+                                                                   dOmega)[..., None])
     elif simulation.dim == 3:
             itheta = np.arange(p.shape[1])
             iphi = np.arange(p.shape[0])
-            PNScore_dictionary['local']['s'].append(rho[iphi, itheta, indx_pns])
+            PNScore_dictionary['local']['rho'].append(rho[iphi, itheta, indx_pns])
             PNScore_dictionary['local']['ye'].append(ye[iphi, itheta, indx_pns])
             PNScore_dictionary['local']['t'].append(t[iphi, itheta, indx_pns])
             PNScore_dictionary['local']['p'].append(p[iphi, itheta, indx_pns])
@@ -579,11 +579,11 @@ def __compute_2D_global_local_quantities(PNScore_dictionary: dict,
         rperp2 = (simulation.cell.radius(simulation.ghost)[None, :] *
                           np.sin(simulation.cell.theta(simulation.ghost))[:, None]) ** 2
         omg = simulation.omega(file_name)
-        PNScore_dictionary['local']['vt'].append(vth[itheta, indx_pns])
-        PNScore_dictionary['local']['vp'].append(vph[itheta, indx_pns])
-        PNScore_dictionary['local']['omg'].append(omg[itheta, indx_pns])
+        PNScore_dictionary['local']['vt'].append(vth[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['vp'].append(vph[itheta, indx_pns][..., None])
+        PNScore_dictionary['local']['omg'].append(omg[itheta, indx_pns][..., None])
         PNScore_dictionary['global']['I'].append(np.nansum((dmass * 
-                                                        rperp2)[PNScore_mask]))
+                                                        rperp2)[PNScore_mask])[..., None])
     elif simulation.dim == 3:
         iphi = np.arange(vth.shape[0])[:, None]
         itheta = np.arange(vth.shape[1])[None, :]
@@ -594,12 +594,12 @@ def __compute_2D_global_local_quantities(PNScore_dictionary: dict,
         btot = np.sqrt(br ** 2 + bt ** 2 + bp ** 2)
         p = simulation.gas_pressure(file_name)
         if simulation.dim == 2:
-            PNScore_dictionary['local']['br'].append(br[itheta, indx_pns])
-            PNScore_dictionary['local']['bt'].append(bt[itheta, indx_pns])
-            PNScore_dictionary['local']['bp'].append(bp[itheta, indx_pns])
-            PNScore_dictionary['local']['beta'].append(p[itheta, indx_pns] / 
+            PNScore_dictionary['local']['br'].append(br[itheta, indx_pns][..., None])
+            PNScore_dictionary['local']['bt'].append(bt[itheta, indx_pns][..., None])
+            PNScore_dictionary['local']['bp'].append(bp[itheta, indx_pns][..., None])
+            PNScore_dictionary['local']['beta'].append((p[itheta, indx_pns] / 
                                                    (0.5 * btot[itheta, indx_pns] ** 2 /
-                                                    c.mu0))
+                                                    c.mu0))[...,None])
         elif simulation.dim == 3:
             PNScore_dictionary['local']['br'].append(br[iphi, itheta, indx_pns])
             PNScore_dictionary['local']['bt'].append(bt[iphi, itheta, indx_pns])
