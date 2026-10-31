@@ -210,11 +210,21 @@ def save_merge_dictionary_hdf(simulation: Simulation,
     time = np.concatenate(time)
     if keys is not None:
         for key in keys:
-            out_dictionary[key] = {kk: np.concatenate(vv) for (kk, vv) 
-                                    in out_dictionary[key].items()}
+            try:
+                out_dictionary[key] = {kk: np.concatenate(vv, axis=-1) for (kk, vv) 
+                                        in out_dictionary[key].items()}
+            except:
+                for kk, vv in out_dictionary[key].items():
+                    print(key, kk, vv)
+                    out_dictionary[key][kk] = np.concatenate(vv)
     else:
-        out_dictionary = {kk: np.stack(vv, axis=-1) for (kk, vv) 
+        try:
+            out_dictionary = {kk: np.concatenate(vv, axis=-1) for (kk, vv) 
                           in out_dictionary.items()}
+        except:
+            for kk, vv in out_dictionary.items():
+                print(kk, vv)
+                np.concatenate(vv, axis=-1)
     if check_existence(simulation, os.path.join(save_path, file_name)):
         old_t, old_dict, _ = load_hdf_to_dictionary(save_path,
                                                     file_name,
@@ -233,7 +243,7 @@ def save_merge_dictionary_hdf(simulation: Simulation,
                     cm = old_dict[key][kk].cmap
                     out_dictionary[key][kk] = \
                         np.concatenate((old_dict[key][kk],
-                                       out_dictionary[key][kk]))
+                                       out_dictionary[key][kk]), axis=-1)
                     out_dictionary[key][kk].set(name=nm, label=lb,
                                                 limits=lm, log=lg,
                                                 cmap=cm)
@@ -246,7 +256,7 @@ def save_merge_dictionary_hdf(simulation: Simulation,
                 cm = old_dict[kk].cmap
                 out_dictionary[kk] = \
                     np.concatenate((old_dict[kk],
-                                    out_dictionary[kk]))
+                                    out_dictionary[kk]), axis=-1)
                 out_dictionary[kk].set(name=nm, label=lb,
                                         limits=lm, log=lg,
                                         cmap=cm)            
@@ -263,7 +273,7 @@ def save_merge_dictionary_hdf(simulation: Simulation,
     out_keys = ['time', 'processed_hdf']
     out_keys.extend(list(out_dictionary.keys()))
     out_dict = [time, processed_hdf]
-    out_dict.extend(list(out_dict.values()))
+    out_dict.extend(list(out_dictionary.values()))
     save_hdf(os.path.join(save_path, file_name),
                 out_keys, out_dict)
 

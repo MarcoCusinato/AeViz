@@ -53,6 +53,9 @@ def supernova_postprocessing(simulation: Simulation,
         pns_processed = load_dataset(simulation.storage_path, 
                                      'PNS_postprocessing.h5',
                                      'processed_hdf', False)
+        if len(pns_processed) == len(file_list) and \
+            pns_processed[-1] == file_list[-1]:
+            return None
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
@@ -91,6 +94,8 @@ def supernova_postprocessing(simulation: Simulation,
         if simulation.dim == 1:
             jx, jy, jz = None, None, None
             jtot = None
+            shell_jx, shell_jy, shell_jz = None, None, None
+            shell_jtot = None
         else:
             vr = simulation.radial_velocity(file_name)
             vt = simulation.theta_velocity(file_name)
@@ -139,11 +144,11 @@ def supernova_postprocessing(simulation: Simulation,
         compute_shock_postprocessing(shock_dict, simulation,
                                      file_name, dV,
                                      jx, jy, jz,
-                                     PNS_dict['r'][-1],
-                                     innercore_dict['r'][-1])
+                                     PNS_dict['local']['r'][-1],
+                                     innercore_dict['local']['r'][-1])
         compute_gain_postprocessing(gain_dict, simulation,
-                                    file_name, dV, PNS_dict['r'][-1],
-                                    shock_dict['r'][-1], jx, jy, jz)
+                                    file_name, dV, PNS_dict['local']['r'][-1],
+                                    shock_dict['local']['r'][-1], jx, jy, jz)
         global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
@@ -197,6 +202,8 @@ def supernova_postprocessing(simulation: Simulation,
             check_index += 1
 
     print('Done, saving files...\n')
+    if not profiles_metadata:
+        profiles_metadata = create_profiles_metadata(profiles_dict)
     save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
                                          pns_processed),
                               simulation.storage_path,
@@ -209,7 +216,8 @@ def supernova_postprocessing(simulation: Simulation,
                                  **pnscore_metadata)
     save_merge_dictionary_hdf(simulation, (global_time, PNS_dict, pns_processed),
                                 simulation.storage_path,
-                                'PNS_postprocessing.h5', **pns_metadata)
+                                'PNS_postprocessing.h5', ['global', 'local'],
+                                **pns_metadata)
     save_merge_dictionary_hdf(simulation, (global_time, innercore_dict,
                                             pns_processed),
                                 simulation.storage_path,

@@ -33,8 +33,7 @@ def declare_profiles_dictionary(dim: int,
         'Ye_profile': [],
         'soundspeed_profile': [],
         'internal_energy_profile': [],
-        'gravitational_potential_profile': [],
-        'convective_flux_profile': [],
+        'gravitational_potential_profile': []
     }
     if dim > 1:
         profiles_dictionary['theta_velocity_profile'] = []
@@ -42,6 +41,7 @@ def declare_profiles_dictionary(dim: int,
         profiles_dictionary['radial_velocity_rms_profile'] = []
         profiles_dictionary['theta_velocity_rms_profile'] = []
         profiles_dictionary['phi_velocity_rms_profile'] = []
+        profiles_dictionary['convective_flux_profile'] = []
         profiles_dictionary['angular_momentum_x_profile'] = []
         profiles_dictionary['angular_momentum_y_profile'] = []
         profiles_dictionary['angular_momentum_z_profile'] = []
@@ -79,7 +79,7 @@ def create_profiles_metadata(profile_dictionary:dict) -> dict:
             limits=value[0].limits,
             cmap=value[0].cmap,
             log=value[0].log
-         ) for key, value in profile_dictionary.items
+         ) for key, value in profile_dictionary.items()
     }
     return meta
 
@@ -95,33 +95,34 @@ def compute_profiles_postprocessing(profiles_dictionary: dict,
                                     X_perp: np.array,
                                     eR: np.array,
                                     grid_unit: u) -> None:
-    __compute_1D_global_local_quantities(profiles_dictionary,
-                                         simulation,
-                                         file_name,
-                                         I)
+    __compute_1D_profiles(profiles_dictionary,
+                          simulation,
+                          file_name,
+                          I)
     if simulation.dim > 1:
-        __compute_2D_global_local_quantities(profiles_dictionary,
-                                             simulation,
-                                             file_name,
-                                             jx,
-                                             jy,
-                                             jz,
-                                             jtot)
+        __compute_2D_profiles(profiles_dictionary,
+                              simulation,
+                              file_name,
+                              jx,
+                              jy,
+                              jz,
+                              jtot)
     if simulation.dim > 2:
-        __compute_3D_global_local_quantities(profiles_dictionary,
-                                             simulation,
-                                             file_name,
-                                             n,
-                                             X_perp,
-                                             eR,
-                                             grid_unit)
+        __compute_3D_profiles(profiles_dictionary,
+                              simulation,
+                              file_name,
+                              n,
+                              X_perp,
+                              eR,
+                              grid_unit)
 
-def __compute_1D_global_local_quantities(profiles_dictionary: dict,
+def __compute_1D_profiles(profiles_dictionary: dict,
                                         simulation: Simulation,
                                         file_name: str,
                                         I: aerray) -> None:
     
-    I_prof = np.nansum(I, axis=range(simulation.dim - 1)).to(u.g / u.cm ** 2)
+    I_prof = np.nansum(I, axis=tuple(range(
+        simulation.dim - 1))).to(u.g * u.cm ** 2)
     I_prof.set(name='inertia_moment_profile', label=r'$I(r)$',
                cmap='cividis', limits=[1e13, 1e30], log=True)
     vr =   simulation.grid.omega_average(simulation.radial_velocity(file_name))
@@ -133,21 +134,19 @@ def __compute_1D_global_local_quantities(profiles_dictionary: dict,
     cs =   simulation.grid.omega_average(simulation.soundspeed(file_name))
     eint = simulation.grid.omega_average(simulation.internal_energy(file_name))
     gpot = simulation.grid.omega_average(simulation.gravitational_potential(file_name))
-    fconv = simulation.convective_flux(file_name)
 
-    profiles_dictionary['inertia_profile'].append(I_prof)
-    profiles_dictionary['radial_velocity_profile'].append(vr)
-    profiles_dictionary['rho_profile'].append(rho)
-    profiles_dictionary['temperature_profile'].append(t)
-    profiles_dictionary['gas_pressure_profile'].append(p)
-    profiles_dictionary['entropy_profile'].append(s)
-    profiles_dictionary['Ye_profile'].append(ye)
-    profiles_dictionary['soundspeed_profile'].append(cs)
-    profiles_dictionary['internal_energy_profile'].append(eint)
-    profiles_dictionary['gravitational_potential_profile'].append(gpot)    
-    profiles_dictionary['convective_flux_profile'].append(fconv)
+    profiles_dictionary['inertia_profile'].append(I_prof[..., None])
+    profiles_dictionary['radial_velocity_profile'].append(vr[..., None])
+    profiles_dictionary['rho_profile'].append(rho[..., None])
+    profiles_dictionary['temperature_profile'].append(t[..., None])
+    profiles_dictionary['gas_pressure_profile'].append(p[..., None])
+    profiles_dictionary['entropy_profile'].append(s[..., None])
+    profiles_dictionary['Ye_profile'].append(ye[..., None])
+    profiles_dictionary['soundspeed_profile'].append(cs[..., None])
+    profiles_dictionary['internal_energy_profile'].append(eint[..., None])
+    profiles_dictionary['gravitational_potential_profile'].append(gpot[..., None])
 
-def __compute_2D_global_local_quantities(profiles_dictionary: dict,
+def __compute_2D_profiles(profiles_dictionary: dict,
                                         simulation: Simulation,
                                         file_name: str,
                                         jx: aerray,
@@ -167,6 +166,7 @@ def __compute_2D_global_local_quantities(profiles_dictionary: dict,
     vr = simulation.radial_velocity(file_name)
     vt = simulation.theta_velocity(file_name)
     vp = simulation.phi_velocity(file_name)
+    fconv = simulation.convective_flux(file_name)
     rho = simulation.rho(file_name)
     vr_rms = rms_quantity('radial_velocity', simulation, file_name)
     vt_rms = rms_quantity('theta_velocity', simulation, file_name)
@@ -209,24 +209,25 @@ def __compute_2D_global_local_quantities(profiles_dictionary: dict,
     vortensity_z.set(name='vortensity_z', label=r'$\xi_z$',
                      cmap='seismic', limits=[-1e14, 1e14], log=True)
 
-    profiles_dictionary['theta_velocity_profile'].append(simulation.grid.omega_average(vt))
-    profiles_dictionary['phi_velocity_profile'].append(simulation.grid.omega_average(vp))
-    profiles_dictionary['radial_velocity_rms_profile'].append(vr_rms)
-    profiles_dictionary['theta_velocity_rms_profile'].append(vt_rms)
-    profiles_dictionary['phi_velocity_rms_profile'].append(vp_rms)
-    profiles_dictionary['angular_momentum_x_profile'].append(jx)
-    profiles_dictionary['angular_momentum_y_profile'].append(jy)
-    profiles_dictionary['angular_momentum_z_profile'].append(jz)
-    profiles_dictionary['angular_momentum_tot_profile'].append(jtot)
-    profiles_dictionary['vorticity_magnitude_profile'].append(simulation.grid.omega_average(vort_mag))
-    profiles_dictionary['vorticity_x_profile'].append(simulation.grid.omega_average(vort_x))
-    profiles_dictionary['vorticity_y_profile'].append(simulation.grid.omega_average(vort_y))
-    profiles_dictionary['vorticity_z_profile'].append(simulation.grid.omega_average(vort_z))
-    profiles_dictionary['vortensity_magnitude_profile'].append(simulation.grid.omega_average(vortens_mag))
-    profiles_dictionary['vortensity_x_profile'].append(simulation.grid.omega_average(vortensity_x))
-    profiles_dictionary['vortensity_y_profile'].append(simulation.grid.omega_average(vortensity_y))
-    profiles_dictionary['vortensity_z_profile'].append(simulation.grid.omega_average(vortensity_z))
-    profiles_dictionary['enstrophy_profile'].append(simulation.grid.omega_average(enstrophy))
+    profiles_dictionary['theta_velocity_profile'].append(simulation.grid.omega_average(vt)[..., None])
+    profiles_dictionary['phi_velocity_profile'].append(simulation.grid.omega_average(vp)[..., None])
+    profiles_dictionary['radial_velocity_rms_profile'].append(vr_rms[..., None])
+    profiles_dictionary['theta_velocity_rms_profile'].append(vt_rms[..., None])
+    profiles_dictionary['phi_velocity_rms_profile'].append(vp_rms[..., None])
+    profiles_dictionary['convective_flux_profile'].append(fconv[..., None])
+    profiles_dictionary['angular_momentum_x_profile'].append(jx[..., None])
+    profiles_dictionary['angular_momentum_y_profile'].append(jy[..., None])
+    profiles_dictionary['angular_momentum_z_profile'].append(jz[..., None])
+    profiles_dictionary['angular_momentum_tot_profile'].append(jtot[..., None])
+    profiles_dictionary['vorticity_magnitude_profile'].append(simulation.grid.omega_average(vort_mag)[..., None])
+    profiles_dictionary['vorticity_x_profile'].append(simulation.grid.omega_average(vort_x)[..., None])
+    profiles_dictionary['vorticity_y_profile'].append(simulation.grid.omega_average(vort_y)[..., None])
+    profiles_dictionary['vorticity_z_profile'].append(simulation.grid.omega_average(vort_z)[..., None])
+    profiles_dictionary['vortensity_magnitude_profile'].append(simulation.grid.omega_average(vortens_mag)[..., None])
+    profiles_dictionary['vortensity_x_profile'].append(simulation.grid.omega_average(vortensity_x)[..., None])
+    profiles_dictionary['vortensity_y_profile'].append(simulation.grid.omega_average(vortensity_y)[..., None])
+    profiles_dictionary['vortensity_z_profile'].append(simulation.grid.omega_average(vortensity_z)[..., None])
+    profiles_dictionary['enstrophy_profile'].append(simulation.grid.omega_average(enstrophy)[..., None])
 
     if simulation.dim == 2:
         kappa = simulation.epicyclic_frequency(file_name)
@@ -241,11 +242,11 @@ def __compute_2D_global_local_quantities(profiles_dictionary: dict,
         bv_freq = simulation.grid.omega_average(bv_freq)
         omega   = simulation.grid.omega_average(simulation.omega(file_name))
         rossby  = simulation.grid.omega_average(simulation.Rossby_number(file_name))
-        profiles_dictionary['omega_profile'].append(omega)
-        profiles_dictionary['Solberg_Hoiland_profile'].append(simulation.grid.omega_average(so_crit))
-        profiles_dictionary['Rossby_number'].append(rossby)
-        profiles_dictionary['BV_frequency_profile'].append(bv_freq)
-        profiles_dictionary['epicyclic_frequency_profile'].append(kappa)
+        profiles_dictionary['omega_profile'].append(omega[..., None])
+        profiles_dictionary['Solberg_Hoiland_profile'].append(simulation.grid.omega_average(so_crit)[..., None])
+        profiles_dictionary['Rossby_number'].append(rossby[..., None])
+        profiles_dictionary['BV_frequency_profile'].append(bv_freq[..., None])
+        profiles_dictionary['epicyclic_frequency_profile'].append(kappa[..., None])
 
     if simulation.evolved_qts['magdim'] > 0:
         br, bt, bp = simulation.magnetic_fields(file_name, comp='all')
@@ -259,19 +260,19 @@ def __compute_2D_global_local_quantities(profiles_dictionary: dict,
         br =   simulation.grid.omega_average(br)
         bt =   simulation.grid.omega_average(bt)
         bp =   simulation.grid.omega_average(bp)
-        profiles_dictionary['magnetic_field_radial_profile'].append(br)
-        profiles_dictionary['magnetic_field_theta_profile'].append(bt)
-        profiles_dictionary['magnetic_field_phi_profile'].append(bp)
-        profiles_dictionary['magnetic_field_total_profile'].append(btot)
+        profiles_dictionary['magnetic_field_radial_profile'].append(br[..., None])
+        profiles_dictionary['magnetic_field_theta_profile'].append(bt[..., None])
+        profiles_dictionary['magnetic_field_phi_profile'].append(bp[..., None])
+        profiles_dictionary['magnetic_field_total_profile'].append(btot[..., None])
 
-def __compute_3D_global_local_quantities(profiles_dictionary: dict,
-                                        simulation: Simulation,
-                                        file_name: str,
-                                        n: np.array,
-                                        X_perp: np.array,
-                                        eR: np.array,
-                                        grid_unit: u
-                                        ) -> None:
+def __compute_3D_profiles(profiles_dictionary: dict,
+                          simulation: Simulation,
+                          file_name: str,
+                          n: np.array,
+                          X_perp: np.array,
+                          eR: np.array,
+                          grid_unit: u
+                          ) -> None:
     ephi = np.cross(n[:, None, None, :], eR, axis=0)
     
     vr = simulation.radial_velocity(file_name)
@@ -290,11 +291,11 @@ def __compute_3D_global_local_quantities(profiles_dictionary: dict,
     kappa_og   = simulation.grid.omega_average(kappa_og)
     omega_og   = simulation.omega(file_name)
     rossby_og  = simulation.grid.omega_average(simulation.Rossby_number(file_name))
-    profiles_dictionary['omega_profile'].append(simulation.grid.omega_average(omega_og))
-    profiles_dictionary['Solberg_Hoiland_profile'].append(simulation.grid.omega_average(so_crit_og))
-    profiles_dictionary['Rossby_number'].append(rossby_og)
-    profiles_dictionary['BV_frequency_profile'].append(simulation.grid.omega_average(bv_freq))
-    profiles_dictionary['epicyclic_frequency_profile'].append(kappa_og)
+    profiles_dictionary['omega_profile'].append(simulation.grid.omega_average(omega_og)[..., None])
+    profiles_dictionary['Solberg_Hoiland_profile'].append(simulation.grid.omega_average(so_crit_og)[..., None])
+    profiles_dictionary['Rossby_number'].append(rossby_og[..., None])
+    profiles_dictionary['BV_frequency_profile'].append(simulation.grid.omega_average(bv_freq)[..., None])
+    profiles_dictionary['epicyclic_frequency_profile'].append(kappa_og[..., None])
 
     ## Follow the shell axis
     r = simulation.grid.radius
@@ -340,11 +341,11 @@ def __compute_3D_global_local_quantities(profiles_dictionary: dict,
                 limits=bv_freq.limits,
                 cmap='seismic',
                 log=True)
-    profiles_dictionary['omega_axis_profile'].append(simulation.grid.omega_average(omg))
-    profiles_dictionary['Solberg_Hoiland_axis_profile'].append(simulation.grid.omega_average(so_crit))
-    profiles_dictionary['Rossby_axis_profile'].append(simulation.grid.omega_average(ross))
-    profiles_dictionary['epicyclic_frequency_axis_profile'].append(simulation.grid.omega_average(kappa2))
-    profiles_dictionary['rotational_velocity_profile'].append(simulation.grid.omega_average(vrot))
-    profiles_dictionary['residual_velocity_profile'].append(simulation.grid.omega_average(vres))
+    profiles_dictionary['omega_axis_profile'].append(simulation.grid.omega_average(omg)[..., None])
+    profiles_dictionary['Solberg_Hoiland_axis_profile'].append(simulation.grid.omega_average(so_crit)[..., None])
+    profiles_dictionary['Rossby_axis_profile'].append(simulation.grid.omega_average(ross)[..., None])
+    profiles_dictionary['epicyclic_frequency_axis_profile'].append(simulation.grid.omega_average(kappa2)[..., None])
+    profiles_dictionary['rotational_velocity_profile'].append(simulation.grid.omega_average(vrot)[..., None])
+    profiles_dictionary['residual_velocity_profile'].append(simulation.grid.omega_average(vres)[..., None])
 
 

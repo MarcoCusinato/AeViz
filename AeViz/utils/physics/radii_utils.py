@@ -90,7 +90,7 @@ def neutrino_sphere_radii(simulation, file_name):
     return [np.flip(simulation.cell.radius(simulation.ghost))\
                                 [np.argmax(ka >= tau, axis=-1)] for ka in k]
 
-def PNS_core(simulation, file_name):
+def PNS_core_radius(simulation, file_name):
     """
     Calculates the radius of the PNS nucleus for each timestep.
     Employed method: entropy jump at s=4kb from the inside out.
@@ -107,8 +107,7 @@ def shock_radius(simulation, file_name, pns_radius, innercore_radius):
     Employed method: first jump in pressure and radial velocity after
                     the bounce, considered from infinite to the centre.
     """
-    if rmax is None:
-        rmax = simulation.cell.radius(simulation.ghost)[-1]
+    rmax = simulation.cell.radius(simulation.ghost)[-1]
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
             return 0.0 * simulation.cell.radius(simulation.ghost).unit

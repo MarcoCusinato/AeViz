@@ -41,7 +41,7 @@ def declare_shock_dictionary(dim: int,
             'I' : [],
             'I_unb': [],
             'ej_ye_045': [],
-            'ej_ye_045' :[],
+            'ej_ye_055' :[],
             'ej_rye_045': [],
             'ej_rye_055': [],
             },
@@ -464,7 +464,7 @@ def __compute_1D_global_local_quantities(shock_dictionary: dict,
     vr = simulation.radial_velocity(file_name)
     mhd_ene = simulation.MHD_energy(file_name)
     nu_heat = simulation.nu_heat(file_name)
-    ye = simulation(file_name)
+    ye = simulation.Ye(file_name)
 
     ## add the global variables
     shock_dictionary['global']['mass'].append(np.nansum(dmass[shock_mask]))

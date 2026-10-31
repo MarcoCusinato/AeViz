@@ -27,14 +27,13 @@ def declare_gain_dictionary(dim: int,
         'global': {
             'mass': [],
             'mass_unb': [],
-
             'rmax': [],
             'rmin': [],
             'ravg': [],
-
             'tadv': [],
             'tadv_unb': [],
-
+            'ekin': [],
+            'ekin_unb': [],
             'er': [],
             'er_unb': [],
             'eg': [],
@@ -43,19 +42,13 @@ def declare_gain_dictionary(dim: int,
             'ei_unb': [],
             'nu_heat': [],
             'nu_heat_unb': [],
-
-            'mdot_net': [],
-            'mdot_in': [],
-            'mdot_out': [],
         },
         'local': {
             'r': [],
             'mass': [],
             'mass_unb': [],
-
             'tadv': [],
             'tadv_unb': [],
-
             'er': [],
             'er_unb': [],
             'eg': [],
@@ -63,7 +56,7 @@ def declare_gain_dictionary(dim: int,
             'ei': [],
             'ei_unb': [],
             'nu_heat': [],
-            'nu_heat_unb': [],
+            'nu_heat_unb': []
         }
     }
 
@@ -93,6 +86,10 @@ def declare_gain_dictionary(dim: int,
                         'ebr_unb', 'ebt_unb', 'ebp_unb'):
                 gain_dictionary['global'][key] = []
                 gain_dictionary['local'][key] = []
+
+            for key in ('ebtot', 'ebtot_unb', 'ebpol', 'ebtor',
+                        'ebpol_unb', 'ebtor_unb'):
+                gain_dictionary['global'][key] = []
 
     return gain_dictionary
 
@@ -213,28 +210,6 @@ def gain_quantity_metadata() -> dict:
                 limits=[-1e52, 1e52],
                 cmap="coolwarm",
                 log=False
-            ),
-
-            "mdot_net": dict(
-                name="gain_mass_flux_net",
-                label=r"$\dot M_{\rm net}$",
-                limits=[-5.0, 5.0],
-                cmap="coolwarm",
-                log=False
-            ),
-            "mdot_in": dict(
-                name="gain_mass_flux_inflow",
-                label=r"$\dot M_{\rm in}$",
-                limits=[1e-5, 5.0],
-                cmap="viridis",
-                log=True
-            ),
-            "mdot_out": dict(
-                name="gain_mass_flux_outflow",
-                label=r"$\dot M_{\rm out}$",
-                limits=[1e-5, 5.0],
-                cmap="plasma",
-                log=True
             ),
 
             "et": dict(
@@ -394,8 +369,27 @@ def gain_quantity_metadata() -> dict:
                 cmap="PuBuGn",
                 log=True
             ),
+            "ekin": dict(
+                name="gain_kinetic_energy",
+                label=r"$E_{\rm kin,gain}$",
+                limits=[1e44, 1e52], cmap="inferno", log=True
+            ),
+            "ekin_unb": dict(
+                name="gain_unbound_kinetic_energy",
+                label=r"$E_{\rm kin,gain,unb}$",
+                limits=[1e44, 1e52], cmap="inferno", log=True
+            ),
+            "ebtot": dict(
+                name="gain_total_magnetic_energy",
+                label=r"$E_{\rm mag,gain}$",
+                limits=[1e40, 1e50], cmap="PuBuGn", log=True
+            ),
+            "ebtot_unb": dict(
+                name="gain_unbound_total_magnetic_energy",
+                label=r"$E_{\rm mag,gain,unb}$",
+                limits=[1e40, 1e50], cmap="PuBuGn", log=True
+            ),
         },
-
         "local": {
             "r": dict(
                 name="gain_radius",
@@ -592,7 +586,7 @@ def compute_gain_postprocessing(gain_dictionary: dict,
                                          simulation,
                                          file_name,
                                          dV,
-                                         gain_radius,
+                                         gainr,
                                          gain_mask,
                                          unbound_mask)
     if simulation.dim > 1:

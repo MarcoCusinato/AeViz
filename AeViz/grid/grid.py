@@ -42,8 +42,6 @@ class grid:
 
     @classmethod
     def from_cell(cls, cl, gh):
-        if cl.geom != 2:
-            raise NotImplementedError("grid only supports spherical geometry.")
         gr = cls(cl.dim, cl.radius(gh),
                    cl.theta(gh) if cl.dim > 1 else None,
                    cl.phi(gh) if cl.dim > 2 else None)
