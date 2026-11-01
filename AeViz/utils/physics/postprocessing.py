@@ -233,3 +233,7 @@ def supernova_postprocessing(simulation: Simulation,
                                       simulation.storage_path,
                                       'gain_postprocessing.h5', ['global', 'local'],
                                       **gain_metadata)
+
+def supernova_neutrino_postprocessing(simulation: Simulation,
+                                      save_checkpoints: bool = True) -> None:
+    pass
