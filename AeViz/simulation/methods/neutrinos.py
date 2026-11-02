@@ -318,6 +318,40 @@ def neutrino_luminosity(self, file_name,
         return lum[2]
     elif comp == 'all':
         return lum
+
+@get_grid
+@smooth
+def labframe_neutrino_luminosity(self, file_name,
+                                 comp:Literal['all', 'nue', 'nua', 'nux']='all',
+                                 closure:Literal['Minerbo', 'M1',
+                                                  'Janka', 'MaxS']='MaxS',
+                                 **kwargs):
+    Fnu = self.neutrino_momenta(file_name)
+    Pnu = self.neutrino_pressure_tensor(file_name, closure=closure)
+    Enu = self.neutrino_energy_density(file_name)
+    vr = self.radial_velocity(file_name)[..., None]
+    if self.dim > 1:
+        vt = self.theta_velocity(file_name)[..., None]
+        vp = self.phi_velocity(file_name)[..., None]
+    Lnu = []
+    if comp == 'all':
+        ls = range(3)
+    elif comp == 'nua':
+        ls = [1]
+    elif comp == 'nue':
+        ls = [0]
+    else:
+        comp = [2]
+    for inu in ls:
+        if self.dim > 1:
+            Lnu.append(Fnu[inu][..., 0] * Enu[inu] * vr +
+                       vr * Pnu[inu][..., 0, 0] +
+                       vt * Pnu[inu][..., 0, 1] +
+                       vp * Pnu[inu][..., 0, 2])
+        else:
+            Lnu.append(Fnu[inu] * Enu[inu] * vr +
+                       vr * Pnu[inu])
+    return Lnu
     
 ## GREY
 
@@ -498,7 +532,8 @@ def flux_direction(self, file_name, **kwargs):
         nu_mod = kwargs['neu_mod']
     else:
         nu_mod = self.flux_modulo(file_name)
-    return [np.nan_to_num(nn / nm[..., None]) for nn, nm in zip(neu, nu_mod)]
+    return [np.nan_to_num(nn / nm[..., None]) if self.dim > 1 else np.nan_to_num(nn / nm)
+             for nn, nm in zip(neu, nu_mod)]
 
 def neutrino_flux_factor(self, file_name, **kwargs):
     if 'neu_mod' in kwargs:
@@ -508,7 +543,6 @@ def neutrino_flux_factor(self, file_name, **kwargs):
     E = self.neutrino_energy_density(file_name)
     return [nn / (c.c * ee) for nn, ee in zip(nu_mod, E)]
     
-
 def eddington_factor(self, file_name, closure:Literal['Minerbo', 'M1',
                                                       'Janka', 'MaxS']='MaxS',
                      **kwargs):
@@ -545,14 +579,19 @@ def neutrino_pressure_tensor(self, file_name, closure:Literal['Minerbo', 'M1',
     """
     neu_mod = self.flux_modulo(file_name)
     chi = self.eddington_factor(file_name, closure=closure, neu_mod=neu_mod)
-    chi = [cc[..., None, None] for cc in chi]
     n = self.flux_direction(file_name, neu_mod=neu_mod)
     eden = self.neutrino_energy_density(file_name)
-    eden = [ee[..., None, None] for ee in eden]
-    delta = np.eye(3, 3)
     pnu = []
-    for inu in range(3):
-        pnu.append(eden[inu] * (0.5 * (1 - chi[inu]) * delta + \
-            0.5 * (3 * chi[inu] - 1) * n[inu][..., :, None] * n[inu][..., None, :]))
+    if self.dim > 1:
+        chi = [cc[..., None, None] for cc in chi]
+        eden = [ee[..., None, None] for ee in eden]
+        delta = np.eye(3)
+        for inu in range(3):
+            pnu.append(eden[inu] * (0.5 * (1 - chi[inu]) * delta + \
+                0.5 * (3 * chi[inu] - 1) * n[inu][..., :, None] * n[inu][..., None, :]))
+    else:
+        for inu in range(3):
+            pnu.append(eden[inu] * (0.5 * (1 - chi[inu]) + \
+                0.5 * (3 * chi[inu] - 1) * n[inu] * n[inu]))
     return pnu
     

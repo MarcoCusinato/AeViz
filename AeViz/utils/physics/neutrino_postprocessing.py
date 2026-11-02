@@ -24,8 +24,12 @@ def compute_neutrino_postprocessing(neutrino_dictionary: dict,
 def __full_neutrino_output(neutrino_dictionary: dict,
                            simulation: Simulation,
                            file_name: str) -> None:
+    ene = simulation.cell.E_nu()
+    while ene.ndim < simulation.dim:
+        ene = ene[None, ...]
     nuer, nuar, nuxr = neutrino_sphere_radii(simulation,
                                              file_name)
+    Lnu_lab_frame = simulation.labframe_neutrino_luminosity(file_name)
 
 def __reduced_neutrino_output(neutrino_dictionary: dict,
                               simulation: Simulation,
@@ -46,4 +50,3 @@ def __reduced_neutrino_output(neutrino_dictionary: dict,
                 neutrino_dictionary[fl][f'Leq_{angle}'] = \
                     equivalent_factor * lum[it, index500]
                 angle += 10
-            

@@ -51,4 +51,4 @@ def e(self):
     """
     Computes the small e for the neutrino fluxes
     """
-    return (c.h  * c.c / (self.E_nu() * 4 * np.pi)) ** 3
+    return (c.h  * c.c / self.E_nu()) ** 3 / (4 * np.pi)

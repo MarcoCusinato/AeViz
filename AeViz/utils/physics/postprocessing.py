@@ -1,8 +1,7 @@
 
 from __future__ import annotations
-from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
+from AeViz.utils.utils import (check_existence, checkpoints)
 from AeViz.simulation.simulation import Simulation
-import os
 from AeViz.utils.physics.PNS_postprocessing import (declare_PNS_dictionary,
                                                     compute_PNS_postprocessing,
                                                     PNS_quantity_metadata)
@@ -161,7 +160,7 @@ def supernova_postprocessing(simulation: Simulation,
         global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
-            tqdm.write('Checkpoint reached, saving files...\n')
+            pbar.set_description('Saving.')
             if not profiles_metadata:
                 profiles_metadata = create_profiles_metadata(profiles_dict)
             save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
@@ -207,10 +206,10 @@ def supernova_postprocessing(simulation: Simulation,
             gain_dict = declare_gain_dictionary(simulation.dim,
                                                 simulation.evolved_qts['magdim'])
             global_time = []
+            pbar.set_description('Supernova postprocessing')
         else:
             check_index += 1
 
-    print('Done, saving files...\n')
     if not profiles_metadata:
         profiles_metadata = create_profiles_metadata(profiles_dict)
     save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
@@ -242,6 +241,7 @@ def supernova_postprocessing(simulation: Simulation,
                                       simulation.storage_path,
                                       'gain_postprocessing.h5', ['global', 'local'],
                                       **gain_metadata)
+    tqdm.write('Supernova postprocessing completed!')
 
 def supernova_neutrino_postprocessing(simulation: Simulation,
                                       save_checkpoints: bool = True) -> None:
