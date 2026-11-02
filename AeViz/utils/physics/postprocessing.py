@@ -23,6 +23,7 @@ from AeViz.utils.physics.profiles_postprocessing import (declare_profiles_dictio
                                                          compute_profiles_postprocessing)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
+from tqdm import tqdm
 
 def supernova_postprocessing(simulation: Simulation,
                              save_checkpoints: bool = True) -> None:
@@ -56,6 +57,10 @@ def supernova_postprocessing(simulation: Simulation,
         if len(pns_processed) == len(file_list) and \
             pns_processed[-1] == file_list[-1]:
             return None
+        tqdm.write(f"Checkpoint found for the Supernova Postprocessing, starting from {pns_processed[-1]}.")
+    else:
+        tqdm.write(f"Starting Supernova Postprocessing.")
+    
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
     tot_points = len(file_list)
@@ -85,8 +90,12 @@ def supernova_postprocessing(simulation: Simulation,
     gain_metadata = gain_quantity_metadata()
     global_time = []
     check_index = 0
-    for findex, file_name in enumerate(file_list):
-        progressBar(findex, tot_points, '...Computing postprocessing...')
+    pbar = tqdm(file_list,
+                "Supernova postprocessing",
+                colour="#008cff"
+                )
+    for file_name in pbar:
+        pbar.set_postfix(file=file_name)
         ## Compute the angular momentum
         dmass = simulation.rho(file_name) * dV
         time = simulation.time(file_name)
@@ -152,7 +161,7 @@ def supernova_postprocessing(simulation: Simulation,
         global_time.append(time)
         pns_processed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
-            print('Checkpoint reached, saving files...\n')
+            tqdm.write('Checkpoint reached, saving files...\n')
             if not profiles_metadata:
                 profiles_metadata = create_profiles_metadata(profiles_dict)
             save_merge_dictionary_hdf(simulation, (global_time, profiles_dict,
