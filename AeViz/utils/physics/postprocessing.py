@@ -245,4 +245,12 @@ def supernova_postprocessing(simulation: Simulation,
 
 def supernova_neutrino_postprocessing(simulation: Simulation,
                                       save_checkpoints: bool = True) -> None:
-    pass
+    index500 = np.argmax(simulation.grid.radius >= (500 * u.km))
+    index_theta = None
+    index_phi = None
+    if simulation.dim > 1:
+        index_theta = [np.argmax(simulation.grid.theta >= (dd * u.deg))
+                        for dd in (np.arange(19) * 10)]
+        index_theta[-1] = -1 if index_theta[-1] == 0 else index_theta[-1]
+    if simulation.dim > 2:
+        index_phi = 0

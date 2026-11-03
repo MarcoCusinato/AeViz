@@ -321,7 +321,7 @@ def neutrino_luminosity(self, file_name,
 
 @get_grid
 @smooth
-def labframe_neutrino_luminosity(self, file_name,
+def labframe_neutrino_fluxes(self, file_name,
                                  comp:Literal['all', 'nue', 'nua', 'nux']='all',
                                  closure:Literal['Minerbo', 'M1',
                                                   'Janka', 'MaxS']='MaxS',
