@@ -116,10 +116,10 @@ def __full_neutrino_output(neutrino_dictionary: dict,
         if simulation.dim == 2:
             gws = __compute_neutrino_contribution_gws_2D(lnu, Wh)
             neutrino_dictionary[nu]['hdot'].append(gws)
-        elif simulation.dim == 3
-        gweq, gwpol, gwene = __compute_neutrino_contribution_gws_3D(lnu,
-                                                                    Wh,
-                                                                    dOmega)
+        elif simulation.dim == 3:
+            gweq, gwpol, gwene = __compute_neutrino_contribution_gws_3D(lnu,
+                                                                        Wh,
+                                                                        dOmega)
         neutrino_dictionary[nu]['hdot_eqpl'].append(gweq[0])
         neutrino_dictionary[nu]['hdot_eqcr'].append(gweq[1])
         neutrino_dictionary[nu]['hdot_polpl'].append(gwpol[0])
