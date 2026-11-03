@@ -31,7 +31,9 @@ def __full_neutrino_output(neutrino_dictionary: dict,
                            indices_theta_avg: tuple[int] | None,
                            dOmega: aerray,
                            indexPhi: int | None,
-                           Wh: tuple[tuple[aerray]] | None) -> None:
+                           Wh: tuple[tuple[aerray]] | None,
+                           PNS_mass: aerray | None,
+                           PNS_radius: aerray | None) -> None:
     ene = simulation.cell.E_nu()
     while ene.ndim < simulation.dim:
         ene = ene[None, ...]
@@ -55,9 +57,11 @@ def __full_neutrino_output(neutrino_dictionary: dict,
     Lnu_lab_frame = (simulation.labframe_neutrino_fluxes(file_name) *
                      simulation.radius[index500] ** 2)
     for inu, nu in enumerate(['nue', 'nua', 'nux']):
-        num_nu = np.nansum(Lnu_lab_frame[inu][..., index500, :] / ene, axis=-1)
-        lnu = np.nansum(Lnu_lab_frame[inu][..., index500, :], axis=-1)
-        l2nu = np.nansum(Lnu_lab_frame[inu][..., index500, :] * ene, axis=-1)
+        lumlab = Lnu_lab_frame[inu][..., index500, :] if simulation.dim == 1 \
+            else Lnu_lab_frame[inu][..., index500, :, 0]
+        num_nu = np.nansum(lumlab / ene, axis=-1)
+        lnu = np.nansum(lumlab, axis=-1)
+        l2nu = np.nansum(lumlab * ene, axis=-1)
         if indexTheta is None:
             neutrino_dictionary[nu]['Llab_avg'].append((4 * np.pi * lnu).to(u.erg /
                                                                         u.s))
@@ -120,13 +124,13 @@ def __full_neutrino_output(neutrino_dictionary: dict,
             gweq, gwpol, gwene = __compute_neutrino_contribution_gws_3D(lnu,
                                                                         Wh,
                                                                         dOmega)
-        neutrino_dictionary[nu]['hdot_eqpl'].append(gweq[0])
-        neutrino_dictionary[nu]['hdot_eqcr'].append(gweq[1])
-        neutrino_dictionary[nu]['hdot_polpl'].append(gwpol[0])
-        neutrino_dictionary[nu]['hdot_polcr'].append(gwpol[1])
-        neutrino_dictionary[nu]['l2pl'].append(gwene[0])
-        neutrino_dictionary[nu]['l2cr'].append(gwene[1])
-
+            neutrino_dictionary[nu]['hdot_eqpl'].append(gweq[0])
+            neutrino_dictionary[nu]['hdot_eqcr'].append(gweq[1])
+            neutrino_dictionary[nu]['hdot_polpl'].append(gwpol[0])
+            neutrino_dictionary[nu]['hdot_polcr'].append(gwpol[1])
+            neutrino_dictionary[nu]['l2pl'].append(gwene[0])
+            neutrino_dictionary[nu]['l2cr'].append(gwene[1])
+        
 def __reduced_neutrino_output(neutrino_dictionary: dict,
                               simulation: Simulation,
                               file_name: str,
