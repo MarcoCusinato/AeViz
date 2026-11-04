@@ -14,26 +14,37 @@ def compute_neutrino_postprocessing(neutrino_dictionary: dict,
                                     Wh: tuple[tuple[aerray]] | None,
                                     index500: int,
                                     index_theta: int | None,
-                                    index_phi: int | None) -> None:
+                                    indices_theta_avg: tuple[int] | None,
+                                    index_phi: int | None,
+                                    PNS_mass: aerray | None) -> None:
     __reduced_neutrino_output(neutrino_dictionary,
                               simulation,
                               file_name,
                               index500,
                               index_theta,
                               index_phi)
-    
+    __full_neutrino_output(neutrino_dictionary,
+                           simulation,
+                           file_name,
+                           index500,
+                           index_theta,
+                           indices_theta_avg,
+                           dOmega,
+                           index_phi,
+                           Wh,
+                           PNS_mass
+                           )
 
 def __full_neutrino_output(neutrino_dictionary: dict,
                            simulation: Simulation,
                            file_name: str,
                            index500: int,
                            indexTheta: int | None,
-                           indices_theta_avg: tuple[int] | None,
+                           indicesThetaAvg: tuple[int] | None,
                            dOmega: aerray,
                            indexPhi: int | None,
                            Wh: tuple[tuple[aerray]] | None,
-                           PNS_mass: aerray | None,
-                           PNS_radius: aerray | None) -> None:
+                           PNS_mass: aerray | None) -> None:
     ene = simulation.cell.E_nu()
     while ene.ndim < simulation.dim:
         ene = ene[None, ...]
@@ -71,7 +82,7 @@ def __full_neutrino_output(neutrino_dictionary: dict,
         else:
             angle = 0
             for it in indexTheta:
-                if indexPhi:
+                if indexPhi is not None:
                     neutrino_dictionary[nu][f'Llab_{angle}'].append(
                         (4 * np.pi * lnu[indexPhi, it]).to(u.erg / u.s))
                     neutrino_dictionary[nu][f'Elab_{angle}'].append(
@@ -88,35 +99,41 @@ def __full_neutrino_output(neutrino_dictionary: dict,
                         (l2nu[it] / num_nu[it]).to(
                             u.MeV ** 2))
                 angle += 10
-                num_nu[inu] *= dOmega
-                lnu[inu] *= dOmega
-                l2nu[inu] *= dOmega
-                j1, j2, j3 = indices_theta_avg
-                neutrino_dictionary[nu][f'Llab_avg'].append(
-                    np.nansum(lnu).to(u.erg / u.s))
-                neutrino_dictionary[nu][f'Elab_avg'].append(
-                    np.nansum(lnu / num_nu).to(u.MeV))
-                neutrino_dictionary[nu][f'E2lab_avg'].append(
-                    np.nansum(l2nu / num_nu).to(
-                        u.MeV ** 2))
-                neutrino_dictionary[nu][f'Llab_pol'].append(
-                    (4 * np.pi * np.nansum(lnu[..., :j1]) / 
-                     np.nansum(dOmega[..., :j1])).to(u.erg / u.s))
-                neutrino_dictionary[nu][f'Elab_pol'].append(
-                    (np.nansum(lnu[..., :j1]) / np.nansum(num_nu[..., :j1])).to(u.MeV))
-                neutrino_dictionary[nu][f'E2lab_pol'].append(
-                    (np.nansum(l2nu[..., :j1]) / np.nansum(num_nu[..., :j1])).to(
-                        u.MeV ** 2))
-                neutrino_dictionary[nu][f'Llab_eq'].append(
-                    (4 * np.pi * np.nansum(lnu[..., j2:j3]) / 
-                     np.nansum(dOmega[..., j2:j3])).to(u.erg / u.s))
-                neutrino_dictionary[nu][f'Elab_eq'].append(
-                    (np.nansum(lnu[..., j2:j3]) / 
-                     np.nansum(num_nu[..., j2:j3])).to(u.MeV))
-                neutrino_dictionary[nu][f'E2lab_eq'].append(
-                    (np.nansum(l2nu[..., j2:j3]) / 
-                     np.nansum(num_nu[..., j2:j3])).to(
-                        u.MeV ** 2))
+            num_nu *= dOmega
+            lnu *= dOmega
+            l2nu *= dOmega
+            j1, j2, j3 = indicesThetaAvg
+            neutrino_dictionary[nu][f'Llab_avg'].append(
+                np.nansum(lnu).to(u.erg / u.s))
+            neutrino_dictionary[nu][f'Elab_avg'].append(
+                (np.nansum(lnu) / np.nansum(num_nu)).to(u.MeV))
+            neutrino_dictionary[nu][f'E2lab_avg'].append(
+                (np.nansum(l2nu) / np.nansum(num_nu)).to(
+                    u.MeV ** 2))
+            neutrino_dictionary[nu][f'Llab_pol'].append(
+                (4 * np.pi * np.nansum(lnu[..., :j1]) / 
+                    np.nansum(dOmega[..., :j1])).to(u.erg / u.s))
+            neutrino_dictionary[nu][f'Elab_pol'].append(
+                (np.nansum(lnu[..., :j1]) / np.nansum(num_nu[..., :j1])).to(u.MeV))
+            neutrino_dictionary[nu][f'E2lab_pol'].append(
+                (np.nansum(l2nu[..., :j1]) / np.nansum(num_nu[..., :j1])).to(
+                    u.MeV ** 2))
+            neutrino_dictionary[nu][f'Llab_eq'].append(
+                (4 * np.pi * np.nansum(lnu[..., j2:j3]) / 
+                    np.nansum(dOmega[..., j2:j3])).to(u.erg / u.s))
+            neutrino_dictionary[nu][f'Elab_eq'].append(
+                (np.nansum(lnu[..., j2:j3]) / 
+                    np.nansum(num_nu[..., j2:j3])).to(u.MeV))
+            neutrino_dictionary[nu][f'E2lab_eq'].append(
+                (np.nansum(l2nu[..., j2:j3]) / 
+                    np.nansum(num_nu[..., j2:j3])).to(
+                    u.MeV ** 2))
+            __compute_kick_ang_mom(neutrino_dictionary[nu],
+                                   simulation,
+                                   np.nansum(Lnu_lab_frame[nu], axis=-2),
+                                   dOmega,
+                                   PNS_mass,
+                                   simulation.grid.radius[index500])
         if simulation.dim == 2:
             gws = __compute_neutrino_contribution_gws_2D(lnu, Wh)
             neutrino_dictionary[nu]['hdot'].append(gws)
@@ -130,7 +147,7 @@ def __full_neutrino_output(neutrino_dictionary: dict,
             neutrino_dictionary[nu]['hdot_polcr'].append(gwpol[1])
             neutrino_dictionary[nu]['l2pl'].append(gwene[0])
             neutrino_dictionary[nu]['l2cr'].append(gwene[1])
-        
+
 def __reduced_neutrino_output(neutrino_dictionary: dict,
                               simulation: Simulation,
                               file_name: str,
@@ -140,15 +157,15 @@ def __reduced_neutrino_output(neutrino_dictionary: dict,
     equivalent_factor = np.pi * 4 * simulation.grid.radius[index500] ** 2
     nulums = simulation.neutrino_luminosity(file_name)
     for fl, lum in zip(['nue', 'nua', 'nux'], nulums):
-        if indexPhi:
+        if indexPhi is not None:
             lum = lum[indexPhi, :, :]
         if indexTheta is None:
-            neutrino_dictionary[fl]['Leq'] = equivalent_factor * lum[index500]
+            neutrino_dictionary[fl]['Leq'].append(equivalent_factor * lum[index500])
         else:
             angle = 0
             for it in indexTheta:
-                neutrino_dictionary[fl][f'Leq_{angle}'] = \
-                    equivalent_factor * lum[it, index500]
+                neutrino_dictionary[fl][f'Leq_{angle}'].append(
+                    equivalent_factor * lum[it, index500])
                 angle += 10
 
 def __compute_neutrino_contribution_gws_2D(neuflux: aerray,
@@ -171,6 +188,40 @@ def __compute_neutrino_contribution_gws_3D(neuflux: aerray,
     l2pl = np.nansum(dOmega * (wtd[0] * neuflux) ** 2)
     l2cr = np.nansum(dOmega * (wtd[1] * neuflux) ** 2)
     return ((gwpleq, gwcreq), (gwplpol, gwcrpol), (l2pl, l2cr)) 
+
+def __compute_kick_ang_mom(neutrino_dictionary: dict,
+                           simulation: Simulation,
+                           nufluxes: aerray,
+                           dOmega:aerray,
+                           PNS_mass: aerray,
+                           r500: aerray):
+    nufluxes = nufluxes * dOmega[..., None]
+    ## taking only the radial flux since we are far enogh and the neutrinos are free-streaming
+    fx, fy, fz = simulation.grid.spherical_to_cartesian(
+        nufluxes[..., 0][..., None],
+        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit,
+        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit
+    )
+    accx =  - np.nansum(fx) / (PNS_mass * c.c)
+    accy =  - np.nansum(fy) / (PNS_mass * c.c)
+    accz =  - np.nansum(fz) / (PNS_mass * c.c)
+    neutrino_dictionary['accx'].append(accx)
+    neutrino_dictionary['accy'].append(accy)
+    neutrino_dictionary['accz'].append(accz)
+
+    ## compute the neutrino contribution to the ang mom
+    ## as 0, +fphi, -ftheta
+    jx, jy, jz = simulation.grid.spherical_to_cartesian(
+        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit,
+        nufluxes[..., 2][..., None],
+        -nufluxes[..., 1][..., None]
+    )
+    jz = r500 / c.c * np.nansum(jz)
+    jx = r500 / c.c * np.nansum(jx) if simulation.dim == 3 else 0 * jz.unit
+    jy = r500 / c.c * np.nansum(jy) if simulation.dim == 3 else 0 * jz.unit
+    neutrino_dictionary['jx'].append(jx)
+    neutrino_dictionary['jy'].append(jy)
+    neutrino_dictionary['jz'].append(jz)
 
 def compute_weights(theta: aerray, phi: aerray, alpha: aerray, beta: aerray, dim: int) -> tuple[aerray]:
     if dim == 1:

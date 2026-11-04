@@ -111,7 +111,12 @@ def supernova_postprocessing(simulation: Simulation,
             vx, vy, vz = simulation.grid.spherical_to_cartesian(dmass * vr,
                                                                 dmass * vt,
                                                                 dmass * vp)
-            jx, jy, jz = (vz * X - vy * Z), (vx * Z - vz * X), (vy * X - vx * Y)
+            if simulation.dim == 2:
+                jx, jy, jz = (np.zeros(vz.shape) * vz.unit * X.unit,
+                              np.zeros(vz.shape) * vz.unit * X.unit,
+                              (vy * X - vx * Y))
+            else:
+                jx, jy, jz = (vz * X - vy * Z), (vx * Z - vz * X), (vy * X - vx * Y)
             jtot = np.sqrt(jx ** 2 + jy ** 2 + jz ** 2)
             shell_jx = np.nansum(jx, axis=tuple(range(simulation.dim - 1)))
             shell_jy = np.nansum(jy, axis=tuple(range(simulation.dim - 1)))
