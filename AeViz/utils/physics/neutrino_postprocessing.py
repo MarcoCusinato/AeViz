@@ -66,7 +66,7 @@ def __full_neutrino_output(neutrino_dictionary: dict,
     neutrino_dictionary['nux']['ravg'].append(
         simulation.grid.radii_angular_average(nuxr))
     Lnu_lab_frame = (simulation.labframe_neutrino_fluxes(file_name) *
-                     simulation.radius[index500] ** 2)
+                     simulation.grid.radius[index500] ** 2)
     for inu, nu in enumerate(['nue', 'nua', 'nux']):
         lumlab = Lnu_lab_frame[inu][..., index500, :] if simulation.dim == 1 \
             else Lnu_lab_frame[inu][..., index500, :, 0]
@@ -199,8 +199,8 @@ def __compute_kick_ang_mom(neutrino_dictionary: dict,
     ## taking only the radial flux since we are far enogh and the neutrinos are free-streaming
     fx, fy, fz = simulation.grid.spherical_to_cartesian(
         nufluxes[..., 0][..., None],
-        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit,
-        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit
+        np.zeros_like(nufluxes[..., 0][..., None]),
+        np.zeros_like(nufluxes[..., 0][..., None])
     )
     accx =  - np.nansum(fx) / (PNS_mass * c.c)
     accy =  - np.nansum(fy) / (PNS_mass * c.c)
@@ -212,7 +212,7 @@ def __compute_kick_ang_mom(neutrino_dictionary: dict,
     ## compute the neutrino contribution to the ang mom
     ## as 0, +fphi, -ftheta
     jx, jy, jz = simulation.grid.spherical_to_cartesian(
-        np.zeros_like(nufluxes[..., 0][..., None]) * nufluxes[..., 0].unit,
+        np.zeros_like(nufluxes[..., 0][..., None]),
         nufluxes[..., 2][..., None],
         -nufluxes[..., 1][..., None]
     )
