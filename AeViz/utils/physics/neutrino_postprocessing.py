@@ -7,6 +7,8 @@ from AeViz.units.constants import constants as c
 from AeViz.cell.cell_methods.spherical_methods import dOmega
 
 
+
+
 def compute_neutrino_postprocessing(neutrino_dictionary: dict,
                                     simulation: Simulation,
                                     file_name: str,
@@ -73,7 +75,7 @@ def __full_neutrino_output(neutrino_dictionary: dict,
         num_nu = np.nansum(lumlab / ene, axis=-1)
         lnu = np.nansum(lumlab, axis=-1)
         l2nu = np.nansum(lumlab * ene, axis=-1)
-        if indexTheta is None:
+        if simulation.dim == 1:
             neutrino_dictionary[nu]['Llab_avg'].append((4 * np.pi * lnu).to(u.erg /
                                                                         u.s))
             neutrino_dictionary[nu]['Elab_avg'].append((lnu / num_nu).to(u.MeV))
@@ -82,7 +84,7 @@ def __full_neutrino_output(neutrino_dictionary: dict,
         else:
             angle = 0
             for it in indexTheta:
-                if indexPhi is not None:
+                if simulation.dim == 3:
                     neutrino_dictionary[nu][f'Llab_{angle}'].append(
                         (4 * np.pi * lnu[indexPhi, it]).to(u.erg / u.s))
                     neutrino_dictionary[nu][f'Elab_{angle}'].append(
@@ -130,23 +132,24 @@ def __full_neutrino_output(neutrino_dictionary: dict,
                     u.MeV ** 2))
             __compute_kick_ang_mom(neutrino_dictionary[nu],
                                    simulation,
-                                   np.nansum(Lnu_lab_frame[nu], axis=-2),
+                                   np.nansum(Lnu_lab_frame[inu], axis=-2),
                                    dOmega,
                                    PNS_mass,
                                    simulation.grid.radius[index500])
-        if simulation.dim == 2:
-            gws = __compute_neutrino_contribution_gws_2D(lnu, Wh)
-            neutrino_dictionary[nu]['hdot'].append(gws)
-        elif simulation.dim == 3:
-            gweq, gwpol, gwene = __compute_neutrino_contribution_gws_3D(lnu,
-                                                                        Wh,
-                                                                        dOmega)
-            neutrino_dictionary[nu]['hdot_eqpl'].append(gweq[0])
-            neutrino_dictionary[nu]['hdot_eqcr'].append(gweq[1])
-            neutrino_dictionary[nu]['hdot_polpl'].append(gwpol[0])
-            neutrino_dictionary[nu]['hdot_polcr'].append(gwpol[1])
-            neutrino_dictionary[nu]['l2pl'].append(gwene[0])
-            neutrino_dictionary[nu]['l2cr'].append(gwene[1])
+            if simulation.dim == 2:
+                ## lnu already multiplied by dOmega
+                gws = __compute_neutrino_contribution_gws_2D(lnu, Wh)
+                neutrino_dictionary[nu]['hdot_eqpl'].append(gws)
+            elif simulation.dim == 3:
+                gweq, gwpol, gwene = __compute_neutrino_contribution_gws_3D(lnu,
+                                                                            Wh,
+                                                                            dOmega)
+                neutrino_dictionary[nu]['hdot_eqpl'].append(gweq[0])
+                neutrino_dictionary[nu]['hdot_eqcr'].append(gweq[1])
+                neutrino_dictionary[nu]['hdot_polpl'].append(gwpol[0])
+                neutrino_dictionary[nu]['hdot_polcr'].append(gwpol[1])
+                neutrino_dictionary[nu]['l2pl'].append(gwene[0])
+                neutrino_dictionary[nu]['l2cr'].append(gwene[1])
 
 def __reduced_neutrino_output(neutrino_dictionary: dict,
                               simulation: Simulation,
@@ -176,7 +179,7 @@ def __compute_neutrino_contribution_gws_2D(neuflux: aerray,
 
 def __compute_neutrino_contribution_gws_3D(neuflux: aerray,
                                            wh: tuple[tuple[aerray]],
-                                           dOmega: aerray):
+                                           dOmega_obs: aerray):
     weq, wpol, wtd = wh
 
     gwpleq = (2 * c.G / (c.c ** 4) * np.nansum(weq[0] * neuflux)).to(u.cm / u.s)
@@ -185,8 +188,8 @@ def __compute_neutrino_contribution_gws_3D(neuflux: aerray,
     gwplpol = (2 * c.G / (c.c ** 4) * np.nansum(wpol[0] * neuflux)).to(u.cm / u.s)
     gwcrpol = (2 * c.G / (c.c ** 4) * np.nansum(wpol[1] * neuflux)).to(u.cm / u.s)
 
-    l2pl = np.nansum(dOmega * (wtd[0] * neuflux) ** 2)
-    l2cr = np.nansum(dOmega * (wtd[1] * neuflux) ** 2)
+    l2pl = np.nansum(dOmega_obs * (wtd[0] * neuflux[None, None, ...]) ** 2)
+    l2cr = np.nansum(dOmega_obs * (wtd[1] * neuflux[None, None, ...]) ** 2)
     return ((gwpleq, gwcreq), (gwplpol, gwcrpol), (l2pl, l2cr)) 
 
 def __compute_kick_ang_mom(neutrino_dictionary: dict,
@@ -202,12 +205,15 @@ def __compute_kick_ang_mom(neutrino_dictionary: dict,
         np.zeros_like(nufluxes[..., 0][..., None]),
         np.zeros_like(nufluxes[..., 0][..., None])
     )
-    accx =  - np.nansum(fx) / (PNS_mass * c.c)
-    accy =  - np.nansum(fy) / (PNS_mass * c.c)
-    accz =  - np.nansum(fz) / (PNS_mass * c.c)
-    neutrino_dictionary['accx'].append(accx)
-    neutrino_dictionary['accy'].append(accy)
-    neutrino_dictionary['accz'].append(accz)
+    accz =  (- np.nansum(fz) / (PNS_mass * c.c)).to(u.cm / u.s ** 2)
+    accx =  (- np.nansum(fx) / (PNS_mass * c.c)).to(u.cm / u.s ** 2) \
+        if simulation.dim == 3 else 0 * accz.unit
+    accy =  (- np.nansum(fy) / (PNS_mass * c.c)).to(u.cm / u.s ** 2) \
+        if simulation.dim == 3 else 0 * accz.unit
+    
+    neutrino_dictionary['accx'].append(accx.to(u.cm / u.s ** 2))
+    neutrino_dictionary['accy'].append(accy.to(u.cm / u.s ** 2))
+    neutrino_dictionary['accz'].append(accz.to(u.cm / u.s ** 2))
 
     ## compute the neutrino contribution to the ang mom
     ## as 0, +fphi, -ftheta
@@ -223,30 +229,48 @@ def __compute_kick_ang_mom(neutrino_dictionary: dict,
     neutrino_dictionary['jy'].append(jy)
     neutrino_dictionary['jz'].append(jz)
 
-def compute_weights(theta: aerray, phi: aerray, alpha: aerray, beta: aerray, dim: int) -> tuple[aerray]:
+def compute_weights(theta: aerray,
+                    phi: aerray,
+                    alpha: aerray,
+                    beta: aerray,
+                    dim: int) -> tuple[aerray]:
     if dim == 1:
         whpl, whcr = None, None
     elif dim == 2:
-        whpl = np.sin(theta) * np. pi * (2 * np.abs(np.cos(theta)) - 1)
+        whpl = 0.5 * (2 * np.abs(np.cos(theta)) - 1)
         whcr = 0
     else:
         theta = theta[None, :]
         phi = phi[:, None]
         if alpha.size > 1 and beta.size > 1:
-            alpha = alpha[None, :]
-            beta = beta[:, None]
-        N = (((np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * np.sin(theta) * np.cos(beta) -
+            alpha = alpha[:, None, None, None]
+            beta = beta[None, :, None, None]
+            theta = theta[None, None, ...]
+            phi = phi[None, None, ...]
+        N = (((np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * 
+              np.sin(theta) * np.cos(beta) -
              np.cos(theta) * np.sin(beta)) ** 2 + np.sin(theta) ** 2 *
              (np.sin(phi) * np.cos(alpha) - np.cos(phi) * np.sin(alpha)) ** 2)
-        Dpl = ((1 + (np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * np.sin(theta) * np.sin(beta) +
+        Dpl = ((1 + (np.cos(phi) * np.cos(alpha) + np.sin(phi) *
+                     np.sin(alpha)) * np.sin(theta) * np.sin(beta) +
                 np.cos(theta) * np.cos(beta)) * 
                 (((np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * 
-                  np.sin(alpha) * np.cos(beta) - np.cos(theta) * np.sin(beta)) ** 2 - 
+                  np.sin(theta) * np.cos(beta) - np.cos(theta) * np.sin(beta)) ** 2 - 
                 np.sin(theta) ** 2 * (np.sin(phi) * np.cos(alpha) - np.cos(phi) * np.sin(alpha)) ** 2))
-        Dcr = ((1 + (np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * np.sin(theta) * np.sin(beta) +
-                np.cos(theta) * np.cos(beta)) * 2 * ((np.cos(phi) * np.cos(alpha) + np.sin(theta) * np.sin(alpha)) *
-                                                     np.sin(theta) * np.cos(beta)) * np.sin(theta) *
-                                                     (np.sin(phi) * np.cos(alpha) - np.cos(phi) * np.sin(alpha)))
+        Dcr = ((1 + (np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) *
+                np.sin(theta) * np.sin(beta) + np.cos(theta) * np.cos(beta)) * 
+               2 * ((np.cos(phi) * np.cos(alpha) + np.sin(phi) * np.sin(alpha)) * 
+                    np.sin(theta) * np.cos(beta)- np.cos(theta) * np.sin(beta)) * 
+                np.sin(theta) * (np.sin(phi) * np.cos(alpha) - np.cos(phi) * np.sin(alpha)))
         whpl = Dpl / N
         whcr = Dcr / N
     return (whpl, whcr)
+
+def build_obs_grid(nalpha: int):
+    assert (nalpha % 2 == 0), "Number of alphas must be even."
+    dangle = 2 * np.pi / nalpha * u.radian
+    beta = (np.arange(int(nalpha / 2)) + 0.5) * dangle
+    beta_sinb = np.sin(beta)[:, None, None, None] * dangle
+    dOmega_obs = (np.ones(int(nalpha / 2))[None, :, None, None] * dangle) * beta_sinb
+    return dOmega_obs
+## POINT B2
