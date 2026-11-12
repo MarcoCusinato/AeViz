@@ -20,9 +20,15 @@ from AeViz.utils.physics.gain_postprocessing import (declare_gain_dictionary,
 from AeViz.utils.physics.profiles_postprocessing import (declare_profiles_dictionary,
                                                          create_profiles_metadata,
                                                          compute_profiles_postprocessing)
+from AeViz.utils.physics.neutrino_postprocessing import (declare_neutrino_dictionary,
+                                                         neutrino_quantity_metadata,
+                                                         compute_neutrino_postprocessing,
+                                                         compute_weights,
+                                                         build_obs_grid)
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
 import numpy as np
 from tqdm import tqdm
+from AeViz.units import u
 
 def supernova_postprocessing(simulation: Simulation,
                              save_checkpoints: bool = True) -> None:
@@ -30,13 +36,24 @@ def supernova_postprocessing(simulation: Simulation,
         checkpoint = len(simulation.hdf_file_list)
     else:
         checkpoint = checkpoints[simulation.dim]
+    file_list = simulation.hdf_file_list
+    pns_processed = []
+    if check_existence(simulation, 'PNS_postprocessing.h5'):
+        pns_processed = load_dataset(simulation.storage_path, 
+                                     'PNS_postprocessing.h5',
+                                     'processed_hdf', False)
+        if len(pns_processed) == len(file_list) and \
+            pns_processed[-1] == file_list[-1]:
+            return None
+        tqdm.write(f"Checkpoint found for the Supernova Postprocessing, starting from {pns_processed[-1]}.")
+    else:
+        tqdm.write(f"Starting Supernova Postprocessing.")
     
     dV = simulation.cell.dVolume_integration(simulation.ghost)
     radius = simulation.cell.radius(simulation.ghost)
     grid = simulation.grid.cartesian_grid()
     dOmega = simulation.cell.dOmega(simulation.ghost)
-    file_list = simulation.hdf_file_list
-    pns_processed = []
+    
     ## unpack the grid
     if simulation.dim == 1:
         X = grid * radius.unit
@@ -49,16 +66,6 @@ def supernova_postprocessing(simulation: Simulation,
         rperp2 = (radius[None, None, :] * 
                   np.sin(simulation.cell.theta(simulation.ghost))[None, :, None]) ** 2
         X, Y, Z = grid[0] * radius.unit, X[1] * radius.unit, grid[3] * radius.unit
-    if check_existence(simulation, 'PNS_postprocessing.h5'):
-        pns_processed = load_dataset(simulation.storage_path, 
-                                     'PNS_postprocessing.h5',
-                                     'processed_hdf', False)
-        if len(pns_processed) == len(file_list) and \
-            pns_processed[-1] == file_list[-1]:
-            return None
-        tqdm.write(f"Checkpoint found for the Supernova Postprocessing, starting from {pns_processed[-1]}.")
-    else:
-        tqdm.write(f"Starting Supernova Postprocessing.")
     
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
@@ -250,12 +257,106 @@ def supernova_postprocessing(simulation: Simulation,
 
 def supernova_neutrino_postprocessing(simulation: Simulation,
                                       save_checkpoints: bool = True) -> None:
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    file_list = simulation.hdf_file_list
+    postprocessed = []
+    if check_existence(simulation, 'neutrino_postprocessing.h5'):
+        postprocessed = load_dataset(simulation.storage_path, 
+                                     'neutrino_postprocessing.h5',
+                                     'processed_hdf', False)
+        if len(postprocessed) == len(file_list) and \
+            postprocessed[-1] == postprocessed[-1]:
+            return None
+        tqdm.write(f"Checkpoint found for the Neutrino Postprocessing, starting from {postprocessed[-1]}.")
+    else:
+        tqdm.write(f"Starting Neutrino Postprocessing.")
+    pns_mass = load_dataset(simulation.storage_path, 
+                            'PNS_postprocessing.h5',
+                            'global/mass', False)
     index500 = np.argmax(simulation.grid.radius >= (500 * u.km))
+    dOmega = simulation.cell.dOmega(simulation.ghost)
+    theta = simulation.cell.theta(simulation.ghost)
+    phi = simulation.cell.phi(simulation.ghost)
     index_theta = None
     index_phi = None
+    weights = [[None, None], [None, None], [None, None]]
+    indices_theta_avg = 0
+    domega_obs = None
     if simulation.dim > 1:
         index_theta = [np.argmax(simulation.grid.theta >= (dd * u.deg))
                         for dd in (np.arange(19) * 10)]
         index_theta[-1] = -1 if index_theta[-1] == 0 else index_theta[-1]
+        weights[0] = compute_weights(theta, phi,
+                                     0 * u.radian, np.pi / 2 * u.radian,
+                                     simulation.dim)
+        indices_theta_avg = [np.argmax(theta >= (6 * u.deg)),
+                             np.argmax(theta >= (86 * u.deg)),
+                             np.argmax(theta >= (94 * u.deg))]
     if simulation.dim > 2:
         index_phi = 0
+        weights[1] = compute_weights(theta, phi,
+                                     0 * u.radian, 0 * u.radian,
+                                     simulation.dim)
+        domega_obs, alpha, beta = build_obs_grid(256)
+        weights[2] = compute_weights(theta, phi,
+                                     alpha, beta,
+                                     simulation.dim)
+    neutrino_dict = declare_neutrino_dictionary(simulation.dim,
+                                                      index_theta)
+    neutrino_metadata = neutrino_quantity_metadata(index_theta)
+    global_time = []
+    reduced_time = []
+    check_index = 0
+    pbar = tqdm(file_list,
+                "Neutrino postprocessing",
+                colour="#07ff9c"
+                )
+    for i, file_name in enumerate(pbar):
+        pbar.set_postfix(file=file_name)
+        time = simulation.time(file_name)
+        global_time.append(time)
+        save_loc = compute_neutrino_postprocessing(neutrino_dict,
+                                                   simulation,
+                                                   file_name,
+                                                   dOmega,
+                                                   weights,
+                                                   domega_obs,
+                                                   index500,
+                                                   index_theta,
+                                                   indices_theta_avg,
+                                                   index_phi,
+                                                   pns_mass[i]
+                                                   )
+        if save_loc:
+            reduced_time.append(time)
+        postprocessed.append(file_name)
+        if (check_index >= checkpoint) and save_checkpoints:
+            pbar.set_description('Saving.')
+            save_merge_dictionary_hdf(simulation, (global_time,
+                                                   neutrino_dict, postprocessed),
+                                      simulation.storage_path,
+                                      'neutrino_postprocessing.h5', ['nue',
+                                                                    'nua',
+                                                                    'nux'],
+                                      **neutrino_metadata)
+            check_index = 0
+            neutrino_dict = declare_neutrino_dictionary(simulation.dim,
+                                                      index_theta)
+            global_time = []
+            reduced_time = []
+            pbar.set_description('Neutrino postprocessing')
+        else:
+            check_index += 1
+    save_merge_dictionary_hdf(simulation, (global_time,
+                                           neutrino_dict, postprocessed),
+                                      simulation.storage_path,
+                                      'neutrino_postprocessing.h5', ['nue',
+                                                                    'nua',
+                                                                    'nux'],
+                                      **neutrino_metadata)
+    tqdm.write('Neutrino postprocessing completed!')
+
+    

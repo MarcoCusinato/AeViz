@@ -331,8 +331,9 @@ def labframe_neutrino_fluxes(self, file_name,
     Enu = self.neutrino_energy_density(file_name)
     vr = self.radial_velocity(file_name)[..., None]
     if self.dim > 1:
-        vt = self.theta_velocity(file_name)[..., None]
-        vp = self.phi_velocity(file_name)[..., None]
+        v = (vr,
+             self.theta_velocity(file_name)[..., None],
+             self.phi_velocity(file_name)[..., None])
     Lnu = []
     if comp == 'all':
         ls = range(3)
@@ -344,12 +345,15 @@ def labframe_neutrino_fluxes(self, file_name,
         comp = [2]
     for inu in ls:
         if self.dim > 1:
-            Lnu.append(Fnu[inu][..., 0] * Enu[inu] * vr +
-                       vr * Pnu[inu][..., 0, 0] +
-                       vt * Pnu[inu][..., 0, 1] +
-                       vp * Pnu[inu][..., 0, 2])
+            F = Fnu[inu]
+            P = Pnu[inu]
+            E = Enu[inu]
+            comps = [F[..., i] + v[i] * E
+                     + v[0] * P[..., i, 0] + v[1] * P[..., i, 1] + v[2] * P[..., i, 2]
+                     for i in range(3)]
+            Lnu.append(np.stack(comps, axis=-1))
         else:
-            Lnu.append(Fnu[inu] * Enu[inu] * vr +
+            Lnu.append(Fnu[inu] + Enu[inu] * vr +
                        vr * Pnu[inu])
     return Lnu
     
