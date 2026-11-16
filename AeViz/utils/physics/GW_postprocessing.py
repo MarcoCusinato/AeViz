@@ -165,7 +165,7 @@ def __compute_2D_gws_postprocessing(
     sho_rad: aerray,
 ):
     radius = simulation.grid.radius
-    ctheta = np.cos(simulation.grid.theta)
+    ctheta = np.cos(simulation.grid.theta)[:, None]
     rho = simulation.rho(file_name)
     vr = simulation.radial_velocity(file_name)
     vt = simulation.theta_velocity(file_name)
@@ -276,7 +276,7 @@ def __compute_2D_partial_strain(
     rad2_ind = np.argmax(radius[None, :] >= rad2[..., None], axis=-1)
 
     if mask1 is not None:
-        mask = mask2 & np.logical_and(mask1)
+        mask = mask2 & np.logical_not(mask1)
     else:
         mask = mask2
 

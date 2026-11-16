@@ -14,6 +14,7 @@ from AeViz.utils.physics.gain_postprocessing import (
 from AeViz.utils.physics.GW_postprocessing import (
     GWs_metadata,
     compute_gws_postprocessing,
+    declare_GW_dictionary,
 )
 from AeViz.utils.physics.innercore_postprocessing import (
     compute_innercore_postprocessing,
@@ -439,7 +440,7 @@ def supernova_neutrino_postprocessing(
             index_theta,
             indices_theta_avg,
             index_phi,
-            pns_mass[i],
+            pns_mass[i + start_index],
         )
         if save_loc:
             reduced_time.append(time)
@@ -455,7 +456,10 @@ def supernova_neutrino_postprocessing(
                 **neutrino_metadata,
             )
             check_index = 0
-            neutrino_dict = declare_neutrino_dictionary(simulation.dim, index_theta)
+            neutrino_dict = declare_neutrino_dictionary(
+                simulation.dim,
+                index_theta,
+            )
             global_time = []
             reduced_time = []
             pbar.set_description("Neutrino postprocessing")
@@ -502,11 +506,10 @@ def supernova_gws_postprocessing(
         )
     else:
         tqdm.write("Starting Gravitational Waves Postprocessing.")
-    gws_dict = declare_neutrino_dictionary(simulation.dim)
+    gws_dict = declare_GW_dictionary(simulation.dim)
     gws_metadata = GWs_metadata()
     global_time = []
     check_index = 0
-    pbar = tqdm(file_list, "GWs postprocessing", colour="#ffa407")
     dOmega = simulation.cell.dOmega(simulation.ghost)
     dV = simulation.cell.dVolume_integration(simulation.ghost)
     core_radius = load_dataset(
@@ -535,12 +538,13 @@ def supernova_gws_postprocessing(
     )
     start_index = min(
         len(postprocessed),
-        len(core_radius),
-        len(pns_radius),
-        len(innercore_radius),
-        len(shock_radius),
+        core_radius.shape[-1],
+        pns_radius.shape[-1],
+        innercore_radius.shape[-1],
+        shock_radius.shape[-1],
     )
     file_list = file_list[start_index:]
+    pbar = tqdm(file_list, "GWs postprocessing", colour="#ffa407")
     for i, file_name in enumerate(pbar):
         pbar.set_postfix(file=file_name)
         time = simulation.time(file_name)
@@ -551,10 +555,10 @@ def supernova_gws_postprocessing(
             file_name,
             dOmega,
             dV,
-            core_radius[i],
-            pns_radius[i],
-            innercore_radius[i],
-            shock_radius[i],
+            core_radius[..., i + start_index],
+            pns_radius[..., i + start_index],
+            innercore_radius[..., i + start_index],
+            shock_radius[..., i + start_index],
         )
         postprocessed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
@@ -568,7 +572,7 @@ def supernova_gws_postprocessing(
                 **gws_metadata,
             )
             check_index = 0
-            gws_dict = declare_neutrino_dictionary(simulation.dim)
+            gws_dict = declare_GW_dictionary(simulation.dim)
             global_time = []
             pbar.set_description("GWs postprocessing")
         else:
