@@ -49,6 +49,7 @@ from AeViz.utils.physics.shock_postprocessing import (
     shock_quantity_metadata,
 )
 from AeViz.utils.utils import check_existence, checkpoints
+from build.lib.AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 
 
 def supernova_postprocessing(
@@ -512,6 +513,22 @@ def supernova_gws_postprocessing(
     check_index = 0
     dOmega = simulation.cell.dOmega(simulation.ghost)
     dV = simulation.cell.dVolume_integration(simulation.ghost)
+    gradient = None
+    Ylm = None
+    if simulation.dim == 3:
+        theta = simulation.grid.theta
+        phi = simulation.grid.phi
+        radius = simulation.grid.radius
+        gradient = []
+        Ylm = []
+        harm = SphericalHarmonics()
+        for m in range(-2, 3):
+            Y2m_r = (
+                harm.Ylm_conj(m, 2, theta, phi)[..., None] * radius[None, None, :] ** 2
+            )
+            gradient.append(simulation.grid.gradient(Y2m_r, True))
+            Ylm.append(Y2m_r * radius[None, None, ...] ** 2 * dOmega[..., None])
+
     core_radius = load_dataset(
         simulation.storage_path,
         "PNScore_postprocessing.h5",
@@ -559,6 +576,8 @@ def supernova_gws_postprocessing(
             pns_radius[..., i + start_index],
             innercore_radius[..., i + start_index],
             shock_radius[..., i + start_index],
+            gradient,
+            Ylm,
         )
         postprocessed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
