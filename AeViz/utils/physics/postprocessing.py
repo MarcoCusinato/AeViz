@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from tqdm import tqdm
 
 from AeViz.simulation.simulation import Simulation
+from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 from AeViz.units import u
 from AeViz.utils.files.file_utils import load_dataset, save_merge_dictionary_hdf
+from AeViz.utils.physics.deformability_postprocessing import (
+    compute_tidal_love,
+    declare_tidal_dictionary,
+    tidal_quantity_metadata,
+)
 from AeViz.utils.physics.gain_postprocessing import (
     compute_gain_postprocessing,
     declare_gain_dictionary,
@@ -49,7 +57,6 @@ from AeViz.utils.physics.shock_postprocessing import (
     shock_quantity_metadata,
 )
 from AeViz.utils.utils import check_existence, checkpoints
-from build.lib.AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
 
 
 def supernova_postprocessing(
@@ -371,16 +378,16 @@ def supernova_neutrino_postprocessing(
             "processed_hdf",
             False,
         )
-        if (
-            len(postprocessed) == len(file_list)
-            and postprocessed[-1] == postprocessed[-1]
-        ):
+        if len(postprocessed) == len(file_list) and postprocessed[-1] == file_list[-1]:
             return
         tqdm.write(
             f"Checkpoint found for the Neutrino Postprocessing, starting from {postprocessed[-1]}."
         )
     else:
         tqdm.write("Starting Neutrino Postprocessing.")
+    if not check_existence(simulation, "PNS_postprocessing.h5"):
+        warnings.warn("No PNS mass saved, run the supernova postprocessing first.")
+        return
     pns_mass = load_dataset(
         simulation.storage_path,
         "PNS_postprocessing.h5",
@@ -388,8 +395,9 @@ def supernova_neutrino_postprocessing(
         False,
     )
 
-    start_index = min(len(postprocessed), len(pns_mass))
-    file_list = file_list[start_index:]
+    start_index = len(postprocessed)
+    end_index = min(len(file_list), len(pns_mass))
+    file_list = file_list[start_index:end_index]
     index500 = np.argmax(simulation.grid.radius >= (500 * u.km))
     dOmega = simulation.cell.dOmega(simulation.ghost)
     theta = simulation.cell.theta(simulation.ghost)
@@ -496,10 +504,7 @@ def supernova_gws_postprocessing(
             "processed_hdf",
             False,
         )
-        if (
-            len(postprocessed) == len(file_list)
-            and postprocessed[-1] == postprocessed[-1]
-        ):
+        if len(postprocessed) == len(file_list) and postprocessed[-1] == file_list[-1]:
             return
         tqdm.write(
             "Checkpoint found for the Gravitational Waves Postprocessing, "
@@ -553,14 +558,15 @@ def supernova_gws_postprocessing(
         "local/r",
         False,
     )
-    start_index = min(
-        len(postprocessed),
+    start_index = len(postprocessed)
+    end_index = min(
+        len(file_list),
         core_radius.shape[-1],
         pns_radius.shape[-1],
         innercore_radius.shape[-1],
         shock_radius.shape[-1],
     )
-    file_list = file_list[start_index:]
+    file_list = file_list[start_index:end_index]
     pbar = tqdm(file_list, "GWs postprocessing", colour="#ffa407")
     for i, file_name in enumerate(pbar):
         pbar.set_postfix(file=file_name)
@@ -604,4 +610,113 @@ def supernova_gws_postprocessing(
         "GWs_postprocessing.h5",
         None,
         **gws_metadata,
+    )
+
+
+def tidal_deformability_postprocesing(
+    simulation: Simulation,
+    save_checkpoints: bool = True,
+) -> None:
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    file_list = simulation.hdf_file_list
+    postprocessed = []
+    if check_existence(simulation, "tidal_postprocessing.h5"):
+        postprocessed = load_dataset(
+            simulation.storage_path,
+            "tidal_postprocessing.h5",
+            "processed_hdf",
+            False,
+        )
+        if (len(postprocessed) == len(file_list)) and (
+            postprocessed[-1] == file_list[-1]
+        ):
+            return
+        tqdm.write(
+            "Checkpoint found for the Tidal Deformabilty Postprocessing, "
+            f" starting from {postprocessed[-1]}."
+        )
+    else:
+        tqdm.write("Starting Tidal Deformabilty Postprocessing.")
+
+    if not check_existence(simulation, "profiles_postprocessing.h5"):
+        warnings.warn("No profiles saved, run the supernova postprocessing first.")
+        return
+    rho = load_dataset(
+        simulation.storage_path,
+        "profiles_postprocessing.h5",
+        "rho_profile",
+        True,
+    )
+    tm = rho.time
+    rho = rho.data
+    cs = load_dataset(
+        simulation.storage_path,
+        "profiles_postprocessing.h5",
+        "soundspeed_profile",
+        False,
+    )
+    s = load_dataset(
+        simulation.storage_path,
+        "profiles_postprocessing.h5",
+        "entropy_profile",
+        False,
+    )
+    p = load_dataset(
+        simulation.storage_path,
+        "profiles_postprocessing.h5",
+        "gas_pressure_profile",
+        False,
+    )
+    start_index = len(postprocessed)
+    end_index = min(len(file_list), len(tm))
+    file_list = file_list[start_index:end_index]
+    pbar = tqdm(
+        file_list,
+        "Tidal deformability postprocessing",
+        colour="#c507ff",
+    )
+    global_time = []
+    tidal_dict = declare_tidal_dictionary()
+    tidal_meta = tidal_quantity_metadata()
+    check_index = 0
+    for i, file_name in enumerate(pbar):
+        pbar.set_postfix(file=file_name)
+        time = tm[i + start_index]
+        global_time.append(time)
+        compute_tidal_love(
+            tidal_dict,
+            simulation,
+            rho[i + start_index],
+            p[i + start_index],
+            cs[i + start_index],
+            s[i + start_index],
+        )
+        postprocessed.append(file_name)
+        if (check_index >= checkpoint) and save_checkpoints:
+            pbar.set_description("Saving.")
+            save_merge_dictionary_hdf(
+                simulation,
+                (global_time, tidal_dict, postprocessed),
+                simulation.storage_path,
+                "tidal_postprocessing.h5",
+                ["PNS", "core"],
+                **tidal_meta,
+            )
+            check_index = 0
+            tidal_dict = declare_tidal_dictionary()
+            global_time = []
+            pbar.set_description("Tidal deformability postprocessing")
+        else:
+            check_index += 1
+
+    save_merge_dictionary_hdf(
+        simulation,
+        (global_time, tidal_dict, postprocessed),
+        simulation.storage_path,
+        "Tidal deformability postprocessing.h5",
+        ["PNS", "core"],
+        **tidal_meta,
     )
