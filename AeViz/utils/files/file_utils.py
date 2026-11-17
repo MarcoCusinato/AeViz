@@ -1,14 +1,20 @@
 from __future__ import annotations
-import os, h5py
+
+import inspect
+import os
+from typing import TYPE_CHECKING
+
+import h5py
 import numpy as np
 import pandas as pd
-import inspect
-from AeViz.units import aeseries, aerray, u
 import requests
-from AeViz.utils.utils import units_from_string, check_existence
-from typing import TYPE_CHECKING
+
+from AeViz.units import aerray, aeseries, u
+from AeViz.utils.utils import check_existence, units_from_string
+
 if TYPE_CHECKING:
     from AeViz.simulation.simulation import Simulation
+
 
 def list_module_functions(module):
     """
@@ -19,21 +25,23 @@ def list_module_functions(module):
         list of all the functions decleared in the module
     """
     return [
-        (name, obj) for name, obj in inspect.getmembers(module, inspect.isfunction)
-        if obj.__module__ == module.__name__ 
+        (name, obj)
+        for name, obj in inspect.getmembers(module, inspect.isfunction)
+        if obj.__module__ == module.__name__
     ]
+
 
 def load_file(path_folder, file_name):
     """
     Load data files, three attempts are made
     - Attempt 1: use of loadtxt method of NumPy
-    - Attempt 2: use of loadtxt method of NumPy, reading only the first 
+    - Attempt 2: use of loadtxt method of NumPy, reading only the first
                  n columns, with n specified on the 2nd row of the .txt
                  header file
     - Attempt 3: use of Pandas to generate missing data
-    - Attempt 4: read file line by line filling a matrix with dimension 
-                 NxM, where N is the number of rows in the file and M 
-                 the maximum number of colums. It assumes the last line 
+    - Attempt 4: read file line by line filling a matrix with dimension
+                 NxM, where N is the number of rows in the file and M
+                 the maximum number of colums. It assumes the last line
                  as the one with the more colums.
     - Attempt 5: read file line by line filling a matrix with dimension
                  NxM, where N is the number of rows in the file and M
@@ -48,50 +56,54 @@ def load_file(path_folder, file_name):
         data = np.loadtxt(path)
     except:
         try:
-            col_number = int(np.loadtxt(path.replace('.dat', '.txt'), 
-                                        skiprows=1) + 2)
-
+            col_number = int(np.loadtxt(path.replace(".dat", ".txt"), skiprows=1) + 2)
 
             data = np.loadtxt(path, usecols=tuple(range(col_number)))
         except:
             try:
-                head = list(np.genfromtxt(path.replace('.dat', '.txt'),
-                                          dtype=str, delimiter=',',
-                                          skip_footer=1))
-                data_str = pd.read_table(path, dtype=str, sep=r'\s+',
-                                         names=head, usecols=range(col_number))
-                data_str = data_str.fillna('0')
+                head = list(
+                    np.genfromtxt(
+                        path.replace(".dat", ".txt"),
+                        dtype=str,
+                        delimiter=",",
+                        skip_footer=1,
+                    )
+                )
+                data_str = pd.read_table(
+                    path, dtype=str, sep=r"\s+", names=head, usecols=range(col_number)
+                )
+                data_str = data_str.fillna("0")
                 data_str = data_str.to_numpy()
                 index_list = []
                 for i in range(data_str.shape[0]):
                     try:
-                        data_str[i,:].astype('float')
+                        data_str[i, :].astype("float")
                     except:
                         index_list.append(i)
-                data_str = np.delete(data_str, index_list,0)
-                data = data_str.astype('float')
+                data_str = np.delete(data_str, index_list, 0)
+                data = data_str.astype("float")
             except:
                 try:
-                    with open(path, 'r') as f:
+                    with open(path, "r") as f:
                         lines = f.readlines()
                         data = np.zeros((len(lines), len(lines[-1].split())))
-                        for (i, line) in zip(range(len(lines)), lines):
-                            line_data = np.array( line.split() ).astype(float)
-                            data[i, :len( line_data )] = line_data
+                        for i, line in zip(range(len(lines)), lines):
+                            line_data = np.array(line.split()).astype(float)
+                            data[i, : len(line_data)] = line_data
                 except:
-                    with open(path, 'r') as f:
+                    with open(path, "r") as f:
                         n_cols = -1
                         for line in f:
                             n_cols = max(n_cols, len(line.split()))
                         data = np.zeros((len(lines), n_cols))
-                        for (i, line) in zip(range(len(lines)), lines):
-                            line_data = np.array( line.split() ).astype(float)
-                            data[i, :len( line_data )] = line_data
-                        
+                        for i, line in zip(range(len(lines)), lines):
+                            line_data = np.array(line.split()).astype(float)
+                            data[i, : len(line_data)] = line_data
+
     return data
 
-def find_column_changing_line(path_folder: str,
-                              file_name: str) -> list:
+
+def find_column_changing_line(path_folder: str, file_name: str) -> list:
     """
     Loads a data file and returns the list of line numbers at which
     number of the line at which the number of columns changes.
@@ -108,15 +120,15 @@ def find_column_changing_line(path_folder: str,
     list
         list of row numbers
     """
-    #default_column = 0
-    #if column is None:
+    # default_column = 0
+    # if column is None:
     #    column = default_column
     path = os.path.join(path_folder, file_name)
     assert os.path.exists(path), "Selected file does not exists"
     number_of_colums = None
     line_number = 1
     line_change = []
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         for line in f:
             columns = len(line.strip().split())
             if number_of_colums is None:
@@ -125,15 +137,16 @@ def find_column_changing_line(path_folder: str,
                 line_number += 1
                 number_of_colums = columns
                 line_change.append(line_number)
-                #break
+                # break
             line_number += 1
-    #if len(line_change) > 1:
+    # if len(line_change) > 1:
     #    line_number = line_change[column]
-    #if len(line_change) == 1:
+    # if len(line_change) == 1:
     #    line_number = line_change[0]
-    #if line_number < 3:
+    # if line_number < 3:
     #    line_number = None
     return line_change
+
 
 def save_hdf(save_path, dataset_keywords, dataset_values):
     """
@@ -142,58 +155,64 @@ def save_hdf(save_path, dataset_keywords, dataset_values):
     dataset_values: list of whatever you want, these are the values for
                     the datasets
     """
+
     def save_with_attr(arr, key, group):
-        d = group.create_dataset(key if isinstance(key, str) else str(key),
-                                 data = arr.value)
-        d.attrs['name'] = arr.name
-        d.attrs['label'] = arr.label
-        d.attrs['cmap'] = arr.cmap if arr.cmap is not None else 'inferno'
-        d.attrs['lim0'] = arr.limits[0]
-        d.attrs['lim1'] = arr.limits[1]
-        d.attrs['log'] = arr.log
-        d.attrs['unit'] = str(arr.unit)
-    assert len(dataset_keywords) == len(dataset_values), \
+        d = group.create_dataset(
+            key if isinstance(key, str) else str(key), data=arr.value
+        )
+        d.attrs["name"] = arr.name
+        d.attrs["label"] = arr.label
+        d.attrs["cmap"] = arr.cmap if arr.cmap is not None else "inferno"
+        d.attrs["lim0"] = arr.limits[0]
+        d.attrs["lim1"] = arr.limits[1]
+        d.attrs["log"] = arr.log
+        d.attrs["unit"] = str(arr.unit)
+
+    assert len(dataset_keywords) == len(dataset_values), (
         "Number of keywords and values do not match"
-    with h5py.File(save_path, 'w') as file_out:
-        for (key, value) in zip(dataset_keywords, dataset_values):
+    )
+    with h5py.File(save_path, "w") as file_out:
+        for key, value in zip(dataset_keywords, dataset_values):
             if type(value) == dict:
                 group = file_out.create_group(key)
-                for (k, v) in value.items():
+                for k, v in value.items():
                     if type(v) == dict:
                         subgroup = group.create_group(k)
-                        for (kk, vv) in v.items():
+                        for kk, vv in v.items():
                             if isinstance(vv, aerray):
                                 save_with_attr(vv, kk, subgroup)
                             else:
                                 subgroup.create_dataset(
-                                    kk if isinstance(kk, str) else str(kk),
-                                    data = vv)
+                                    kk if isinstance(kk, str) else str(kk), data=vv
+                                )
                     else:
                         if isinstance(v, aerray):
                             save_with_attr(v, k, group)
                         else:
                             group.create_dataset(
-                                k if isinstance(k, str) else str(k),
-                                data = v)
+                                k if isinstance(k, str) else str(k), data=v
+                            )
             elif isinstance(value, aerray):
                 save_with_attr(value, key, file_out)
             else:
-                file_out.create_dataset(key, data = value)
+                file_out.create_dataset(key, data=value)
 
-def save_merge_dictionary_hdf(simulation: Simulation,
-                              value_dictionary: dict,
-                              save_path: str,
-                              file_name: str,
-                              keys: list[str] | None=None,
-                              **kwargs
-                              ) -> None:
+
+def save_merge_dictionary_hdf(
+    simulation: Simulation,
+    value_dictionary: dict,
+    save_path: str,
+    file_name: str,
+    keys: list[str] | None = None,
+    **kwargs,
+) -> None:
     """
     Merges the postprocessing located in a file with the newly run one.
     In case no postprocessing is found, the file is created.
     The output file needs to be organised as follows: two lists
     containing time and processed_hdf files, a dictionary containing
     local and global dictionaries of lists.
-    
+
 
     Parameters
     ----------
@@ -211,28 +230,28 @@ def save_merge_dictionary_hdf(simulation: Simulation,
     if keys is not None:
         for key in keys:
             try:
-                out_dictionary[key] = {kk: np.concatenate(vv, axis=-1) for (kk, vv) 
-                                        in out_dictionary[key].items()}
+                out_dictionary[key] = {
+                    kk: np.concatenate(vv, axis=-1)
+                    for (kk, vv) in out_dictionary[key].items()
+                }
             except:
                 for kk, vv in out_dictionary[key].items():
                     print(key, kk, vv)
                     out_dictionary[key][kk] = np.concatenate(vv)
     else:
         try:
-            out_dictionary = {kk: np.concatenate(vv, axis=-1) for (kk, vv) 
-                          in out_dictionary.items()}
+            out_dictionary = {
+                kk: np.concatenate(vv, axis=-1) for (kk, vv) in out_dictionary.items()
+            }
         except:
             for kk, vv in out_dictionary.items():
                 print(kk, vv)
                 np.concatenate(vv, axis=-1)
     if check_existence(simulation, os.path.join(save_path, file_name)):
-        old_t, old_dict, _ = load_hdf_to_dictionary(save_path,
-                                                    file_name,
-                                                    keys)
+        old_t, old_dict, _ = load_hdf_to_dictionary(save_path, file_name, keys)
         nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
         time = np.concatenate((old_t, time))
-        time.set(name=nm, label=lb, cmap=cm, log=lg,
-                 limits=[-0.005, time.value[-1]])
+        time.set(name=nm, label=lb, cmap=cm, log=lg, limits=[-0.005, time.value[-1]])
         if keys is not None:
             for key in keys:
                 for kk in out_dictionary[key].keys():
@@ -241,45 +260,47 @@ def save_merge_dictionary_hdf(simulation: Simulation,
                     lm = old_dict[key][kk].limits
                     lg = old_dict[key][kk].log
                     cm = old_dict[key][kk].cmap
-                    out_dictionary[key][kk] = \
-                        np.concatenate((old_dict[key][kk],
-                                       out_dictionary[key][kk]), axis=-1)
-                    out_dictionary[key][kk].set(name=nm, label=lb,
-                                                limits=lm, log=lg,
-                                                cmap=cm)
+                    out_dictionary[key][kk] = np.concatenate(
+                        (old_dict[key][kk], out_dictionary[key][kk]), axis=-1
+                    )
+                    out_dictionary[key][kk].set(
+                        name=nm, label=lb, limits=lm, log=lg, cmap=cm
+                    )
         else:
-            for kk in out_dictionary.keys():
+            for kk in out_dictionary:
                 nm = old_dict[kk].name
                 lb = old_dict[kk].label
                 lm = old_dict[kk].limits
                 lg = old_dict[kk].log
                 cm = old_dict[kk].cmap
-                out_dictionary[kk] = \
-                    np.concatenate((old_dict[kk],
-                                    out_dictionary[kk]), axis=-1)
-                out_dictionary[kk].set(name=nm, label=lb,
-                                        limits=lm, log=lg,
-                                        cmap=cm)            
+                out_dictionary[kk] = np.concatenate(
+                    (old_dict[kk], out_dictionary[kk]), axis=-1
+                )
+                out_dictionary[kk].set(name=nm, label=lb, limits=lm, log=lg, cmap=cm)
     else:
-        time.set(name='time', label=r'$t-t_{\rm b}$',
-                 limits=[-0.005, time.value[-1]], log=False)
+        time.set(
+            name="time",
+            label=r"$t-t_{\rm b}$",
+            limits=[-0.005, time.value[-1]],
+            log=False,
+        )
         if keys is not None:
             for key in keys:
-                for kk in out_dictionary[key].keys():
+                for kk in out_dictionary[key]:
                     out_dictionary[key][kk].set(**kwargs[key][kk])
         else:
-            for key in out_dictionary.keys():
+            for key in out_dictionary:
                 out_dictionary[key].set(**kwargs[key])
-    out_keys = ['time', 'processed_hdf']
+    out_keys = ["time", "processed_hdf"]
     out_keys.extend(list(out_dictionary.keys()))
     out_dict = [time, processed_hdf]
     out_dict.extend(list(out_dictionary.values()))
-    save_hdf(os.path.join(save_path, file_name),
-                out_keys, out_dict)
+    save_hdf(os.path.join(save_path, file_name), out_keys, out_dict)
 
-def load_hdf_to_dictionary(path: str,
-                           file_name:str,
-                           keys=None) -> tuple[aerray, dict[aerray], list[str]]:
+
+def load_hdf_to_dictionary(
+    path: str, file_name: str, keys=None
+) -> tuple[aerray, dict[aerray], list[str]]:
     """
     Loads a hdf file split into 'global' and 'local' datasets into a
     dictionary of aerrays.
@@ -297,92 +318,104 @@ def load_hdf_to_dictionary(path: str,
         aerray containing the time and a dictionary containing two
         dictionaries of aerrays.
     """
-    with h5py.File(os.path.join(path, file_name), 'r') as f:
-        time = aerray(f['time'][:], units_from_string(f['time'].attrs['unit']),
-                        f['time'].attrs['name'], f['time'].attrs['label'],
-                        f['time'].attrs['cmap'], [f['time'].attrs['lim0'],
-                                                f['time'].attrs['lim1']],
-                        f['time'].attrs['log'])
+    with h5py.File(os.path.join(path, file_name), "r") as f:
+        time = aerray(
+            f["time"][:],
+            units_from_string(f["time"].attrs["unit"]),
+            f["time"].attrs["name"],
+            f["time"].attrs["label"],
+            f["time"].attrs["cmap"],
+            [f["time"].attrs["lim0"], f["time"].attrs["lim1"]],
+            f["time"].attrs["log"],
+        )
         out_dictionary = {key: {} for key in keys} if keys is not None else {}
         if keys is not None:
             for key in keys:
-                for kk in f[key].keys():
-                    att = f[f'{key}/{kk}'].attrs
-                    out_dictionary[key][kk] = aerray(f[f'{key}/{kk}'][:],
-                                                              units_from_string(att['unit']),
-                                                              att['name'],
-                                                              att['label'],
-                                                              att['cmap'],
-                                                              [att['lim0'], att['lim1']],
-                                                              att['log'])
+                for kk in f[key]:
+                    att = f[f"{key}/{kk}"].attrs
+                    out_dictionary[key][kk] = aerray(
+                        f[f"{key}/{kk}"][:],
+                        units_from_string(att["unit"]),
+                        att["name"],
+                        att["label"],
+                        att["cmap"],
+                        [att["lim0"], att["lim1"]],
+                        att["log"],
+                    )
         else:
-            for kk in f.keys():
-                if kk == 'time' or kk == 'processed_hdf':
+            for kk in f:
+                if kk == "time" or kk == "processed_hdf":
                     continue
-                att = f[f'{kk}'].attrs
-                out_dictionary[kk] = aerray(f[f'{kk}'][...],
-                                            units_from_string(att['unit']),
-                                            att['name'],
-                                            att['label'],
-                                            att['cmap'],
-                                            [att['lim0'], att['lim1']],
-                                            att['log'])
-        processed_hdf = [ff.decode("utf-8") for ff in f['processed_hdf']]
+                att = f[f"{kk}"].attrs
+                out_dictionary[kk] = aerray(
+                    f[f"{kk}"][...],
+                    units_from_string(att["unit"]),
+                    att["name"],
+                    att["label"],
+                    att["cmap"],
+                    [att["lim0"], att["lim1"]],
+                    att["log"],
+                )
+        processed_hdf = [ff.decode("utf-8") for ff in f["processed_hdf"]]
     return time, out_dictionary, processed_hdf
 
-def load_dataset(path: str,
-              file_name: str,
-              dset_name: str,
-              return_series: bool = True) -> aerray | aeseries:
-    with h5py.File(os.path.join(path, file_name), 'r') as f:
+
+def load_dataset(
+    path: str, file_name: str, dset_name: str, return_series: bool = True
+) -> aerray | aeseries:
+    with h5py.File(os.path.join(path, file_name), "r") as f:
         dset = f[dset_name]
         if len(dset.attrs) > 0:
             att = dset.attrs
-            arr = aerray(dset[...],
-                         units_from_string(att['unit']),
-                         att['name'],
-                         att['label'],
-                         att['cmap'],
-                         [att['lim0'], att['lim1']],
-                         att['log'])
+            arr = aerray(
+                dset[...],
+                units_from_string(att["unit"]),
+                att["name"],
+                att["label"],
+                att["cmap"],
+                [att["lim0"], att["lim1"]],
+                att["log"],
+            )
         else:
             arr = dset[...]
-            if all((isinstance(a, bytes) for a in arr)):
+            if all(isinstance(a, bytes) for a in arr):
                 arr = [a.decode("utf-8") for a in arr]
         if isinstance(arr, aerray) and return_series:
-            dset = f['time']
+            dset = f["time"]
             att = dset.attrs
-            time = aerray(dset[...],
-                            units_from_string(att['unit']),
-                            att['name'],
-                            att['label'],
-                            att['cmap'],
-                            [att['lim0'], att['lim1']],
-                            att['log'])
+            time = aerray(
+                dset[...],
+                units_from_string(att["unit"]),
+                att["name"],
+                att["label"],
+                att["cmap"],
+                [att["lim0"], att["lim1"]],
+                att["log"],
+            )
             return create_series(time, arr)
         return arr
+
 
 def create_series(time, *args):
     """
     Creates as many aeseries as argument.
     """
     ghost_cells = False
-    if type(args[-1]) == dict:
-        if 'r_l' in args[-1]:
-            ghost_cells = args[-1]
-            args = args[:-1]
+    if type(args[-1]) == dict and "r_l" in args[-1]:
+        ghost_cells = args[-1]
+        args = args[:-1]
     series = []
     for arg in args:
         if type(arg) == dict:
             ddict = {}
-            for key in arg.keys():
+            for key in arg:
                 if isinstance(arg[key], aerray):
                     ddict[key] = aeseries(arg[key], time=time.copy())
                 elif type(arg[key]) == dict:
                     dddict = {}
-                    for kk in arg[key].keys():
+                    for kk in arg[key]:
                         dddict[kk] = aeseries(arg[key][kk], time=time.copy())
-                    ddict[key] = dddict                   
+                    ddict[key] = dddict
             series.append(ddict)
         elif type(arg) == list:
             llist = []
@@ -393,43 +426,58 @@ def create_series(time, *args):
             series.append(aeseries(arg, time=time.copy()))
     if ghost_cells:
         series.append(ghost_cells)
+    if len(series) == 1:
+        series = series[0]
     return series
+
 
 def load_asd(path, detector):
     url = {
-        'LIGOO3H': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_H1.txt",
-        'LIGOO3L': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_L1.txt",
-        'LIGOO4': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4low.txt",
-        'LIGOO4High': "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4high.txt",
-        'LIGO': "https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt",
-        'VirgoO3': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O3actual.txt",
-        'VirgoO4': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O4high_NEW.txt",
-        'Virgo': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
-        'VirgoO5High': "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
-        'KAGRA': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt",
-        'KAGRA80': "https://dcc.ligo.org/public/0165/T2000012/002/kagra_80Mpc.txt",
-        'ET': "https://apps.et-gw.eu/tds/?call_file=ET-0000A-18_ETDSensitivityCurveTxtFile.txt",
-        'CE': ""
+        "LIGOO3H": "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_H1.txt",
+        "LIGOO3L": "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O3actual_L1.txt",
+        "LIGOO4": "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4low.txt",
+        "LIGOO4High": "https://dcc.ligo.org/public/0165/T2000012/002/aligo_O4high.txt",
+        "LIGO": "https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt",
+        "VirgoO3": "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O3actual.txt",
+        "VirgoO4": "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O4high_NEW.txt",
+        "Virgo": "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
+        "VirgoO5High": "https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5low_NEW.txt",
+        "KAGRA": "https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt",
+        "KAGRA80": "https://dcc.ligo.org/public/0165/T2000012/002/kagra_80Mpc.txt",
+        "ET": "https://apps.et-gw.eu/tds/?call_file=ET-0000A-18_ETDSensitivityCurveTxtFile.txt",
+        "CE": "",
     }
-    assert detector in url.keys(), f"The detector should be one of {list(url.keys())}"
-    file_path = os.path.join(path, 'psds', detector + '.txt')
+    assert detector in url, f"The detector should be one of {list(url.keys())}"
+    file_path = os.path.join(path, "psds", detector + ".txt")
     if not os.path.exists(file_path):
-        if not os.path.exists(os.path.join(path, 'psds')):
-            os.mkdir(os.path.join(path, 'psds'))
+        if not os.path.exists(os.path.join(path, "psds")):
+            os.mkdir(os.path.join(path, "psds"))
         resp = requests.get(url[detector])
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(resp.content)
     psd = np.loadtxt(file_path)
-    frequency = aerray(psd[:, 0], u.Hz, 'frequency', r'$f$', None, [10, 4e3],
-                       True)
+    frequency = aerray(psd[:, 0], u.Hz, "frequency", r"$f$", None, [10, 4e3], True)
     i10 = np.argmax(frequency >= 10)
     i4000 = np.argmax(frequency >= 4000)
-    if detector == 'ET':
-        asd = aerray(psd[:, 3], (u.Hz**(-0.5)), detector, detector, None,
-                     [psd[i10:i4000, 3].min(), psd[i10:i4000, 3].max()], True)
+    if detector == "ET":
+        asd = aerray(
+            psd[:, 3],
+            (u.Hz ** (-0.5)),
+            detector,
+            detector,
+            None,
+            [psd[i10:i4000, 3].min(), psd[i10:i4000, 3].max()],
+            True,
+        )
     else:
-        asd = aerray(psd[:, 1], (u.Hz**(-0.5)), detector, detector, None,
-                     [psd[i10:i4000, 1].min(), psd[i10:i4000, 1].max()], True)
-    
-    return aeseries(asd,
-                    frequency=frequency)
+        asd = aerray(
+            psd[:, 1],
+            (u.Hz ** (-0.5)),
+            detector,
+            detector,
+            None,
+            [psd[i10:i4000, 1].min(), psd[i10:i4000, 1].max()],
+            True,
+        )
+
+    return aeseries(asd, frequency=frequency)
