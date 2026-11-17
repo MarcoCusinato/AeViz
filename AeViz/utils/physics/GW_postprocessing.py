@@ -283,3 +283,39 @@ def __compute_2D_partial_strain(
     corr = __compute_2D_Zha_surface_correction(rad1_ind, rad2_ind, correction)
 
     return np.sum(ne220[mask]) + corr
+
+
+def __compute_3D_gws_postprocessing(
+    gws_dictionary: dict,
+    simulation: Simulation,
+    file_name: str,
+    dV: aerray,
+    gradient: aerray,
+    Ylm: aerray,
+    dOmega: aerray,
+    cor_rad: aerray,
+    pns_rad: aerray,
+    inn_rad: aerray,
+    sho_rad: aerray,
+):
+    rho = simulation.rho(file_name)
+    vr = simulation.radial_velocity(file_name)
+    vt = simulation.theta_velocity(file_name)
+    vp = simulation.phi_velocity(file_name)
+    rho_vr = rho * vr
+    dmass = rho * dV
+    corr = []
+    Qradial = []
+    for i in range(5):
+        Qdot = dmass * (
+            vr * gradient[i][..., 0]
+            + vt * gradient[i][..., 1]
+            + vp * gradient[i][..., 3]
+        )
+        Qcorr = rho_vr * Ylm[i]
+        Qradial.append(np.sum(Qradial, axis=(0, 1)))
+        corr.append(np.sum(Qcorr, axis=(0, 1)))
+
+
+def __compute_3D_partial_Q():
+    pass
