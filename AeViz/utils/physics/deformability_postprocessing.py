@@ -71,7 +71,7 @@ def compute_tidal_love(
     entropy: aerray,
 ):
     ind_cor = np.argmax(entropy >= (4 * u.kBol / u.bry))
-    ind_pns = np.argmax(density >= (1e11 * u.g / u.cm**3))
+    ind_pns = np.argmax(density <= (1e11 * u.g / u.cm**3))
     mass = (
         np.cumsum(
             4 * np.pi * simulation.cell.dr_integration(simulation.ghost) * density
@@ -81,27 +81,33 @@ def compute_tidal_love(
     geo_dens = __to_geometrised_dens(density)
     geo_press = __to_geometrised_pres(pressure)
     geo_cs = __to_geometrised_vel(soundspeed)
-    radius = __to_geometrised_len(simulation.radius)
-    l_cr, k2_cr = __solve_tidal_love(
-        mass[ind_cor] / radius[ind_cor],
-        geo_press[: ind_cor + 1],
-        mass[: ind_cor + 1],
-        geo_cs[: ind_cor + 1],
-        geo_dens[: ind_cor + 1],
-        radius[: ind_cor + 1],
-    )
-    l_pn, k2_pn = __solve_tidal_love(
-        mass[ind_pns] / radius[ind_pns],
-        geo_press[: ind_pns + 1],
-        mass[: ind_pns + 1],
-        geo_cs[: ind_pns + 1],
-        geo_dens[: ind_pns + 1],
-        radius[: ind_pns + 1],
-    )
-    tidal_dictionary["core/kappa2"].append(k2_cr)
-    tidal_dictionary["core/tidal_deformability"].append(l_cr)
-    tidal_dictionary["PNS/kappa2"].append(k2_pn)
-    tidal_dictionary["PNS/tidal_deformability"].append(l_pn)
+    radius = __to_geometrised_len(simulation.grid.radius)
+    if ind_cor == 0 or ind_pns == 0:
+        l_cr = 0 * u.dimensionless_unscaled
+        k2_cr = 0 * u.dimensionless_unscaled
+        l_pn = 0 * u.dimensionless_unscaled
+        k2_pn = 0 * u.dimensionless_unscaled
+    else:
+        k2_cr, l_cr = __solve_tidal_love(
+            mass[ind_cor] / radius[ind_cor],
+            geo_press[: ind_cor + 1],
+            mass[: ind_cor + 1],
+            geo_cs[: ind_cor + 1],
+            geo_dens[: ind_cor + 1],
+            radius[: ind_cor + 1],
+        )
+        k2_pn, l_pn = __solve_tidal_love(
+            mass[ind_pns] / radius[ind_pns],
+            geo_press[: ind_pns + 1],
+            mass[: ind_pns + 1],
+            geo_cs[: ind_pns + 1],
+            geo_dens[: ind_pns + 1],
+            radius[: ind_pns + 1],
+        )
+    tidal_dictionary["core"]["kappa2"].append(k2_cr)
+    tidal_dictionary["core"]["tidal_deformability"].append(l_cr)
+    tidal_dictionary["PNS"]["kappa2"].append(k2_pn)
+    tidal_dictionary["PNS"]["tidal_deformability"].append(l_pn)
 
 
 def __to_geometrised_len(x: aerray) -> aerray:
@@ -340,8 +346,8 @@ def __solve_tidal_love(
         t_eval=radius,
         args=[pres, mass, soundspeed, dens],
         max_step=10000,
-        atol=1e-9,
-        rtol=1e-5,
+        atol=1e-18,
+        rtol=3e-14,
     )
     y = solution.t[-1] * solution.y[0][-1] / solution.y[1][-1]
     kappa2 = __compute_Love_number(xi, y)

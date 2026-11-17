@@ -689,10 +689,10 @@ def tidal_deformability_postprocesing(
         compute_tidal_love(
             tidal_dict,
             simulation,
-            rho[i + start_index],
-            p[i + start_index],
-            cs[i + start_index],
-            s[i + start_index],
+            rho[:, i + start_index],
+            p[:, i + start_index],
+            cs[:, i + start_index],
+            s[:, i + start_index],
         )
         postprocessed.append(file_name)
         if (check_index >= checkpoint) and save_checkpoints:
@@ -716,7 +716,7 @@ def tidal_deformability_postprocesing(
         simulation,
         (global_time, tidal_dict, postprocessed),
         simulation.storage_path,
-        "Tidal deformability postprocessing.h5",
+        "tidal_postprocessing.h5",
         ["PNS", "core"],
         **tidal_meta,
     )
