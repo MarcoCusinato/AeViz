@@ -720,3 +720,18 @@ def tidal_deformability_postprocesing(
         ["PNS", "core"],
         **tidal_meta,
     )
+
+
+def spherical_harmonics_postprocessing(
+    simulation: Simulation,
+    quantity_name: str,
+    save_checkpoints: bool = True,
+) -> None:
+    isradius = False
+    if "-" in quantity_name:
+        splits = quantity_name.split("-")
+        if len(splits) > 3:
+            raise ValueError(f"Too many values, expected at most 3, got {len(splits)}.")
+        quantity_name = splits[0]
+        isradius =True
+        if 

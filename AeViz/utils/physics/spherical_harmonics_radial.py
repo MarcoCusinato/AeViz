@@ -1,34 +1,51 @@
 from __future__ import annotations
-from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
+
+import os
+from typing import Literal
+
+import h5py
 import numpy as np
 import scipy.special as sp
-from AeViz.utils.utils import (check_existence, progressBar, checkpoints)
-from AeViz.utils.files.file_utils import save_hdf
-import os, h5py
-from AeViz.units import u
-from typing import Literal
-from AeViz.units import aerray, aeseries
+
 from AeViz.simulation import Simulation
+from AeViz.spherical_harmonics.spherical_harmonics import SphericalHarmonics
+from AeViz.units import aerray, aeseries, u
+from AeViz.utils.files.file_utils import save_hdf
+from AeViz.utils.utils import check_existence, checkpoints, progressBar
+
 
 def get_radius_indices(simulation, r, radius):
     if isinstance(r, str):
-        rs = r.split('-')
+        rs = r.split("-")
         if len(rs) == 1:
             rr = rs[0]
-            rt = 'avg'
+            rt = "avg"
             rc = None
         elif len(rs) == 2:
             rr = rs[0]
-            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else 'avg'
-            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else None
+            rt = rs[1] if rs[1] in ["avg", "max", "min"] else "avg"
+            rc = rs[1] if rs[1] not in ["avg", "max", "min", "full"] else None
         elif len(rs) == 3:
             rr = rs[0]
-            rt = rs[1] if rs[1] in ['avg', 'max', 'min'] else rs[2] \
-                if rs[2] in ['avg', 'max', 'min'] else 'avg'
-            rc = rs[1] if rs[1] not in ['avg', 'max', 'min', 'full'] else \
-                rs[2] if rs[2] not in ['avg', 'max', 'min', 'full'] else None
-        r = getattr(simulation, rr)(rad=rt) if rc is None else \
-            getattr(simulation, rr)(rad=rt, comp=rc)
+            rt = (
+                rs[1]
+                if rs[1] in ["avg", "max", "min"]
+                else rs[2]
+                if rs[2] in ["avg", "max", "min"]
+                else "avg"
+            )
+            rc = (
+                rs[1]
+                if rs[1] not in ["avg", "max", "min", "full"]
+                else rs[2]
+                if rs[2] not in ["avg", "max", "min", "full"]
+                else None
+            )
+        r = (
+            getattr(simulation, rr)(rad=rt)
+            if rc is None
+            else getattr(simulation, rr)(rad=rt, comp=rc)
+        )
         rindex = np.argmax(radius[:, None] >= r.data[None, :], axis=0)
     else:
         if r >= radius[-1]:
@@ -39,16 +56,19 @@ def get_radius_indices(simulation, r, radius):
             rindex = np.argmax(radius >= r)
     return rindex
 
-def Harmonics_decomposition_rho(simulation: Simulation,
-                                file_name: str,
-                                theta: aerray,
-                                phi: aerray,
-                                dOmega: aerray,
-                                SpH: SphericalHarmonics,
-                                lmax: int = 4) -> aerray:
+
+def Harmonics_decomposition_rho(
+    simulation: Simulation,
+    file_name: str,
+    theta: aerray,
+    phi: aerray,
+    dOmega: aerray,
+    SpH: SphericalHarmonics,
+    lmax: int = 4,
+) -> aerray:
     """
     Computes the spherical harmonics decomposition of the density up to
-    a value of l equal to lmax for all ms. 
+    a value of l equal to lmax for all ms.
 
     Parameters
     ----------
@@ -77,25 +97,29 @@ def Harmonics_decomposition_rho(simulation: Simulation,
     rho = simulation.rho(file_name)
     out_array = np.zeros((int(sp.factorial(lmax)) + 1, rho.shape[-1]))
     harm_index = 0
-    for l in range( lmax + 1 ):
-        for m in range( -l, l + 1 ):
+    for l in range(lmax + 1):
+        for m in range(-l, l + 1):
             Ylm = SpH.Ylm_norm(m, l, theta, phi)
-            out_array[harm_index, :] = np.sum( rho * Ylm[..., None] * 
-                                              dOmega[..., None],
-                                        axis=tuple(range(simulation.dim-1)))
+            out_array[harm_index, :] = np.sum(
+                rho * Ylm[..., None] * dOmega[..., None],
+                axis=tuple(range(simulation.dim - 1)),
+            )
             harm_index += 1
     return out_array
 
-def Harmonics_decomposition_rho_msum(simulation: Simulation,
-                                     file_name: str,
-                                     theta: aerray,
-                                     phi: aerray,
-                                     dOmega: aerray,
-                                     SpH: SphericalHarmonics,
-                                     lmax: int = 40):
+
+def Harmonics_decomposition_rho_msum(
+    simulation: Simulation,
+    file_name: str,
+    theta: aerray,
+    phi: aerray,
+    dOmega: aerray,
+    SpH: SphericalHarmonics,
+    lmax: int = 40,
+):
     """
     Computes the spherical harmonics decomposition of the density up to
-    a value of l equal to lmax summed for all ms. 
+    a value of l equal to lmax summed for all ms.
 
     Parameters
     ----------
@@ -122,21 +146,28 @@ def Harmonics_decomposition_rho_msum(simulation: Simulation,
         timestep
     """
     rho = simulation.rho(file_name)
-    out_array = np.zeros((lmax+1, rho.shape[-1]))
+    out_array = np.zeros((lmax + 1, rho.shape[-1]))
     harm_index = 0
-    for l in range( lmax + 1 ):
-        for m in range( -l, l + 1 ):
+    for l in range(lmax + 1):
+        for m in range(-l, l + 1):
             Ylm = SpH.Ylm_norm(m, l, theta, phi)
-            out_array[harm_index, :] += np.sum( rho * Ylm[..., None] * 
-                                               dOmega[..., None],
-                                        axis=tuple(range(simulation.dim-1))) ** 2
+            out_array[harm_index, :] += (
+                np.sum(
+                    rho * Ylm[..., None] * dOmega[..., None],
+                    axis=tuple(range(simulation.dim - 1)),
+                )
+                ** 2
+            )
         harm_index += 1
     return np.sqrt(out_array)
-   
-def calculate_rho_decomposition(simulation: Simulation,
-                                save_checkpoints: bool = True,
-                                msum: bool = False,
-                                no_new:bool = False) -> bool:
+
+
+def calculate_rho_decomposition(
+    simulation: Simulation,
+    save_checkpoints: bool = True,
+    msum: bool = False,
+    no_new: bool = False,
+) -> bool:
     """
     Computes the density decomposition in spherical harmonics of all
     timestep of a simulation.
@@ -161,31 +192,35 @@ def calculate_rho_decomposition(simulation: Simulation,
     """
     if msum:
         lmax = 40
-        fname = 'rho_decomposition_SpH_msum.h5'
+        fname = "rho_decomposition_SpH_msum.h5"
     else:
         lmax = 4
-        fname = 'rho_decomposition_SpH.h5'
+        fname = "rho_decomposition_SpH.h5"
     if check_existence(simulation, fname):
-        time, decomposition, processed_hdf = read_rho_decomposition(simulation, 
-                                                                    lmax, msum)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
-            or no_new:
+        time, decomposition, processed_hdf = read_rho_decomposition(
+            simulation, lmax, msum
+        )
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] or no_new:
             return True
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
-            print('Checkpoint found for the harmonics decomposition file, ' \
-                  'starting from the beginning.\nPlease wait...')
+            print(
+                "Checkpoint found for the harmonics decomposition file, "
+                "starting from the beginning.\nPlease wait..."
+            )
     else:
         start_point = 0
         processed_hdf = []
-        print('No checkpoint found for the harmonics decomposition file, ' \
-              'starting from the beginning.\nPlease wait...')
+        print(
+            "No checkpoint found for the harmonics decomposition file, "
+            "starting from the beginning.\nPlease wait..."
+        )
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
     else:
         checkpoint = checkpoints[simulation.dim]
-    
+
     ## Set up the spherical harmonics
     SpH = SphericalHarmonics()
     ## Get the angular component
@@ -197,42 +232,45 @@ def calculate_rho_decomposition(simulation: Simulation,
     progress_index = 0
     total_points = len(simulation.hdf_file_list) - start_point
     for file in simulation.hdf_file_list[start_point:]:
-        progressBar(progress_index, total_points,
-                    suffix='Computing spherical harmonics...')
+        progressBar(
+            progress_index, total_points, suffix="Computing spherical harmonics..."
+        )
         if msum:
-            in_data = (simulation, file, theta,
-                                                       phi, dOmega, SpH)
+            in_data = (simulation, file, theta, phi, dOmega, SpH)
         else:
-            in_data = Harmonics_decomposition_rho(simulation, file, theta, phi,
-                                                  dOmega, SpH)
+            in_data = Harmonics_decomposition_rho(
+                simulation, file, theta, phi, dOmega, SpH
+            )
         try:
             time = np.concatenate((time, simulation.time(file)))
-            decomposition = np.concatenate((decomposition, in_data[..., None]),
-                                           axis=-1)
-        except Exception as e:
+            decomposition = np.concatenate((decomposition, in_data[..., None]), axis=-1)
+        except Exception:
             time = simulation.time(file)
             decomposition = in_data[..., None]
         processed_hdf.append(file)
         if (check_index >= checkpoint) and save_checkpoints:
-            print('Checkpoint reached, saving...\n')
-            save_decomposition(simulation, decomposition, time, processed_hdf,
-                               lmax, msum)
-            
+            print("Checkpoint reached, saving...\n")
+            save_decomposition(
+                simulation, decomposition, time, processed_hdf, lmax, msum
+            )
+
             check_index = 0
         check_index += 1
         progress_index += 1
         findex += 1
-    print('Computation completed, saving...')
-    save_decomposition(simulation, decomposition, time, processed_hdf, lmax,
-                       msum)
+    print("Computation completed, saving...")
+    save_decomposition(simulation, decomposition, time, processed_hdf, lmax, msum)
     return True
 
-def save_decomposition(simulation: Simulation,
-                       decomposition: aerray,
-                       time: aerray,
-                       processed_hdf: list[str],
-                       lmax: int,
-                       msum: bool) -> None:
+
+def save_decomposition(
+    simulation: Simulation,
+    decomposition: aerray,
+    time: aerray,
+    processed_hdf: list[str],
+    lmax: int,
+    msum: bool,
+) -> None:
     """
     Saves the decomposition in spherical harmonics in a hdf file.
 
@@ -252,31 +290,29 @@ def save_decomposition(simulation: Simulation,
     msum : bool
         if the dcomposition has been done summing over m
     """
-    keys = ['time']
+    keys = ["time"]
     quantity = [time]
     if msum:
-        file_name = 'rho_decomposition_SpH_msum.h5'
+        file_name = "rho_decomposition_SpH_msum.h5"
     else:
-        file_name = 'rho_decomposition_SpH.h5'
+        file_name = "rho_decomposition_SpH.h5"
     dec_index = 0
     for l in range(lmax + 1):
         if msum:
-            keys.append('rho_l' + str(l))
+            keys.append("rho_l" + str(l))
             quantity.append(decomposition[dec_index, ...])
             dec_index += 1
         else:
             for m in range(-l, l + 1):
-                keys.append('rho_l' + str(l) + 'm' + str(m))
+                keys.append("rho_l" + str(l) + "m" + str(m))
                 quantity.append(decomposition[dec_index, ...])
                 dec_index += 1
-    keys.append('processed')
+    keys.append("processed")
     quantity.append(processed_hdf)
-    save_hdf(os.path.join(simulation.storage_path, file_name),
-                keys, quantity)
-    
-def read_rho_decomposition(simulation: Simulation,
-                           lmax: int,
-                           msum: bool) -> list:
+    save_hdf(os.path.join(simulation.storage_path, file_name), keys, quantity)
+
+
+def read_rho_decomposition(simulation: Simulation, lmax: int, msum: bool) -> list:
     """
     Reads the density decomposed in spherical hgarmonics.
 
@@ -293,43 +329,45 @@ def read_rho_decomposition(simulation: Simulation,
     Returns
     -------
     list
-        list of the computation results containing the time, 
+        list of the computation results containing the time,
         decomposition, and procedd timestep.
     """
     if msum:
-        fname = 'rho_decomposition_SpH_msum.h5'
+        fname = "rho_decomposition_SpH_msum.h5"
         data_dim = lmax + 1
     else:
-        fname = 'rho_decomposition_SpH.h5'
+        fname = "rho_decomposition_SpH.h5"
         data_dim = int(sp.factorial(lmax)) + 1
-    decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
-                                            fname), 'r')
-    data = [
-        (decomposition_data['time'][...] * u.s)
-    ]
+    decomposition_data = h5py.File(os.path.join(simulation.storage_path, fname), "r")
+    data = [(decomposition_data["time"][...] * u.s)]
 
-    dec_data = np.zeros((data_dim,
-                         len(simulation.cell.radius(simulation.ghost)),
-                         len(decomposition_data['time'][...])))
+    dec_data = np.zeros(
+        (
+            data_dim,
+            len(simulation.cell.radius(simulation.ghost)),
+            len(decomposition_data["time"][...]),
+        )
+    )
     dec_index = 0
     for l in range(lmax + 1):
         if msum:
-            key = 'rho_l' + str(l)
+            key = "rho_l" + str(l)
             dec_data[dec_index, ...] = decomposition_data[key][...]
             dec_index += 1
         else:
             for m in range(-l, l + 1):
-                key = 'rho_l' + str(l) + 'm' + str(m)
+                key = "rho_l" + str(l) + "m" + str(m)
                 dec_data[dec_index, ...] = decomposition_data[key][...]
                 dec_index += 1
     data.append(dec_data)
-    data.append(decomposition_data['processed'][...])
+    data.append(decomposition_data["processed"][...])
     decomposition_data.close()
     return data
-    
-def get_sph_profile(simulation: Simulation,
-                    l: int,
-                    m: int | None = None) -> tuple[np.ndarray, np.ndarray]:
+
+
+def get_sph_profile(
+    simulation: Simulation, l: int, m: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Reads from an hdf file the decomposition
 
@@ -350,36 +388,37 @@ def get_sph_profile(simulation: Simulation,
         list of time and profile
     """
     if m is None:
-        fname = 'rho_decomposition_SpH_msum.h5'
-        key = 'rho_l' + str(l)
+        fname = "rho_decomposition_SpH_msum.h5"
+        key = "rho_l" + str(l)
     else:
-        fname = 'rho_decomposition_SpH.h5'
-        key = 'rho_l' + str(l) + 'm' + str(m)
-    decomposition_data = h5py.File(os.path.join(simulation.storage_path, 
-                                            fname), 'r')
+        fname = "rho_decomposition_SpH.h5"
+        key = "rho_l" + str(l) + "m" + str(m)
+    decomposition_data = h5py.File(os.path.join(simulation.storage_path, fname), "r")
     data = decomposition_data[key][...]
-    time = decomposition_data['time'][...]
+    time = decomposition_data["time"][...]
     decomposition_data.close()
     return time, data
 
-def get_sph_profiles_r(simulation: Simulation,
-                       l: int,
-                       m: int = None,
-                       zero_norm: bool = True,
-                       rhomin: aerray | None = None,
-                       rhomax: aerray | None = None,
-                       r: aerray | None = None,
-                       mode: Literal['mass', 'radius'] = 'radius') -> \
-                           tuple[np.ndarray, np.ndarray]:
+
+def get_sph_profiles_r(
+    simulation: Simulation,
+    l: int,
+    m: int = None,
+    zero_norm: bool = True,
+    rhomin: aerray | None = None,
+    rhomax: aerray | None = None,
+    r: aerray | None = None,
+    mode: Literal["mass", "radius"] = "radius",
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Returns the spherical profile or the value of a certain radius or 
+    Returns the spherical profile or the value of a certain radius or
     the average over a certain region enclosed by two values of density.
 
     Parameters
     ----------
     simulation : Simulation
         simulation from which the spherical harmonics decomposition has
-        been computed 
+        been computed
     l : int
         the l number to consider
     m : int | None, optional
@@ -403,8 +442,9 @@ def get_sph_profiles_r(simulation: Simulation,
         time and profile.
     """
     rr = [rhomin, rhomax, r]
-    assert rr.count(None) < 3, "Please provide at least one of the three " \
-        "arguments: rhomin, rhomax, r"
+    assert rr.count(None) < 3, (
+        "Please provide at least one of the three arguments: rhomin, rhomax, r"
+    )
     if m is None:
         time, r00 = get_sph_profile(simulation, 0)
     else:
@@ -420,38 +460,41 @@ def get_sph_profiles_r(simulation: Simulation,
         except:
             return time, rlm[rindex, ...]
     else:
-        rho = simulation.radial_profile('rho').data.value
+        rho = simulation.radial_profile("rho").data.value
         if rhomin is None:
             rhomin = 0
         if rhomax is None:
             rhomax = rho.max()
-        mask = (rho >= rhomin) & (rho <= rhomax)        
+        mask = (rho >= rhomin) & (rho <= rhomax)
         rlm[~mask] = np.nan
         ## Average over the selected region
-        if mode == 'radius':
-            dr = simulation.cell.dr_integration(simulation.ghost).value[:, None] * \
-                np.ones(rlm.shape)
+        if mode == "radius":
+            dr = simulation.cell.dr_integration(simulation.ghost).value[
+                :, None
+            ] * np.ones(rlm.shape)
             rlm = rlm * dr
             dr[~mask] = np.nan
             rlm = np.nansum(rlm, axis=0) / np.nansum(dr, axis=0)
             rlm = np.nan_to_num(rlm)
-        elif mode == 'mass':
+        elif mode == "mass":
             rlm = rlm * rho
             rho[~mask] = np.nan
             rlm = np.nansum(rlm, axis=0) / np.nansum(rho, axis=0)
             rlm = np.nan_to_num(rlm)
         return time, rlm
-    
-def get_data_for_barcode(simulation: Simulation,
-                         lmax: int | None = None,
-                         lmin: int | None = None,
-                         rhomin: aerray | None = None,
-                         rhomax:aerray | None = None,
-                         r: aerray | None = None,
-                         msum: bool = False,
-                         zero_norm: bool = True,
-                         mode: Literal['mass', 'radius'] = 'radius') -> \
-                             tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+
+def get_data_for_barcode(
+    simulation: Simulation,
+    lmax: int | None = None,
+    lmin: int | None = None,
+    rhomin: aerray | None = None,
+    rhomax: aerray | None = None,
+    r: aerray | None = None,
+    msum: bool = False,
+    zero_norm: bool = True,
+    mode: Literal["mass", "radius"] = "radius",
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Returns the evolution of the l and m over time for a specific radius
     or an average over two values of density.
@@ -460,12 +503,12 @@ def get_data_for_barcode(simulation: Simulation,
     ----------
     simulation : Simulation
         simulation from which the spherical harmonics decomposition has
-        been computed 
+        been computed
     lmax : int | None, optional
-        maximum value of l to consider, if None default values are 
+        maximum value of l to consider, if None default values are
         considered, by default None
     lmin : int | None, optional
-        minimum value of l to consider, if None default values are 
+        minimum value of l to consider, if None default values are
         considered, by default None
     rhomin : aerray | None, optional
         minimum value of density to consider, by default None
@@ -501,9 +544,16 @@ def get_data_for_barcode(simulation: Simulation,
         Yscale = np.arange(lmin, lmax + 1)
     if msum:
         for l in range(lmin, lmax + 1):
-            time, rlm = get_sph_profiles_r(simulation, l=l, m=None,
-                                           zero_norm=zero_norm, rhomin=rhomin,
-                                           rhomax=rhomax, r=r, mode=mode)
+            time, rlm = get_sph_profiles_r(
+                simulation,
+                l=l,
+                m=None,
+                zero_norm=zero_norm,
+                rhomin=rhomin,
+                rhomax=rhomax,
+                r=r,
+                mode=mode,
+            )
             if l == lmin:
                 data = rlm[None, ...]
             else:
@@ -511,19 +561,26 @@ def get_data_for_barcode(simulation: Simulation,
     else:
         for l in range(lmin, lmax + 1):
             for m in range(-l, l + 1):
-                time, rlm = get_sph_profiles_r(simulation, l=l, m=m,
-                                               zero_norm=zero_norm,
-                                               rhomin=rhomin, rhomax=rhomax,
-                                               r=r, mode=mode)
+                time, rlm = get_sph_profiles_r(
+                    simulation,
+                    l=l,
+                    m=m,
+                    zero_norm=zero_norm,
+                    rhomin=rhomin,
+                    rhomax=rhomax,
+                    r=r,
+                    mode=mode,
+                )
                 if l == lmin and m == -l:
                     data = rlm[None, ...]
                 else:
                     data = np.concatenate((data, rlm[None, ...]), axis=0)
     return time, Yscale, data
-    
-def Fourier_amplitude(simulation: Simulation,
-                      save_checkpoints: bool = True,
-                      no_new: bool = False) -> bool:
+
+
+def Fourier_amplitude(
+    simulation: Simulation, save_checkpoints: bool = True, no_new: bool = False
+) -> bool:
     """
     Computes the fourier amplitude for the first 11 ms in a 3D simulation
 
@@ -544,28 +601,31 @@ def Fourier_amplitude(simulation: Simulation,
         True if the computation is finished or it does not have to be
         resumed.
     """
-    if check_existence(simulation, 'rho_fourier.h5'):
+    if check_existence(simulation, "rho_fourier.h5"):
         time, rhom_series, processed_hdf = read_rho_fourier(simulation)
-        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] \
-            or no_new:
+        if processed_hdf[-1].decode("utf-8") == simulation.hdf_file_list[-1] or no_new:
             return True
         else:
             start_point = len(processed_hdf)
             processed_hdf = [ff.decode("utf-8") for ff in processed_hdf]
-            print('Checkpoint found for the Fourier coefficients file, ' \
-                  'starting from the checkpoint.\nPlease wait...')
+            print(
+                "Checkpoint found for the Fourier coefficients file, "
+                "starting from the checkpoint.\nPlease wait..."
+            )
     else:
         start_point = 0
         processed_hdf = []
-        print('No checkpoint found for the Fourier coefficients file, ' \
-              'starting from the beginning.\nPlease wait...')
+        print(
+            "No checkpoint found for the Fourier coefficients file, "
+            "starting from the beginning.\nPlease wait..."
+        )
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
     else:
         checkpoint = checkpoints[simulation.dim]
     dtheta = simulation.cell.dtheta_integration(simulation.ghost).value
     N_theta = len(dtheta) // 2
-    dtheta = dtheta[None, N_theta-2:N_theta+2, None]
+    dtheta = dtheta[None, N_theta - 2 : N_theta + 2, None]
     theta_norm = dtheta.sum()
     phi = simulation.cell.phi(simulation.ghost).value[:, None, None]
     dphi = simulation.cell.dphi(simulation.ghost).value[:, None, None]
@@ -575,12 +635,13 @@ def Fourier_amplitude(simulation: Simulation,
     ## Compute all the stuff we can just one time
     mexp = {}
     for m in range(11):
-        mexp[m] = np.exp(1.j * m * phi) * dphi / theta_norm * dtheta
+        mexp[m] = np.exp(1.0j * m * phi) * dphi / theta_norm * dtheta
     total_points = len(simulation.hdf_file_list) - start_point
     for file in simulation.hdf_file_list[start_point:]:
-        progressBar(progress_index, total_points,
-                    suffix='Computing Fourier coefficients')
-        rho = simulation.rho(file).value[:, N_theta-2:N_theta+2, :]
+        progressBar(
+            progress_index, total_points, suffix="Computing Fourier coefficients"
+        )
+        rho = simulation.rho(file).value[:, N_theta - 2 : N_theta + 2, :]
         ## Compute the radial m coefficients
         rhom = {}
         for m in range(11):
@@ -589,8 +650,9 @@ def Fourier_amplitude(simulation: Simulation,
         try:
             time = np.concatenate((time, tm))
             for m in range(11):
-                rhom_series[m] = np.concatenate((rhom_series[m],
-                                                 rhom[m][..., None]), axis=-1)
+                rhom_series[m] = np.concatenate(
+                    (rhom_series[m], rhom[m][..., None]), axis=-1
+                )
         except Exception as e:
             print(e)
             time = tm
@@ -599,19 +661,24 @@ def Fourier_amplitude(simulation: Simulation,
                 rhom_series[m] = rhom[m][..., None]
 
         processed_hdf.append(file)
-        if (check_index >= checkpoint and save_checkpoints):
-            print('Checkpoint reached, saving...\n')
-            save_hdf(os.path.join(simulation.storage_path, 'rho_fourier.h5'),
-                     ['time', 'Pm', 'processed'],
-                     [time, rhom_series, processed_hdf])
+        if check_index >= checkpoint and save_checkpoints:
+            print("Checkpoint reached, saving...\n")
+            save_hdf(
+                os.path.join(simulation.storage_path, "rho_fourier.h5"),
+                ["time", "Pm", "processed"],
+                [time, rhom_series, processed_hdf],
+            )
             check_index = 0
         check_index += 1
         progress_index += 1
-    print('Computation complete, saving...\n')
-    save_hdf(os.path.join(simulation.storage_path, 'rho_fourier.h5'),
-                     ['time', 'Pm', 'processed'],
-                     [time, rhom_series, processed_hdf])
+    print("Computation complete, saving...\n")
+    save_hdf(
+        os.path.join(simulation.storage_path, "rho_fourier.h5"),
+        ["time", "Pm", "processed"],
+        [time, rhom_series, processed_hdf],
+    )
     return True
+
 
 def read_rho_fourier(simulation: Simulation) -> list[aerray]:
     """
@@ -621,32 +688,34 @@ def read_rho_fourier(simulation: Simulation) -> list[aerray]:
     ----------
     simulation : Simulation
         simulation from which the Fourier decomposition has been
-        computed 
+        computed
 
     Returns
     -------
     list[aerray]
         list of data
     """
-    fourier_data = h5py.File(os.path.join(simulation.storage_path, 
-                                                'rho_fourier.h5'), 'r')
-    data = [
-        (fourier_data['time'][...] * u.s)
-    ]
+    fourier_data = h5py.File(
+        os.path.join(simulation.storage_path, "rho_fourier.h5"), "r"
+    )
+    data = [(fourier_data["time"][...] * u.s)]
 
     Pm = {}
     for m in range(11):
-        Pm[m] = fourier_data[f'Pm/{m}'][...]
+        Pm[m] = fourier_data[f"Pm/{m}"][...]
     data.append(Pm)
-    data.append(fourier_data['processed'][...])
+    data.append(fourier_data["processed"][...])
     fourier_data.close()
     return data
 
-def get_rho_fourier(simulation: Simulation,
-                    m: int,
-                    mode: Literal['phase', 'amplitude'] = 'amplitude',
-                    r: aerray | None = None,
-                    zero_norm: bool = True) -> aeseries:
+
+def get_rho_fourier(
+    simulation: Simulation,
+    m: int,
+    mode: Literal["phase", "amplitude"] = "amplitude",
+    r: aerray | None = None,
+    zero_norm: bool = True,
+) -> aeseries:
     """
     Returns the evolution of the Fourier coefficient with azimuthal
     number m at a certain radius r
@@ -655,7 +724,7 @@ def get_rho_fourier(simulation: Simulation,
     ----------
     simulation : Simulation
         simulation from which the Fourier decomposition has been
-        computed 
+        computed
     m : int
         azimuthal number
     mode : Literal['phase', 'amplitude'], optional
@@ -675,28 +744,47 @@ def get_rho_fourier(simulation: Simulation,
     """
     time, Pms, _ = read_rho_fourier(simulation)
     radius = simulation.cell.radius(simulation.ghost)
-    time.set(name='time', label=r'$t-t_\mathrm{b}$', cmap=None, log=False,
-             limits=[-0.005, time.value.max()])
+    time.set(
+        name="time",
+        label=r"$t-t_\mathrm{b}$",
+        cmap=None,
+        log=False,
+        limits=[-0.005, time.value.max()],
+    )
     P0 = np.abs(Pms[0])
     Pm = Pms[m]
-    if mode == 'phase':
-        outdata = aerray(np.angle(Pm), u.radian, name=f'phase_{m}',
-                    label=f'$\\phi_{m}$', cmap='rainbow', limits=[-np.pi, np.pi])
-    elif mode == 'amplitude':
+    if mode == "phase":
+        outdata = aerray(
+            np.angle(Pm),
+            u.radian,
+            name=f"phase_{m}",
+            label=f"$\\phi_{m}$",
+            cmap="rainbow",
+            limits=[-np.pi, np.pi],
+        )
+    elif mode == "amplitude":
         if zero_norm:
-            outdata = aerray(np.abs(Pm)/P0, u.dimensionless_unscaled, name=f'ampl_{m}',
-                    label=r'$\tilde{P}_{%d}/\tilde{P}_{0}$' % m, cmap='cividis',
-                    limits=[(np.abs(Pm)/P0).min() * 1.1, (np.abs(Pm)/P0).max() * 0.9])
-        
+            outdata = aerray(
+                np.abs(Pm) / P0,
+                u.dimensionless_unscaled,
+                name=f"ampl_{m}",
+                label=r"$\tilde{P}_{%d}/\tilde{P}_{0}$" % m,
+                cmap="cividis",
+                limits=[(np.abs(Pm) / P0).min() * 1.1, (np.abs(Pm) / P0).max() * 0.9],
+            )
+
         else:
-            outdata = aerray(np.abs(Pm), u.dimensionless_unscaled, name=f'ampl_{m}',
-                    label=r'$\\tilde{P}'+f'_{m}$', cmap='cividis',
-                    limits=[np.abs(Pm).min() * 1.1, np.abs(Pm).max() * 0.9])
+            outdata = aerray(
+                np.abs(Pm),
+                u.dimensionless_unscaled,
+                name=f"ampl_{m}",
+                label=r"$\\tilde{P}" + f"_{m}$",
+                cmap="cividis",
+                limits=[np.abs(Pm).min() * 1.1, np.abs(Pm).max() * 0.9],
+            )
     if r is not None:
         rindex = np.argmax(radius >= r)
         outdata = outdata[rindex, ...]
         return aeseries(outdata, time=time)
     else:
         return aeseries(outdata, time=time, radius=radius)
-        
-    
