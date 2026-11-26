@@ -756,7 +756,7 @@ def spherical_harmonics_postprocessing(
     isradius = False
     if simulation.dim == 1:
         return
-    out_name = f"{quantity_name}.h5"
+    out_name = f"{quantity_name}_spherical_harmonics_decomposition.h5"
     if "-" in quantity_name:
         isradius = True
         splits = quantity_name.split("-")
@@ -780,7 +780,7 @@ def spherical_harmonics_postprocessing(
             else:
                 raise TypeError("Quantity not recognised.")
         if comp is not None:
-            out_name = f"{quantity_name}_{comp}.h5"
+            out_name = f"{quantity_name}_{comp}_spherical_harmonics_decomposition.h5"
     if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
         checkpoint = len(simulation.hdf_file_list)
     else:
@@ -841,9 +841,13 @@ def spherical_harmonics_postprocessing(
     global_time = []
     sph_harm_dict = declare_spherical_harmonics_dicionary(simulation.dim)
     check_index = 0
-    dOmega = simulation.cell.dOmega(simulation.ghost)
+    dOmega = (
+        simulation.cell.dOmega(simulation.ghost)
+        if isradius
+        else simulation.cell.dOmega(simulation.ghost)[..., None]
+    )
     spher_harm = SphericalHarmonics()
-    lmax = int((simulation.theta / 2 - 1) * 1.11)
+    lmax = int((len(simulation.grid.theta) / 2 - 1) * 1.11)
 
     for i, file_name in enumerate(pbar):
         pbar.set_postfix(file=file_name)
@@ -872,14 +876,14 @@ def spherical_harmonics_postprocessing(
                 spher_meta = create_metadata_spherical_harmonics(dd_qt)
             save_merge_dictionary_hdf(
                 simulation,
-                (global_time, spher_harm, postprocessed),
+                (global_time, sph_harm_dict, postprocessed),
                 simulation.storage_path,
                 out_name,
                 None,
                 **spher_meta,
             )
             check_index = 0
-            spher_harm = declare_spherical_harmonics_dicionary()
+            sph_harm_dict = declare_spherical_harmonics_dicionary(simulation.dim)
             global_time = []
             pbar.set_description(
                 f"Spherical harmonics decomposition of {quantity_name}",
@@ -890,7 +894,7 @@ def spherical_harmonics_postprocessing(
         spher_meta = create_metadata_spherical_harmonics(dd_qt)
     save_merge_dictionary_hdf(
         simulation,
-        (global_time, spher_harm, postprocessed),
+        (global_time, sph_harm_dict, postprocessed),
         simulation.storage_path,
         out_name,
         None,

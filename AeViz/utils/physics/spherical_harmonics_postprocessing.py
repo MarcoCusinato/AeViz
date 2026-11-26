@@ -109,15 +109,16 @@ def __compute_2D_spherical_harmonics(
         timestep
     """
     dec_arr = np.zeros((lmax + 1, quantity.shape[-1]))
-    harm_index = 0
     for l in range(lmax + 1):
         m = 0
-        Ylm = SpH.Ylm_norm(m, l, simulation.grid.theta, simulation.phi)
+        Ylm = SpH.Ylm_norm(
+            m, l, simulation.grid.theta, simulation.cell.phi(simulation.ghost)
+        )
         if Ylm.ndim < quantity.ndim:
             Ylm = Ylm[..., None]
-        harm = np.sum(quantity * Ylm * dOmega, axis=(0, 1))
-        dec_arr[harm_index, :] = harm
-    sph_harmonics_dictionary["decomposition"].append(dec_arr[..., None])
+        harm = np.sum(quantity * Ylm * dOmega, axis=(0))
+        dec_arr[l, :] = harm
+    sph_harmonics_dictionary["decomposition"].append(dec_arr[..., None] * quantity.unit)
 
 
 def __compute_3D_spherical_harmonics(
@@ -159,7 +160,7 @@ def __compute_3D_spherical_harmonics(
     harm_index = 0
     for l in range(lmax + 1):
         for m in range(-l, l + 1):
-            Ylm = SpH.Ylm_norm(m, l, simulation.grid.theta, simulation.phi)
+            Ylm = SpH.Ylm_norm(m, l, simulation.grid.theta, simulation.grid.phi)
             if Ylm.ndim < quantity.ndim:
                 Ylm = Ylm[..., None]
             harm = np.sum(quantity * Ylm * dOmega, axis=(0, 1))
@@ -167,5 +168,7 @@ def __compute_3D_spherical_harmonics(
                 dec_arr[harm_index, :] = harm
             power_arr[l, :] += harm**2
             harm_index += 1
-    sph_harmonics_dictionary["power_harm"].append(np.sqrt(power_arr)[..., None])
-    sph_harmonics_dictionary["decomposition"].append(dec_arr[..., None])
+    sph_harmonics_dictionary["power_harm"].append(
+        np.sqrt(power_arr)[..., None] * quantity.unit
+    )
+    sph_harmonics_dictionary["decomposition"].append(dec_arr[..., None] * quantity.unit)
