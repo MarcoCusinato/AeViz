@@ -47,6 +47,9 @@ script-files = ["bin/add_Aenus_sim_paths",
                 "bin/run_postprocessing"]
 include-package-data = true
 
+[project.scripts]
+aeviz_run_postprocessing = "AeViz.cli.run_postprocessing:main"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*"]
