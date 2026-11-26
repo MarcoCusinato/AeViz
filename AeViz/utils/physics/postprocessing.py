@@ -433,7 +433,9 @@ def supernova_neutrino_postprocessing(
         )
         domega_obs, alpha, beta = build_obs_grid(256)
         weights[2] = compute_weights(theta, phi, alpha, beta, simulation.dim)
-    neutrino_dict = declare_neutrino_dictionary(simulation.dim, index_theta)
+    neutrino_dict, neutrino_red_dict = declare_neutrino_dictionary(
+        simulation.dim, index_theta
+    )
     neutrino_metadata = neutrino_quantity_metadata(index_theta)
     global_time = []
     reduced_time = []
@@ -445,6 +447,7 @@ def supernova_neutrino_postprocessing(
         global_time.append(time)
         save_loc = compute_neutrino_postprocessing(
             neutrino_dict,
+            neutrino_red_dict,
             simulation,
             file_name,
             dOmega,
@@ -463,14 +466,22 @@ def supernova_neutrino_postprocessing(
             pbar.set_description("Saving.")
             save_merge_dictionary_hdf(
                 simulation,
-                (global_time, neutrino_dict, postprocessed),
+                (reduced_time, neutrino_dict, postprocessed),
                 simulation.storage_path,
                 "neutrino_postprocessing.h5",
                 ["nue", "nua", "nux"],
                 **neutrino_metadata,
             )
+            save_merge_dictionary_hdf(
+                simulation,
+                (global_time, neutrino_red_dict, postprocessed),
+                simulation.storage_path,
+                "neutrino_reduced_postprocessing.h5",
+                ["nue", "nua", "nux"],
+                **neutrino_metadata,
+            )
             check_index = 0
-            neutrino_dict = declare_neutrino_dictionary(
+            neutrino_dict, neutrino_red_dict = declare_neutrino_dictionary(
                 simulation.dim,
                 index_theta,
             )
@@ -481,9 +492,17 @@ def supernova_neutrino_postprocessing(
             check_index += 1
     save_merge_dictionary_hdf(
         simulation,
-        (global_time, neutrino_dict, postprocessed),
+        (reduced_time, neutrino_dict, postprocessed),
         simulation.storage_path,
         "neutrino_postprocessing.h5",
+        ["nue", "nua", "nux"],
+        **neutrino_metadata,
+    )
+    save_merge_dictionary_hdf(
+        simulation,
+        (global_time, neutrino_red_dict, postprocessed),
+        simulation.storage_path,
+        "neutrino_reduced_postprocessing.h5",
         ["nue", "nua", "nux"],
         **neutrino_metadata,
     )

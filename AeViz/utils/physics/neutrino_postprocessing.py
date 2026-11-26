@@ -39,13 +39,13 @@ def declare_neutrino_dictionary(dim: int, angles: list[int] | None = None):
         "Elab_avg": [],
         "E2lab_avg": [],
     }
-
+    nu_red_spec = {}
     if dim == 1:
-        nu_spec["Leq"] = []
+        nu_red_spec["Leq"] = []
     if dim > 1:
         angl = 0
         for i in range(len(angles)):
-            nu_spec[f"Leq_{angl}"] = []
+            nu_red_spec[f"Leq_{angl}"] = []
             nu_spec[f"Llab_{angl}"] = []
             nu_spec[f"Elab_{angl}"] = []
             nu_spec[f"E2lab_{angl}"] = []
@@ -70,7 +70,10 @@ def declare_neutrino_dictionary(dim: int, angles: list[int] | None = None):
         nu_spec["l2pl"] = []
         nu_spec["l2cr"] = []
     neutrino_dictionary = {nu: deepcopy(nu_spec) for nu in ("nue", "nua", "nux")}
-    return neutrino_dictionary
+    neutrino_reduced_dictionary = {
+        nu: deepcopy(nu_red_spec) for nu in ("nue", "nua", "nux")
+    }
+    return neutrino_dictionary, neutrino_reduced_dictionary
 
 
 def neutrino_quantity_metadata(angles: list[int] | None = None) -> dict:
@@ -314,6 +317,7 @@ def neutrino_quantity_metadata(angles: list[int] | None = None) -> dict:
 
 def compute_neutrino_postprocessing(
     neutrino_dictionary: dict,
+    neutrino_reduced_dictionary: dict,
     simulation: Simulation,
     file_name: str,
     dOmega: aerray,
@@ -326,7 +330,12 @@ def compute_neutrino_postprocessing(
     PNS_mass: aerray | None,
 ) -> None:
     __reduced_neutrino_output(
-        neutrino_dictionary, simulation, file_name, index500, index_theta, index_phi
+        neutrino_reduced_dictionary,
+        simulation,
+        file_name,
+        index500,
+        index_theta,
+        index_phi,
     )
     __full_neutrino_output(
         neutrino_dictionary,
