@@ -68,6 +68,11 @@ def declare_profiles_dictionary(dim: int,
     if dim > 2:
         profiles_dictionary['rotational_velocity_profile'] = []
         profiles_dictionary['residual_velocity_profile'] = []
+        profiles_dictionary['omega_axis_profile'] = []
+        profiles_dictionary['Solberg_Hoiland_axis_profile'] = []
+        profiles_dictionary['Rossby_axis_profile'] = []
+        profiles_dictionary['epicyclic_frequency_axis_profile'] = []
+        
             
     return profiles_dictionary
 
@@ -283,7 +288,7 @@ def __compute_3D_profiles(profiles_dictionary: dict,
     kappa_og = simulation.epicyclic_frequency(file_name)
     bv_freq = simulation.BV_frequency(file_name)
     so_crit_og = kappa_og + bv_freq
-    so_crit.set(name='soldberg hoiland criterion',
+    so_crit_og.set(name='soldberg hoiland criterion',
                 label=r'$\omega^2_{\rm SH}$',
                 limits=bv_freq.limits,
                 cmap='seismic',

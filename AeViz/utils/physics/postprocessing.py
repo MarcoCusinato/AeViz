@@ -104,7 +104,7 @@ def supernova_postprocessing(
             radius[None, None, :]
             * np.sin(simulation.cell.theta(simulation.ghost))[None, :, None]
         ) ** 2
-        X, Y, Z = grid[0] * radius.unit, X[1] * radius.unit, grid[3] * radius.unit
+        X, Y, Z = grid[0] * radius.unit, grid[1] * radius.unit, grid[2] * radius.unit
 
     start_index = len(pns_processed)
     file_list = file_list[start_index:]
