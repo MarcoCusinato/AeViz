@@ -861,6 +861,7 @@ def __compute_3D_global_local_quantities(
         omg = (vrot / R) * vel_unit / simulation.grid.radius.unit
         vturb = np.nansum((v - vrot * e_rot) ** 2, axis=0) * vel_unit**2
         vrot = vrot * vel_unit
+        R = R * simulation.grid.radius.unit
     PNS_dictionary["global"]["I"].append(np.nansum((dmass.to(u.g) * R**2)[PNS_mask]))
     PNS_dictionary["global"]["erot"].append(
         np.nansum(0.5 * (vrot**2 * dmass)[mask]).to(u.erg)
