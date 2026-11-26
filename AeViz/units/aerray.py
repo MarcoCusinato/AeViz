@@ -617,9 +617,9 @@ class aerray(np.ndarray):
         if x is None and y is None:
             return np.where(condition)
         if isinstance(x, aerray) and isinstance(y, aerray):
-            if x.unit != y.unit:
+            if not x.unit.is_equivalent(y.unit):
                 raise ValueError(f"Cannot mix units: {x.unit} and {y.unit}")
-            return aerray(np.where(condition, x.value, y.value), unit=x.unit)
+            return aerray(np.where(condition, x.value, y.to(x.unit).value), unit=x.unit)
         elif isinstance(x, aerray):
             return aerray(np.where(condition, x.value, y), unit=x.unit,
                           name=x.name, label=x.label, cmap=x.cmap,
