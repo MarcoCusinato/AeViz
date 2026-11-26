@@ -56,6 +56,11 @@ from AeViz.utils.physics.shock_postprocessing import (
     declare_shock_dictionary,
     shock_quantity_metadata,
 )
+from AeViz.utils.physics.spherical_harmonics_postprocessing import (
+    compute_spherical_harmonics_decomposition,
+    create_metadata_spherical_harmonics,
+    declare_spherical_harmonics_dicionary,
+)
 from AeViz.utils.utils import check_existence, checkpoints
 
 
@@ -727,11 +732,148 @@ def spherical_harmonics_postprocessing(
     quantity_name: str,
     save_checkpoints: bool = True,
 ) -> None:
+    comp = None
+    rad = None
     isradius = False
+    if simulation.dim == 1:
+        return
+    out_name = f"{quantity_name}.h5"
     if "-" in quantity_name:
+        isradius = True
         splits = quantity_name.split("-")
         if len(splits) > 3:
             raise ValueError(f"Too many values, expected at most 3, got {len(splits)}.")
         quantity_name = splits[0]
-        isradius =True
-        if 
+        splits = splits[1:]
+        if len(splits) == 1:
+            splits = splits[0]
+            if splits in ["avg", "min", "max", "full"]:
+                rad = "full"
+            else:
+                comp = splits
+        elif len(splits) == 2:
+            if splits[0] in ["avg", "min", "max", "full"]:
+                rad = "full"
+                comp = splits[1]
+            elif splits[1] in ["avg", "min", "max", "full"]:
+                rad = "full"
+                comp = splits[0]
+            else:
+                raise TypeError("Quantity not recognised.")
+        if comp is not None:
+            out_name = f"{quantity_name}_{comp}.h5"
+    if (checkpoints[simulation.dim] == False) or (not save_checkpoints):
+        checkpoint = len(simulation.hdf_file_list)
+    else:
+        checkpoint = checkpoints[simulation.dim]
+    file_list = simulation.hdf_file_list
+    postprocessed = []
+    if check_existence(simulation, out_name):
+        postprocessed = load_dataset(
+            simulation.storage_path,
+            out_name,
+            "processed_hdf",
+            False,
+        )
+        if (len(postprocessed) == len(file_list)) and (
+            postprocessed[-1] == file_list[-1]
+        ):
+            return
+        tqdm.write(
+            f"Checkpoint found for the {quantity_name} spherical harmonis decomposition, "
+            f" starting from {postprocessed[-1]}."
+        )
+    else:
+        tqdm.write(f"Starting spherical harmonics decomposition of {quantity_name}.")
+    assert hasattr(simulation, quantity_name), (
+        f"The selected quantity ({quantity_name}) is not present in the simulation."
+    )
+    deco_quantity = None
+    spher_meta = None
+    if isradius:
+        try:
+            if comp is not None and rad is not None:
+                deco_quantity = getattr(simulation, quantity_name)(comp=comp, rad=rad)
+            elif rad is not None and comp is None:
+                deco_quantity = getattr(simulation, quantity_name)(rad=rad)
+            else:
+                deco_quantity = getattr(simulation, quantity_name)(
+                    comp=comp, rad="full"
+                )
+            tm_deco = deco_quantity.time
+            deco_quantity = deco_quantity.data
+            spher_meta = create_metadata_spherical_harmonics(deco_quantity)
+        except IndexError:
+            isradius = False
+            deco_quantity = None
+
+    start_index = len(postprocessed)
+    end_index = (
+        min(len(file_list), deco_quantity.shape[-1])
+        if deco_quantity is not None
+        else len(file_list)
+    )
+    file_list = file_list[start_index:end_index]
+    pbar = tqdm(
+        file_list,
+        f"Spherical harmonics decomposition of {quantity_name}",
+        colour="#ff0739",
+    )
+    global_time = []
+    sph_harm_dict = declare_spherical_harmonics_dicionary(simulation.dim)
+    check_index = 0
+    dOmega = simulation.cell.dOmega(simulation.ghost)
+    spher_harm = SphericalHarmonics()
+    lmax = int((simulation.theta / 2 - 1) * 1.11)
+
+    for i, file_name in enumerate(pbar):
+        pbar.set_postfix(file=file_name)
+        if isradius:
+            time = tm_deco[i + start_index]
+            dd_qt = deco_quantity[i + start_index]
+        else:
+            time = simulation.time(file_name)
+            if comp is not None:
+                dd_qt = getattr(simulation, quantity_name)(file_name, comp=comp)
+            else:
+                dd_qt = getattr(simulation, quantity_name)(file_name)
+        global_time.append(time)
+        compute_spherical_harmonics_decomposition(
+            sph_harm_dict,
+            spher_harm,
+            dd_qt,
+            simulation,
+            dOmega,
+            lmax,
+        )
+        postprocessed.append(file_name)
+        if (check_index >= checkpoint) and save_checkpoints:
+            pbar.set_description("Saving.")
+            if spher_meta is None:
+                spher_meta = create_metadata_spherical_harmonics(dd_qt)
+            save_merge_dictionary_hdf(
+                simulation,
+                (global_time, spher_harm, postprocessed),
+                simulation.storage_path,
+                out_name,
+                None,
+                **spher_meta,
+            )
+            check_index = 0
+            spher_harm = declare_spherical_harmonics_dicionary()
+            global_time = []
+            pbar.set_description(
+                f"Spherical harmonics decomposition of {quantity_name}",
+            )
+        else:
+            check_index += 1
+    if spher_meta is None:
+        spher_meta = create_metadata_spherical_harmonics(dd_qt)
+    save_merge_dictionary_hdf(
+        simulation,
+        (global_time, spher_harm, postprocessed),
+        simulation.storage_path,
+        out_name,
+        None,
+        **spher_meta,
+    )
