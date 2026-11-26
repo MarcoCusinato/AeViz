@@ -273,45 +273,46 @@ def neutrino_quantity_metadata(angles: list[int] | None = None) -> dict:
                 "log": True,
             },
         }
-        angl = 0
-        for i in range(len(angles)):
-            meta[nu][f"Leq_{angl}"] = {
-                "name": f"equivalent_luminosity_{nu}_{angl}",
-                "label": r"$L_{" + lb + r"}^{\rm eq," + str(angl) + r"^\circ}$",
-                "limits": [0, 1e53],
-                "cmap": "inferno",
-                "log": False,
-            }
-            meta[nu][f"Llab_{angl}"] = {
-                "name": f"lab_luminosity_polar_{nu}_{angl}",
-                "label": r"$L_{" + lb + r"}^{\rm lab," + str(angl) + r"^\circ}$",
-                "limits": [0, 1e53],
-                "cmap": "inferno",
-                "log": False,
-            }
-            meta[nu][f"Elab_{angl}"] = {
-                "name": f"lab_mean_energy_equatorial_{nu}_{angl}",
-                "label": r"$\langle E^{"
-                + lb
-                + r"}\rangle_{\rm lab,"
-                + str(angl)
-                + r"^\circ}$",
-                "limits": [0, 30],
-                "cmap": "viridis",
-                "log": False,
-            }
-            meta[nu][f"E2lab_{angl}"] = {
-                "name": f"lab_mean_square_energy_equatorial_{nu}_{angl}",
-                "label": r"$\langle E^{2,"
-                + lb
-                + r"}\rangle_{\rm lab,"
-                + str(angl)
-                + r"^\circ}$",
-                "limits": [0, 200],
-                "cmap": "viridis",
-                "log": False,
-            }
-            angl += 10
+        if angles is not None:
+            angl = 0
+            for i in range(len(angles)):
+                meta[nu][f"Leq_{angl}"] = {
+                    "name": f"equivalent_luminosity_{nu}_{angl}",
+                    "label": r"$L_{" + lb + r"}^{\rm eq," + str(angl) + r"^\circ}$",
+                    "limits": [0, 1e53],
+                    "cmap": "inferno",
+                    "log": False,
+                }
+                meta[nu][f"Llab_{angl}"] = {
+                    "name": f"lab_luminosity_polar_{nu}_{angl}",
+                    "label": r"$L_{" + lb + r"}^{\rm lab," + str(angl) + r"^\circ}$",
+                    "limits": [0, 1e53],
+                    "cmap": "inferno",
+                    "log": False,
+                }
+                meta[nu][f"Elab_{angl}"] = {
+                    "name": f"lab_mean_energy_equatorial_{nu}_{angl}",
+                    "label": r"$\langle E^{"
+                    + lb
+                    + r"}\rangle_{\rm lab,"
+                    + str(angl)
+                    + r"^\circ}$",
+                    "limits": [0, 30],
+                    "cmap": "viridis",
+                    "log": False,
+                }
+                meta[nu][f"E2lab_{angl}"] = {
+                    "name": f"lab_mean_square_energy_equatorial_{nu}_{angl}",
+                    "label": r"$\langle E^{2,"
+                    + lb
+                    + r"}\rangle_{\rm lab,"
+                    + str(angl)
+                    + r"^\circ}$",
+                    "limits": [0, 200],
+                    "cmap": "viridis",
+                    "log": False,
+                }
+                angl += 10
     return meta
 
 
