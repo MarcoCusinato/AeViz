@@ -74,15 +74,14 @@ def main(args=None):
         colour="#aaff00",
     )
     sph_harms = ["rho"]
-    pbar_harmonics = tqdm(
-        sph_harms,
-        f"Spherical harmonics for {sim.simulation_name}",
-        colour="#e8f405",
-    )
     if args.show_warnings:
         for pp in pbar:
             pp(sim, True)
-
+        pbar_harmonics = tqdm(
+            sph_harms,
+            f"Spherical harmonics for {sim.simulation_name}",
+            colour="#e8f405",
+        )
         for sp in pbar_harmonics:
             spherical_harmonics_postprocessing(sim, sp, True)
     else:
@@ -91,7 +90,11 @@ def main(args=None):
             warnings.filterwarnings("ignore", message="Mean of empty slice")
             for pp in pbar:
                 pp(sim, True)
-
+            pbar_harmonics = tqdm(
+                sph_harms,
+                f"Spherical harmonics for {sim.simulation_name}",
+                colour="#e8f405",
+            )
             for sp in pbar_harmonics:
                 spherical_harmonics_postprocessing(sim, sp, True)
 
