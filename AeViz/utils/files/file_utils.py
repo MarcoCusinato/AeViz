@@ -235,18 +235,26 @@ def save_merge_dictionary_hdf(
                     for (kk, vv) in out_dictionary[key].items()
                 }
             except:
+                print(f"Problem detected in {file_name}")
                 for kk, vv in out_dictionary[key].items():
-                    print(key, kk, vv)
-                    out_dictionary[key][kk] = np.concatenate(vv)
+                    try:
+                        out_dictionary[key][kk] = np.concatenate(vv)
+                    except Exception as e:
+                        print(f"The key in question is {key}/{kk}, with {vv}")
+                        raise KeyError(e)
     else:
         try:
             out_dictionary = {
                 kk: np.concatenate(vv, axis=-1) for (kk, vv) in out_dictionary.items()
             }
         except:
+            print(f"Problem detected in {file_name}")
             for kk, vv in out_dictionary.items():
-                print(kk, vv)
-                np.concatenate(vv, axis=-1)
+                try:
+                    np.concatenate(vv, axis=-1)
+                except Exception as e:
+                    print(f"The key in question is {kk}, with {vv}")
+                    raise KeyError(e)
     if check_existence(simulation, os.path.join(save_path, file_name)):
         old_t, old_dict, _ = load_hdf_to_dictionary(save_path, file_name, keys)
         nm, lb, lg, cm = old_t.name, old_t.label, old_t.log, old_t.cmap
