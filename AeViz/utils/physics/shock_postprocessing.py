@@ -1005,7 +1005,7 @@ def __compute_2D_global_local_quantities(
             + np.nansum(dmass[unbound_mask] * rt[unbound_mask]) ** 2
             + np.nansum(dmass[unbound_mask] * rp[unbound_mask]) ** 2
         )
-        / shock_dictionary["local"]["m_unb"][-1]
+        / shock_dictionary["global"]["mass_unb"][-1]
     )
     Pej = np.sqrt(
         np.nansum(dmass[unbound_mask] * vr[unbound_mask]) ** 2
@@ -1083,13 +1083,13 @@ def __compute_2D_global_local_quantities(
         shock_dictionary["global"]["ebt_unb"].append(np.nansum(ebt[unbound_mask]))
         shock_dictionary["global"]["ebp_unb"].append(np.nansum(ebp[unbound_mask]))
         shock_dictionary["local"]["ebr_unb"].append(
-            np.nansum(ebr[unbound_mask], axis=-1)[..., None]
+            np.nansum(np.where(unbound_mask, ebr, 0), axis=-1)[..., None]
         )
         shock_dictionary["local"]["ebt_unb"].append(
-            np.nansum(ebt[unbound_mask], axis=-1)[..., None]
+            np.nansum(np.where(unbound_mask, ebt, 0), axis=-1)[..., None]
         )
         shock_dictionary["local"]["ebp_unb"].append(
-            np.nansum(ebp[unbound_mask], axis=-1)[..., None]
+            np.nansum(np.where(unbound_mask, ebp, 0), axis=-1)[..., None]
         )
         if simulation.dim == 2:
             shock_dictionary["local"]["ebr"].append(
@@ -1227,7 +1227,8 @@ def __compute_3D_global_local_quantities(
         vrot_unb = np.nansum(v * e_rot_unb, axis=0)
         vturb_unb = np.nansum((v - vrot_unb * e_rot_unb) ** 2, axis=0) * vel_unit**2
         vrot_unb = vrot_unb * vel_unit
-        R = R * simulation.grid.radius.unit
+    R = R if isinstance(R, aerray) else R * simulation.grid.radius.unit
+    R_unb = R_unb if isinstance(R_unb, aerray) else R_unb * simulation.grid.radius.unit
     shock_dictionary["global"]["I"].append(
         np.nansum((dmass.to(u.g) * R**2)[shock_mask])
     )
@@ -1238,7 +1239,7 @@ def __compute_3D_global_local_quantities(
         np.nansum(0.5 * (vturb * dmass)[mask]).to(u.erg)
     )
     shock_dictionary["global"]["I_unb"].append(
-        np.nansum((dmass.to(u.g) * R**2)[unbound_mask])
+        np.nansum((dmass.to(u.g) * R_unb**2)[unbound_mask])
     )
     shock_dictionary["global"]["erot_unb"].append(
         np.nansum(0.5 * (vrot_unb**2 * dmass)[unb_mask]).to(u.erg)

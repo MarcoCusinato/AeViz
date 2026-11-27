@@ -839,7 +839,7 @@ def __compute_3D_global_local_quantities(
     PNS_dictionary["global"]["cmass_z"].append(
         np.nansum(z[PNS_mask] * dmass[PNS_mask]) / PNS_dictionary["global"]["mass"][-1]
     )
-    if n[2] >= 0.99:
+    if n[2] >= 0.995:
         vrot = vp
         vturb = vt**2 + vr**2
         omg = simulation.omega(file_name)
@@ -862,6 +862,7 @@ def __compute_3D_global_local_quantities(
         vturb = np.nansum((v - vrot * e_rot) ** 2, axis=0) * vel_unit**2
         vrot = vrot * vel_unit
         R = R * simulation.grid.radius.unit
+        print(R.unit)
     PNS_dictionary["global"]["I"].append(np.nansum((dmass.to(u.g) * R**2)[PNS_mask]))
     PNS_dictionary["global"]["erot"].append(
         np.nansum(0.5 * (vrot**2 * dmass)[mask]).to(u.erg)

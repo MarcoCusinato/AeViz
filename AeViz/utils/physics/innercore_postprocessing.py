@@ -857,7 +857,7 @@ def __compute_3D_global_local_quantities(
         np.nansum(z[innercore_mask] * dmass[innercore_mask])
         / innercore_dictionary["global"]["mass"][-1]
     )
-    if n[2] >= 0.99:
+    if n[2] >= 0.995:
         vrot = vp
         vturb = vt**2 + vr**2
         omg = simulation.omega(file_name)

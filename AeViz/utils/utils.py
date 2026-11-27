@@ -10,7 +10,7 @@ from AeViz.units import u
 from AeViz.units.aerray import aerray
 
 ## CHECKPOINTS FOR COMPUTING LOCAL QUANTITIES
-checkpoints = {1: 50, 2: 50, 3: 20}
+checkpoints = {1: 50, 2: 50, 3: 5}
 
 
 def progressBar(count_value, total, suffix=""):
@@ -144,14 +144,39 @@ def units_from_string(string: str) -> u:
     return unit
 
 
-def restart_from(simulation, file_name):
+def restart_from(simulation, step_name, files_list):
+    if not step_name.endswith(".h5"):
+        step_name = step_name + ".h5"
+
     def cut_and_replace_dset(group, key, index):
-        truncated_data = group[key][..., :index]
+        old_group = group[key]
+
+        ## save the important stuff
+        attrs = dict(old_group.attrs)
+        dtype = old_group.dtype
+        compression = old_group.compression
+        compression_opts = old_group.compression_opts
+        shuffle = old_group.shuffle
+        fletcher32 = old_group.fletcher32
+        fillvalue = old_group.fillvalue
+
+        truncated_data = old_group[..., :index]
         del group[key]
-        group.create_dataset(key, data=truncated_data)
+        new_group = group.create_dataset(
+            key,
+            data=truncated_data,
+            dtype=dtype,
+            compression=compression,
+            compression_opts=compression_opts,
+            shuffle=shuffle,
+            fletcher32=fletcher32,
+            fillvalue=fillvalue,
+        )
+        for nn, vv in attrs.items():
+            new_group.attrs[nn] = vv
 
     def cut_recursively(group, index):
-        keys = list(group.keys())  # Make a copy of keys to avoid iteration issues
+        keys = list(group.keys())
         for key in keys:
             if key == "gcells":
                 continue
@@ -160,17 +185,14 @@ def restart_from(simulation, file_name):
             elif isinstance(group[key], h5py.Group):
                 cut_recursively(group[key], index)
 
-    flist = os.listdir(simulation.storage_path)
-    flist = [fl for fl in flist if fl.endswith("h5")]
-    hdf_flist = simulation.hdf_file_list
-    for fl in flist:
-        data = h5py.File(os.path.join(simulation.storage_path, fl), "a")
-        if not "processed" in data:
-            data.create_dataset("processed", data=hdf_flist[: len(data["time"][...])])
-        processed_hdf = [ff.decode("utf-8") for ff in data["processed"][...]]
-        if file_name not in processed_hdf:
-            data.close()
-            raise ValueError(f"{file_name} has nevere being processed. R u sure?")
-        index_hdf = processed_hdf.index(file_name)
-        cut_recursively(data, index_hdf)
-        data.close()
+    for fl in files_list:
+        file_path = os.path.join(simulation.storage_path, fl)
+        if not os.path.exists(file_path):
+            continue
+        with h5py.File(file_path, "a") as data:
+            processed_hdf = [ff.decode("utf-8") for ff in data["processed_hdf"][...]]
+            if step_name not in processed_hdf:
+                data.close()
+                raise ValueError(f"{step_name} has nevere being processed. R u sure?")
+            index_hdf = processed_hdf.index(step_name)
+            cut_recursively(data, index_hdf)
