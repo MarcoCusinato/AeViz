@@ -13,6 +13,7 @@ from AeViz.utils.physics.postprocessing import (
     supernova_postprocessing,
     tidal_deformability_postprocesing,
 )
+from AeViz.utils.utils import restart_from
 
 
 def main(args=None):
@@ -51,7 +52,12 @@ def main(args=None):
         help="Do not suppress numerical warnings",
         default=False,
     )
-
+    parser.add_argument(
+        "--restart-from",
+        default=None,
+        type=str,
+        help="The name of the timestep from which to restart the postprocessing.",
+    )
     args = parser.parse_args()
     sim = Simulation(args.sim_name, args.sim_path)
     sim.neglect_new()  ## Probably not needed, here just for legacy reasons.
@@ -60,6 +66,19 @@ def main(args=None):
         np.savetxt(
             os.path.join(sim.storage_path, "tob.dat"),
             np.array([args.tob]),
+        )
+    if args.restart_from is not None:
+        restart_from(
+            sim,
+            args.restart_from,
+            [
+                "PNS_postprocessing.h5",
+                "gain_postprocessing.h5",
+                "innercore_postprocessing.h5",
+                "profiles_postprocessing.h5",
+                "PNScore_postprocessing.h5",
+                "shock_postprocessing.h5",
+            ],
         )
     postprocessing = [
         supernova_postprocessing,
