@@ -254,29 +254,45 @@ def save_merge_dictionary_hdf(
         time.set(name=nm, label=lb, cmap=cm, log=lg, limits=[-0.005, time.value[-1]])
         if keys is not None:
             for key in keys:
-                for kk in out_dictionary[key].keys():
-                    nm = old_dict[key][kk].name
-                    lb = old_dict[key][kk].label
-                    lm = old_dict[key][kk].limits
-                    lg = old_dict[key][kk].log
-                    cm = old_dict[key][kk].cmap
-                    out_dictionary[key][kk] = np.concatenate(
-                        (old_dict[key][kk], out_dictionary[key][kk]), axis=-1
-                    )
-                    out_dictionary[key][kk].set(
-                        name=nm, label=lb, limits=lm, log=lg, cmap=cm
-                    )
+                for kk in out_dictionary[key]:
+                    try:
+                        nm = old_dict[key][kk].name
+                        lb = old_dict[key][kk].label
+                        lm = old_dict[key][kk].limits
+                        lg = old_dict[key][kk].log
+                        cm = old_dict[key][kk].cmap
+                        out_dictionary[key][kk] = np.concatenate(
+                            (old_dict[key][kk], out_dictionary[key][kk]), axis=-1
+                        )
+                        out_dictionary[key][kk].set(
+                            name=nm, label=lb, limits=lm, log=lg, cmap=cm
+                        )
+                    except Exception as e:
+                        print(
+                            f"Problem in {key}/{kk}, in {file_name}",
+                            out_dictionary[key][kk],
+                        )
+                        raise TypeError(e)
         else:
             for kk in out_dictionary:
-                nm = old_dict[kk].name
-                lb = old_dict[kk].label
-                lm = old_dict[kk].limits
-                lg = old_dict[kk].log
-                cm = old_dict[kk].cmap
-                out_dictionary[kk] = np.concatenate(
-                    (old_dict[kk], out_dictionary[kk]), axis=-1
-                )
-                out_dictionary[kk].set(name=nm, label=lb, limits=lm, log=lg, cmap=cm)
+                try:
+                    nm = old_dict[kk].name
+                    lb = old_dict[kk].label
+                    lm = old_dict[kk].limits
+                    lg = old_dict[kk].log
+                    cm = old_dict[kk].cmap
+                    out_dictionary[kk] = np.concatenate(
+                        (old_dict[kk], out_dictionary[kk]), axis=-1
+                    )
+                    out_dictionary[kk].set(
+                        name=nm, label=lb, limits=lm, log=lg, cmap=cm
+                    )
+                except Exception as e:
+                    print(
+                        f"Problem in {kk}, in {file_name}",
+                        out_dictionary[key][kk],
+                    )
+                    raise TypeError(e)
     else:
         time.set(
             name="time",
