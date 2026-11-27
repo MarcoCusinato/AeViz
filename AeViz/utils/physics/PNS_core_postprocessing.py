@@ -596,7 +596,7 @@ def __compute_1D_global_local_quantities(
         )
         rperp2 = simulation.cell.radius(simulation.ghost) ** 2
         PNScore_dictionary["global"]["I"].append(
-            np.nansum((dmass * rperp2)[PNScore_mask])
+            np.nansum((dmass * rperp2).to(u.g * u.cm**2)[PNScore_mask])
         )
     elif simulation.dim == 2:
         itheta = np.arange(p.shape[0])
@@ -698,7 +698,7 @@ def __compute_2D_global_local_quantities(
         PNScore_dictionary["local"]["vp"].append(vph[itheta, indx_pns][..., None])
         PNScore_dictionary["local"]["omg"].append(omg[itheta, indx_pns][..., None])
         PNScore_dictionary["global"]["I"].append(
-            np.nansum((dmass * rperp2)[PNScore_mask])[..., None]
+            np.nansum((dmass * rperp2).to(u.g * u.cm**2)[PNScore_mask])[..., None]
         )
     elif simulation.dim == 3:
         iphi = np.arange(vth.shape[0])[:, None]
@@ -828,7 +828,9 @@ def __compute_3D_global_local_quantities(
         vturb = np.nansum((v - vrot * e_rot) ** 2, axis=0) * vel_unit**2
         vrot = vrot * vel_unit
         R = R * simulation.grid.radius.unit
-    PNScore_dictionary["global"]["I"].append(np.nansum((dmass * R**2)[PNScore_mask]))
+    PNScore_dictionary["global"]["I"].append(
+        np.nansum((dmass * R**2).to(u.g * u.cm**2)[PNScore_mask])
+    )
     PNScore_dictionary["global"]["erot"].append(
         np.nansum(0.5 * (vrot**2 * dmass)[mask])
     )
