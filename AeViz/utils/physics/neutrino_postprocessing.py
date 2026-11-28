@@ -338,20 +338,23 @@ def compute_neutrino_postprocessing(
         index_theta,
         index_phi,
     )
-    __full_neutrino_output(
-        neutrino_dictionary,
-        simulation,
-        file_name,
-        index500,
-        index_theta,
-        indices_theta_avg,
-        dOmega,
-        index_phi,
-        Wh,
-        dOmega_obs,
-        PNS_mass,
-    )
-    return True
+    try:
+        __full_neutrino_output(
+            neutrino_dictionary,
+            simulation,
+            file_name,
+            index500,
+            index_theta,
+            indices_theta_avg,
+            dOmega,
+            index_phi,
+            Wh,
+            dOmega_obs,
+            PNS_mass,
+        )
+        return True
+    except KeyError:
+        return False
 
 
 def __full_neutrino_output(
@@ -655,6 +658,6 @@ def build_obs_grid(nalpha: int):
     dangle = 2 * np.pi / nalpha * u.radian
     beta = (np.arange(int(nalpha / 2)) + 0.5) * dangle
     alpha = (np.arange(int(nalpha)) + 0.5) * dangle
-    beta_sinb = np.sin(beta)[:, None, None, None] * dangle
-    dOmega_obs = (np.ones(int(nalpha / 2))[None, :, None, None] * dangle) * beta_sinb
+    beta_sinb = np.sin(beta)[None, :, None, None] * dangle
+    dOmega_obs = (np.ones(int(nalpha))[:, None, None, None] * dangle) * beta_sinb
     return dOmega_obs, alpha, beta
