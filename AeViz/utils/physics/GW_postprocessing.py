@@ -342,12 +342,12 @@ def __compute_3D_gws_postprocessing(
         Qdot = dmass * (
             vr * gradient[i][..., 0]
             + vt * gradient[i][..., 1]
-            + vp * gradient[i][..., 3]
+            + vp * gradient[i][..., 2]
         )
         Qcorr = rho_vr * Ylm[i]
         Qradial.append(np.sum(Qdot, axis=(0, 1))[..., None])
         corr.append(np.sum(Qcorr, axis=(0, 1))[..., None])
-        Qfull.append(np.sum(Qdot)[:, None])
+        Qfull.append(np.sum(Qdot)[..., None])
         Qcor.append(
             __compute_3D_partial_Q(
                 Qdot,
