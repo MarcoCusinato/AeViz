@@ -41,6 +41,12 @@ def main(args=None):
                             a file",
     )
     parser.add_argument(
+        "--postprocessing",
+        default=["all"],
+        nargs="+",
+        help="Selects which postprocessing to run: available 'all', 'supernova', 'neutrinos', 'tidal', 'GWs' ",
+    )
+    parser.add_argument(
         "--spherical-harmonics",
         action="store_true",
         default=False,
@@ -67,25 +73,62 @@ def main(args=None):
             os.path.join(sim.storage_path, "tob.dat"),
             np.array([args.tob]),
         )
+    pptypes = [pp.casefold() for pp in args.postprocessing]
+    if "all" in pptypes:
+        postprocessing = [
+            supernova_postprocessing,
+            supernova_neutrino_postprocessing,
+            supernova_gws_postprocessing,
+            tidal_deformability_postprocesing,
+        ]
+        restart_files = [
+            "PNS_postprocessing.h5",
+            "gain_postprocessing.h5",
+            "innercore_postprocessing.h5",
+            "profiles_postprocessing.h5",
+            "PNScore_postprocessing.h5",
+            "shock_postprocessing.h5",
+            "neutrino_postprocessing.h5",
+            "neutrino_reduced_postprocessing.h5",
+            "GWs_postprocessing.h5",
+            "tidal_postprocessing.h5",
+        ]
+    else:
+        postprocessing = []
+        restart_files = []
+        if "supernova" in pptypes or "minimal" in pptypes:
+            postprocessing.append(supernova_postprocessing)
+            restart_files.extend(
+                [
+                    "PNS_postprocessing.h5",
+                    "gain_postprocessing.h5",
+                    "innercore_postprocessing.h5",
+                    "profiles_postprocessing.h5",
+                    "PNScore_postprocessing.h5",
+                    "shock_postprocessing.h5",
+                ]
+            )
+        if "neutrinos" in pptypes:
+            postprocessing.append(supernova_neutrino_postprocessing)
+            restart_files.extend(
+                [
+                    "neutrino_postprocessing.h5",
+                    "neutrino_reduced_postprocessing.h5",
+                ]
+            )
+        if "gws" in pptypes:
+            postprocessing.append(supernova_gws_postprocessing)
+            restart_files.append("GWs_postprocessing.h5")
+        if "tidal" in pptypes or "love" in pptypes:
+            postprocessing.append(tidal_deformability_postprocesing)
+            restart_files.append("tidal_postprocessing.h5")
+
     if args.restart_from is not None:
         restart_from(
             sim,
             args.restart_from,
-            [
-                "PNS_postprocessing.h5",
-                "gain_postprocessing.h5",
-                "innercore_postprocessing.h5",
-                "profiles_postprocessing.h5",
-                "PNScore_postprocessing.h5",
-                "shock_postprocessing.h5",
-            ],
+            restart_files,
         )
-    postprocessing = [
-        supernova_postprocessing,
-        supernova_neutrino_postprocessing,
-        supernova_gws_postprocessing,
-        tidal_deformability_postprocesing,
-    ]
 
     pbar = tqdm(
         postprocessing,
