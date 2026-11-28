@@ -1,7 +1,9 @@
 import numpy as np
-from AeViz.utils.math_utils import IDL_derivative, inplace_smooth
 from scipy.interpolate import griddata
+
 from AeViz.units import u
+from AeViz.utils.math_utils import IDL_derivative, inplace_smooth
+
 
 def PNS_radius(simulation, file_name):
     """
@@ -9,8 +11,10 @@ def PNS_radius(simulation, file_name):
     Employed method: radius at which the density drops below
                      10^11 g/cm^3
     """
-    return simulation.cell.radius(simulation.ghost)[np.argmax(
-        simulation.rho(file_name) < (1e11 * u.g / u.cm ** 3), axis=-1)]
+    return simulation.cell.radius(simulation.ghost)[
+        np.argmax(simulation.rho(file_name) < (1e11 * u.g / u.cm**3), axis=-1)
+    ]
+
 
 def isodensity_radii(simulation, file_name):
     """
@@ -19,42 +23,51 @@ def isodensity_radii(simulation, file_name):
     1e14 to 1e8, excluding 1e11 which is the PNS.
     """
     radius = simulation.cell.radius(simulation.ghost)
-    return {'%.0e' % id: radius[np.argmax(simulation.rho(file_name) < \
-                                          (id * u.g / u.cm ** 3), 
-                                          axis=-1)]
-                                          for id in [1e14, 1e13, 1e12, 1e10,
-                                                  1e9, 1e8]}
+    return {
+        "%.0e" % id: radius[
+            np.argmax(simulation.rho(file_name) < (id * u.g / u.cm**3), axis=-1)
+        ]
+        for id in [1e14, 1e13, 1e12, 1e10, 1e9, 1e8]
+    }
+
 
 def innercore_radius(simulation, file_name):
     """
-    Calculates the radius of the inner core for each timestep. 
+    Calculates the radius of the inner core for each timestep.
     The innercore is defined as the region in sonic contact with the
     centre of the star. This corresponds to the region where the
     sound speed is larger than the radial velocity.
     Employed method: comparing the module of the radial with the
                      sound speed.
     """
-    return simulation.cell.radius(simulation.ghost)[np.argmax(
-        simulation.radial_velocity(file_name) ** 2 
-        >= simulation.soundspeed(file_name) ** 2, axis=-1)]
+    return simulation.cell.radius(simulation.ghost)[
+        np.argmax(
+            simulation.radial_velocity(file_name) ** 2
+            >= simulation.soundspeed(file_name) ** 2,
+            axis=-1,
+        )
+    ]
+
 
 def gain_radius(simulation, file_name, PNS_radius):
     """
     Calculates the radius of the gain region for each timestep. Gain
     region is defined as the region where the neutrino heating becomes
     larger than the cooling.
-    Employed method: finding the radius, outside the PNS where the 
+    Employed method: finding the radius, outside the PNS where the
                      neutrino energy depostion is larger than 0.
     """
     radius = simulation.cell.radius(simulation.ghost)
     neu_ene_dep = simulation.nu_heat(file_name)
     while radius.ndim < neu_ene_dep.ndim:
         radius = radius[None, ...]
-    neu_ene_dep = np.where(radius >= PNS_radius[..., None], neu_ene_dep,  0)
-    gain_r = simulation.cell.radius(simulation.ghost)[np.argmax(neu_ene_dep > 0,
-                                                      axis=-1)]
+    neu_ene_dep = np.where(radius >= PNS_radius[..., None], neu_ene_dep, 0)
+    gain_r = simulation.cell.radius(simulation.ghost)[
+        np.argmax(neu_ene_dep > 0, axis=-1)
+    ]
     gain_r = np.where(gain_r <= PNS_radius, np.nan, gain_r)
     return gain_r
+
 
 def neutrino_sphere_radii(simulation, file_name):
     """
@@ -73,22 +86,29 @@ def neutrino_sphere_radii(simulation, file_name):
     momenta = simulation.neutrino_momenta(file_name)
     kappa = simulation.neutrino_momenta_opacities(file_name)
 
-    if simulation.dim == 1 or 'notrino' in simulation._Simulation__data_h5:
-        k = [np.nansum(mom * ka, axis=simulation.dim) /
-              np.nansum(mom, axis=simulation.dim) for (mom, ka) in
-            zip(momenta, kappa)]
+    if simulation.dim == 1 or "notrino" in simulation._Simulation__data_h5:
+        k = [
+            np.nansum(mom * ka, axis=simulation.dim)
+            / np.nansum(mom, axis=simulation.dim)
+            for (mom, ka) in zip(momenta, kappa)
+        ]
 
     else:
-        k = [np.nansum(mom[..., 0] * ka[..., 0], axis=simulation.dim) /
-              np.nansum(mom[..., 0], axis=simulation.dim) for (mom, ka) in
-            zip(momenta, kappa)]
-    
+        k = [
+            np.nansum(mom[..., 0] * ka[..., 0], axis=simulation.dim)
+            / np.nansum(mom[..., 0], axis=simulation.dim)
+            for (mom, ka) in zip(momenta, kappa)
+        ]
+
     dr = simulation.cell.dr(simulation.ghost)
     while dr.ndim < k[0].ndim:
         dr = dr[None, ...]
     k = [np.nancumsum(np.flip(ka * dr, axis=-1), axis=-1) for ka in k]
-    return [np.flip(simulation.cell.radius(simulation.ghost))\
-                                [np.argmax(ka >= tau, axis=-1)] for ka in k]
+    return [
+        np.flip(simulation.cell.radius(simulation.ghost))[np.argmax(ka >= tau, axis=-1)]
+        for ka in k
+    ]
+
 
 def PNS_core_radius(simulation, file_name):
     """
@@ -101,6 +121,7 @@ def PNS_core_radius(simulation, file_name):
     S4Kb = np.argmax(s >= (4 * u.kBol / u.bry), axis=-1)
     return radius[S4Kb]
 
+
 def shock_radius(simulation, file_name, pns_radius, innercore_radius):
     """
     Calculates the shock radius for each timestep.
@@ -111,27 +132,31 @@ def shock_radius(simulation, file_name, pns_radius, innercore_radius):
     if simulation.time(file_name, True) <= 0:
         if simulation.dim == 1:
             return 0.0 * simulation.cell.radius(simulation.ghost).unit
-        return np.zeros(simulation.cell.dVolume_integration(
-            simulation.ghost).shape[:-1]) * \
-                simulation.cell.radius(simulation.ghost).unit
-    fallback_radius = np.where(pns_radius < innercore_radius,
-                               innercore_radius,
-                               pns_radius)
+        return (
+            np.zeros(simulation.cell.dVolume_integration(simulation.ghost).shape[:-1])
+            * simulation.cell.radius(simulation.ghost).unit
+        )
+    fallback_radius = np.where(
+        pns_radius < innercore_radius, innercore_radius, pns_radius
+    )
     if simulation.dim == 1:
         shock_r = shock_radius_1D(simulation, file_name, rmax)
     elif simulation.dim == 2:
-        shock_r = interpol_1D(hampel_filter(
-            shock_radius_2D(simulation, file_name, rmax)),
-                           simulation.cell.theta(simulation.ghost))
+        shock_r = interpol_1D(
+            hampel_filter(shock_radius_2D(simulation, file_name, rmax)),
+            simulation.cell.theta(simulation.ghost),
+        )
     elif simulation.dim == 3:
-        Theta, Phi = np.meshgrid(simulation.cell.theta(simulation.ghost), 
-                                 simulation.cell.phi(simulation.ghost))
-        shock_r = interpol_2D(shock_radius_3D(simulation, file_name, rmax),
-                           Theta, Phi)
+        Theta, Phi = np.meshgrid(
+            simulation.cell.theta(simulation.ghost),
+            simulation.cell.phi(simulation.ghost),
+        )
+        shock_r = interpol_2D(shock_radius_3D(simulation, file_name, rmax), Theta, Phi)
     else:
         raise ValueError("Invalid dimension")
     return np.where(shock_r > fallback_radius, shock_r, fallback_radius)
-   
+
+
 def shock_radius_1D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
     vr = np.abs(inplace_smooth(simulation.radial_velocity(file_name), 1))
@@ -143,10 +168,16 @@ def shock_radius_1D(simulation, file_name, rmax):
     for ir in range(len(dS)):
         if r[ir] > rmax:
             continue
-        if (dS[ir] < -0.25 and vr[ir] > 5e-7 and dvr[ir] < -1 and dP[ir] < -10 and 
-            vr[max(0, ir-10)] > vr[min(len(r)-1, ir+10)]):
+        if (
+            dS[ir] < -0.25
+            and vr[ir] > 5e-7
+            and dvr[ir] < -1
+            and dP[ir] < -10
+            and vr[max(0, ir - 10)] > vr[min(len(r) - 1, ir + 10)]
+        ):
             return r[ir]
     return 0.0 * r.unit
+
 
 def shock_radius_2D(simulation, file_name, rmax):
     r = simulation.cell.radius(simulation.ghost)
@@ -162,15 +193,20 @@ def shock_radius_2D(simulation, file_name, rmax):
         for ir in range(dP.shape[1]):
             if r[ir] > rmax:
                 continue
-            if (dS[it, ir] < -0.25 and vr[it, ir] > 5e-7 and dvr[it, ir] < -1
-                and dP[it, ir] < -10 and 
-                vr[it, max(0, ir-10)] > vr[it, min(len(r)-1, ir+10)]):
+            if (
+                dS[it, ir] < -0.25
+                and vr[it, ir] > 5e-7
+                and dvr[it, ir] < -1
+                and dP[it, ir] < -10
+                and vr[it, max(0, ir - 10)] > vr[it, min(len(r) - 1, ir + 10)]
+            ):
                 shock_r[it] = r[ir]
                 break
     ## COPY over the gcells
     if np.isnan(shock_r).all():
         return np.zeros(dP.shape[0]) * r.unit
     return shock_r * r.unit
+
 
 def shock_radius_3D(simulation, file_name, rmax):
     """
@@ -192,46 +228,56 @@ def shock_radius_3D(simulation, file_name, rmax):
             for ir in range(dP.shape[2]):
                 if r[ir] > rmax:
                     continue
-                if (dS[ip, it, ir] < -0.25 and vr[ip, it, ir] > 5e-7 and
-                    dvr[ip, it, ir] < -1 and dP[ip, it, ir] < -10 and 
-                    vr[ip, it, max(0, ir-10)] > vr[ip, it, min(len(r)-1, ir+10)]):
+                if (
+                    dS[ip, it, ir] < -0.25
+                    and vr[ip, it, ir] > 5e-7
+                    and dvr[ip, it, ir] < -1
+                    and dP[ip, it, ir] < -10
+                    and vr[ip, it, max(0, ir - 10)]
+                    > vr[ip, it, min(len(r) - 1, ir + 10)]
+                ):
                     shock_r[ip, it] = r[ir]
                     break
     return shock_r * r.unit
+
 
 def hampel_filter(shock_radius, sigma=3):
     """
     Applies a hampel filter to the shock radius.
     """
-    
-    assert shock_radius.size > 1 and shock_radius.ndim >= 1, "Expected 1 or 2 \
+
+    assert shock_radius.size > 1 and shock_radius.ndim >= 1, (
+        "Expected 1 or 2 \
             dimensional array, with at least 2 elements."
+    )
     shock_radius_copy = shock_radius.copy()
     for i in range(10):
         rmedian = np.nanmedian(shock_radius)
         diff = np.abs(shock_radius - rmedian)
         diffmedian = np.nanmedian(diff)
-        
+
         if i == 0:
-            threshold = np.minimum(sigma, np.nanmax(diff / (1.4826 * \
-                diffmedian)) * 0.95)
+            threshold = np.minimum(
+                sigma, np.nanmax(diff / (1.4826 * diffmedian)) * 0.95
+            )
         mask = diff > 1.4826 * diffmedian * threshold
         shock_radius[mask] = np.nan
         num_outliers = np.sum(mask)
-        
+
         if num_outliers == 0:
             break
     if np.sum(np.isnan(shock_radius)) >= shock_radius.size / 2:
         return shock_radius_copy
     return shock_radius
- 
+
+
 def interpol_1D(shock_radius, theta):
     mask = np.isnan(shock_radius)
     if mask.sum() == 0:
         return shock_radius
-    shock_radius[mask] = np.interp(theta[mask], theta[~mask],
-                                   shock_radius[~mask])
+    shock_radius[mask] = np.interp(theta[mask], theta[~mask], shock_radius[~mask])
     return shock_radius
+
 
 def interpol_2D(shock_radius, Theta, Phi):
     unit = shock_radius.unit
@@ -241,12 +287,16 @@ def interpol_2D(shock_radius, Theta, Phi):
         return shock_radius * unit
     if np.all(mask):
         return np.zeros_like(shock_radius) * unit
+    if (shock_radius.size - mask.sum()) < 4 or (mask.sum() > shock_radius.size * 0.9):
+        shock_radius[mask] = 0
+        return shock_radius * unit
     median = np.nanmedian(shock_radius)
     shock_radius = np.ma.masked_invalid(shock_radius)
-    shock_radius[shock_radius.mask] = \
-        griddata((Phi.value[~shock_radius.mask], Theta.value[~shock_radius.mask]),
-                 shock_radius[~shock_radius.mask].ravel(),
-                 (Phi.value[shock_radius.mask], Theta.value[shock_radius.mask]),
-                    method='linear', fill_value=median)
+    shock_radius[shock_radius.mask] = griddata(
+        (Phi.value[~shock_radius.mask], Theta.value[~shock_radius.mask]),
+        shock_radius[~shock_radius.mask].ravel(),
+        (Phi.value[shock_radius.mask], Theta.value[shock_radius.mask]),
+        method="linear",
+        fill_value=median,
+    )
     return shock_radius * unit
-    
